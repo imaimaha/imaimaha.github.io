@@ -1,0 +1,277 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f0ebe3;
+  color: #4a3f35;
+  overflow-x: hidden;
+}
+
+/* 雲アニメーション */
+.clouds {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  background: white;
+  border-radius: 50px;
+  opacity: 0.6;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+}
+
+.cloud-1 {
+  width: 200px; height: 60px;
+  top: 8%; left: -220px;
+  animation: float-cloud 30s linear infinite;
+}
+.cloud-1::before { width: 80px; height: 80px; top: -40px; left: 30px; }
+.cloud-1::after  { width: 60px; height: 60px; top: -30px; left: 90px; }
+
+.cloud-2 {
+  width: 150px; height: 45px;
+  top: 18%; left: -180px;
+  animation: float-cloud 45s linear infinite 10s;
+}
+.cloud-2::before { width: 60px; height: 60px; top: -30px; left: 20px; }
+.cloud-2::after  { width: 50px; height: 50px; top: -25px; left: 70px; }
+
+.cloud-3 {
+  width: 180px; height: 50px;
+  top: 5%; left: -200px;
+  animation: float-cloud 38s linear infinite 20s;
+}
+.cloud-3::before { width: 70px; height: 70px; top: -35px; left: 25px; }
+.cloud-3::after  { width: 55px; height: 55px; top: -28px; left: 80px; }
+
+@keyframes float-cloud {
+  from { left: -250px; }
+  to   { left: 110%; }
+}
+
+/* ヘッダー */
+.hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+}
+
+.title {
+  font-family: 'Zen Kurenaido', sans-serif;
+  font-size: 3rem;
+  color: #5d4037;
+  letter-spacing: 0.15em;
+  text-shadow: 2px 2px 0 #fff8e1;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #8d6e63;
+  margin: 8px 0 30px;
+  letter-spacing: 0.1em;
+}
+
+.hero-photo-frame {
+  display: inline-block;
+  position: relative;
+  margin-top: 10px;
+}
+
+.hero-photo {
+  width: 320px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 6px solid #fff;
+  box-shadow: 4px 6px 20px rgba(0,0,0,0.15);
+  transform: rotate(-1.5deg);
+}
+
+.photo-label {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #8d6e63;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  white-space: nowrap;
+}
+
+/* ナビ */
+.menu {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px 20px;
+  flex-wrap: wrap;
+}
+
+.menu-item {
+  background: #fff;
+  color: #5d4037;
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid #e8ddd5;
+}
+
+.menu-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* セクション共通 */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.section {
+  margin: 50px 0;
+}
+
+.section-title {
+  font-family: 'Zen Kurenaido', sans-serif;
+  font-size: 1.6rem;
+  color: #5d4037;
+  margin-bottom: 24px;
+  padding-left: 12px;
+  border-left: 4px solid #a5d6a7;
+}
+
+/* ギャラリー */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.gallery-item {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+
+.gallery-item:hover {
+  transform: translateY(-4px);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.gallery-item p {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #8d6e63;
+}
+
+.gallery-item.empty {
+  border: 2px dashed #d7ccc8;
+  background: #faf8f5;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-slot {
+  text-align: center;
+  color: #bcaaa4;
+  font-size: 1.8rem;
+  line-height: 1.6;
+}
+
+.empty-slot span {
+  font-size: 0.8rem;
+}
+
+/* スケジュール */
+.schedule-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  border-left: 5px solid #a5d6a7;
+}
+
+.schedule-date {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #5d4037;
+  margin-bottom: 8px;
+}
+
+.schedule-desc {
+  color: #8d6e63;
+  font-size: 0.9rem;
+}
+
+/* ウィッシュリスト */
+.wish-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wish-item {
+  background: #fff;
+  padding: 14px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  font-size: 0.95rem;
+  color: #5d4037;
+  transition: transform 0.2s;
+}
+
+.wish-item:hover {
+  transform: translateX(6px);
+}
+
+/* フッター */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px 20px;
+  color: #a1887f;
+  font-size: 0.9rem;
+  background: linear-gradient(0deg, #c8e6c9 0%, #f0ebe3 100%);
+  margin-top: 40px;
+}
