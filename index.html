@@ -7,8 +7,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
 </head>
-<body>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div style="position:fixed;top:16px;right:16px;z-index:100">
+    <button onclick="_sb.auth.signOut().then(()=>location.href='/login.html')" style="background:#fff;border:2px solid #e8ddd5;color:#8d6e63;padding:6px 16px;border-radius:20px;cursor:pointer;font-size:0.85rem">ログアウト</button>
+  </div>
 
   <div class="clouds">
     <div class="cloud cloud-1"></div>
