@@ -285,12 +285,12 @@
       const id = btn.dataset.id
       if (btn.dataset.action === 'check') {
         const done = btn.dataset.done === 'true'
-        wishes = wishes.map(w => w.id === id ? { ...w, done: !done } : w)
+        wishes = wishes.map(w => String(w.id) === id ? { ...w, done: !done } : w)
         renderList()
         _sb.from('wishes').update({ done: !done }).eq('id', id)
       }
       if (btn.dataset.action === 'delete') {
-        wishes = wishes.filter(w => w.id !== id)
+        wishes = wishes.filter(w => String(w.id) !== id)
         renderList()
         _sb.from('wishes').delete().eq('id', id)
       }
