@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>思い出アルバム | ふたりの場所</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f0ebe3;
+      color: #4a3f35;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+    }
+
+    .top-bar a { color: #8d6e63; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #5d4037; }
+
+    .logout-btn {
+      background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+    }
+
+    .content { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* アップロードエリア */
+    .upload-area {
+      background: #fff;
+      border: 2px dashed #c8e6c9;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 32px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: #81c784;
+      background: #f1f8f1;
+    }
+
+    .upload-area input { display: none; }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    .upload-area p { color: #8d6e63; font-size: 0.95rem; }
+    .upload-area span { font-size: 0.8rem; color: #bcaaa4; }
+
+    .memo-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e8ddd5;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #4a3f35;
+      margin-top: 12px;
+      outline: none;
+    }
+
+    .memo-input:focus { border-color: #a5d6a7; }
+
+    .upload-btn {
+      margin-top: 12px;
+      padding: 10px 28px;
+      background: #81c784;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-btn:hover { background: #66bb6a; }
+    .upload-btn:disabled { background: #c8e6c9; cursor: not-allowed; }
+
+    .preview-img {
+      max-width: 200px;
+      max-height: 150px;
+      border-radius: 8px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* ギャラリー */
+    .gallery-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.5rem;
+      color: #5d4037;
+      margin-bottom: 20px;
+      padding-left: 12px;
+      border-left: 4px solid #a5d6a7;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .photo-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+
+    .photo-card:hover { transform: translateY(-4px); }
+
+    .photo-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .photo-info {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .photo-memo { font-size: 0.85rem; color: #8d6e63; flex: 1; }
+    .photo-date { font-size: 0.75rem; color: #bcaaa4; }
+
+    .delete-photo-btn {
+      background: none; border: none; color: #d7ccc8;
+      cursor: pointer; font-size: 1rem; padding: 4px;
+      transition: color 0.2s;
+    }
+    .delete-photo-btn:hover { color: #ef9a9a; }
+
+    /* ライトボックス */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox.open { display: flex; }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px; right: 24px;
+      color: #fff; font-size: 2rem;
+      cursor: pointer; background: none; border: none;
+    }
+
+    .empty { text-align: center; color: #bcaaa4; padding: 40px 0; }
+
+    .progress {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #81c784;
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>思い出アルバム</h1>
+    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+  </div>
+
+  <div class="content">
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept="image/*" onchange="handleFile(this.files[0])">
+      <div class="upload-icon">📸</div>
+      <p>写真をクリックまたはドラッグ＆ドロップ</p>
+      <span>JPG・PNG・HEIC対応 / 最大50MB</span>
+      <img id="preview" class="preview-img">
+      <input type="text" class="memo-input" id="memo-input" placeholder="ひとことメモ（任意）" onclick="event.stopPropagation()">
+      <div><button class="upload-btn" id="upload-btn" onclick="event.stopPropagation();uploadPhoto()" disabled>アップロード</button></div>
+      <div class="progress" id="progress">アップロード中...</div>
+    </div>
+
+    <h2 class="gallery-title">📷 思い出</h2>
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
+  <script>
+    let selectedFile = null
+
+    function handleDrop(e) {
+      e.preventDefault()
+      document.getElementById('upload-area').classList.remove('drag-over')
+      const file = e.dataTransfer.files[0]
+      if (file && file.type.startsWith('image/')) handleFile(file)
+    }
+
+    function handleFile(file) {
+      if (!file) return
+      selectedFile = file
+      const reader = new FileReader()
+      reader.onload = e => {
+        const preview = document.getElementById('preview')
+        preview.src = e.target.result
+        preview.style.display = 'block'
+      }
+      reader.readAsDataURL(file)
+      document.getElementById('upload-btn').disabled = false
+    }
+
+    async function uploadPhoto() {
+      if (!selectedFile) return
+      const btn = document.getElementById('upload-btn')
+      const progress = document.getElementById('progress')
+      btn.disabled = true
+      progress.style.display = 'block'
+
+      const { data: { session } } = await _sb.auth.getSession()
+      const userId = session.user.id
+      const ext = selectedFile.name.split('.').pop()
+      const path = `${userId}/${Date.now()}.${ext}`
+
+      const { error: uploadError } = await _sb.storage
+        .from('memories')
+        .upload(path, selectedFile)
+
+      if (uploadError) {
+        console.error('upload error:', uploadError)
+        progress.textContent = 'アップロード失敗: ' + uploadError.message
+        btn.disabled = false
+        return
+      }
+
+      const memo = document.getElementById('memo-input').value.trim()
+      await _sb.from('photos').insert({ path, memo })
+
+      // リセット
+      selectedFile = null
+      document.getElementById('preview').style.display = 'none'
+      document.getElementById('preview').src = ''
+      document.getElementById('memo-input').value = ''
+      document.getElementById('upload-btn').disabled = true
+      progress.style.display = 'none'
+
+      loadPhotos()
+    }
+
+    async function loadPhotos() {
+      const gallery = document.getElementById('gallery')
+      const { data } = await _sb
+        .from('photos')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!data || data.length === 0) {
+        gallery.innerHTML = '<div class="empty">まだ写真がありません 🌿</div>'
+        return
+      }
+
+      gallery.innerHTML = ''
+      for (const photo of data) {
+        const { data: urlData } = await _sb.storage
+          .from('memories')
+          .createSignedUrl(photo.path, 3600)
+
+        if (!urlData) continue
+        const url = urlData.signedUrl
+
+        const card = document.createElement('div')
+        card.className = 'photo-card'
+        const date = new Date(photo.created_at).toLocaleDateString('ja-JP')
+        card.innerHTML = `
+          <img src="${url}" alt="${escHtml(photo.memo || '')}" onclick="openLightbox('${url}')">
+          <div class="photo-info">
+            <span class="photo-memo">${escHtml(photo.memo || '')}</span>
+            <span class="photo-date">${date}</span>
+            <button class="delete-photo-btn" data-id="${photo.id}" data-path="${escHtml(photo.path)}">✕</button>
+          </div>
+        `
+        gallery.appendChild(card)
+      }
+    }
+
+    document.getElementById('gallery').addEventListener('click', async e => {
+      const btn = e.target.closest('.delete-photo-btn')
+      if (!btn) return
+      if (!confirm('この写真を削除しますか？')) return
+      const id = btn.dataset.id
+      const path = btn.dataset.path
+      await _sb.storage.from('memories').remove([path])
+      await _sb.from('photos').delete().eq('id', id)
+      loadPhotos()
+    })
+
+    function openLightbox(url) {
+      document.getElementById('lightbox-img').src = url
+      document.getElementById('lightbox').classList.add('open')
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open')
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    loadPhotos()
+  </script>
+</body>
+</html>
