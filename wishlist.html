@@ -228,10 +228,7 @@
       { id: '行きたい場所', icon: '🗺️' },
       { id: '食べたいもの', icon: '🍽️' },
       { id: '見たいもの',   icon: '🎬' },
-      { id: '作りたいもの', icon: '🛠️' },
-      { id: 'やりたいこと', icon: '🎮' },
       { id: 'ほしいもの',   icon: '🎁' },
-      { id: '読みたい本',   icon: '📚' },
     ]
 
     let currentCategory = categories[0].id
@@ -299,15 +296,15 @@
     }
 
     async function toggleDone(id, current) {
-      await _sb.from('wishes').update({ done: !current }).eq('id', id)
       wishes = wishes.map(w => w.id === id ? { ...w, done: !current } : w)
       renderList()
+      _sb.from('wishes').update({ done: !current }).eq('id', id)
     }
 
     async function deleteWish(id) {
-      await _sb.from('wishes').delete().eq('id', id)
       wishes = wishes.filter(w => w.id !== id)
       renderList()
+      _sb.from('wishes').delete().eq('id', id)
     }
 
     function escHtml(str) {
