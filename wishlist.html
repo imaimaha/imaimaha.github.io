@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>やりたいことリスト | ふたりの場所</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f0ebe3;
+      color: #4a3f35;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+    }
+
+    .top-bar a {
+      color: #8d6e63;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .top-bar h1 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.4rem;
+      color: #5d4037;
+    }
+
+    .logout-btn {
+      background: #fff;
+      border: 2px solid #e8ddd5;
+      color: #8d6e63;
+      padding: 6px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* タブ */
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      padding: 16px 20px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      white-space: nowrap;
+      padding: 8px 18px;
+      border-radius: 24px;
+      border: 2px solid #e8ddd5;
+      background: #fff;
+      color: #8d6e63;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .tab.active {
+      background: #81c784;
+      border-color: #81c784;
+      color: #fff;
+    }
+
+    /* メインコンテンツ */
+    .content {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 8px 20px 40px;
+    }
+
+    /* 追加フォーム */
+    .add-form {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+      margin-bottom: 24px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .add-form input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #e8ddd5;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #4a3f35;
+      outline: none;
+    }
+
+    .add-form input:focus { border-color: #a5d6a7; }
+
+    .add-form button {
+      padding: 10px 20px;
+      background: #81c784;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .add-form button:hover { background: #66bb6a; }
+
+    /* リスト */
+    .wish-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wish-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: opacity 0.2s;
+    }
+
+    .wish-item.done {
+      opacity: 0.5;
+    }
+
+    .wish-item.done .wish-title {
+      text-decoration: line-through;
+    }
+
+    .check-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #a5d6a7;
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .check-btn.checked {
+      background: #a5d6a7;
+      border-color: #a5d6a7;
+    }
+
+    .wish-title {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #4a3f35;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #d7ccc8;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .delete-btn:hover { color: #ef9a9a; }
+
+    .empty {
+      text-align: center;
+      color: #bcaaa4;
+      padding: 40px 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>やりたいことリスト</h1>
+    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="content">
+    <div class="add-form">
+      <input type="text" id="new-title" placeholder="追加する..." maxlength="100">
+      <button onclick="addWish()">追加</button>
+    </div>
+    <div class="wish-list" id="wish-list"></div>
+  </div>
+
+  <script>
+    const categories = [
+      { id: '行きたい場所', icon: '🗺️' },
+      { id: '食べたいもの', icon: '🍽️' },
+      { id: '見たいもの',   icon: '🎬' },
+      { id: '作りたいもの', icon: '🛠️' },
+      { id: 'やりたいこと', icon: '🎮' },
+      { id: 'ほしいもの',   icon: '🎁' },
+      { id: '読みたい本',   icon: '📚' },
+    ]
+
+    let currentCategory = categories[0].id
+    let wishes = []
+
+    // タブ描画
+    const tabsEl = document.getElementById('tabs')
+    categories.forEach(cat => {
+      const btn = document.createElement('button')
+      btn.className = 'tab' + (cat.id === currentCategory ? ' active' : '')
+      btn.textContent = cat.icon + ' ' + cat.id
+      btn.onclick = () => switchCategory(cat.id)
+      tabsEl.appendChild(btn)
+    })
+
+    function switchCategory(id) {
+      currentCategory = id
+      document.querySelectorAll('.tab').forEach((btn, i) => {
+        btn.classList.toggle('active', categories[i].id === id)
+      })
+      loadWishes()
+    }
+
+    async function loadWishes() {
+      const { data } = await _sb
+        .from('wishes')
+        .select('*')
+        .eq('category', currentCategory)
+        .order('created_at', { ascending: true })
+      wishes = data || []
+      renderList()
+    }
+
+    function renderList() {
+      const list = document.getElementById('wish-list')
+      if (wishes.length === 0) {
+        list.innerHTML = '<div class="empty">まだ何も追加されていません 🌱</div>'
+        return
+      }
+      list.innerHTML = wishes.map(w => `
+        <div class="wish-item ${w.done ? 'done' : ''}" id="item-${w.id}">
+          <button class="check-btn ${w.done ? 'checked' : ''}" onclick="toggleDone('${w.id}', ${w.done})">
+            ${w.done ? '✓' : ''}
+          </button>
+          <span class="wish-title">${escHtml(w.title)}</span>
+          <button class="delete-btn" onclick="deleteWish('${w.id}')">✕</button>
+        </div>
+      `).join('')
+    }
+
+    async function addWish() {
+      const input = document.getElementById('new-title')
+      const title = input.value.trim()
+      if (!title) return
+      const { data } = await _sb.from('wishes').insert({
+        title,
+        category: currentCategory,
+        done: false
+      }).select().single()
+      if (data) {
+        wishes.push(data)
+        renderList()
+        input.value = ''
+      }
+    }
+
+    async function toggleDone(id, current) {
+      await _sb.from('wishes').update({ done: !current }).eq('id', id)
+      wishes = wishes.map(w => w.id === id ? { ...w, done: !current } : w)
+      renderList()
+    }
+
+    async function deleteWish(id) {
+      await _sb.from('wishes').delete().eq('id', id)
+      wishes = wishes.filter(w => w.id !== id)
+      renderList()
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    }
+
+    document.getElementById('new-title').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addWish()
+    })
+
+    loadWishes()
+  </script>
+</body>
+</html>
