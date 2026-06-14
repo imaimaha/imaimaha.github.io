@@ -269,15 +269,32 @@
         return
       }
       list.innerHTML = wishes.map(w => `
-        <div class="wish-item ${w.done ? 'done' : ''}" id="item-${w.id}">
-          <button class="check-btn ${w.done ? 'checked' : ''}" onclick="toggleDone('${w.id}', ${w.done})">
+        <div class="wish-item ${w.done ? 'done' : ''}" data-id="${w.id}" data-done="${w.done}">
+          <button class="check-btn ${w.done ? 'checked' : ''}" data-action="check" data-id="${w.id}" data-done="${w.done}">
             ${w.done ? '✓' : ''}
           </button>
           <span class="wish-title">${escHtml(w.title)}</span>
-          <button class="delete-btn" onclick="deleteWish('${w.id}')">✕</button>
+          <button class="delete-btn" data-action="delete" data-id="${w.id}">✕</button>
         </div>
       `).join('')
     }
+
+    document.getElementById('wish-list').addEventListener('click', e => {
+      const btn = e.target.closest('[data-action]')
+      if (!btn) return
+      const id = btn.dataset.id
+      if (btn.dataset.action === 'check') {
+        const done = btn.dataset.done === 'true'
+        wishes = wishes.map(w => w.id === id ? { ...w, done: !done } : w)
+        renderList()
+        _sb.from('wishes').update({ done: !done }).eq('id', id)
+      }
+      if (btn.dataset.action === 'delete') {
+        wishes = wishes.filter(w => w.id !== id)
+        renderList()
+        _sb.from('wishes').delete().eq('id', id)
+      }
+    })
 
     async function addWish() {
       const input = document.getElementById('new-title')
@@ -293,18 +310,6 @@
         renderList()
         input.value = ''
       }
-    }
-
-    async function toggleDone(id, current) {
-      wishes = wishes.map(w => w.id === id ? { ...w, done: !current } : w)
-      renderList()
-      _sb.from('wishes').update({ done: !current }).eq('id', id)
-    }
-
-    async function deleteWish(id) {
-      wishes = wishes.filter(w => w.id !== id)
-      renderList()
-      _sb.from('wishes').delete().eq('id', id)
     }
 
     function escHtml(str) {
