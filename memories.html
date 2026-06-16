@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>思い出アルバム | ふたりの場所</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      background-attachment: fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+      position: relative; z-index: 1;
+    }
+
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #e8f4fd; }
+
+    .top-right { display: flex; align-items: center; gap: 8px; }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(150,200,255,0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      color: #e8f4fd;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.1); border: 1.5px solid rgba(150,200,255,0.3); color: #98bedd;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+    }
+
+    .content { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px; position: relative; z-index: 1; }
+
+    .upload-area {
+      background: rgba(255,255,255,0.08);
+      border: 2px dashed rgba(100,180,255,0.4);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 32px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      backdrop-filter: blur(4px);
+    }
+
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: rgba(100,200,255,0.8);
+      background: rgba(255,255,255,0.12);
+    }
+
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .upload-area p { color: #98bedd; font-size: 0.95rem; }
+    .upload-area span { font-size: 0.8rem; color: #5a7fa8; }
+
+    .preview-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .preview-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 90px;
+    }
+
+    .preview-thumb {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid rgba(100,180,255,0.4);
+    }
+
+    .preview-memo-input {
+      width: 125%;
+      margin-left: -12.5%;
+      font-size: 16px;
+      padding: 4px 6px;
+      border: 1.5px solid rgba(100,180,255,0.3);
+      border-radius: 6px;
+      text-align: center;
+      font-family: inherit;
+      color: #e8f4fd;
+      outline: none;
+      background: rgba(255,255,255,0.08);
+      transform: scale(0.72);
+      transform-origin: top center;
+    }
+
+    .preview-memo-input:focus { border-color: rgba(100,200,255,0.8); background: rgba(255,255,255,0.14); }
+    .preview-memo-input::placeholder { color: #5a7fa8; }
+
+    .count-label { font-size: 0.85rem; color: #64b5f6; margin-top: 4px; }
+
+    .upload-btn {
+      margin-top: 12px;
+      padding: 10px 28px;
+      background: #3d7ab5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-btn:hover { background: #2d6a9f; }
+    .upload-btn:disabled { background: rgba(100,150,200,0.3); cursor: not-allowed; color: #5a7fa8; }
+
+    .progress {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #64b5f6;
+    }
+
+    .gallery-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.5rem;
+      color: #e8f4fd;
+      margin-bottom: 20px;
+      padding-left: 12px;
+      border-left: 4px solid #5ba3d0;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .photo-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+
+    .photo-card:hover { transform: translateY(-4px); }
+
+    .photo-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .photo-info { padding: 8px 12px 10px; }
+
+    .photo-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .photo-uploader { font-size: 0.78rem; color: #8d6e63; }
+    .photo-memo { font-size: 0.85rem; color: #5d4037; margin-bottom: 4px; }
+    .photo-date { font-size: 0.72rem; color: #bcaaa4; }
+
+    .delete-photo-btn {
+      background: none; border: none; color: #d7ccc8;
+      cursor: pointer; font-size: 1rem; padding: 4px;
+      transition: color 0.2s; flex-shrink: 0;
+    }
+    .delete-photo-btn:hover { color: #ef9a9a; }
+
+    .lightbox {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox.open { display: flex; }
+
+    .lightbox-img-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%; height: 100%;
+    }
+
+    .lightbox img {
+      max-width: 88vw; max-height: 85vh;
+      border-radius: 8px; object-fit: contain;
+      user-select: none; -webkit-user-drag: none;
+    }
+
+    .lightbox-close {
+      position: absolute; top: 16px; right: 20px;
+      color: #fff; font-size: 2rem;
+      cursor: pointer; background: none; border: none; line-height: 1;
+    }
+
+    .lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.15); border: none; color: #fff;
+      font-size: 2rem; width: 48px; height: 64px;
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.28); }
+    .lightbox-nav.prev { left: 12px; }
+    .lightbox-nav.next { right: 12px; }
+    .lightbox-nav:disabled { opacity: 0.2; cursor: default; }
+
+    .lightbox-counter {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.6); font-size: 0.85rem;
+    }
+
+    .empty { text-align: center; color: #5a7fa8; padding: 40px 0; }
+
+    @media (max-width: 480px) {
+      .gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .photo-card img { height: 140px; }
+      .content { padding: 16px 12px 60px; }
+      .top-bar { padding: 12px 14px; }
+      .top-bar h1 { font-size: 1.15rem; }
+      .user-badge .user-name { display: none; }
+      .lightbox-nav { display: none; }
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>思い出アルバム</h1>
+    <div class="top-right">
+      <div class="user-badge" id="user-badge" style="display:none">
+        <span id="user-emoji-badge"></span>
+        <span class="user-name" id="user-name-badge"></span>
+      </div>
+      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <div class="upload-icon">📸</div>
+      <p>写真をクリックまたはドラッグ＆ドロップ</p>
+      <span>JPG・PNG・HEIC対応 / 複数選択OK</span>
+      <div class="preview-area" id="preview-area"></div>
+      <div class="count-label" id="count-label"></div>
+      <div><button class="upload-btn" id="upload-btn" onclick="event.stopPropagation();uploadPhotos()" disabled>アップロード</button></div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <h2 class="gallery-title">📷 思い出</h2>
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button class="lightbox-nav prev" id="lb-prev" onclick="lbNav(-1)">‹</button>
+    <div class="lightbox-img-wrap" onclick="closeLightbox()">
+      <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+    </div>
+    <button class="lightbox-nav next" id="lb-next" onclick="lbNav(1)">›</button>
+    <div class="lightbox-counter" id="lb-counter"></div>
+  </div>
+
+  <script>
+    let selectedFiles = []
+    let photoUrls = []
+    let currentPhotoIndex = 0
+    let profiles = []
+
+    async function loadProfile() {
+      const { data: { session } } = await _sb.auth.getSession()
+      const { data } = await _sb.from('profiles').select('*')
+      if (!data) return
+      profiles = data
+      const me = data.find(p => p.id === session.user.id)
+      if (me) {
+        document.getElementById('user-emoji-badge').textContent = me.emoji
+        document.getElementById('user-name-badge').textContent  = me.name
+        document.getElementById('user-badge').style.display = 'flex'
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault()
+      document.getElementById('upload-area').classList.remove('drag-over')
+      const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))
+      if (files.length) handleFiles(files)
+    }
+
+    function handleFiles(fileList) {
+      selectedFiles = Array.from(fileList)
+      const area = document.getElementById('preview-area')
+      area.innerHTML = ''
+      selectedFiles.forEach((file, i) => {
+        const item = document.createElement('div')
+        item.className = 'preview-item'
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.className = 'preview-memo-input'
+        input.placeholder = 'コメント...'
+        input.dataset.index = i
+        input.addEventListener('click', e => e.stopPropagation())
+        const reader = new FileReader()
+        reader.onload = e => {
+          const img = document.createElement('img')
+          img.src = e.target.result
+          img.className = 'preview-thumb'
+          item.appendChild(img)
+          item.appendChild(input)
+          area.appendChild(item)
+        }
+        reader.readAsDataURL(file)
+      })
+      document.getElementById('count-label').textContent = `${selectedFiles.length}枚選択中`
+      document.getElementById('upload-btn').disabled = false
+    }
+
+    async function uploadPhotos() {
+      if (!selectedFiles.length) return
+      const btn = document.getElementById('upload-btn')
+      const progress = document.getElementById('progress')
+      btn.disabled = true
+      progress.style.display = 'block'
+
+      const { data: { session } } = await _sb.auth.getSession()
+      const userId = session.user.id
+      const memoInputs = document.querySelectorAll('.preview-memo-input')
+
+      let done = 0
+      for (let i = 0; i < selectedFiles.length; i++) {
+        progress.textContent = `アップロード中... ${done + 1} / ${selectedFiles.length}`
+        const file = selectedFiles[i]
+        const memo = memoInputs[i]?.value.trim() || ''
+        const ext = file.name.split('.').pop()
+        const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`
+        const { error } = await _sb.storage.from('memories').upload(path, file)
+        if (error) { console.error('upload error:', error); continue }
+        await _sb.from('photos').insert({ path, memo })
+        done++
+      }
+
+      selectedFiles = []
+      document.getElementById('preview-area').innerHTML = ''
+      document.getElementById('count-label').textContent = ''
+      document.getElementById('upload-btn').disabled = true
+      progress.textContent = `${done}枚アップロード完了！`
+      setTimeout(() => { progress.style.display = 'none' }, 2000)
+      loadPhotos()
+    }
+
+    async function loadPhotos() {
+      const gallery = document.getElementById('gallery')
+      gallery.innerHTML = ''
+
+      const { data } = await _sb.from('photos').select('*').order('created_at', { ascending: false })
+      if (!data || data.length === 0) {
+        gallery.innerHTML = '<div class="empty">まだ写真がありません ✨</div>'
+        return
+      }
+
+      photoUrls = []
+      const urlResults = await Promise.all(
+        data.map(photo => _sb.storage.from('memories').createSignedUrl(photo.path, 3600))
+      )
+
+      data.forEach((photo, i) => {
+        const urlData = urlResults[i]?.data
+        if (!urlData) return
+        const url = urlData.signedUrl
+        photoUrls.push(url)
+
+        const uploaderId = photo.path.split('/')[0]
+        const uploader = profiles.find(p => p.id === uploaderId)
+        const uploaderHtml = uploader ? `<span class="photo-uploader">${uploader.emoji} ${escHtml(uploader.name)}</span>` : ''
+
+        const card = document.createElement('div')
+        card.className = 'photo-card'
+        const date = new Date(photo.created_at).toLocaleDateString('ja-JP')
+        const idx = photoUrls.length - 1
+        card.innerHTML = `
+          <img src="${url}" alt="${escHtml(photo.memo || '')}" onclick="openLightbox(${idx})">
+          <div class="photo-info">
+            ${photo.memo ? `<div class="photo-memo">${escHtml(photo.memo)}</div>` : ''}
+            <div class="photo-top-row">
+              ${uploaderHtml}
+              <span class="photo-date">${date}</span>
+              <button class="delete-photo-btn" data-id="${photo.id}" data-path="${escHtml(photo.path)}">✕</button>
+            </div>
+          </div>
+        `
+        gallery.appendChild(card)
+      })
+    }
+
+    document.getElementById('gallery').addEventListener('click', async e => {
+      const btn = e.target.closest('.delete-photo-btn')
+      if (!btn) return
+      if (!confirm('この写真を削除しますか？')) return
+      const id = btn.dataset.id
+      const path = btn.dataset.path
+      await _sb.storage.from('memories').remove([path])
+      await _sb.from('photos').delete().eq('id', id)
+      loadPhotos()
+    })
+
+    function openLightbox(index) {
+      currentPhotoIndex = index
+      updateLightbox()
+      document.getElementById('lightbox').classList.add('open')
+    }
+
+    function updateLightbox() {
+      document.getElementById('lightbox-img').src = photoUrls[currentPhotoIndex]
+      document.getElementById('lb-counter').textContent = `${currentPhotoIndex + 1} / ${photoUrls.length}`
+      document.getElementById('lb-prev').disabled = currentPhotoIndex === 0
+      document.getElementById('lb-next').disabled = currentPhotoIndex === photoUrls.length - 1
+    }
+
+    function lbNav(dir) {
+      const next = currentPhotoIndex + dir
+      if (next >= 0 && next < photoUrls.length) { currentPhotoIndex = next; updateLightbox() }
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open')
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return
+      if (e.key === 'ArrowLeft') lbNav(-1)
+      if (e.key === 'ArrowRight') lbNav(1)
+      if (e.key === 'Escape') closeLightbox()
+    })
+
+    let touchStartX = 0
+    const lb = document.getElementById('lightbox')
+    lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX }, { passive: true })
+    lb.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - touchStartX
+      if (Math.abs(diff) > 50) lbNav(diff > 0 ? -1 : 1)
+    })
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    loadProfile().then(() => loadPhotos())
+  </script>
+</body>
+</html>
