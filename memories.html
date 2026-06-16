@@ -37,6 +37,24 @@
     .top-bar a { color: #8d6e63; text-decoration: none; font-size: 0.9rem; }
     .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #5d4037; }
 
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff;
+      border: 2px solid #e8ddd5;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      color: #5d4037;
+    }
+
     .logout-btn {
       background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
       padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
@@ -62,41 +80,9 @@
     }
 
     .upload-area input { display: none; }
-
     .upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
-
     .upload-area p { color: #8d6e63; font-size: 0.95rem; }
     .upload-area span { font-size: 0.8rem; color: #bcaaa4; }
-
-    .memo-input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid #e8ddd5;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      color: #4a3f35;
-      margin-top: 12px;
-      outline: none;
-    }
-
-    .memo-input:focus { border-color: #a5d6a7; }
-
-    .upload-btn {
-      margin-top: 12px;
-      padding: 10px 28px;
-      background: #81c784;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .upload-btn:hover { background: #66bb6a; }
-    .upload-btn:disabled { background: #c8e6c9; cursor: not-allowed; }
 
     .preview-area {
       display: flex;
@@ -124,7 +110,7 @@
 
     .preview-memo-input {
       width: 100%;
-      font-size: 0.72rem;
+      font-size: 16px;
       padding: 4px 6px;
       border: 1.5px solid #e8ddd5;
       border-radius: 6px;
@@ -133,14 +119,37 @@
       color: #4a3f35;
       outline: none;
       background: #fafafa;
+      transform: scale(0.72);
+      transform-origin: top center;
+      width: 125%;
+      margin-left: -12.5%;
     }
 
     .preview-memo-input:focus { border-color: #a5d6a7; background: #fff; }
 
-    .count-label {
+    .count-label { font-size: 0.85rem; color: #81c784; margin-top: 4px; }
+
+    .upload-btn {
+      margin-top: 12px;
+      padding: 10px 28px;
+      background: #81c784;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-btn:hover { background: #66bb6a; }
+    .upload-btn:disabled { background: #c8e6c9; cursor: not-allowed; }
+
+    .progress {
+      display: none;
+      margin-top: 8px;
       font-size: 0.85rem;
       color: #81c784;
-      margin-top: 4px;
     }
 
     /* ギャラリー */
@@ -177,19 +186,31 @@
     }
 
     .photo-info {
-      padding: 10px 12px;
+      padding: 8px 12px 10px;
+    }
+
+    .photo-top-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 4px;
     }
 
-    .photo-memo { font-size: 0.85rem; color: #8d6e63; flex: 1; }
-    .photo-date { font-size: 0.75rem; color: #bcaaa4; }
+    .photo-uploader {
+      font-size: 0.78rem;
+      color: #a1887f;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .photo-memo { font-size: 0.85rem; color: #5d4037; margin-bottom: 2px; }
+    .photo-date { font-size: 0.72rem; color: #bcaaa4; }
 
     .delete-photo-btn {
       background: none; border: none; color: #d7ccc8;
       cursor: pointer; font-size: 1rem; padding: 4px;
-      transition: color 0.2s;
+      transition: color 0.2s; flex-shrink: 0;
     }
     .delete-photo-btn:hover { color: #ef9a9a; }
 
@@ -198,7 +219,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.88);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -206,27 +227,69 @@
 
     .lightbox.open { display: flex; }
 
+    .lightbox-img-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
     .lightbox img {
-      max-width: 90vw;
-      max-height: 90vh;
+      max-width: 88vw;
+      max-height: 85vh;
       border-radius: 8px;
       object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     .lightbox-close {
       position: absolute;
-      top: 20px; right: 24px;
+      top: 16px; right: 20px;
       color: #fff; font-size: 2rem;
       cursor: pointer; background: none; border: none;
+      line-height: 1;
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      font-size: 2rem;
+      width: 48px; height: 64px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .lightbox-nav:hover { background: rgba(255,255,255,0.28); }
+    .lightbox-nav.prev { left: 12px; }
+    .lightbox-nav.next { right: 12px; }
+    .lightbox-nav:disabled { opacity: 0.2; cursor: default; }
+
+    .lightbox-counter {
+      position: absolute;
+      bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
     }
 
     .empty { text-align: center; color: #bcaaa4; padding: 40px 0; }
 
-    .progress {
-      display: none;
-      margin-top: 8px;
-      font-size: 0.85rem;
-      color: #81c784;
+    @media (max-width: 480px) {
+      .gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .photo-card img { height: 140px; }
+      .content { padding: 16px 12px 60px; }
+      .top-bar { padding: 12px 14px; }
+      .top-bar h1 { font-size: 1.15rem; }
+      .user-badge .user-name { display: none; }
+      .lightbox-nav { display: none; }
     }
   </style>
 </head>
@@ -235,7 +298,13 @@
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>思い出アルバム</h1>
-    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+    <div class="top-right">
+      <div class="user-badge" id="user-badge" style="display:none">
+        <span id="user-emoji-badge"></span>
+        <span class="user-name" id="user-name-badge"></span>
+      </div>
+      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+    </div>
   </div>
 
   <div class="content">
@@ -257,13 +326,36 @@
     <div class="gallery" id="gallery"></div>
   </div>
 
-  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox" id="lightbox">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-    <img id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav prev" id="lb-prev" onclick="lbNav(-1)">‹</button>
+    <div class="lightbox-img-wrap" onclick="closeLightbox()">
+      <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+    </div>
+    <button class="lightbox-nav next" id="lb-next" onclick="lbNav(1)">›</button>
+    <div class="lightbox-counter" id="lb-counter"></div>
   </div>
 
   <script>
     let selectedFiles = []
+    let photoUrls = []
+    let currentPhotoIndex = 0
+    let profiles = []
+    let myProfile = null
+
+    // プロフィール読み込み
+    async function loadProfile() {
+      const { data: { session } } = await _sb.auth.getSession()
+      const { data } = await _sb.from('profiles').select('*')
+      if (!data) return
+      profiles = data
+      myProfile = data.find(p => p.id === session.user.id)
+      if (myProfile) {
+        document.getElementById('user-emoji-badge').textContent = myProfile.emoji
+        document.getElementById('user-name-badge').textContent  = myProfile.name
+        document.getElementById('user-badge').style.display = 'flex'
+      }
+    }
 
     function handleDrop(e) {
       e.preventDefault()
@@ -336,38 +428,50 @@
 
     async function loadPhotos() {
       const gallery = document.getElementById('gallery')
-      const { data } = await _sb
-        .from('photos')
-        .select('*')
-        .order('created_at', { ascending: false })
+      gallery.innerHTML = ''
+
+      const { data } = await _sb.from('photos').select('*').order('created_at', { ascending: false })
 
       if (!data || data.length === 0) {
         gallery.innerHTML = '<div class="empty">まだ写真がありません 🌿</div>'
         return
       }
 
-      gallery.innerHTML = ''
-      for (const photo of data) {
-        const { data: urlData } = await _sb.storage
-          .from('memories')
-          .createSignedUrl(photo.path, 3600)
+      photoUrls = []
 
-        if (!urlData) continue
+      const urlResults = await Promise.all(
+        data.map(photo => _sb.storage.from('memories').createSignedUrl(photo.path, 3600))
+      )
+
+      data.forEach((photo, i) => {
+        const urlData = urlResults[i]?.data
+        if (!urlData) return
         const url = urlData.signedUrl
+        photoUrls.push(url)
+
+        const uploaderId = photo.path.split('/')[0]
+        const uploader = profiles.find(p => p.id === uploaderId)
+        const uploaderHtml = uploader
+          ? `<span class="photo-uploader">${uploader.emoji} ${escHtml(uploader.name)}</span>`
+          : ''
 
         const card = document.createElement('div')
         card.className = 'photo-card'
         const date = new Date(photo.created_at).toLocaleDateString('ja-JP')
+        const idx = photoUrls.length - 1
         card.innerHTML = `
-          <img src="${url}" alt="${escHtml(photo.memo || '')}" onclick="openLightbox('${url}')">
+          <img src="${url}" alt="${escHtml(photo.memo || '')}" onclick="openLightbox(${idx})">
           <div class="photo-info">
-            <span class="photo-memo">${escHtml(photo.memo || '')}</span>
-            <span class="photo-date">${date}</span>
-            <button class="delete-photo-btn" data-id="${photo.id}" data-path="${escHtml(photo.path)}">✕</button>
+            ${photo.memo ? `<div class="photo-memo">${escHtml(photo.memo)}</div>` : ''}
+            <div class="photo-top-row">
+              ${uploaderHtml}
+              <span class="photo-date">${date}</span>
+              <button class="delete-photo-btn" data-id="${photo.id}" data-path="${escHtml(photo.path)}">✕</button>
+            </div>
           </div>
         `
         gallery.appendChild(card)
-      }
+      })
     }
 
     document.getElementById('gallery').addEventListener('click', async e => {
@@ -381,20 +485,53 @@
       loadPhotos()
     })
 
-    function openLightbox(url) {
-      document.getElementById('lightbox-img').src = url
+    function openLightbox(index) {
+      currentPhotoIndex = index
+      updateLightbox()
       document.getElementById('lightbox').classList.add('open')
+    }
+
+    function updateLightbox() {
+      document.getElementById('lightbox-img').src = photoUrls[currentPhotoIndex]
+      document.getElementById('lb-counter').textContent = `${currentPhotoIndex + 1} / ${photoUrls.length}`
+      document.getElementById('lb-prev').disabled = currentPhotoIndex === 0
+      document.getElementById('lb-next').disabled = currentPhotoIndex === photoUrls.length - 1
+    }
+
+    function lbNav(dir) {
+      const next = currentPhotoIndex + dir
+      if (next >= 0 && next < photoUrls.length) {
+        currentPhotoIndex = next
+        updateLightbox()
+      }
     }
 
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('open')
     }
 
+    // キーボード操作
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return
+      if (e.key === 'ArrowLeft')  lbNav(-1)
+      if (e.key === 'ArrowRight') lbNav(1)
+      if (e.key === 'Escape')     closeLightbox()
+    })
+
+    // スワイプ操作
+    let touchStartX = 0
+    const lb = document.getElementById('lightbox')
+    lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX }, { passive: true })
+    lb.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - touchStartX
+      if (Math.abs(diff) > 50) lbNav(diff > 0 ? -1 : 1)
+    })
+
     function escHtml(str) {
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
-    loadPhotos()
+    loadProfile().then(() => loadPhotos())
   </script>
 </body>
 </html>
