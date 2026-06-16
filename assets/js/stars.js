@@ -2,19 +2,19 @@
   const container = document.querySelector('.clouds')
   if (!container) return
 
-  // 降り星 80個（キラキラ）
-  for (let i = 0; i < 80; i++) {
+  // きらめく固定星 55個（移動なし）
+  for (let i = 0; i < 55; i++) {
     const s = document.createElement('div')
     s.className = 'star'
     const size = Math.random() * 3.5 + 0.5
     const isBright = Math.random() < 0.25
     s.style.cssText = [
-      `left:${(Math.random() * 110 - 5).toFixed(1)}%`,
-      `top:${(Math.random() * 110 - 5).toFixed(1)}%`,
+      `left:${(Math.random() * 100).toFixed(1)}%`,
+      `top:${(Math.random() * 100).toFixed(1)}%`,
       `width:${size.toFixed(1)}px`,
       `height:${size.toFixed(1)}px`,
-      `animation-delay:${(Math.random() * 12).toFixed(2)}s`,
-      `animation-duration:${(Math.random() * 6 + 5).toFixed(1)}s`,
+      `animation-delay:${(Math.random() * 8).toFixed(2)}s`,
+      `animation-duration:${(Math.random() * 3 + 2).toFixed(1)}s`,
       isBright
         ? `box-shadow:0 0 ${(size*3).toFixed(0)}px ${(size*2).toFixed(0)}px rgba(200,230,255,0.9)`
         : `box-shadow:0 0 ${(size*2).toFixed(0)}px rgba(180,220,255,0.5)`,
@@ -47,7 +47,7 @@
       `left:${(Math.random() * 75).toFixed(1)}%`,
       `top:${(Math.random() * 45).toFixed(1)}%`,
       `animation-delay:${(i * 4 + Math.random() * 5).toFixed(1)}s`,
-      `animation-duration:${(Math.random() * 1.0 + 0.6).toFixed(2)}s`,
+      `animation-duration:${(Math.random() * 1.0 + 5.6).toFixed(2)}s`,
     ].join(';')
     container.appendChild(s)
   }

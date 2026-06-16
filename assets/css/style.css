@@ -23,19 +23,12 @@ body {
   overflow: hidden;
 }
 
-/* 降り星 */
+/* 固定星（動かないきらめき） */
 .star {
   position: absolute;
   border-radius: 50%;
   background: #fff;
-  animation: fall-star linear infinite;
-}
-
-@keyframes fall-star {
-  0%   { transform: translateY(-10px) translateX(0);   opacity: 0; }
-  8%   { opacity: 0.9; }
-  92%  { opacity: 0.6; }
-  100% { transform: translateY(105vh) translateX(12px); opacity: 0; }
+  animation: twinkle ease-in-out infinite alternate;
 }
 
 /* きらめく固定星 */
