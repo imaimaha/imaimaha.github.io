@@ -21,7 +21,7 @@
 
     body {
       font-family: 'Noto Sans JP', sans-serif;
-      background-color: #f0ebe3;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed; background-attachment: fixed;
       color: #4a3f35;
       min-height: 100vh;
     }
@@ -31,11 +31,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 24px;
-      background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%); backdrop-filter: blur(4px);
     }
 
-    .top-bar a { color: #8d6e63; text-decoration: none; font-size: 0.9rem; }
-    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #5d4037; }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #e8f4fd; }
 
     .logout-btn {
       background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
@@ -356,8 +356,11 @@
       margin-bottom: 10px;
     }
   </style>
+  <style>.clouds{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}</style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js"></script>
 
   <div class="top-bar">
     <a href="/">← もどる</a>
