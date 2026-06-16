@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ふたりの予定 | ふたりの場所</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f0ebe3;
+      color: #4a3f35;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+    }
+
+    .top-bar a { color: #8d6e63; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #5d4037; }
+
+    .logout-btn {
+      background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+    }
+
+    .content {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* カレンダーナビ */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .cal-nav button {
+      background: #fff;
+      border: 2px solid #e8ddd5;
+      border-radius: 50%;
+      width: 36px; height: 36px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #8d6e63;
+      transition: background 0.2s;
+    }
+
+    .cal-nav button:hover { background: #f1f8f1; }
+
+    .cal-month {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.4rem;
+      color: #5d4037;
+    }
+
+    /* カレンダーグリッド */
+    .cal-grid {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #e8f5e9;
+    }
+
+    .cal-weekday {
+      text-align: center;
+      padding: 10px 0;
+      font-size: 0.8rem;
+      color: #8d6e63;
+      font-weight: bold;
+    }
+
+    .cal-weekday:first-child { color: #ef9a9a; }
+    .cal-weekday:last-child  { color: #90caf9; }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .cal-day {
+      min-height: 64px;
+      border-top: 1px solid #f0ebe3;
+      border-right: 1px solid #f0ebe3;
+      padding: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .cal-day:nth-child(7n) { border-right: none; }
+
+    .cal-day:hover { background: #f9fbe7; }
+
+    .cal-day.other-month { opacity: 0.3; pointer-events: none; }
+
+    .cal-day.today .day-num {
+      background: #81c784;
+      color: #fff;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .cal-day.has-anniversary .day-num::after {
+      content: '💕';
+      position: absolute;
+      font-size: 0.6rem;
+      top: 2px; right: 2px;
+    }
+
+    .day-num {
+      font-size: 0.85rem;
+      color: #5d4037;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .cal-day:nth-child(7n+1) .day-num { color: #ef9a9a; }
+    .cal-day:nth-child(7n) .day-num   { color: #90caf9; }
+
+    .day-events {
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .day-event-dot {
+      font-size: 0.7rem;
+      background: #c8e6c9;
+      color: #5d4037;
+      border-radius: 4px;
+      padding: 1px 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* イベントリスト */
+    .events-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem;
+      color: #5d4037;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 4px solid #a5d6a7;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .event-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .event-date-badge {
+      background: #e8f5e9;
+      border-radius: 10px;
+      padding: 8px 12px;
+      text-align: center;
+      min-width: 52px;
+      flex-shrink: 0;
+    }
+
+    .event-date-month { font-size: 0.7rem; color: #8d6e63; }
+    .event-date-day   { font-size: 1.3rem; font-weight: bold; color: #5d4037; line-height: 1; }
+
+    .event-info { flex: 1; }
+    .event-title { font-size: 0.95rem; color: #4a3f35; }
+    .event-memo  { font-size: 0.8rem; color: #a1887f; margin-top: 2px; }
+
+    .event-past { opacity: 0.45; }
+
+    .delete-event-btn {
+      background: none; border: none; color: #d7ccc8;
+      cursor: pointer; font-size: 1rem; padding: 4px;
+      transition: color 0.2s;
+    }
+    .delete-event-btn:hover { color: #ef9a9a; }
+
+    .empty { text-align: center; color: #bcaaa4; padding: 32px 0; }
+
+    /* モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      width: min(400px, 90vw);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .modal h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.2rem;
+      color: #5d4037;
+      margin-bottom: 20px;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 0.85rem;
+      color: #8d6e63;
+      margin-bottom: 6px;
+    }
+
+    .modal input, .modal textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e8ddd5;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #4a3f35;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal input:focus, .modal textarea:focus { border-color: #a5d6a7; }
+    .modal textarea { resize: none; height: 72px; }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      background: #fff;
+      border: 2px solid #e8ddd5;
+      border-radius: 10px;
+      color: #8d6e63;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .btn-save {
+      padding: 10px 24px;
+      background: #81c784;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-save:hover { background: #66bb6a; }
+
+    /* 記念日マーク */
+    .anniversary-row {
+      background: #fff9e6;
+      border: 2px solid #ffe082;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>ふたりの予定</h1>
+    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+  </div>
+
+  <div class="content">
+    <div class="cal-nav">
+      <button onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="cal-month"></div>
+      <button onclick="changeMonth(1)">›</button>
+    </div>
+
+    <div class="cal-grid">
+      <div class="cal-weekdays">
+        <div class="cal-weekday">日</div>
+        <div class="cal-weekday">月</div>
+        <div class="cal-weekday">火</div>
+        <div class="cal-weekday">水</div>
+        <div class="cal-weekday">木</div>
+        <div class="cal-weekday">金</div>
+        <div class="cal-weekday">土</div>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+
+    <h2 class="events-title">📅 予定リスト</h2>
+    <div class="event-list" id="event-list"></div>
+  </div>
+
+  <!-- 追加モーダル -->
+  <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h3 id="modal-title">予定を追加</h3>
+      <label>タイトル</label>
+      <input type="text" id="ev-title" placeholder="どこ行く？なにする？" maxlength="60">
+      <label>日付</label>
+      <input type="date" id="ev-date">
+      <label>メモ（任意）</label>
+      <textarea id="ev-memo" placeholder="集合場所・時間など"></textarea>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-save" onclick="saveEvent()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ANNIVERSARY = new Date('2025-11-22')
+    let currentYear  = new Date().getFullYear()
+    let currentMonth = new Date().getMonth()
+    let events = []
+
+    async function loadEvents() {
+      const { data } = await _sb
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true })
+      events = data || []
+      renderCalendar()
+      renderEventList()
+    }
+
+    function renderCalendar() {
+      const monthEl = document.getElementById('cal-month')
+      monthEl.textContent = `${currentYear}年 ${currentMonth + 1}月`
+
+      const daysEl = document.getElementById('cal-days')
+      daysEl.innerHTML = ''
+
+      const today = new Date()
+      const firstDay = new Date(currentYear, currentMonth, 1)
+      const lastDay  = new Date(currentYear, currentMonth + 1, 0)
+      const startDow = firstDay.getDay()
+
+      // 前月の日を埋める
+      for (let i = 0; i < startDow; i++) {
+        const d = new Date(currentYear, currentMonth, -startDow + i + 1)
+        daysEl.appendChild(makeDay(d, true))
+      }
+      // 今月の日
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(currentYear, currentMonth, d)
+        daysEl.appendChild(makeDay(date, false))
+      }
+      // 次月の日を埋める（6行になるよう）
+      const total = startDow + lastDay.getDate()
+      const remaining = total % 7 === 0 ? 0 : 7 - (total % 7)
+      for (let i = 1; i <= remaining; i++) {
+        const d = new Date(currentYear, currentMonth + 1, i)
+        daysEl.appendChild(makeDay(d, true))
+      }
+    }
+
+    function makeDay(date, otherMonth) {
+      const cell = document.createElement('div')
+      cell.className = 'cal-day' + (otherMonth ? ' other-month' : '')
+
+      const today = new Date()
+      if (!otherMonth &&
+          date.getFullYear() === today.getFullYear() &&
+          date.getMonth() === today.getMonth() &&
+          date.getDate() === today.getDate()) {
+        cell.classList.add('today')
+      }
+
+      // 記念日チェック（月/日が11/22）
+      if (date.getMonth() === 10 && date.getDate() === 22) {
+        cell.classList.add('has-anniversary')
+      }
+
+      const dateStr = toDateStr(date)
+      const dayEvents = events.filter(e => e.date === dateStr)
+
+      const numEl = document.createElement('div')
+      numEl.className = 'day-num'
+      numEl.textContent = date.getDate()
+      cell.appendChild(numEl)
+
+      if (dayEvents.length > 0) {
+        const dotsEl = document.createElement('div')
+        dotsEl.className = 'day-events'
+        dayEvents.slice(0, 2).forEach(ev => {
+          const dot = document.createElement('div')
+          dot.className = 'day-event-dot'
+          dot.textContent = ev.title
+          dotsEl.appendChild(dot)
+        })
+        cell.appendChild(dotsEl)
+      }
+
+      if (!otherMonth) {
+        cell.onclick = () => openModal(dateStr)
+      }
+
+      return cell
+    }
+
+    function renderEventList() {
+      const list = document.getElementById('event-list')
+      list.innerHTML = ''
+
+      const today = toDateStr(new Date())
+
+      // 記念日を今年/来年分挿入
+      const anniversaries = []
+      for (let y = currentYear - 1; y <= currentYear + 1; y++) {
+        anniversaries.push({ date: `${y}-11-22`, title: '💕 記念日', memo: '11/22', anniversary: true })
+      }
+
+      const allEvents = [...anniversaries, ...events]
+        .filter(e => e.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 20)
+
+      if (allEvents.length === 0) {
+        list.innerHTML = '<div class="empty">まだ予定がありません 🌿</div>'
+        return
+      }
+
+      allEvents.forEach(ev => {
+        const d = new Date(ev.date + 'T00:00:00')
+        const month = d.getMonth() + 1
+        const day   = d.getDate()
+
+        const item = document.createElement('div')
+        item.className = ev.anniversary ? 'anniversary-row' : 'event-item' + (ev.date < today ? ' event-past' : '')
+
+        item.innerHTML = `
+          <div class="event-date-badge">
+            <div class="event-date-month">${month}月</div>
+            <div class="event-date-day">${day}</div>
+          </div>
+          <div class="event-info">
+            <div class="event-title">${escHtml(ev.title)}</div>
+            ${ev.memo ? `<div class="event-memo">${escHtml(ev.memo)}</div>` : ''}
+          </div>
+          ${ev.id ? `<button class="delete-event-btn" data-id="${ev.id}">✕</button>` : ''}
+        `
+        list.appendChild(item)
+      })
+    }
+
+    document.getElementById('event-list').addEventListener('click', async e => {
+      const btn = e.target.closest('.delete-event-btn')
+      if (!btn) return
+      if (!confirm('この予定を削除しますか？')) return
+      const id = btn.dataset.id
+      events = events.filter(ev => String(ev.id) !== id)
+      renderCalendar()
+      renderEventList()
+      await _sb.from('events').delete().eq('id', id)
+    })
+
+    function changeMonth(delta) {
+      currentMonth += delta
+      if (currentMonth < 0)  { currentMonth = 11; currentYear-- }
+      if (currentMonth > 11) { currentMonth = 0;  currentYear++ }
+      renderCalendar()
+      renderEventList()
+    }
+
+    let pendingDate = ''
+
+    function openModal(dateStr) {
+      pendingDate = dateStr
+      document.getElementById('ev-date').value = dateStr
+      document.getElementById('ev-title').value = ''
+      document.getElementById('ev-memo').value = ''
+      document.getElementById('modal').classList.add('open')
+      setTimeout(() => document.getElementById('ev-title').focus(), 50)
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open')
+    }
+
+    async function saveEvent() {
+      const title = document.getElementById('ev-title').value.trim()
+      const date  = document.getElementById('ev-date').value
+      const memo  = document.getElementById('ev-memo').value.trim()
+      if (!title || !date) return
+
+      const { data } = await _sb.from('events').insert({ title, date, memo: memo || null }).select().single()
+      if (data) {
+        events.push(data)
+        events.sort((a, b) => a.date.localeCompare(b.date))
+        renderCalendar()
+        renderEventList()
+      }
+      closeModal()
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal()
+    })
+
+    document.getElementById('ev-title').addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveEvent()
+    })
+
+    function toDateStr(d) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    loadEvents()
+  </script>
+</body>
+</html>

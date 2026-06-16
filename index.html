@@ -38,6 +38,7 @@
         <img src="assets/images/memories/ginza_01.jpg" alt="銀座の思い出" class="hero-photo">
         <div class="photo-label">📍 銀座エリザベート</div>
       </div>
+      <div class="anniversary-badge" id="anniversary-badge"></div>
     </div>
   </header>
 
@@ -58,10 +59,10 @@
 
     <section id="schedule" class="section">
       <h2 class="section-title">つぎの予定</h2>
-      <div class="schedule-card">
-        <div class="schedule-date">📅 予定を入れよう</div>
-        <p class="schedule-desc">まだ予定がありません</p>
-      </div>
+      <a href="/calendar.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:1.5rem;margin-bottom:8px">📅 🗓️ 🌙 ☀️</div>
+        <div id="next-event-preview" style="font-size:0.95rem;color:#8d6e63">2人の予定を管理しよう →</div>
+      </a>
     </section>
 
     <section id="wishlist" class="section">
@@ -76,6 +77,43 @@
   <footer>
     <p>🌿 ふたりだけの小さな世界</p>
   </footer>
+
+  <script>
+    // 記念日カウンター
+    const START = new Date('2025-11-22')
+    function updateAnniversary() {
+      const now = new Date()
+      const days = Math.floor((now - START) / 86400000)
+      const next = new Date(START)
+      next.setFullYear(now.getFullYear())
+      if (next <= now) next.setFullYear(now.getFullYear() + 1)
+      const daysToNext = Math.ceil((next - now) / 86400000)
+      const badge = document.getElementById('anniversary-badge')
+      if (badge) badge.innerHTML = `
+        <span class="ann-days">${days}</span><span class="ann-label">日</span>
+        <span class="ann-sub">次の記念日まで あと ${daysToNext} 日</span>
+      `
+    }
+    updateAnniversary()
+
+    // トップページ：次の予定をプレビュー表示
+    async function loadNextEvent() {
+      const today = new Date().toISOString().split('T')[0]
+      const { data } = await _sb
+        .from('events')
+        .select('title, date')
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(1)
+      const el = document.getElementById('next-event-preview')
+      if (el && data && data.length > 0) {
+        const d = new Date(data[0].date + 'T00:00:00')
+        const label = d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
+        el.textContent = `📅 ${label} ${data[0].title} →`
+      }
+    }
+    loadNextEvent()
+  </script>
 
 </body>
 </html>
