@@ -98,12 +98,26 @@
     .upload-btn:hover { background: #66bb6a; }
     .upload-btn:disabled { background: #c8e6c9; cursor: not-allowed; }
 
-    .preview-img {
-      max-width: 200px;
-      max-height: 150px;
-      border-radius: 8px;
+    .preview-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
       margin-top: 12px;
-      display: none;
+    }
+
+    .preview-thumb {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #c8e6c9;
+    }
+
+    .count-label {
+      font-size: 0.85rem;
+      color: #81c784;
+      margin-top: 4px;
     }
 
     /* ギャラリー */
@@ -206,14 +220,15 @@
       ondragover="event.preventDefault();this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
       ondrop="handleDrop(event)">
-      <input type="file" id="file-input" accept="image/*" onchange="handleFile(this.files[0])">
+      <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
       <div class="upload-icon">📸</div>
       <p>写真をクリックまたはドラッグ＆ドロップ</p>
-      <span>JPG・PNG・HEIC対応 / 最大50MB</span>
-      <img id="preview" class="preview-img">
-      <input type="text" class="memo-input" id="memo-input" placeholder="ひとことメモ（任意）" onclick="event.stopPropagation()">
-      <div><button class="upload-btn" id="upload-btn" onclick="event.stopPropagation();uploadPhoto()" disabled>アップロード</button></div>
-      <div class="progress" id="progress">アップロード中...</div>
+      <span>JPG・PNG・HEIC対応 / 複数選択OK</span>
+      <div class="preview-area" id="preview-area"></div>
+      <div class="count-label" id="count-label"></div>
+      <input type="text" class="memo-input" id="memo-input" placeholder="ひとことメモ（任意・全枚共通）" onclick="event.stopPropagation()">
+      <div><button class="upload-btn" id="upload-btn" onclick="event.stopPropagation();uploadPhotos()" disabled>アップロード</button></div>
+      <div class="progress" id="progress"></div>
     </div>
 
     <h2 class="gallery-title">📷 思い出</h2>
@@ -226,30 +241,35 @@
   </div>
 
   <script>
-    let selectedFile = null
+    let selectedFiles = []
 
     function handleDrop(e) {
       e.preventDefault()
       document.getElementById('upload-area').classList.remove('drag-over')
-      const file = e.dataTransfer.files[0]
-      if (file && file.type.startsWith('image/')) handleFile(file)
+      const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'))
+      if (files.length) handleFiles(files)
     }
 
-    function handleFile(file) {
-      if (!file) return
-      selectedFile = file
-      const reader = new FileReader()
-      reader.onload = e => {
-        const preview = document.getElementById('preview')
-        preview.src = e.target.result
-        preview.style.display = 'block'
-      }
-      reader.readAsDataURL(file)
+    function handleFiles(fileList) {
+      selectedFiles = Array.from(fileList)
+      const area = document.getElementById('preview-area')
+      area.innerHTML = ''
+      selectedFiles.forEach(file => {
+        const reader = new FileReader()
+        reader.onload = e => {
+          const img = document.createElement('img')
+          img.src = e.target.result
+          img.className = 'preview-thumb'
+          area.appendChild(img)
+        }
+        reader.readAsDataURL(file)
+      })
+      document.getElementById('count-label').textContent = `${selectedFiles.length}枚選択中`
       document.getElementById('upload-btn').disabled = false
     }
 
-    async function uploadPhoto() {
-      if (!selectedFile) return
+    async function uploadPhotos() {
+      if (!selectedFiles.length) return
       const btn = document.getElementById('upload-btn')
       const progress = document.getElementById('progress')
       btn.disabled = true
@@ -257,30 +277,26 @@
 
       const { data: { session } } = await _sb.auth.getSession()
       const userId = session.user.id
-      const ext = selectedFile.name.split('.').pop()
-      const path = `${userId}/${Date.now()}.${ext}`
+      const memo = document.getElementById('memo-input').value.trim()
 
-      const { error: uploadError } = await _sb.storage
-        .from('memories')
-        .upload(path, selectedFile)
-
-      if (uploadError) {
-        console.error('upload error:', uploadError)
-        progress.textContent = 'アップロード失敗: ' + uploadError.message
-        btn.disabled = false
-        return
+      let done = 0
+      for (const file of selectedFiles) {
+        progress.textContent = `アップロード中... ${done + 1} / ${selectedFiles.length}`
+        const ext = file.name.split('.').pop()
+        const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`
+        const { error } = await _sb.storage.from('memories').upload(path, file)
+        if (error) { console.error('upload error:', error); continue }
+        await _sb.from('photos').insert({ path, memo })
+        done++
       }
 
-      const memo = document.getElementById('memo-input').value.trim()
-      await _sb.from('photos').insert({ path, memo })
-
-      // リセット
-      selectedFile = null
-      document.getElementById('preview').style.display = 'none'
-      document.getElementById('preview').src = ''
+      selectedFiles = []
+      document.getElementById('preview-area').innerHTML = ''
+      document.getElementById('count-label').textContent = ''
       document.getElementById('memo-input').value = ''
       document.getElementById('upload-btn').disabled = true
-      progress.style.display = 'none'
+      progress.textContent = `${done}枚アップロード完了！`
+      setTimeout(() => { progress.style.display = 'none' }, 2000)
 
       loadPhotos()
     }

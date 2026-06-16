@@ -381,8 +381,10 @@
       <h3 id="modal-title">予定を追加</h3>
       <label>タイトル</label>
       <input type="text" id="ev-title" placeholder="どこ行く？なにする？" maxlength="60">
-      <label>日付</label>
+      <label>開始日</label>
       <input type="date" id="ev-date">
+      <label>終了日（任意・複数日の場合）</label>
+      <input type="date" id="ev-date-end">
       <label>メモ（任意）</label>
       <textarea id="ev-memo" placeholder="集合場所・時間など"></textarea>
       <div class="modal-btns">
@@ -457,7 +459,7 @@
       }
 
       const dateStr = toDateStr(date)
-      const dayEvents = events.filter(e => e.date === dateStr)
+      const dayEvents = events.filter(e => e.date <= dateStr && (e.date_end || e.date) >= dateStr)
 
       const numEl = document.createElement('div')
       numEl.className = 'day-num'
@@ -510,13 +512,21 @@
         const month = d.getMonth() + 1
         const day   = d.getDate()
 
+        let dateLabel = `${month}月`
+        let dayLabel  = `${day}`
+        if (ev.date_end && ev.date_end !== ev.date) {
+          const de = new Date(ev.date_end + 'T00:00:00')
+          dayLabel = `${day}〜${de.getDate()}`
+          if (de.getMonth() + 1 !== month) dateLabel = `${month}/${day}〜${de.getMonth()+1}/${de.getDate()}`
+        }
+
         const item = document.createElement('div')
         item.className = ev.anniversary ? 'anniversary-row' : 'event-item' + (ev.date < today ? ' event-past' : '')
 
         item.innerHTML = `
           <div class="event-date-badge">
-            <div class="event-date-month">${month}月</div>
-            <div class="event-date-day">${day}</div>
+            <div class="event-date-month">${dateLabel}</div>
+            <div class="event-date-day" style="font-size:${dayLabel.length > 3 ? '0.9rem' : '1.3rem'}">${dayLabel}</div>
           </div>
           <div class="event-info">
             <div class="event-title">${escHtml(ev.title)}</div>
@@ -552,6 +562,7 @@
     function openModal(dateStr) {
       pendingDate = dateStr
       document.getElementById('ev-date').value = dateStr
+      document.getElementById('ev-date-end').value = ''
       document.getElementById('ev-title').value = ''
       document.getElementById('ev-memo').value = ''
       document.getElementById('modal').classList.add('open')
@@ -563,12 +574,14 @@
     }
 
     async function saveEvent() {
-      const title = document.getElementById('ev-title').value.trim()
-      const date  = document.getElementById('ev-date').value
-      const memo  = document.getElementById('ev-memo').value.trim()
+      const title   = document.getElementById('ev-title').value.trim()
+      const date    = document.getElementById('ev-date').value
+      const dateEnd = document.getElementById('ev-date-end').value
+      const memo    = document.getElementById('ev-memo').value.trim()
       if (!title || !date) return
 
-      const { data } = await _sb.from('events').insert({ title, date, memo: memo || null }).select().single()
+      const payload = { title, date, memo: memo || null, date_end: dateEnd || null }
+      const { data } = await _sb.from('events').insert(payload).select().single()
       if (data) {
         events.push(data)
         events.sort((a, b) => a.date.localeCompare(b.date))
