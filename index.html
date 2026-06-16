@@ -88,10 +88,11 @@
       next.setFullYear(now.getFullYear())
       if (next <= now) next.setFullYear(now.getFullYear() + 1)
       const daysToNext = Math.ceil((next - now) / 86400000)
+      const nYear = next.getFullYear() - START.getFullYear()
       const badge = document.getElementById('anniversary-badge')
       if (badge) badge.innerHTML = `
         <span class="ann-days">${days}</span><span class="ann-label">日</span>
-        <span class="ann-sub">次の記念日まで あと ${daysToNext} 日</span>
+        <span class="ann-sub">${nYear}年記念日まで あと ${daysToNext} 日</span>
       `
     }
     updateAnniversary()
