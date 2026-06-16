@@ -101,18 +101,41 @@
     .preview-area {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
-      margin-top: 12px;
+      margin-top: 14px;
+    }
+
+    .preview-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 90px;
     }
 
     .preview-thumb {
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       object-fit: cover;
       border-radius: 8px;
       border: 2px solid #c8e6c9;
     }
+
+    .preview-memo-input {
+      width: 100%;
+      font-size: 0.72rem;
+      padding: 4px 6px;
+      border: 1.5px solid #e8ddd5;
+      border-radius: 6px;
+      text-align: center;
+      font-family: inherit;
+      color: #4a3f35;
+      outline: none;
+      background: #fafafa;
+    }
+
+    .preview-memo-input:focus { border-color: #a5d6a7; background: #fff; }
 
     .count-label {
       font-size: 0.85rem;
@@ -226,7 +249,6 @@
       <span>JPG・PNG・HEIC対応 / 複数選択OK</span>
       <div class="preview-area" id="preview-area"></div>
       <div class="count-label" id="count-label"></div>
-      <input type="text" class="memo-input" id="memo-input" placeholder="ひとことメモ（任意・全枚共通）" onclick="event.stopPropagation()">
       <div><button class="upload-btn" id="upload-btn" onclick="event.stopPropagation();uploadPhotos()" disabled>アップロード</button></div>
       <div class="progress" id="progress"></div>
     </div>
@@ -254,13 +276,23 @@
       selectedFiles = Array.from(fileList)
       const area = document.getElementById('preview-area')
       area.innerHTML = ''
-      selectedFiles.forEach(file => {
+      selectedFiles.forEach((file, i) => {
+        const item = document.createElement('div')
+        item.className = 'preview-item'
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.className = 'preview-memo-input'
+        input.placeholder = 'コメント...'
+        input.dataset.index = i
+        input.addEventListener('click', e => e.stopPropagation())
         const reader = new FileReader()
         reader.onload = e => {
           const img = document.createElement('img')
           img.src = e.target.result
           img.className = 'preview-thumb'
-          area.appendChild(img)
+          item.appendChild(img)
+          item.appendChild(input)
+          area.appendChild(item)
         }
         reader.readAsDataURL(file)
       })
@@ -277,11 +309,13 @@
 
       const { data: { session } } = await _sb.auth.getSession()
       const userId = session.user.id
-      const memo = document.getElementById('memo-input').value.trim()
+      const memoInputs = document.querySelectorAll('.preview-memo-input')
 
       let done = 0
-      for (const file of selectedFiles) {
+      for (let i = 0; i < selectedFiles.length; i++) {
         progress.textContent = `アップロード中... ${done + 1} / ${selectedFiles.length}`
+        const file = selectedFiles[i]
+        const memo = memoInputs[i]?.value.trim() || ''
         const ext = file.name.split('.').pop()
         const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`
         const { error } = await _sb.storage.from('memories').upload(path, file)
@@ -293,7 +327,6 @@
       selectedFiles = []
       document.getElementById('preview-area').innerHTML = ''
       document.getElementById('count-label').textContent = ''
-      document.getElementById('memo-input').value = ''
       document.getElementById('upload-btn').disabled = true
       progress.textContent = `${done}枚アップロード完了！`
       setTimeout(() => { progress.style.display = 'none' }, 2000)

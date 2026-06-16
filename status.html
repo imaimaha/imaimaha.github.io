@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日の帰宅 | ふたりの場所</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f0ebe3;
+      color: #4a3f35;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, #c8e6c9 0%, #f0ebe3 100%);
+    }
+
+    .top-bar a { color: #8d6e63; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #5d4037; }
+
+    .logout-btn {
+      background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+    }
+
+    .content {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ステータスカード */
+    .status-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .status-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    .status-card.mine {
+      border: 2px solid #a5d6a7;
+    }
+
+    .status-card.partner {
+      border: 2px solid #e8ddd5;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-emoji { font-size: 2rem; }
+
+    .card-name {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: #5d4037;
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      background: #a5d6a7;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 4px;
+    }
+
+    .status-time {
+      font-size: 2.2rem;
+      font-family: 'Zen Kurenaido', sans-serif;
+      color: #5d4037;
+      margin-bottom: 4px;
+    }
+
+    .status-time.unset { font-size: 1.1rem; color: #bcaaa4; }
+
+    .status-note {
+      font-size: 0.85rem;
+      color: #a1887f;
+      margin-bottom: 8px;
+      min-height: 20px;
+    }
+
+    .status-updated {
+      font-size: 0.72rem;
+      color: #d7ccc8;
+    }
+
+    .edit-btn {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: #f1f8f1;
+      border: 1.5px solid #a5d6a7;
+      color: #66bb6a;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    .edit-btn:hover { background: #e8f5e9; }
+
+    /* 編集フォーム */
+    .edit-form {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #f0ebe3;
+    }
+
+    .edit-form.open { display: block; }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .form-row label {
+      font-size: 0.82rem;
+      color: #8d6e63;
+      white-space: nowrap;
+      min-width: 56px;
+    }
+
+    .form-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e8ddd5;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      color: #4a3f35;
+      outline: none;
+    }
+
+    .form-row input:focus { border-color: #a5d6a7; }
+
+    .save-btn {
+      width: 100%;
+      padding: 10px;
+      background: #81c784;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .save-btn:hover { background: #66bb6a; }
+
+    /* 「行っていい？」ボタン */
+    .ask-section {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .ask-btn {
+      background: #fff;
+      border: 2px solid #f48fb1;
+      color: #e91e63;
+      padding: 14px 32px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 3px 10px rgba(233,30,99,0.1);
+    }
+
+    .ask-btn:hover { background: #fce4ec; transform: scale(1.03); }
+    .ask-btn:active { transform: scale(0.97); }
+
+    .ask-result {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #a1887f;
+      min-height: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .status-time { font-size: 1.9rem; }
+      .content { padding: 16px 14px 60px; }
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>今日の帰宅</h1>
+    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+  </div>
+
+  <div class="content">
+    <div class="status-cards" id="status-cards">
+      <div style="text-align:center;color:#bcaaa4;padding:40px 0">読み込み中...</div>
+    </div>
+
+    <div class="ask-section">
+      <button class="ask-btn" onclick="askOk()">🐾 行っていい？</button>
+      <div class="ask-result" id="ask-result"></div>
+    </div>
+  </div>
+
+  <script>
+    let myProfile = null
+    let partnerProfile = null
+    let myStatus = null
+
+    async function load() {
+      const { data: { session } } = await _sb.auth.getSession()
+      const myId = session.user.id
+
+      const [{ data: profiles }, { data: statuses }] = await Promise.all([
+        _sb.from('profiles').select('*'),
+        _sb.from('status').select('*')
+      ])
+
+      if (!profiles || profiles.length === 0) {
+        document.getElementById('status-cards').innerHTML =
+          '<div style="text-align:center;color:#bcaaa4;padding:40px 0">プロフィールが設定されていません</div>'
+        return
+      }
+
+      myProfile      = profiles.find(p => p.id === myId)
+      partnerProfile = profiles.find(p => p.id !== myId)
+      myStatus       = statuses?.find(s => s.user_id === myId)
+      const partnerStatus = statuses?.find(s => s.user_id !== myId)
+
+      const cards = document.getElementById('status-cards')
+      cards.innerHTML = ''
+      cards.appendChild(makeCard(myProfile, myStatus, true))
+      if (partnerProfile) cards.appendChild(makeCard(partnerProfile, partnerStatus, false))
+    }
+
+    function makeCard(profile, status, isMine) {
+      const card = document.createElement('div')
+      card.className = `status-card ${isMine ? 'mine' : 'partner'}`
+
+      const timeText  = status?.finish_time || ''
+      const noteText  = status?.note || ''
+      const updatedAt = status?.updated_at
+        ? new Date(status.updated_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + ' 更新'
+        : ''
+
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="card-emoji">${profile.emoji}</span>
+          <span class="card-name">${escHtml(profile.name)}${isMine ? '<span class="card-badge">自分</span>' : ''}</span>
+        </div>
+        <div class="status-time ${timeText ? '' : 'unset'}">${timeText ? timeText + ' 退社' : '未設定'}</div>
+        <div class="status-note">${escHtml(noteText)}</div>
+        <div class="status-updated">${updatedAt}</div>
+        ${isMine ? `
+          <button class="edit-btn" onclick="toggleEdit(this)">編集</button>
+          <div class="edit-form" id="edit-form">
+            <div class="form-row">
+              <label>退社時間</label>
+              <input type="time" id="input-time" value="${escHtml(timeText)}">
+            </div>
+            <div class="form-row">
+              <label>メモ</label>
+              <input type="text" id="input-note" placeholder="例：ちょっと遅れるかも" maxlength="40" value="${escHtml(noteText)}">
+            </div>
+            <button class="save-btn" onclick="saveStatus()">保存</button>
+          </div>
+        ` : ''}
+      `
+      return card
+    }
+
+    function toggleEdit(btn) {
+      const form = document.getElementById('edit-form')
+      form.classList.toggle('open')
+      btn.textContent = form.classList.contains('open') ? '閉じる' : '編集'
+    }
+
+    async function saveStatus() {
+      const finish_time = document.getElementById('input-time').value
+      const note        = document.getElementById('input-note').value.trim()
+      const { data: { session } } = await _sb.auth.getSession()
+      const user_id = session.user.id
+
+      await _sb.from('status').upsert({ user_id, finish_time, note, updated_at: new Date().toISOString() })
+      await load()
+    }
+
+    async function askOk() {
+      const result = document.getElementById('ask-result')
+      if (!partnerProfile) { result.textContent = 'パートナーのプロフィールが見つかりません'; return }
+      result.textContent = `${partnerProfile.emoji} ${partnerProfile.name} に「行っていい？」を送りました！（LINE通知は準備中）`
+      setTimeout(() => { result.textContent = '' }, 4000)
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    load()
+  </script>
+</body>
+</html>
