@@ -315,6 +315,7 @@
 
     async function init() {
       const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { window.location.href = '/login.html'; return }
       myId = session.user.id
 
       const [profRes, gaugeRes] = await Promise.all([
@@ -323,12 +324,18 @@
       ])
 
       profiles = profRes.data || []
+
+      // プロフィール未登録でもボタンが出るようフォールバック
+      if (!profiles.find(p => p.id === myId)) {
+        profiles = [{ id: myId, name: 'あなた', emoji: '✨' }, ...profiles]
+      }
+
       ;(gaugeRes.data || []).forEach(g => { gauges[g.user_id] = g.gauge })
 
       buildCards()
 
       const me = profiles.find(p => p.id === myId)
-      if (me) {
+      if (me && me.name !== 'あなた') {
         document.getElementById('user-emoji-badge').textContent = me.emoji
         document.getElementById('user-name-badge').textContent  = me.name
         document.getElementById('user-badge').style.display     = 'flex'
