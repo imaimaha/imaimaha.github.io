@@ -153,7 +153,7 @@
       const el = document.getElementById('miss-preview')
       try {
         const { data: profiles } = await _sb.from('profiles').select('*')
-        const { data: gauges }   = await _sb.from('miss_gauge').select('*')
+        const { data: gauges }   = await _sb.from('close_gauge').select('*')
         if (!profiles || profiles.length === 0) return
         const lines = profiles.map(p => {
           const g = gauges?.find(g => g.user_id === p.id)
