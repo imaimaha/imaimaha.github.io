@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
+  <title>会いたいゲージ | Notre Endroit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      background-attachment: fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+
+    .clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+
+    .top-bar {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+    }
+
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #e8f4fd; }
+
+    .logout-btn {
+      background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+    }
+
+    .top-right { display: flex; align-items: center; gap: 8px; }
+
+    .user-badge {
+      display: none; align-items: center; gap: 4px;
+      background: #fff; border: 2px solid #e8ddd5; border-radius: 20px;
+      padding: 4px 12px; font-size: 0.85rem; color: #5d4037;
+    }
+
+    main {
+      position: relative; z-index: 1;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    .page-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 2rem;
+      color: #e8f4fd;
+      text-align: center;
+      margin-bottom: 6px;
+      text-shadow: 0 0 24px rgba(255,150,180,0.5);
+    }
+
+    .page-sub {
+      text-align: center;
+      color: #98bedd;
+      font-size: 0.85rem;
+      margin-bottom: 36px;
+      letter-spacing: 0.05em;
+    }
+
+    .gauges { display: flex; flex-direction: column; gap: 20px; }
+
+    .gauge-card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      padding: 28px 24px 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .gauge-card.is-mine {
+      border-color: rgba(255,120,160,0.5);
+      background: rgba(255,80,130,0.08);
+      box-shadow: 0 8px 32px rgba(255,80,130,0.15);
+    }
+
+    .card-header {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-bottom: 20px;
+    }
+
+    .card-emoji { font-size: 2.8rem; line-height: 1; }
+
+    .card-name {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.2rem; color: #e8f4fd;
+    }
+
+    .hearts-grid {
+      display: flex; flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 16px;
+      min-height: 120px;
+      align-content: center;
+    }
+
+    .heart {
+      font-size: 1.7rem;
+      display: inline-block;
+      line-height: 1;
+    }
+
+    @keyframes heartpop {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.75); }
+      65%  { transform: scale(0.88); }
+      100% { transform: scale(1); }
+    }
+
+    .heart.pop { animation: heartpop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+    .gauge-mood {
+      font-size: 0.88rem;
+      color: #b8d8f8;
+      margin-bottom: 18px;
+      min-height: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    .miss-btn {
+      background: linear-gradient(135deg, #ff6b8a 0%, #ff3d6e 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 44px;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 22px rgba(255,60,110,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.06em;
+    }
+
+    .miss-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(255,60,110,0.55);
+    }
+
+    .miss-btn:active:not(:disabled) { transform: scale(0.94); }
+
+    .miss-btn:disabled {
+      background: linear-gradient(135deg, #7a4060, #6a3050);
+      box-shadow: none;
+      cursor: default;
+      opacity: 0.7;
+    }
+
+    .reset-btn {
+      display: block;
+      margin: 10px auto 0;
+      background: none; border: none;
+      font-size: 0.75rem; color: #4a6a88;
+      cursor: pointer; font-family: inherit;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .reset-btn:hover { color: #98bedd; }
+
+    @media (max-width: 420px) {
+      .heart { font-size: 1.45rem; }
+      .miss-btn { padding: 13px 32px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← もどる</a>
+    <h1>会いたいゲージ</h1>
+    <div class="top-right">
+      <div class="user-badge" id="user-badge">
+        <span id="user-emoji-badge"></span>
+        <span id="user-name-badge"></span>
+      </div>
+      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+    </div>
+  </div>
+
+  <main>
+    <p class="page-title">💕 会いたいゲージ</p>
+    <p class="page-sub">会いたいって思ったらボタンを押してね</p>
+    <div class="gauges" id="gauges"></div>
+  </main>
+
+  <script>
+    const HEARTS = 30
+
+    let myId    = null
+    let profiles = []
+    let gauges  = {}
+
+    function moodText(gauge, isMe) {
+      if (gauge === 0)  return isMe ? 'ボタンを押してゲージをためよう 🤍' : 'まだゲージがたまってないみたい 🤍'
+      if (gauge <= 30)  return isMe ? 'ちょっと会いたいかも 💕' : 'ちょっと会いたいって思ってるみたい 💕'
+      if (gauge <= 60)  return isMe ? '会いたいな〜 💕💕' : '会いたいって思ってるよ 💕💕'
+      if (gauge <= 99)  return isMe ? 'すごく会いたい！ 💕💕💕' : 'すごく会いたいって！ 💕💕💕'
+      return isMe ? 'もう限界！会いたい！ ❤️❤️❤️' : 'めちゃくちゃ会いたいって！ ❤️❤️❤️'
+    }
+
+    function renderHearts(gauge, container, animate) {
+      const filled    = Math.round(gauge / 100 * HEARTS)
+      const prevFilled = parseInt(container.dataset.filled || '0')
+      container.innerHTML     = ''
+      container.dataset.filled = filled
+
+      for (let i = 0; i < HEARTS; i++) {
+        const h = document.createElement('span')
+        h.className = 'heart' + (i < filled ? ' filled' : '')
+        h.textContent = i < filled ? '❤️' : '🤍'
+        if (animate && i < filled && i >= prevFilled) {
+          const delay = (i - prevFilled) * 55
+          setTimeout(() => h.classList.add('pop'), delay)
+        }
+        container.appendChild(h)
+      }
+    }
+
+    async function pressMiss() {
+      const newGauge = Math.min((gauges[myId] || 0) + 10, 100)
+      gauges[myId] = newGauge
+
+      const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
+      renderHearts(newGauge, card.querySelector('.hearts-grid'), true)
+      card.querySelector('.gauge-mood').textContent = moodText(newGauge, true)
+      if (newGauge >= 100) {
+        const btn = card.querySelector('.miss-btn')
+        btn.disabled = true
+        btn.textContent = '❤️ MAX！'
+      }
+
+      await _sb.from('miss_gauge')
+        .upsert({ user_id: myId, gauge: newGauge, updated_at: new Date().toISOString() })
+    }
+
+    async function resetGauge() {
+      if (!confirm('自分のゲージをリセットしますか？')) return
+      gauges[myId] = 0
+      const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
+      renderHearts(0, card.querySelector('.hearts-grid'), false)
+      card.querySelector('.gauge-mood').textContent = moodText(0, true)
+      const btn = card.querySelector('.miss-btn')
+      btn.disabled = false
+      btn.textContent = '会いたい！'
+      await _sb.from('miss_gauge')
+        .upsert({ user_id: myId, gauge: 0, updated_at: new Date().toISOString() })
+    }
+
+    function buildCards() {
+      const container = document.getElementById('gauges')
+      container.innerHTML = ''
+
+      const sorted = [...profiles].sort((a, b) => (a.id === myId ? -1 : 1))
+
+      sorted.forEach(p => {
+        const isMe   = p.id === myId
+        const gauge  = gauges[p.id] || 0
+        const filled = Math.round(gauge / 100 * HEARTS)
+
+        const card = document.createElement('div')
+        card.className  = 'gauge-card' + (isMe ? ' is-mine' : '')
+        card.dataset.uid = p.id
+
+        const heartsHtml = Array.from({ length: HEARTS }, (_, i) =>
+          `<span class="heart${i < filled ? ' filled' : ''}">${i < filled ? '❤️' : '🤍'}</span>`
+        ).join('')
+
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-emoji">${p.emoji}</span>
+            <span class="card-name">${p.name}${isMe ? '（あなた）' : ''}</span>
+          </div>
+          <div class="hearts-grid" data-filled="${filled}">${heartsHtml}</div>
+          <p class="gauge-mood">${moodText(gauge, isMe)}</p>
+          ${isMe ? `
+            <button class="miss-btn" onclick="pressMiss()"${gauge >= 100 ? ' disabled' : ''}>
+              ${gauge >= 100 ? '❤️ MAX！' : '会いたい！'}
+            </button>
+            <button class="reset-btn" onclick="resetGauge()">リセット</button>
+          ` : ''}
+        `
+        container.appendChild(card)
+      })
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      myId = session.user.id
+
+      const [profRes, gaugeRes] = await Promise.all([
+        _sb.from('profiles').select('*'),
+        _sb.from('miss_gauge').select('*')
+      ])
+
+      profiles = profRes.data || []
+      ;(gaugeRes.data || []).forEach(g => { gauges[g.user_id] = g.gauge })
+
+      buildCards()
+
+      const me = profiles.find(p => p.id === myId)
+      if (me) {
+        document.getElementById('user-emoji-badge').textContent = me.emoji
+        document.getElementById('user-name-badge').textContent  = me.name
+        document.getElementById('user-badge').style.display     = 'flex'
+      }
+
+      // 相手が押したらリアルタイムで反映
+      _sb.channel('miss-gauge-rt')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'miss_gauge' }, payload => {
+          const uid = payload.new?.user_id
+          if (!uid || uid === myId) return
+          gauges[uid] = payload.new.gauge
+          const card = document.querySelector(`.gauge-card[data-uid="${uid}"]`)
+          if (!card) return
+          renderHearts(gauges[uid], card.querySelector('.hearts-grid'), true)
+          card.querySelector('.gauge-mood').textContent = moodText(gauges[uid], false)
+        })
+        .subscribe()
+    }
+
+    init()
+  </script>
+</body>
+</html>

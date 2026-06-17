@@ -43,6 +43,7 @@
 
   <nav class="menu">
     <a href="#status"   class="menu-item">🕐 今日の帰宅</a>
+    <a href="#miss"     class="menu-item">💕 会いたいゲージ</a>
     <a href="#memories" class="menu-item">🌸 思い出</a>
     <a href="#schedule" class="menu-item">📅 予定</a>
     <a href="#wishlist" class="menu-item">✨ やりたいこと</a>
@@ -53,6 +54,14 @@
       <h2 class="section-title">今日の帰宅</h2>
       <a href="/status.html" style="display:block;background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
         <div id="status-preview" style="font-size:0.95rem;color:#8d6e63">読み込み中...</div>
+      </a>
+    </section>
+
+    <section id="miss" class="section">
+      <h2 class="section-title">会いたいゲージ</h2>
+      <a href="/miss.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:1.5rem;margin-bottom:8px">❤️ 🤍 ❤️ 🤍 ❤️</div>
+        <div id="miss-preview" style="font-size:0.95rem;color:#8d6e63">会いたい気持ちを共有しよう →</div>
       </a>
     </section>
 
@@ -138,6 +147,24 @@
       } catch { el.textContent = '今日の帰宅時間を共有しよう →' }
     }
     loadStatusPreview()
+
+    // 会いたいゲージプレビュー
+    async function loadMissPreview() {
+      const el = document.getElementById('miss-preview')
+      try {
+        const { data: profiles } = await _sb.from('profiles').select('*')
+        const { data: gauges }   = await _sb.from('miss_gauge').select('*')
+        if (!profiles || profiles.length === 0) return
+        const lines = profiles.map(p => {
+          const g = gauges?.find(g => g.user_id === p.id)
+          const filled = Math.round((g?.gauge || 0) / 100 * 5)
+          const hearts = '❤️'.repeat(filled) + '🤍'.repeat(5 - filled)
+          return `${p.emoji} ${hearts}`
+        })
+        el.textContent = lines.join('　　') + ' →'
+      } catch {}
+    }
+    loadMissPreview()
 
     // プロフィール絵文字をヒーローに反映
     async function loadHeroEmoji() {
