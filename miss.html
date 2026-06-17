@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
-  <title>会いたいゲージ | Notre Endroit</title>
+  <title>ゲージ | Notre Endroit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -67,7 +67,7 @@
       color: #e8f4fd;
       text-align: center;
       margin-bottom: 6px;
-      text-shadow: 0 0 24px rgba(255,150,180,0.5);
+      text-shadow: 0 0 24px rgba(150,200,255,0.5);
     }
 
     .page-sub {
@@ -91,9 +91,9 @@
     }
 
     .gauge-card.is-mine {
-      border-color: rgba(255,120,160,0.5);
-      background: rgba(255,80,130,0.08);
-      box-shadow: 0 8px 32px rgba(255,80,130,0.15);
+      border-color: rgba(100,180,255,0.4);
+      background: rgba(80,130,255,0.07);
+      box-shadow: 0 8px 32px rgba(80,130,255,0.12);
     }
 
     .card-header {
@@ -108,7 +108,7 @@
       font-size: 1.2rem; color: #e8f4fd;
     }
 
-    .hearts-grid {
+    .stars-grid {
       display: flex; flex-wrap: wrap;
       justify-content: center;
       gap: 5px;
@@ -117,20 +117,24 @@
       align-content: center;
     }
 
-    .heart {
+    .star-dot {
       font-size: 1.7rem;
       display: inline-block;
       line-height: 1;
+      opacity: 0.18;
+      transition: opacity 0.2s;
     }
 
-    @keyframes heartpop {
+    .star-dot.filled { opacity: 1; }
+
+    @keyframes starpop {
       0%   { transform: scale(1); }
       35%  { transform: scale(1.75); }
       65%  { transform: scale(0.88); }
       100% { transform: scale(1); }
     }
 
-    .heart.pop { animation: heartpop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+    .star-dot.pop { animation: starpop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
     .gauge-mood {
       font-size: 0.88rem;
@@ -140,8 +144,8 @@
       letter-spacing: 0.04em;
     }
 
-    .miss-btn {
-      background: linear-gradient(135deg, #ff6b8a 0%, #ff3d6e 100%);
+    .gauge-btn {
+      background: linear-gradient(135deg, #5b9bd5 0%, #3a7abf 100%);
       color: #fff;
       border: none;
       border-radius: 50px;
@@ -150,23 +154,23 @@
       font-size: 1.15rem;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 4px 22px rgba(255,60,110,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+      box-shadow: 0 4px 22px rgba(60,120,200,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
       transition: transform 0.15s, box-shadow 0.15s;
       letter-spacing: 0.06em;
     }
 
-    .miss-btn:hover:not(:disabled) {
+    .gauge-btn:hover:not(:disabled) {
       transform: translateY(-3px);
-      box-shadow: 0 8px 30px rgba(255,60,110,0.55);
+      box-shadow: 0 8px 30px rgba(60,120,200,0.55);
     }
 
-    .miss-btn:active:not(:disabled) { transform: scale(0.94); }
+    .gauge-btn:active:not(:disabled) { transform: scale(0.94); }
 
-    .miss-btn:disabled {
-      background: linear-gradient(135deg, #7a4060, #6a3050);
+    .gauge-btn:disabled {
+      background: linear-gradient(135deg, #3a5070, #2a4060);
       box-shadow: none;
       cursor: default;
-      opacity: 0.7;
+      opacity: 0.6;
     }
 
     .reset-btn {
@@ -182,8 +186,8 @@
     .reset-btn:hover { color: #98bedd; }
 
     @media (max-width: 420px) {
-      .heart { font-size: 1.45rem; }
-      .miss-btn { padding: 13px 32px; font-size: 1rem; }
+      .star-dot { font-size: 1.45rem; }
+      .gauge-btn { padding: 13px 32px; font-size: 1rem; }
     }
   </style>
 </head>
@@ -193,7 +197,7 @@
 
   <div class="top-bar">
     <a href="/">← もどる</a>
-    <h1>会いたいゲージ</h1>
+    <h1>✨ ゲージ</h1>
     <div class="top-right">
       <div class="user-badge" id="user-badge">
         <span id="user-emoji-badge"></span>
@@ -204,55 +208,55 @@
   </div>
 
   <main>
-    <p class="page-title">💕 会いたいゲージ</p>
-    <p class="page-sub">会いたいって思ったらボタンを押してね</p>
+    <p class="page-title">✨ ゲージ</p>
+    <p class="page-sub">気持ちをためよう</p>
     <div class="gauges" id="gauges"></div>
   </main>
 
   <script>
-    const HEARTS = 30
+    const STARS = 30
 
-    let myId    = null
+    let myId     = null
     let profiles = []
-    let gauges  = {}
+    let gauges   = {}
 
     function moodText(gauge, isMe) {
-      if (gauge === 0)  return isMe ? 'ボタンを押してゲージをためよう 🤍' : 'まだゲージがたまってないみたい 🤍'
-      if (gauge <= 30)  return isMe ? 'ちょっと会いたいかも 💕' : 'ちょっと会いたいって思ってるみたい 💕'
-      if (gauge <= 60)  return isMe ? '会いたいな〜 💕💕' : '会いたいって思ってるよ 💕💕'
-      if (gauge <= 99)  return isMe ? 'すごく会いたい！ 💕💕💕' : 'すごく会いたいって！ 💕💕💕'
-      return isMe ? 'もう限界！会いたい！ ❤️❤️❤️' : 'めちゃくちゃ会いたいって！ ❤️❤️❤️'
+      if (gauge === 0)  return isMe ? 'ボタンを押してためよう' : 'まだたまってないみたい'
+      if (gauge <= 30)  return isMe ? 'ちょっとたまってきた ✨' : 'ちょっとたまってるみたい ✨'
+      if (gauge <= 60)  return isMe ? 'たまってきたよ ✨✨' : 'たまってるよ ✨✨'
+      if (gauge <= 99)  return isMe ? 'かなりたまってる！ ✨✨✨' : 'かなりたまってるよ！ ✨✨✨'
+      return 'ゲージMAX！ ✨✨✨'
     }
 
-    function renderHearts(gauge, container, animate) {
-      const filled    = Math.round(gauge / 100 * HEARTS)
+    function renderStars(gauge, container, animate) {
+      const filled     = Math.round(gauge / 100 * STARS)
       const prevFilled = parseInt(container.dataset.filled || '0')
-      container.innerHTML     = ''
+      container.innerHTML      = ''
       container.dataset.filled = filled
 
-      for (let i = 0; i < HEARTS; i++) {
-        const h = document.createElement('span')
-        h.className = 'heart' + (i < filled ? ' filled' : '')
-        h.textContent = i < filled ? '❤️' : '🤍'
+      for (let i = 0; i < STARS; i++) {
+        const s = document.createElement('span')
+        s.className   = 'star-dot' + (i < filled ? ' filled' : '')
+        s.textContent = '✨'
         if (animate && i < filled && i >= prevFilled) {
           const delay = (i - prevFilled) * 55
-          setTimeout(() => h.classList.add('pop'), delay)
+          setTimeout(() => s.classList.add('pop'), delay)
         }
-        container.appendChild(h)
+        container.appendChild(s)
       }
     }
 
-    async function pressMiss() {
+    async function pressGauge() {
       const newGauge = Math.min((gauges[myId] || 0) + 10, 100)
       gauges[myId] = newGauge
 
       const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
-      renderHearts(newGauge, card.querySelector('.hearts-grid'), true)
+      renderStars(newGauge, card.querySelector('.stars-grid'), true)
       card.querySelector('.gauge-mood').textContent = moodText(newGauge, true)
       if (newGauge >= 100) {
-        const btn = card.querySelector('.miss-btn')
-        btn.disabled = true
-        btn.textContent = '❤️ MAX！'
+        const btn = card.querySelector('.gauge-btn')
+        btn.disabled    = true
+        btn.textContent = '✨ MAX！'
       }
 
       await _sb.from('miss_gauge')
@@ -260,14 +264,14 @@
     }
 
     async function resetGauge() {
-      if (!confirm('自分のゲージをリセットしますか？')) return
+      if (!confirm('ゲージをリセットしますか？')) return
       gauges[myId] = 0
       const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
-      renderHearts(0, card.querySelector('.hearts-grid'), false)
+      renderStars(0, card.querySelector('.stars-grid'), false)
       card.querySelector('.gauge-mood').textContent = moodText(0, true)
-      const btn = card.querySelector('.miss-btn')
-      btn.disabled = false
-      btn.textContent = '会いたい！'
+      const btn = card.querySelector('.gauge-btn')
+      btn.disabled    = false
+      btn.textContent = '✨ ためる'
       await _sb.from('miss_gauge')
         .upsert({ user_id: myId, gauge: 0, updated_at: new Date().toISOString() })
     }
@@ -281,14 +285,14 @@
       sorted.forEach(p => {
         const isMe   = p.id === myId
         const gauge  = gauges[p.id] || 0
-        const filled = Math.round(gauge / 100 * HEARTS)
+        const filled = Math.round(gauge / 100 * STARS)
 
         const card = document.createElement('div')
-        card.className  = 'gauge-card' + (isMe ? ' is-mine' : '')
+        card.className   = 'gauge-card' + (isMe ? ' is-mine' : '')
         card.dataset.uid = p.id
 
-        const heartsHtml = Array.from({ length: HEARTS }, (_, i) =>
-          `<span class="heart${i < filled ? ' filled' : ''}">${i < filled ? '❤️' : '🤍'}</span>`
+        const starsHtml = Array.from({ length: STARS }, (_, i) =>
+          `<span class="star-dot${i < filled ? ' filled' : ''}">✨</span>`
         ).join('')
 
         card.innerHTML = `
@@ -296,11 +300,11 @@
             <span class="card-emoji">${p.emoji}</span>
             <span class="card-name">${p.name}${isMe ? '（あなた）' : ''}</span>
           </div>
-          <div class="hearts-grid" data-filled="${filled}">${heartsHtml}</div>
+          <div class="stars-grid" data-filled="${filled}">${starsHtml}</div>
           <p class="gauge-mood">${moodText(gauge, isMe)}</p>
           ${isMe ? `
-            <button class="miss-btn" onclick="pressMiss()"${gauge >= 100 ? ' disabled' : ''}>
-              ${gauge >= 100 ? '❤️ MAX！' : '会いたい！'}
+            <button class="gauge-btn" onclick="pressGauge()"${gauge >= 100 ? ' disabled' : ''}>
+              ${gauge >= 100 ? '✨ MAX！' : '✨ ためる'}
             </button>
             <button class="reset-btn" onclick="resetGauge()">リセット</button>
           ` : ''}
@@ -330,7 +334,6 @@
         document.getElementById('user-badge').style.display     = 'flex'
       }
 
-      // 相手が押したらリアルタイムで反映
       _sb.channel('miss-gauge-rt')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'miss_gauge' }, payload => {
           const uid = payload.new?.user_id
@@ -338,7 +341,7 @@
           gauges[uid] = payload.new.gauge
           const card = document.querySelector(`.gauge-card[data-uid="${uid}"]`)
           if (!card) return
-          renderHearts(gauges[uid], card.querySelector('.hearts-grid'), true)
+          renderStars(gauges[uid], card.querySelector('.stars-grid'), true)
           card.querySelector('.gauge-mood').textContent = moodText(gauges[uid], false)
         })
         .subscribe()
