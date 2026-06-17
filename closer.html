@@ -25,170 +25,190 @@
       background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
       background-attachment: fixed;
       color: #e8f0fc;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 
+    /* ---------- top bar ---------- */
     .top-bar {
-      position: relative; z-index: 1;
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 30;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 24px;
-      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      padding: 14px 20px;
+      background: linear-gradient(180deg, rgba(10,22,40,0.9) 0%, transparent 100%);
       backdrop-filter: blur(4px);
     }
-
     .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
-    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #e8f4fd; }
-
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; }
     .logout-btn {
       background: #fff; border: 2px solid #e8ddd5; color: #8d6e63;
-      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+      padding: 5px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
     }
-
     .top-right { display: flex; align-items: center; gap: 8px; }
-
     .user-badge {
       display: none; align-items: center; gap: 4px;
       background: #fff; border: 2px solid #e8ddd5; border-radius: 20px;
-      padding: 4px 12px; font-size: 0.85rem; color: #5d4037;
+      padding: 4px 12px; font-size: 0.8rem; color: #5d4037;
     }
 
-    main {
-      position: relative; z-index: 1;
-      max-width: 540px;
-      margin: 0 auto;
-      padding: 32px 20px 80px;
+    /* ---------- floating emojis ---------- */
+    .float-emoji {
+      position: fixed;
+      font-size: 4rem;
+      cursor: pointer;
+      user-select: none;
+      z-index: 10;
+      filter: drop-shadow(0 0 14px rgba(200,230,255,0.4));
+      transition: filter 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .float-emoji:hover { filter: drop-shadow(0 0 22px rgba(255,220,100,0.7)); }
 
-    .page-title {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 2rem;
-      color: #e8f4fd;
+    @keyframes emojipop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.6) rotate(15deg); }
+      60%  { transform: scale(0.85) rotate(-8deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .float-emoji.pop { animation: emojipop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+
+    /* ---------- center display ---------- */
+    .closer-display {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
       text-align: center;
-      margin-bottom: 6px;
-      text-shadow: 0 0 24px rgba(150,200,255,0.5);
+      pointer-events: none;
     }
 
-    .page-sub {
-      text-align: center;
-      color: #98bedd;
-      font-size: 0.85rem;
-      margin-bottom: 36px;
-      letter-spacing: 0.05em;
-    }
-
-    .gauges { display: flex; flex-direction: column; gap: 20px; }
-
-    .gauge-card {
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px);
-      border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 28px;
-      padding: 28px 24px 24px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-
-    .gauge-card.is-mine {
-      border-color: rgba(100,180,255,0.4);
-      background: rgba(80,130,255,0.07);
-      box-shadow: 0 8px 32px rgba(80,130,255,0.12);
-    }
-
-    .card-header {
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; margin-bottom: 20px;
-    }
-
-    .card-emoji { font-size: 2.8rem; line-height: 1; }
-
-    .card-name {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.2rem; color: #e8f4fd;
-    }
-
-    .stars-grid {
-      display: flex; flex-wrap: wrap;
+    .closer-row {
+      display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 5px;
-      margin-bottom: 16px;
-      min-height: 120px;
-      align-content: center;
+      white-space: nowrap;
     }
 
-    .star-dot {
-      font-size: 1.7rem;
+    .closer-side { font-size: 3.2rem; transition: none; }
+
+    #closer-gap {
+      font-size: 1.2rem;
+      color: rgba(150,200,255,0.6);
+      letter-spacing: 0.05em;
+      transition: all 0.5s ease;
+      min-width: 4px;
+    }
+
+    .closer-label {
+      font-family: 'Zen Kurenaido', sans-serif;
+      color: rgba(150,200,255,0.45);
+      font-size: 0.8rem;
+      margin-top: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+
+    /* ---------- bottom buttons ---------- */
+    .btn-row {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 20;
+      display: flex;
+      gap: 14px;
+      padding: 20px 24px 36px;
+      background: linear-gradient(0deg, rgba(10,22,40,0.92) 0%, transparent 100%);
+      justify-content: center;
+    }
+
+    .view-btn {
+      background: rgba(255,255,255,0.09);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(150,200,255,0.3);
+      color: #e8f4fd;
+      padding: 13px 26px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .view-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
+    .view-btn:active { transform: scale(0.95); }
+
+    /* ---------- popup ---------- */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: linear-gradient(160deg, #0a0f1e 0%, #0b1830 50%, #0e2050 100%);
+      overflow: hidden;
+    }
+    .popup-overlay.open { display: block; }
+
+    .hearts-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 72px 16px 100px;
+    }
+
+    .ph {
+      font-size: 2rem;
       display: inline-block;
-      line-height: 1;
-      opacity: 0.18;
+      opacity: 0.1;
       transition: opacity 0.2s;
     }
+    .ph.on { opacity: 1; }
 
-    .star-dot.filled { opacity: 1; }
+    @keyframes heartburst {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.3) rotate(5deg);  opacity: 1; }
+      100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+    .ph.burst { animation: heartburst 0.4s cubic-bezier(0.36,0.07,0.19,0.97) forwards; }
 
-    @keyframes starpop {
-      0%   { transform: scale(1); }
-      35%  { transform: scale(1.75); }
-      65%  { transform: scale(0.88); }
-      100% { transform: scale(1); }
+    .popup-center-emoji {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 7rem;
+      z-index: 110;
+      pointer-events: none;
+      filter: drop-shadow(0 0 40px rgba(255,200,200,0.5));
+      animation: bigpulse 2.5s ease-in-out infinite;
+    }
+    @keyframes bigpulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50%       { transform: translate(-50%, -50%) scale(1.1); }
     }
 
-    .star-dot.pop { animation: starpop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-
-    .gauge-mood {
-      font-size: 0.88rem;
-      color: #b8d8f8;
-      margin-bottom: 18px;
-      min-height: 20px;
-      letter-spacing: 0.04em;
-    }
-
-    .gauge-btn {
-      background: linear-gradient(135deg, #5b9bd5 0%, #3a7abf 100%);
-      color: #fff;
-      border: none;
+    .popup-close {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 120;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: #e8f4fd;
+      padding: 13px 36px;
       border-radius: 50px;
-      padding: 15px 44px;
       font-family: inherit;
-      font-size: 1.15rem;
-      font-weight: bold;
+      font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 4px 22px rgba(60,120,200,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
-      transition: transform 0.15s, box-shadow 0.15s;
-      letter-spacing: 0.06em;
+      transition: background 0.2s;
     }
-
-    .gauge-btn:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 30px rgba(60,120,200,0.55);
-    }
-
-    .gauge-btn:active:not(:disabled) { transform: scale(0.94); }
-
-    .gauge-btn:disabled {
-      background: linear-gradient(135deg, #3a5070, #2a4060);
-      box-shadow: none;
-      cursor: default;
-      opacity: 0.6;
-    }
-
-    .reset-btn {
-      display: block;
-      margin: 10px auto 0;
-      background: none; border: none;
-      font-size: 0.75rem; color: #4a6a88;
-      cursor: pointer; font-family: inherit;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-
-    .reset-btn:hover { color: #98bedd; }
-
-    @media (max-width: 420px) {
-      .star-dot { font-size: 1.45rem; }
-      .gauge-btn { padding: 13px 32px; font-size: 1rem; }
-    }
+    .popup-close:hover { background: rgba(255,255,255,0.2); }
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
@@ -197,122 +217,150 @@
 
   <div class="top-bar">
     <a href="/">← もどる</a>
-    <h1>✨ ゲージ</h1>
+    <h1>✨ One Step Closer</h1>
     <div class="top-right">
       <div class="user-badge" id="user-badge">
-        <span id="user-emoji-badge"></span>
-        <span id="user-name-badge"></span>
+        <span id="ub-emoji"></span>
+        <span id="ub-name"></span>
       </div>
       <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
     </div>
   </div>
 
-  <main>
-    <p class="page-title">✨ ゲージ</p>
-    <p class="page-sub">気持ちをためよう</p>
-    <div class="gauges" id="gauges"></div>
-  </main>
+  <!-- floating emojis (position set by JS) -->
+  <div id="fox-float" class="float-emoji">🦊</div>
+  <div id="hed-float"  class="float-emoji">🦔</div>
+
+  <!-- center display -->
+  <div class="closer-display">
+    <div class="closer-row">
+      <span class="closer-side">🦊</span>
+      <span id="closer-gap"></span>
+      <span class="closer-side">🦔</span>
+    </div>
+    <p class="closer-label">one step closer</p>
+  </div>
+
+  <!-- bottom buttons -->
+  <div class="btn-row">
+    <button class="view-btn" onclick="openPopup('fox')">🦊の✨を見る</button>
+    <button class="view-btn" onclick="openPopup('hed')">🦔の✨を見る</button>
+  </div>
+
+  <!-- gauge popup -->
+  <div class="popup-overlay" id="popup">
+    <div class="hearts-wrap" id="popup-hearts"></div>
+    <div class="popup-center-emoji" id="popup-emoji"></div>
+    <button class="popup-close" onclick="closePopup()">閉じる</button>
+  </div>
 
   <script>
-    const STARS = 30
+    const POPUP_HEARTS = 60
 
-    let myId     = null
-    let profiles = []
-    let gauges   = {}
+    let myId       = null
+    let foxUid     = null
+    let hedUid     = null
+    let gauges     = { fox: 0, hed: 0 }
 
-    function moodText(gauge, isMe) {
-      if (gauge === 0)  return isMe ? 'ボタンを押してためよう' : 'まだたまってないみたい'
-      if (gauge <= 30)  return isMe ? 'ちょっとたまってきた ✨' : 'ちょっとたまってるみたい ✨'
-      if (gauge <= 60)  return isMe ? 'たまってきたよ ✨✨' : 'たまってるよ ✨✨'
-      if (gauge <= 99)  return isMe ? 'かなりたまってる！ ✨✨✨' : 'かなりたまってるよ！ ✨✨✨'
-      return 'ゲージMAX！ ✨✨✨'
+    // -------- floating animation --------
+    const fl = {
+      fox: { x: 12, y: 28, vx:  0.13, vy:  0.10 },
+      hed: { x: 68, y: 52, vx: -0.11, vy:  0.14 }
     }
 
-    function renderStars(gauge, container, animate) {
-      const filled     = Math.round(gauge / 100 * STARS)
-      const prevFilled = parseInt(container.dataset.filled || '0')
-      container.innerHTML      = ''
-      container.dataset.filled = filled
+    function animateFloat() {
+      const foxEl = document.getElementById('fox-float')
+      const hedEl = document.getElementById('hed-float')
+      const f = fl.fox, h = fl.hed
 
-      for (let i = 0; i < STARS; i++) {
-        const s = document.createElement('span')
-        s.className   = 'star-dot' + (i < filled ? ' filled' : '')
-        s.textContent = '✨'
-        if (animate && i < filled && i >= prevFilled) {
-          const delay = (i - prevFilled) * 55
-          setTimeout(() => s.classList.add('pop'), delay)
-        }
-        container.appendChild(s)
-      }
+      f.x += f.vx;  f.y += f.vy
+      if (f.x <= 3 || f.x >= 87) f.vx *= -1
+      if (f.y <= 12 || f.y >= 82) f.vy *= -1
+      foxEl.style.left = f.x + 'vw'
+      foxEl.style.top  = f.y + 'vh'
+
+      h.x += h.vx;  h.y += h.vy
+      if (h.x <= 3 || h.x >= 87) h.vx *= -1
+      if (h.y <= 12 || h.y >= 82) h.vy *= -1
+      hedEl.style.left = h.x + 'vw'
+      hedEl.style.top  = h.y + 'vh'
+
+      requestAnimationFrame(animateFloat)
     }
 
-    async function pressGauge() {
-      const newGauge = Math.min((gauges[myId] || 0) + 10, 100)
-      gauges[myId] = newGauge
+    // -------- distance display --------
+    const GAP_STEPS = 12
 
-      const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
-      renderStars(newGauge, card.querySelector('.stars-grid'), true)
-      card.querySelector('.gauge-mood').textContent = moodText(newGauge, true)
-      if (newGauge >= 100) {
-        const btn = card.querySelector('.gauge-btn')
-        btn.disabled    = true
-        btn.textContent = '✨ MAX！'
-      }
+    function updateDistance() {
+      const avg  = (gauges.fox + gauges.hed) / 2
+      const dots = Math.round(GAP_STEPS * (1 - avg / 100))
+      document.getElementById('closer-gap').textContent =
+        dots > 0 ? ' ' + '· '.repeat(dots).trimEnd() + ' ' : ' '
+    }
+
+    // -------- click handler --------
+    async function clickEmoji(type) {
+      const uid = type === 'fox' ? foxUid : hedUid
+      if (!uid) return
+
+      const cur      = gauges[type] || 0
+      const newGauge = Math.min(cur + 5, 100)
+      gauges[type]   = newGauge
+      updateDistance()
+
+      // pop animation
+      const el = document.getElementById(type === 'fox' ? 'fox-float' : 'hed-float')
+      el.classList.remove('pop')
+      void el.offsetWidth
+      el.classList.add('pop')
+      setTimeout(() => el.classList.remove('pop'), 400)
+
+      // jump to new position
+      setTimeout(() => {
+        const f  = fl[type]
+        f.x  = 8  + Math.random() * 76
+        f.y  = 14 + Math.random() * 64
+        f.vx = (0.08 + Math.random() * 0.14) * (Math.random() < .5 ? 1 : -1)
+        f.vy = (0.07 + Math.random() * 0.12) * (Math.random() < .5 ? 1 : -1)
+      }, 220)
 
       await _sb.from('closer_gauge')
-        .upsert({ user_id: myId, gauge: newGauge, updated_at: new Date().toISOString() })
+        .upsert({ user_id: uid, gauge: newGauge, updated_at: new Date().toISOString() })
     }
 
-    async function resetGauge() {
-      if (!confirm('ゲージをリセットしますか？')) return
-      gauges[myId] = 0
-      const card = document.querySelector(`.gauge-card[data-uid="${myId}"]`)
-      renderStars(0, card.querySelector('.stars-grid'), false)
-      card.querySelector('.gauge-mood').textContent = moodText(0, true)
-      const btn = card.querySelector('.gauge-btn')
-      btn.disabled    = false
-      btn.textContent = '✨ ためる'
-      await _sb.from('closer_gauge')
-        .upsert({ user_id: myId, gauge: 0, updated_at: new Date().toISOString() })
+    // -------- popup --------
+    function openPopup(type) {
+      const gauge  = gauges[type] || 0
+      const emoji  = type === 'fox' ? '🦊' : '🦔'
+      const filled = Math.round(gauge / 100 * POPUP_HEARTS)
+
+      const wrap = document.getElementById('popup-hearts')
+      wrap.innerHTML = ''
+      for (let i = 0; i < POPUP_HEARTS; i++) {
+        const h = document.createElement('span')
+        h.className   = 'ph'
+        h.textContent = '❤️'
+        wrap.appendChild(h)
+      }
+
+      // animate hearts in with delay
+      const spans = wrap.querySelectorAll('.ph')
+      for (let i = 0; i < filled; i++) {
+        const delay = i * 30
+        setTimeout(() => {
+          spans[i].classList.add('on', 'burst')
+        }, delay)
+      }
+
+      document.getElementById('popup-emoji').textContent = emoji
+      document.getElementById('popup').classList.add('open')
     }
 
-    function buildCards() {
-      const container = document.getElementById('gauges')
-      container.innerHTML = ''
-
-      const sorted = [...profiles].sort((a, b) => (a.id === myId ? -1 : 1))
-
-      sorted.forEach(p => {
-        const isMe   = p.id === myId
-        const gauge  = gauges[p.id] || 0
-        const filled = Math.round(gauge / 100 * STARS)
-
-        const card = document.createElement('div')
-        card.className   = 'gauge-card' + (isMe ? ' is-mine' : '')
-        card.dataset.uid = p.id
-
-        const starsHtml = Array.from({ length: STARS }, (_, i) =>
-          `<span class="star-dot${i < filled ? ' filled' : ''}">✨</span>`
-        ).join('')
-
-        card.innerHTML = `
-          <div class="card-header">
-            <span class="card-emoji">${p.emoji}</span>
-            <span class="card-name">${p.name}${isMe ? '（あなた）' : ''}</span>
-          </div>
-          <div class="stars-grid" data-filled="${filled}">${starsHtml}</div>
-          <p class="gauge-mood">${moodText(gauge, isMe)}</p>
-          ${isMe ? `
-            <button class="gauge-btn" onclick="pressGauge()"${gauge >= 100 ? ' disabled' : ''}>
-              ${gauge >= 100 ? '✨ MAX！' : '✨ ためる'}
-            </button>
-            <button class="reset-btn" onclick="resetGauge()">リセット</button>
-          ` : ''}
-        `
-        container.appendChild(card)
-      })
+    function closePopup() {
+      document.getElementById('popup').classList.remove('open')
     }
 
+    // -------- init --------
     async function init() {
       const { data: { session } } = await _sb.auth.getSession()
       if (!session) { window.location.href = '/login.html'; return }
@@ -323,35 +371,50 @@
         _sb.from('closer_gauge').select('*')
       ])
 
-      profiles = profRes.data || []
+      const profiles = profRes.data || []
 
-      // プロフィール未登録でもボタンが出るようフォールバック
-      if (!profiles.find(p => p.id === myId)) {
-        profiles = [{ id: myId, name: 'あなた', emoji: '✨' }, ...profiles]
+      // プロフィールの絵文字でfox/hedを判定
+      const foxProf = profiles.find(p => p.emoji === '🦊')
+      const hedProf = profiles.find(p => p.emoji === '🦔')
+      foxUid = foxProf?.id || profiles[0]?.id  || null
+      hedUid = hedProf?.id || profiles[1]?.id  || null
+
+      // 自分が🦊でも🦔でもない場合のフォールバック
+      if (!foxUid) foxUid = myId
+      if (!hedUid && profiles.find(p => p.id !== myId)) {
+        hedUid = profiles.find(p => p.id !== myId).id
       }
 
-      ;(gaugeRes.data || []).forEach(g => { gauges[g.user_id] = g.gauge })
+      ;(gaugeRes.data || []).forEach(g => {
+        if (g.user_id === foxUid) gauges.fox = g.gauge
+        if (g.user_id === hedUid) gauges.hed = g.gauge
+      })
 
-      buildCards()
+      // クリックイベントをUIDで紐付け
+      document.getElementById('fox-float').onclick = () => clickEmoji('fox')
+      document.getElementById('hed-float').onclick  = () => clickEmoji('hed')
+
+      updateDistance()
 
       const me = profiles.find(p => p.id === myId)
-      if (me && me.name !== 'あなた') {
-        document.getElementById('user-emoji-badge').textContent = me.emoji
-        document.getElementById('user-name-badge').textContent  = me.name
-        document.getElementById('user-badge').style.display     = 'flex'
+      if (me) {
+        document.getElementById('ub-emoji').textContent = me.emoji
+        document.getElementById('ub-name').textContent  = me.name
+        document.getElementById('user-badge').style.display = 'flex'
       }
 
-      _sb.channel('miss-gauge-rt')
+      // realtime
+      _sb.channel('closer-gauge-rt')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'closer_gauge' }, payload => {
           const uid = payload.new?.user_id
-          if (!uid || uid === myId) return
-          gauges[uid] = payload.new.gauge
-          const card = document.querySelector(`.gauge-card[data-uid="${uid}"]`)
-          if (!card) return
-          renderStars(gauges[uid], card.querySelector('.stars-grid'), true)
-          card.querySelector('.gauge-mood').textContent = moodText(gauges[uid], false)
+          const g   = payload.new?.gauge
+          if (uid === foxUid) gauges.fox = g
+          if (uid === hedUid) gauges.hed = g
+          updateDistance()
         })
         .subscribe()
+
+      animateFloat()
     }
 
     init()
