@@ -259,7 +259,7 @@
         btn.textContent = '✨ MAX！'
       }
 
-      await _sb.from('close_gauge')
+      await _sb.from('closer_gauge')
         .upsert({ user_id: myId, gauge: newGauge, updated_at: new Date().toISOString() })
     }
 
@@ -272,7 +272,7 @@
       const btn = card.querySelector('.gauge-btn')
       btn.disabled    = false
       btn.textContent = '✨ ためる'
-      await _sb.from('close_gauge')
+      await _sb.from('closer_gauge')
         .upsert({ user_id: myId, gauge: 0, updated_at: new Date().toISOString() })
     }
 
@@ -319,7 +319,7 @@
 
       const [profRes, gaugeRes] = await Promise.all([
         _sb.from('profiles').select('*'),
-        _sb.from('close_gauge').select('*')
+        _sb.from('closer_gauge').select('*')
       ])
 
       profiles = profRes.data || []
@@ -335,7 +335,7 @@
       }
 
       _sb.channel('miss-gauge-rt')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'close_gauge' }, payload => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'closer_gauge' }, payload => {
           const uid = payload.new?.user_id
           if (!uid || uid === myId) return
           gauges[uid] = payload.new.gauge
