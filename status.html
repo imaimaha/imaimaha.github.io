@@ -278,8 +278,11 @@
 
       const cards = document.getElementById('status-cards')
       cards.innerHTML = ''
-      cards.appendChild(makeCard(myProfile, myStatus, true))
+      if (myProfile) cards.appendChild(makeCard(myProfile, myStatus, true))
       if (partnerProfile) cards.appendChild(makeCard(partnerProfile, partnerStatus, false))
+      if (!myProfile && !partnerProfile) {
+        cards.innerHTML = '<div style="text-align:center;color:#bcaaa4;padding:40px 0">プロフィールが設定されていません</div>'
+      }
     }
 
     function makeCard(profile, status, isMine) {
