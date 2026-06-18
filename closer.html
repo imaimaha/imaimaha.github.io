@@ -59,7 +59,7 @@
       font-size: 4rem;
       cursor: pointer;
       user-select: none;
-      z-index: 10;
+      z-index: 25;
       filter: drop-shadow(0 0 14px rgba(200,230,255,0.4));
       transition: filter 0.2s;
       -webkit-tap-highlight-color: transparent;
@@ -279,7 +279,7 @@
 
       f.x += f.vx;  f.y += f.vy
       if (f.x <= 3 || f.x >= 87) f.vx *= -1
-      if (f.y <= 12 || f.y >= 82) f.vy *= -1
+      if (f.y <= 12 || f.y >= 68) f.vy *= -1
       foxEl.style.left = f.x + 'vw'
       foxEl.style.top  = f.y + 'vh'
 
