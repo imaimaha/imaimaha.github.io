@@ -412,17 +412,18 @@
         f.vy = (0.018 + Math.random() * 0.024) * (Math.random() < .5 ? 1 : -1)
       }, 220)
 
-      const uid = type === 'fox' ? foxUid : hedUid
-      if (!uid) return
+      // 自分の絵文字をタップしたときだけゲージを増やす
+      const myType = (myId === foxUid) ? 'fox' : (myId === hedUid) ? 'hed' : null
+      if (!myType || type !== myType) return
 
       const now      = new Date().toISOString()
-      const cur      = effective(type)
+      const cur      = effective(myType)
       const newGauge = Math.min(cur + 5, 100)
-      raw[type]      = { gauge: newGauge, updated_at: now }
+      raw[myType]    = { gauge: newGauge, updated_at: now }
       updateDistance()
 
       await _sb.from('closer_gauge')
-        .upsert({ user_id: uid, gauge: newGauge, updated_at: now })
+        .upsert({ user_id: myId, gauge: newGauge, updated_at: now })
     }
 
     // -------- popup --------
