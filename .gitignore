@@ -1,0 +1,5 @@
+node_modules/
+tests/storage/auth.json
+tests/storage/screenshot-*.png
+test-results/
+playwright-report/
