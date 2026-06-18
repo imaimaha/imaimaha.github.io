@@ -63,6 +63,8 @@
       filter: drop-shadow(0 0 14px rgba(200,230,255,0.4));
       transition: filter 0.2s;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      padding: 12px;
     }
     .float-emoji:hover { filter: drop-shadow(0 0 22px rgba(255,220,100,0.7)); }
 
@@ -260,11 +262,26 @@
 
   <script>
     const POPUP_HEARTS = 60
+    const DAY_MS       = 24 * 60 * 60 * 1000
 
-    let myId       = null
-    let foxUid     = null
-    let hedUid     = null
-    let gauges     = { fox: 0, hed: 0 }
+    let myId  = null
+    let foxUid = null
+    let hedUid = null
+
+    // raw DB の値と更新日時を保持
+    const raw = {
+      fox: { gauge: 0, updated_at: null },
+      hed: { gauge: 0, updated_at: null }
+    }
+
+    // 24時間減衰を適用した現在のゲージ
+    function effective(type) {
+      const d = raw[type]
+      if (!d.updated_at || d.gauge <= 0) return d.gauge
+      const elapsed = Date.now() - new Date(d.updated_at).getTime()
+      const factor  = Math.max(0, 1 - elapsed / DAY_MS)
+      return Math.round(d.gauge * factor)
+    }
 
     // -------- floating animation --------
     const fl = {
@@ -285,7 +302,7 @@
 
       h.x += h.vx;  h.y += h.vy
       if (h.x <= 3 || h.x >= 87) h.vx *= -1
-      if (h.y <= 12 || h.y >= 82) h.vy *= -1
+      if (h.y <= 12 || h.y >= 68) h.vy *= -1
       hedEl.style.left = h.x + 'vw'
       hedEl.style.top  = h.y + 'vh'
 
@@ -296,7 +313,7 @@
     const GAP_STEPS = 12
 
     function updateDistance() {
-      const avg  = (gauges.fox + gauges.hed) / 2
+      const avg  = (effective('fox') + effective('hed')) / 2
       const dots = Math.round(GAP_STEPS * (1 - avg / 100))
       document.getElementById('closer-gap').textContent =
         dots > 0 ? ' ' + '· '.repeat(dots).trimEnd() + ' ' : ' '
@@ -304,15 +321,7 @@
 
     // -------- click handler --------
     async function clickEmoji(type) {
-      const uid = type === 'fox' ? foxUid : hedUid
-      if (!uid) return
-
-      const cur      = gauges[type] || 0
-      const newGauge = Math.min(cur + 5, 100)
-      gauges[type]   = newGauge
-      updateDistance()
-
-      // pop animation
+      // アニメーションは UID に関係なく必ず動かす
       const el = document.getElementById(type === 'fox' ? 'fox-float' : 'hed-float')
       el.classList.remove('pop')
       void el.offsetWidth
@@ -328,8 +337,17 @@
         f.vy = (0.018 + Math.random() * 0.024) * (Math.random() < .5 ? 1 : -1)
       }, 220)
 
+      const uid = type === 'fox' ? foxUid : hedUid
+      if (!uid) return
+
+      const now      = new Date().toISOString()
+      const cur      = effective(type)
+      const newGauge = Math.min(cur + 5, 100)
+      raw[type]      = { gauge: newGauge, updated_at: now }
+      updateDistance()
+
       await _sb.from('closer_gauge')
-        .upsert({ user_id: uid, gauge: newGauge, updated_at: new Date().toISOString() })
+        .upsert({ user_id: uid, gauge: newGauge, updated_at: now })
     }
 
     // -------- popup --------
@@ -338,7 +356,7 @@
     const TOTAL_ROWS  = Math.ceil(POPUP_HEARTS / PER_ROW)
 
     function openPopup(type) {
-      const gauge  = gauges[type] || 0
+      const gauge  = effective(type)
       const emoji  = type === 'fox' ? '🦊' : '🦔'
       const filled = Math.round(gauge / 100 * POPUP_HEARTS)
 
@@ -394,6 +412,7 @@
       ])
 
       const profiles = profRes.data || []
+      console.log('[closer] profiles:', profiles.map(p => ({ id: p.id.slice(0,8), name: p.name, emoji: p.emoji })))
 
       // プロフィールの絵文字でfox/hedを判定
       const foxProf = profiles.find(p => p.emoji === '🦊')
@@ -407,9 +426,11 @@
         hedUid = profiles.find(p => p.id !== myId).id
       }
 
+      console.log('[closer] foxUid:', foxUid?.slice(0,8), '/ hedUid:', hedUid?.slice(0,8) ?? 'null ← 問題！')
+
       ;(gaugeRes.data || []).forEach(g => {
-        if (g.user_id === foxUid) gauges.fox = g.gauge
-        if (g.user_id === hedUid) gauges.hed = g.gauge
+        if (g.user_id === foxUid) raw.fox = { gauge: g.gauge, updated_at: g.updated_at }
+        if (g.user_id === hedUid) raw.hed = { gauge: g.gauge, updated_at: g.updated_at }
       })
 
       // クリックイベントをUIDで紐付け
@@ -429,14 +450,17 @@
       _sb.channel('closer-gauge-rt')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'closer_gauge' }, payload => {
           const uid = payload.new?.user_id
-          const g   = payload.new?.gauge
-          if (uid === foxUid) gauges.fox = g
-          if (uid === hedUid) gauges.hed = g
+          if (uid === foxUid) raw.fox = { gauge: payload.new.gauge, updated_at: payload.new.updated_at }
+          if (uid === hedUid) raw.hed = { gauge: payload.new.gauge, updated_at: payload.new.updated_at }
           updateDistance()
         })
         .subscribe()
 
+      // デバッグ用 (ブラウザコンソールで window._closer で確認できる)
+      window._closer = { foxUid, hedUid, myId, raw, effective }
+
       animateFloat()
+      setInterval(updateDistance, 60000)
     }
 
     init()
