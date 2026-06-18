@@ -76,6 +76,34 @@
     }
     .float-emoji.pop { animation: emojipop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
 
+    /* MAX 状態：くっついたときの輝き */
+    .float-emoji.merged {
+      filter: drop-shadow(0 0 28px rgba(255,210,80,0.85)) drop-shadow(0 0 12px rgba(255,255,200,0.6));
+      animation: merged-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes merged-pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.15); }
+    }
+
+    /* MAX 中央テキスト */
+    #merged-msg {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: rgba(255,230,120,0.85);
+      letter-spacing: 0.2em;
+      pointer-events: none;
+      text-align: center;
+      line-height: 1.8;
+      text-shadow: 0 0 12px rgba(255,200,50,0.5);
+    }
+
     /* ---------- center display ---------- */
     .closer-display {
       position: fixed;
@@ -247,6 +275,9 @@
     </div>
   </div>
 
+  <!-- max 時のメッセージ -->
+  <div id="merged-msg">✨<br>one step closer<br>✨</div>
+
   <!-- bottom buttons -->
   <div class="btn-row">
     <button class="view-btn" onclick="openPopup('fox')">🦊の✨を見る</button>
@@ -289,20 +320,38 @@
       hed: { x: 68, y: 52, vx: -0.029, vy:  0.037 }
     }
 
+    // 両方MAXのとき true
+    let bothMax = false
+
+    // くっつくときの中央ターゲット (vw / vh)
+    const MERGE_TARGET = {
+      fox: { x: 30, y: 40 },
+      hed: { x: 52, y: 40 }
+    }
+
     function animateFloat() {
       const foxEl = document.getElementById('fox-float')
       const hedEl = document.getElementById('hed-float')
       const f = fl.fox, h = fl.hed
 
-      f.x += f.vx;  f.y += f.vy
-      if (f.x <= 3 || f.x >= 87) f.vx *= -1
-      if (f.y <= 12 || f.y >= 68) f.vy *= -1
+      if (bothMax) {
+        // ゆっくり中央に引き寄せる (lerp)
+        f.x += (MERGE_TARGET.fox.x - f.x) * 0.018
+        f.y += (MERGE_TARGET.fox.y - f.y) * 0.018
+        h.x += (MERGE_TARGET.hed.x - h.x) * 0.018
+        h.y += (MERGE_TARGET.hed.y - h.y) * 0.018
+      } else {
+        f.x += f.vx;  f.y += f.vy
+        if (f.x <= 3 || f.x >= 87) f.vx *= -1
+        if (f.y <= 12 || f.y >= 68) f.vy *= -1
+
+        h.x += h.vx;  h.y += h.vy
+        if (h.x <= 3 || h.x >= 87) h.vx *= -1
+        if (h.y <= 12 || h.y >= 68) h.vy *= -1
+      }
+
       foxEl.style.left = f.x + 'vw'
       foxEl.style.top  = f.y + 'vh'
-
-      h.x += h.vx;  h.y += h.vy
-      if (h.x <= 3 || h.x >= 87) h.vx *= -1
-      if (h.y <= 12 || h.y >= 68) h.vy *= -1
       hedEl.style.left = h.x + 'vw'
       hedEl.style.top  = h.y + 'vh'
 
@@ -313,10 +362,36 @@
     const GAP_STEPS = 12
 
     function updateDistance() {
-      const avg  = (effective('fox') + effective('hed')) / 2
+      const fox = effective('fox')
+      const hed = effective('hed')
+      const avg = (fox + hed) / 2
       const dots = Math.round(GAP_STEPS * (1 - avg / 100))
-      document.getElementById('closer-gap').textContent =
-        dots > 0 ? ' ' + '· '.repeat(dots).trimEnd() + ' ' : ' '
+
+      const gapEl  = document.getElementById('closer-gap')
+      const songEl = document.querySelector('.closer-song')
+      const msgEl  = document.getElementById('merged-msg')
+      const foxEl  = document.getElementById('fox-float')
+      const hedEl  = document.getElementById('hed-float')
+      const dispEl = document.querySelector('.closer-display')
+
+      const nowBothMax = fox >= 100 && hed >= 100
+
+      if (nowBothMax !== bothMax) {
+        bothMax = nowBothMax
+        foxEl.classList.toggle('merged', bothMax)
+        hedEl.classList.toggle('merged', bothMax)
+        if (dispEl) dispEl.style.opacity = bothMax ? '0' : '1'
+        if (msgEl)  msgEl.style.display  = bothMax ? 'block' : 'none'
+        if (!bothMax) {
+          fl.fox.vx = 0.034; fl.fox.vy = 0.026
+          fl.hed.vx = -0.029; fl.hed.vy = 0.037
+        }
+      }
+
+      if (!bothMax) {
+        if (gapEl)  gapEl.textContent  = dots > 0 ? ' ' + '· '.repeat(dots).trimEnd() + ' ' : ' '
+        if (songEl) songEl.textContent = 'one step closer'
+      }
     }
 
     // -------- click handler --------
