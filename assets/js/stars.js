@@ -6,7 +6,7 @@
   function randPos() {
     let l, t
     do {
-      l = 12 + Math.random() * 88
+      l = 18 + Math.random() * 82
       t = Math.random() * 100
     } while (l < 25 && t < 25)
     return { l, t }
