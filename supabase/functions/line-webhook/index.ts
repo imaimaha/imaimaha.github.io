@@ -8,6 +8,11 @@ const SB_KEY      = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 Deno.serve(async (req) => {
   const body = await req.text()
+  const sb = createClient(SB_URL, SB_KEY)
+
+  // 署名チェック前にリクエスト到達を記録
+  const { error: dbErr } = await sb.from('settings').upsert({ key: 'last_request', value: new Date().toISOString() })
+  console.log('upsert result:', dbErr ? JSON.stringify(dbErr) : 'ok')
 
   // LINE 署名検証
   const sig = req.headers.get('x-line-signature') ?? ''
@@ -15,59 +20,62 @@ Deno.serve(async (req) => {
   hmac.update(body)
   const expected = hmac.digest('base64')
   if (sig !== expected) {
+    await sb.from('settings').upsert({ key: 'last_sig_fail', value: new Date().toISOString() })
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { events } = JSON.parse(body)
-  const sb = createClient(SB_URL, SB_KEY)
+  const parsed = JSON.parse(body)
+  const { events } = parsed
+
+  // 署名通過後に記録
+  await sb.from('settings').upsert({
+    key: 'last_webhook',
+    value: JSON.stringify({ ts: new Date().toISOString(), events: (events ?? []).map((e: Record<string,unknown>) => ({ type: e.type, src: e.source })) })
+  })
 
   for (const event of events ?? []) {
-    const lineUserId = event.source?.userId
+    const sourceType  = event.source?.type
+    const lineUserId  = event.source?.userId
+    const groupId     = event.source?.groupId
+
+    // グループ参加 or グループメッセージ → グループ ID を settings に保存
+    if (sourceType === 'group' && groupId) {
+      await sb.from('settings').upsert({ key: 'line_group_id', value: groupId })
+      continue
+    }
+
+    // 個人チャット: follow または message → line_user_id を登録
     if (!lineUserId) continue
+    if (event.type !== 'follow' && event.type !== 'message') continue
 
-    if (event.type === 'follow' || event.type === 'message') {
-      // LINE User ID をプロフィールに保存（display name で照合）
-      // まずそのユーザーの表示名を取得
-      const profileRes = await fetch(`https://api.line.me/v2/bot/profile/${lineUserId}`, {
-        headers: { Authorization: `Bearer ${LINE_TOKEN}` },
-      })
-      const lineProfile = await profileRes.json()
-      const displayName: string = lineProfile.displayName ?? ''
+    const { data: profiles } = await sb
+      .from('profiles')
+      .select('id, name, line_user_id')
 
-      // Supabase の profiles に line_user_id をまだ持っていない行を更新
-      // 表示名ではなく、全 profiles に line_user_id がなければ保留リストに追加
-      const { data: profiles } = await sb
+    const alreadyRegistered = profiles?.some(p => p.line_user_id === lineUserId)
+    if (alreadyRegistered) continue
+
+    const unregistered = profiles?.find(p => !p.line_user_id)
+    if (unregistered) {
+      await sb
         .from('profiles')
-        .select('id, name, line_user_id')
+        .update({ line_user_id: lineUserId })
+        .eq('id', unregistered.id)
 
-      // すでに登録済みならスキップ
-      const alreadyRegistered = profiles?.some(p => p.line_user_id === lineUserId)
-      if (alreadyRegistered) continue
-
-      // line_user_id が未登録のプロフィールに順番に割り当て
-      const unregistered = profiles?.find(p => !p.line_user_id)
-      if (unregistered) {
-        await sb
-          .from('profiles')
-          .update({ line_user_id: lineUserId })
-          .eq('id', unregistered.id)
-
-        // 登録完了メッセージを返信
-        await fetch('https://api.line.me/v2/bot/message/reply', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${LINE_TOKEN}`,
-          },
-          body: JSON.stringify({
-            replyToken: event.replyToken,
-            messages: [{
-              type: 'text',
-              text: `✅ ${unregistered.name} として Notre Endroit と連携しました！`,
-            }],
-          }),
-        })
-      }
+      await fetch('https://api.line.me/v2/bot/message/reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${LINE_TOKEN}`,
+        },
+        body: JSON.stringify({
+          replyToken: event.replyToken,
+          messages: [{
+            type: 'text',
+            text: `✅ ${unregistered.name} として Notre Endroit と連携しました！`,
+          }],
+        }),
+      })
     }
   }
 
