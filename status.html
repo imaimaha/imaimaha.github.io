@@ -340,8 +340,32 @@
     async function askOk() {
       const result = document.getElementById('ask-result')
       if (!partnerProfile) { result.textContent = 'パートナーのプロフィールが見つかりません'; return }
-      result.textContent = `${partnerProfile.emoji} ${partnerProfile.name} に「行っていい？」を送りました！（LINE通知は準備中）`
-      setTimeout(() => { result.textContent = '' }, 4000)
+
+      result.textContent = '送信中...'
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        const res = await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender_id: session.user.id,
+            message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾`,
+          }),
+        })
+        if (res.ok) {
+          result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に LINE を送りました！`
+        } else {
+          const err = await res.json()
+          if (err.error?.includes('not registered')) {
+            result.textContent = '⚠️ パートナーがまだ LINE ボットを友達追加していません'
+          } else {
+            result.textContent = '❌ 送信に失敗しました'
+          }
+        }
+      } catch {
+        result.textContent = '❌ ネットワークエラー'
+      }
+      setTimeout(() => { result.textContent = '' }, 5000)
     }
 
     function escHtml(str) {
