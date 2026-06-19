@@ -156,6 +156,30 @@
       gap: 2px;
     }
 
+    /* ゲージ表示バー（トップバー直下） */
+    .gauge-bar {
+      position: fixed;
+      top: 58px;
+      left: 0; right: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 28px;
+      pointer-events: none;
+    }
+
+    .gauge-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: rgba(200,230,255,0.9);
+      text-shadow: 0 0 8px rgba(150,200,255,0.6);
+    }
+
+    .gauge-emoji { font-size: 1.4rem; }
+
     .closer-pct {
       font-family: 'Zen Kurenaido', sans-serif;
       font-size: 1rem;
@@ -278,20 +302,24 @@
   <div id="fox-float" class="float-emoji">🦊</div>
   <div id="hed-float"  class="float-emoji">🦔</div>
 
+  <!-- ゲージ表示（トップバー直下） -->
+  <div class="gauge-bar">
+    <div class="gauge-item">
+      <span class="gauge-emoji">🦊</span>
+      <span id="fox-pct" class="closer-pct">--%</span>
+    </div>
+    <div class="gauge-item">
+      <span id="hed-pct" class="closer-pct">--%</span>
+      <span class="gauge-emoji">🦔</span>
+    </div>
+  </div>
+
   <!-- center display -->
   <div class="closer-display">
     <div class="closer-row">
-      <div class="closer-side-wrap">
-        <span class="closer-side">🦊</span>
-        <span id="fox-pct" class="closer-pct">--</span>
-      </div>
       <div class="closer-middle">
         <span id="closer-gap"></span>
         <span class="closer-song">one step closer</span>
-      </div>
-      <div class="closer-side-wrap">
-        <span class="closer-side">🦔</span>
-        <span id="hed-pct" class="closer-pct">--</span>
       </div>
     </div>
   </div>
