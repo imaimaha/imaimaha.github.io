@@ -2,17 +2,20 @@
   const container = document.querySelector('.clouds')
   if (!container) return
 
-  // 左上 25vw×25vh を避け、左端 12vw 以上でランダム位置を生成
+  const W = window.innerWidth
+  const H = window.innerHeight
+
+  // 左端 18% を除外、左上コーナー 25%×25% も除外
   function randPos() {
     let l, t
     do {
-      l = 18 + Math.random() * 82
-      t = Math.random() * 100
-    } while (l < 25 && t < 25)
+      l = Math.floor(W * 0.18 + Math.random() * W * 0.82)
+      t = Math.floor(Math.random() * H)
+    } while (l < W * 0.25 && t < H * 0.25)
     return { l, t }
   }
 
-  // きらめく固定星 55個
+  // きらめく固定星 55個（position:fixed で確実に viewport 基準）
   for (let i = 0; i < 55; i++) {
     const s = document.createElement('div')
     s.className = 'star'
@@ -20,8 +23,9 @@
     const isBright = Math.random() < 0.25
     const { l, t } = randPos()
     s.style.cssText = [
-      `left:${l.toFixed(1)}vw`,
-      `top:${t.toFixed(1)}vh`,
+      `position:fixed`,
+      `left:${l}px`,
+      `top:${t}px`,
       `width:${size.toFixed(1)}px`,
       `height:${size.toFixed(1)}px`,
       `animation-delay:${(Math.random() * 8).toFixed(2)}s`,
@@ -40,8 +44,9 @@
     const size = Math.random() * 2.5 + 0.8
     const { l, t } = randPos()
     s.style.cssText = [
-      `left:${l.toFixed(1)}vw`,
-      `top:${t.toFixed(1)}vh`,
+      `position:fixed`,
+      `left:${l}px`,
+      `top:${t}px`,
       `width:${size.toFixed(1)}px`,
       `height:${size.toFixed(1)}px`,
       `animation-delay:${(Math.random() * 6).toFixed(2)}s`,
@@ -51,13 +56,14 @@
     container.appendChild(s)
   }
 
-  // 流れ星 8本（左端 15vw より右から開始）
+  // 流れ星 8本（左端 15% より右から開始）
   for (let i = 0; i < 8; i++) {
     const s = document.createElement('div')
     s.className = 'shooting-star'
     s.style.cssText = [
-      `left:${(15 + Math.random() * 60).toFixed(1)}vw`,
-      `top:${(5  + Math.random() * 40).toFixed(1)}vh`,
+      `position:fixed`,
+      `left:${Math.floor(W * 0.15 + Math.random() * W * 0.60)}px`,
+      `top:${Math.floor(H * 0.05 + Math.random() * H * 0.40)}px`,
       `animation-delay:${(i * 4 + Math.random() * 5).toFixed(1)}s`,
       `animation-duration:${(Math.random() * 1.0 + 5.6).toFixed(2)}s`,
     ].join(';')
