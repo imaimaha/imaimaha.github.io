@@ -371,6 +371,7 @@
 
     // 両方MAXのとき true
     let bothMax = false
+    let bothMaxNotified = false
 
     // くっつくときの中央ターゲット (vw / vh)
     const MERGE_TARGET = {
@@ -432,7 +433,12 @@
         hedEl.classList.toggle('merged', bothMax)
         if (dispEl) dispEl.style.opacity = bothMax ? '0' : '1'
         if (msgEl)  msgEl.style.display  = bothMax ? 'block' : 'none'
+        if (bothMax && !bothMaxNotified) {
+          bothMaxNotified = true
+          sendLineMaxNotification()
+        }
         if (!bothMax) {
+          bothMaxNotified = false
           fl.fox.vx = 0.034; fl.fox.vy = 0.026
           fl.hed.vx = -0.029; fl.hed.vy = 0.037
         }
@@ -528,6 +534,23 @@
 
     function closePopup() {
       document.getElementById('popup').classList.remove('open')
+    }
+
+    // -------- LINE notification --------
+    async function sendLineMaxNotification() {
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        if (!session) return
+        const me = (await _sb.from('profiles').select('emoji,name').eq('id', session.user.id).single()).data
+        await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender_id: session.user.id,
+            message: `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
+          }),
+        })
+      } catch {}
     }
 
     // -------- init --------
