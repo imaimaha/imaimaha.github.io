@@ -336,8 +336,9 @@
       await _sb.from('status').upsert({ user_id, finish_time, note, updated_at: new Date().toISOString() })
       await load()
 
-      if (finish_time && myProfile) {
-        const msg = `${myProfile.emoji} ${myProfile.name} の今日の帰宅予定: ${finish_time} 退社${note ? '（' + note + '）' : ''}`
+      if (myProfile) {
+        const timeLabel = finish_time ? `${finish_time} 退社` : '時間未定'
+        const msg = `${myProfile.emoji} ${myProfile.name} の今日の帰宅予定: ${timeLabel}${note ? '（' + note + '）' : ''}`
         fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
