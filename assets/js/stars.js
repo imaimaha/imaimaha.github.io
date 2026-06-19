@@ -39,16 +39,4 @@
     container.appendChild(s)
   }
 
-  // 流れ星 8本
-  for (let i = 0; i < 8; i++) {
-    const s = document.createElement('div')
-    s.className = 'shooting-star'
-    s.style.cssText = [
-      `left:${(Math.random() * 75).toFixed(1)}%`,
-      `top:${(Math.random() * 45).toFixed(1)}%`,
-      `animation-delay:${(i * 4 + Math.random() * 5).toFixed(1)}s`,
-      `animation-duration:${(Math.random() * 1.0 + 5.6).toFixed(2)}s`,
-    ].join(';')
-    container.appendChild(s)
-  }
 })()
