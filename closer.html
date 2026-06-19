@@ -391,11 +391,11 @@
         h.y += (MERGE_TARGET.hed.y - h.y) * 0.018
       } else {
         f.x += f.vx;  f.y += f.vy
-        if (f.x <= 6 || f.x >= 87) f.vx *= -1
+        if (f.x <= 18 || f.x >= 80) f.vx *= -1
         if (f.y <= 20 || f.y >= 72) f.vy *= -1
 
         h.x += h.vx;  h.y += h.vy
-        if (h.x <= 6 || h.x >= 87) h.vx *= -1
+        if (h.x <= 18 || h.x >= 80) h.vx *= -1
         if (h.y <= 20 || h.y >= 72) h.vy *= -1
       }
 
