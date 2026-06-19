@@ -149,6 +149,20 @@
       pointer-events: none;
     }
 
+    .closer-side-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .closer-pct {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 0.7rem;
+      color: rgba(150,200,255,0.45);
+      letter-spacing: 0.05em;
+    }
+
     /* ---------- bottom buttons ---------- */
     .btn-row {
       position: fixed;
@@ -266,12 +280,18 @@
   <!-- center display -->
   <div class="closer-display">
     <div class="closer-row">
-      <span class="closer-side">🦊</span>
+      <div class="closer-side-wrap">
+        <span class="closer-side">🦊</span>
+        <span id="fox-pct" class="closer-pct">--</span>
+      </div>
       <div class="closer-middle">
         <span id="closer-gap"></span>
         <span class="closer-song">one step closer</span>
       </div>
-      <span class="closer-side">🦔</span>
+      <div class="closer-side-wrap">
+        <span class="closer-side">🦔</span>
+        <span id="hed-pct" class="closer-pct">--</span>
+      </div>
     </div>
   </div>
 
@@ -374,7 +394,8 @@
       const hedEl  = document.getElementById('hed-float')
       const dispEl = document.querySelector('.closer-display')
 
-      const nowBothMax = fox >= 100 && hed >= 100
+      // raw が 100 に達したことがあり、かつまだ有効期間内なら merge 維持
+      const nowBothMax = raw.fox.gauge >= 100 && raw.hed.gauge >= 100 && fox > 0 && hed > 0
 
       if (nowBothMax !== bothMax) {
         bothMax = nowBothMax
@@ -387,6 +408,10 @@
           fl.hed.vx = -0.029; fl.hed.vy = 0.037
         }
       }
+
+      // ゲージ % を常時表示
+      if (document.getElementById('fox-pct')) document.getElementById('fox-pct').textContent = fox + '%'
+      if (document.getElementById('hed-pct')) document.getElementById('hed-pct').textContent = hed + '%'
 
       if (!bothMax) {
         if (gapEl)  gapEl.textContent  = dots > 0 ? ' ' + '· '.repeat(dots).trimEnd() + ' ' : ' '
