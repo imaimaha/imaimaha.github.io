@@ -188,6 +188,26 @@
 
     .save-btn:hover { background: #66bb6a; }
 
+    .quick-time-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .quick-btn {
+      flex: 1;
+      padding: 8px 0;
+      background: #f1f8f1;
+      border: 1.5px solid #a5d6a7;
+      color: #66bb6a;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .quick-btn:active { background: #e8f5e9; }
+
     /* 「行っていい？」ボタン */
     .ask-section {
       text-align: center;
@@ -310,6 +330,11 @@
               <label>退社時間</label>
               <input type="time" id="input-time" value="${escHtml(timeText)}">
             </div>
+            <div class="quick-time-row">
+              <button type="button" class="quick-btn" onclick="setQuickTime(30)">+30分</button>
+              <button type="button" class="quick-btn" onclick="setQuickTime(60)">+1時間</button>
+              <button type="button" class="quick-btn" onclick="setQuickTime(90)">+1.5時間</button>
+            </div>
             <div class="form-row">
               <label>メモ</label>
               <input type="text" id="input-note" placeholder="例：ちょっと遅れるかも" maxlength="40" value="${escHtml(noteText)}">
@@ -327,6 +352,14 @@
       btn.textContent = form.classList.contains('open') ? '閉じる' : '編集'
     }
 
+    function setQuickTime(minutes) {
+      const now = new Date()
+      now.setMinutes(now.getMinutes() + minutes)
+      const hh = String(now.getHours()).padStart(2, '0')
+      const mm = String(now.getMinutes()).padStart(2, '0')
+      document.getElementById('input-time').value = `${hh}:${mm}`
+    }
+
     async function saveStatus() {
       const finish_time = document.getElementById('input-time').value
       const note        = document.getElementById('input-note').value.trim()
@@ -336,13 +369,18 @@
       await _sb.from('status').upsert({ user_id, finish_time, note, updated_at: new Date().toISOString() })
       await load()
 
+      const btn = document.querySelector('.save-btn')
+      btn.textContent = '✅ 保存しました'
+      btn.disabled = true
+      setTimeout(() => { btn.textContent = '保存'; btn.disabled = false }, 1500)
+
       if (myProfile) {
         const timeLabel = finish_time ? `${finish_time} 退社` : '時間未定'
         const msg = `${myProfile.emoji} ${myProfile.name} の今日の帰宅予定: ${timeLabel}${note ? '（' + note + '）' : ''}`
         fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender_id: user_id, message: msg }),
+          body: JSON.stringify({ sender_id: user_id, message: msg, target: 'group' }),
         }).catch(() => {})
       }
     }
@@ -359,6 +397,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sender_id: session.user.id,
+            target: 'partner',
             message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾`,
           }),
         })

@@ -547,6 +547,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sender_id: session.user.id,
+            target: 'group',
             message: `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
           }),
         })

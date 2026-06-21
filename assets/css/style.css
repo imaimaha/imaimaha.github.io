@@ -190,12 +190,15 @@ body {
   backdrop-filter: blur(8px);
   color: #c8dff8;
   text-decoration: none;
-  padding: 10px 22px;
+  padding: 14px 20px;
+  min-height: 44px;
   border-radius: 30px;
   font-size: 0.95rem;
   box-shadow: 0 3px 12px rgba(0,0,0,0.2);
   transition: transform 0.2s, background 0.2s;
   border: 1.5px solid rgba(150,200,255,0.25);
+  display: inline-flex;
+  align-items: center;
 }
 
 .menu-item:hover {

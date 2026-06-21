@@ -9,38 +9,46 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders() })
   }
 
-  const { sender_id, message } = await req.json()
+  const { sender_id, message, target } = await req.json()
+  // target: "group" (default) | "partner" (個人送信)
+
   if (!message) {
     return json({ error: 'message is required' }, 400)
   }
 
   const sb = createClient(SB_URL, SB_KEY)
-
-  // グループ ID があればグループへ送信、なければ個人へ送信
-  const { data: groupSetting } = await sb
-    .from('settings')
-    .select('value')
-    .eq('key', 'line_group_id')
-    .single()
-
   let to: string | null = null
 
-  if (groupSetting?.value) {
-    to = groupSetting.value
-  } else {
-    if (!sender_id) {
-      return json({ error: 'sender_id required when no group is configured' }, 400)
-    }
+  if (target === 'partner') {
+    // 相手に個別送信
+    if (!sender_id) return json({ error: 'sender_id required for partner target' }, 400)
     const { data: partner } = await sb
       .from('profiles')
       .select('line_user_id')
       .neq('id', sender_id)
       .single()
-
-    if (!partner?.line_user_id) {
-      return json({ error: 'partner LINE User ID not registered' }, 404)
-    }
+    if (!partner?.line_user_id) return json({ error: 'partner LINE User ID not registered' }, 404)
     to = partner.line_user_id
+  } else {
+    // グループ送信 (default)
+    const { data: groupSetting } = await sb
+      .from('settings')
+      .select('value')
+      .eq('key', 'line_group_id')
+      .single()
+    if (groupSetting?.value) {
+      to = groupSetting.value
+    } else if (sender_id) {
+      const { data: partner } = await sb
+        .from('profiles')
+        .select('line_user_id')
+        .neq('id', sender_id)
+        .single()
+      if (!partner?.line_user_id) return json({ error: 'partner LINE User ID not registered' }, 404)
+      to = partner.line_user_id
+    } else {
+      return json({ error: 'no group configured and no sender_id' }, 400)
+    }
   }
 
   const res = await fetch('https://api.line.me/v2/bot/message/push', {
