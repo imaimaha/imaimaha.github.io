@@ -67,11 +67,18 @@ async function requestPush() {
 
 async function initPushUI() {
   const banner = document.getElementById('push-banner')
+  const info   = document.getElementById('push-debug-info')
   if (!banner) return
 
+  const notifOk = 'Notification' in window
+  const swOk    = 'serviceWorker' in navigator
+  const pushOk  = 'PushManager' in window
+  const perm    = notifOk ? Notification.permission : 'unsupported'
+
+  if (info) info.textContent = `perm:${perm} SW:${swOk} Push:${pushOk}`
+
   // すでに許可済み → バナーなしで購読を更新
-  if ('Notification' in window && Notification.permission === 'granted' &&
-      'serviceWorker' in navigator && 'PushManager' in window) {
+  if (notifOk && perm === 'granted' && swOk && pushOk) {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js')
       await navigator.serviceWorker.ready
@@ -85,10 +92,8 @@ async function initPushUI() {
     return
   }
 
-  // 未許可 or 非対応 → バナーを表示（ボタンは HTML の onclick="requestPush()" で動作）
-  if (!('Notification' in window) || Notification.permission !== 'denied') {
-    banner.style.display = 'flex'
-  }
+  // 常にバナーを表示（状態に関わらず）
+  banner.style.display = 'flex'
 }
 
 if (document.readyState === 'loading') {
