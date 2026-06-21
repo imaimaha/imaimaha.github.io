@@ -8,7 +8,7 @@ module.exports = defineConfig({
 
   use: {
     baseURL:    'http://localhost:3000',
-    headless:   false,          // 目で見てデバッグできるよう headed
+    headless:   true,
     viewport:   { width: 390, height: 844 }, // iPhone 14 Pro
     screenshot: 'on',
     video:      'retain-on-failure',
@@ -22,7 +22,7 @@ module.exports = defineConfig({
     {
       name:         'debug',
       use:          { storageState: 'tests/storage/auth.json' },
-      dependencies: ['setup'],
+      dependencies: [],
     },
   ],
 
