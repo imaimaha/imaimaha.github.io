@@ -42,7 +42,7 @@ async function requestPush() {
     if (banner) banner.style.display = 'none'
     alert('✅ 通知が有効になりました！')
   } catch (e) {
-    console.debug('[push]', e?.message)
+    alert('❌ エラー: ' + (e?.message ?? String(e)))
   }
 }
 
