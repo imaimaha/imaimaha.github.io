@@ -18,23 +18,35 @@ async function _saveSub(sub) {
 }
 
 async function requestPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('❌ 非対応ブラウザ\nSafariのホーム画面追加版で開いてください')
+  if (!('Notification' in window)) {
+    alert('❌ 通知非対応です。\nSafariでホーム画面に追加して開いてください。')
     return
   }
+
+  // iOSはユーザータップ直後に許可を求めないと無視される
+  let perm = Notification.permission
+  if (perm === 'default') perm = await Notification.requestPermission()
+
+  if (perm === 'denied') {
+    alert('🚫 通知が拒否されています。\n\niOS設定 → アプリ名「Notre」→ 通知 をオンにしてください。')
+    return
+  }
+  if (perm !== 'granted') {
+    alert('⚠️ 通知が許可されませんでした。')
+    return
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('❌ プッシュ通知非対応。\nSafariのホーム画面追加版で開いてください。')
+    return
+  }
+
   try {
-    const reg = await Promise.race([
-      navigator.serviceWorker.register('/sw.js'),
-      new Promise((_, r) => setTimeout(() => r(new Error('SW登録タイムアウト')), 8000)),
-    ])
+    const reg = await navigator.serviceWorker.register('/sw.js')
     await Promise.race([
       navigator.serviceWorker.ready,
-      new Promise((_, r) => setTimeout(() => r(new Error('SW準備タイムアウト')), 8000)),
+      new Promise((_, r) => setTimeout(() => r(new Error('SWタイムアウト(8秒)')), 8000)),
     ])
-
-    const perm = await Notification.requestPermission()
-    if (perm === 'denied')  { alert('🚫 通知が拒否されています\niOSの設定 → Safari → 通知 から許可してください'); return }
-    if (perm !== 'granted') { alert('⚠️ 通知が許可されませんでした（' + perm + '）'); return }
 
     let sub = await reg.pushManager.getSubscription()
     if (!sub) {
@@ -49,7 +61,7 @@ async function requestPush() {
     if (banner) banner.style.display = 'none'
     alert('✅ 通知が有効になりました！')
   } catch (e) {
-    alert('❌ エラー: ' + (e?.message ?? String(e)))
+    alert('❌ ' + (e?.message ?? String(e)))
   }
 }
 
