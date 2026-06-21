@@ -7,14 +7,15 @@ function _urlB64ToUint8(b64) {
 }
 
 async function _saveSub(sub) {
-  if (typeof _sb === 'undefined') return
+  if (typeof _sb === 'undefined') throw new Error('Supabaseクライアント未初期化')
   const { data: { session } } = await _sb.auth.getSession()
-  if (!session) return
-  await _sb.from('push_subscriptions').upsert({
+  if (!session) throw new Error('未ログイン状態')
+  const { error } = await _sb.from('push_subscriptions').upsert({
     user_id: session.user.id,
     endpoint: sub.endpoint,
     subscription: sub.toJSON(),
   }, { onConflict: 'user_id,endpoint', ignoreDuplicates: false })
+  if (error) throw new Error('DB保存失敗: ' + error.message)
 }
 
 async function requestPush() {
