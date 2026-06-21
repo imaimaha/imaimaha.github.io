@@ -98,13 +98,13 @@
     <p>✨ Unsere kleine Welt für zwei ✨</p>
   </footer>
 
-  <div id="push-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:14px 20px;display:flex;align-items:center;gap:12px;max-width:320px;width:90%">
+  <div id="push-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:14px 20px;align-items:center;gap:12px;max-width:320px;width:90%">
     <span style="font-size:1.4rem">🔔</span>
     <div style="flex:1">
       <div style="font-size:0.88rem;color:#5d4037;font-weight:bold">通知を有効にする</div>
       <div style="font-size:0.75rem;color:#a1887f">LINEのメッセージをここで受け取る</div>
     </div>
-    <button id="push-allow-btn" style="background:#81c784;color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:0.85rem;cursor:pointer;white-space:nowrap">許可する</button>
+    <button onclick="requestPush()" style="background:#81c784;color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:0.85rem;cursor:pointer;white-space:nowrap">許可する</button>
     <button onclick="document.getElementById('push-banner').style.display='none'" style="background:none;border:none;color:#d7ccc8;cursor:pointer;font-size:1.1rem;padding:0 4px">✕</button>
   </div>
 

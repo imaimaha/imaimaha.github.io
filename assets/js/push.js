@@ -66,35 +66,28 @@ async function requestPush() {
 }
 
 async function initPushUI() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-
   const banner = document.getElementById('push-banner')
-  const btn    = document.getElementById('push-allow-btn')
-  if (!banner || !btn) return
+  if (!banner) return
 
-  // すでに許可済みの場合は購読を更新するだけ（バナーは出さない）
-  if (Notification.permission === 'granted') {
+  // すでに許可済み → バナーなしで購読を更新
+  if ('Notification' in window && Notification.permission === 'granted' &&
+      'serviceWorker' in navigator && 'PushManager' in window) {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js')
       await navigator.serviceWorker.ready
       let sub = await reg.pushManager.getSubscription()
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: _urlB64ToUint8(_VAPID_PUB),
-        })
-      }
+      if (!sub) sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlB64ToUint8(_VAPID_PUB),
+      })
       await _saveSub(sub)
-    } catch (e) {
-      console.debug('[push]', e?.message)
-    }
+    } catch (e) { console.debug('[push]', e?.message) }
     return
   }
 
-  // 未許可の場合はバナーを表示
-  if (Notification.permission === 'default') {
+  // 未許可 or 非対応 → バナーを表示（ボタンは HTML の onclick="requestPush()" で動作）
+  if (!('Notification' in window) || Notification.permission !== 'denied') {
     banner.style.display = 'flex'
-    btn.addEventListener('click', requestPush)
   }
 }
 
