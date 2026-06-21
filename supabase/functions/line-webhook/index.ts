@@ -6,13 +6,22 @@ const LINE_TOKEN  = Deno.env.get('LINE_CHANNEL_TOKEN')!
 const SB_URL      = Deno.env.get('SUPABASE_URL')!
 const SB_KEY      = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+function sendPush(payload: Record<string, unknown>) {
+  fetch(`${SB_URL}/functions/v1/send-push`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SB_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  }).catch(() => {})
+}
+
 Deno.serve(async (req) => {
   const body = await req.text()
   const sb = createClient(SB_URL, SB_KEY)
 
-  // 署名チェック前にリクエスト到達を記録
-  const { error: dbErr } = await sb.from('settings').upsert({ key: 'last_request', value: new Date().toISOString() })
-  console.log('upsert result:', dbErr ? JSON.stringify(dbErr) : 'ok')
+  await sb.from('settings').upsert({ key: 'last_request', value: new Date().toISOString() })
 
   // LINE 署名検証
   const sig = req.headers.get('x-line-signature') ?? ''
@@ -27,7 +36,6 @@ Deno.serve(async (req) => {
   const parsed = JSON.parse(body)
   const { events } = parsed
 
-  // 署名通過後に記録
   await sb.from('settings').upsert({
     key: 'last_webhook',
     value: JSON.stringify({ ts: new Date().toISOString(), events: (events ?? []).map((e: Record<string,unknown>) => ({ type: e.type, src: e.source })) })
@@ -38,9 +46,23 @@ Deno.serve(async (req) => {
     const lineUserId  = event.source?.userId
     const groupId     = event.source?.groupId
 
-    // グループ参加 or グループメッセージ → グループ ID を settings に保存
+    // グループメッセージ → グループID保存 + Web Push送信
     if (sourceType === 'group' && groupId) {
       await sb.from('settings').upsert({ key: 'line_group_id', value: groupId })
+
+      if (event.type === 'message' && event.message?.type === 'text' && lineUserId) {
+        const { data: senderProfile } = await sb
+          .from('profiles')
+          .select('id, name, emoji')
+          .eq('line_user_id', lineUserId)
+          .single()
+        sendPush({
+          title: senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : 'Notre Endroit',
+          body: event.message.text,
+          sender_user_id: senderProfile?.id ?? null,
+          replier_id: senderProfile?.id ?? null,
+        })
+      }
       continue
     }
 
@@ -53,7 +75,22 @@ Deno.serve(async (req) => {
       .select('id, name, line_user_id')
 
     const alreadyRegistered = profiles?.some(p => p.line_user_id === lineUserId)
-    if (alreadyRegistered) continue
+    if (alreadyRegistered) {
+      // 登録済み → 1対1メッセージをWeb Pushで転送
+      if (event.type === 'message' && event.message?.type === 'text') {
+        const senderProfile = profiles?.find(p => p.line_user_id === lineUserId)
+        const recipientProfile = profiles?.find(p => p.line_user_id !== lineUserId)
+        if (recipientProfile) {
+          sendPush({
+            title: senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : 'Notre Endroit',
+            body: event.message.text,
+            recipient_user_id: recipientProfile.id,
+            replier_id: senderProfile?.id ?? null,
+          })
+        }
+      }
+      continue
+    }
 
     const unregistered = profiles?.find(p => !p.line_user_id)
     if (unregistered) {

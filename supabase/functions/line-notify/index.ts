@@ -10,7 +10,6 @@ Deno.serve(async (req) => {
   }
 
   const { sender_id, message, target } = await req.json()
-  // target: "group" (default) | "partner" (個人送信)
 
   if (!message) {
     return json({ error: 'message is required' }, 400)
@@ -18,19 +17,19 @@ Deno.serve(async (req) => {
 
   const sb = createClient(SB_URL, SB_KEY)
   let to: string | null = null
+  let partnerUserId: string | null = null
 
   if (target === 'partner') {
-    // 相手に個別送信
     if (!sender_id) return json({ error: 'sender_id required for partner target' }, 400)
     const { data: partner } = await sb
       .from('profiles')
-      .select('line_user_id')
+      .select('id, line_user_id')
       .neq('id', sender_id)
       .single()
     if (!partner?.line_user_id) return json({ error: 'partner LINE User ID not registered' }, 404)
     to = partner.line_user_id
+    partnerUserId = partner.id
   } else {
-    // グループ送信 (default)
     const { data: groupSetting } = await sb
       .from('settings')
       .select('value')
@@ -41,11 +40,12 @@ Deno.serve(async (req) => {
     } else if (sender_id) {
       const { data: partner } = await sb
         .from('profiles')
-        .select('line_user_id')
+        .select('id, line_user_id')
         .neq('id', sender_id)
         .single()
       if (!partner?.line_user_id) return json({ error: 'partner LINE User ID not registered' }, 404)
       to = partner.line_user_id
+      partnerUserId = partner.id
     } else {
       return json({ error: 'no group configured and no sender_id' }, 400)
     }
@@ -67,6 +67,26 @@ Deno.serve(async (req) => {
     const err = await res.text()
     return json({ error: err }, 500)
   }
+
+  // Web Push 通知（非同期・失敗しても無視）
+  const pushPayload: Record<string, unknown> = {
+    title: 'Notre Endroit',
+    body: message,
+    replier_id: sender_id ?? null,
+  }
+  if (target === 'partner' && partnerUserId) {
+    pushPayload.recipient_user_id = partnerUserId
+  } else {
+    pushPayload.sender_user_id = sender_id ?? null
+  }
+  fetch(`${SB_URL}/functions/v1/send-push`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SB_KEY}`,
+    },
+    body: JSON.stringify(pushPayload),
+  }).catch(() => {})
 
   return json({ ok: true })
 })
