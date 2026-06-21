@@ -19,15 +19,22 @@ async function _saveSub(sub) {
 
 async function requestPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('このブラウザはプッシュ通知に対応していません。\nSafariでホーム画面に追加してください。')
+    alert('❌ 非対応ブラウザ\nSafariのホーム画面追加版で開いてください')
     return
   }
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js')
-    await navigator.serviceWorker.ready
+    const reg = await Promise.race([
+      navigator.serviceWorker.register('/sw.js'),
+      new Promise((_, r) => setTimeout(() => r(new Error('SW登録タイムアウト')), 8000)),
+    ])
+    await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, r) => setTimeout(() => r(new Error('SW準備タイムアウト')), 8000)),
+    ])
 
     const perm = await Notification.requestPermission()
-    if (perm !== 'granted') return
+    if (perm === 'denied')  { alert('🚫 通知が拒否されています\niOSの設定 → Safari → 通知 から許可してください'); return }
+    if (perm !== 'granted') { alert('⚠️ 通知が許可されませんでした（' + perm + '）'); return }
 
     let sub = await reg.pushManager.getSubscription()
     if (!sub) {
