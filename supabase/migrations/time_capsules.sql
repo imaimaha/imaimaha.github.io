@@ -26,3 +26,6 @@ create policy "sender_insert" on time_capsules for insert
 -- 受信者が開封できる（is_opened = true に更新）
 create policy "recipient_open" on time_capsules for update
   using (recipient_id = auth.uid());
+
+-- ログイン済みユーザーにテーブルアクセス権を付与（RLS で細かく制御）
+grant select, insert, update on time_capsules to authenticated;
