@@ -51,7 +51,8 @@
     <a href="/memories.html" class="menu-item">🌸 思い出</a>
     <a href="/calendar.html" class="menu-item">📅 予定</a>
     <a href="/wishlist.html" class="menu-item">✨ やりたいこと</a>
-    <a href="/bingo.html"   class="menu-item">🎯 ビンゴ</a>
+    <a href="/bingo.html"        class="menu-item">🎯 ビンゴ</a>
+    <a href="/time_capsule.html" class="menu-item">🎁 タイムカプセル</a>
   </nav>
 
   <main>
@@ -101,11 +102,33 @@
         <div style="font-size:0.95rem;color:#8d6e63">今日の小さな発見を25マスに集めよう →</div>
       </a>
     </section>
+
+    <section id="capsule" class="section">
+      <h2 class="section-title">タイムカプセル</h2>
+      <a href="/time_capsule.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:1.5rem;margin-bottom:8px">🎁 ✉️ 🌟 💌</div>
+        <div id="capsule-preview" style="font-size:0.95rem;color:#8d6e63">未来の自分たちへメッセージを残そう →</div>
+      </a>
+    </section>
   </main>
 
   <footer>
     <p>✨ Unsere kleine Welt für zwei ✨</p>
   </footer>
+
+  <!-- タイムカプセル届いた通知 -->
+  <div id="capsule-notify" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(5,15,40,0.88);backdrop-filter:blur(8px);justify-content:center;align-items:center;">
+    <div style="background:linear-gradient(160deg,rgba(20,40,90,0.97),rgba(10,20,60,0.97));border:1.5px solid rgba(255,215,100,0.45);border-radius:24px;padding:36px 28px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 60px rgba(255,215,100,0.18);animation:fadeUp 0.4s ease">
+      <div style="font-size:3.5rem;margin-bottom:12px">🎁</div>
+      <div style="font-family:'Zen Kurenaido',sans-serif;font-size:1.3rem;color:#ffd764;margin-bottom:8px">タイムカプセルが届きました！</div>
+      <div id="capsule-notify-desc" style="font-size:0.88rem;color:#98bedd;margin-bottom:24px"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/time_capsule.html#received" style="display:block;padding:13px;background:linear-gradient(135deg,#b8860b,#daa520);border-radius:12px;color:#fff;font-size:0.95rem;text-decoration:none;font-weight:bold">開けてみる ✨</a>
+        <button onclick="document.getElementById('capsule-notify').style.display='none'" style="padding:12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.2);border-radius:12px;color:#98bedd;font-size:0.9rem;cursor:pointer;font-family:inherit">あとで</button>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>
 
   <div id="push-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:14px 20px;align-items:center;gap:12px;max-width:320px;width:90%">
     <span style="font-size:1.4rem">🔔</span>
@@ -171,6 +194,29 @@
       } catch { el.textContent = '今日の帰宅時間を共有しよう →' }
     }
     loadStatusPreview()
+
+    // タイムカプセル通知チェック
+    async function checkCapsules() {
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        if (!session) return
+        const now = new Date().toISOString()
+        const { data } = await _sb
+          .from('time_capsules')
+          .select('id')
+          .eq('recipient_id', session.user.id)
+          .eq('is_opened', false)
+          .lte('open_at', now)
+        if (data && data.length > 0) {
+          const desc = document.getElementById('capsule-notify-desc')
+          if (desc) desc.textContent = `${data.length}件のカプセルが届いています`
+          const preview = document.getElementById('capsule-preview')
+          if (preview) preview.textContent = `🎁 ${data.length}件 届いています！ →`
+          document.getElementById('capsule-notify').style.display = 'flex'
+        }
+      } catch {}
+    }
+    checkCapsules()
 
     // 会いたいゲージプレビュー
     async function loadMissPreview() {
