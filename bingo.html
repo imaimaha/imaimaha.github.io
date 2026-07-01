@@ -129,6 +129,32 @@
 
     .mode-card-arrow { color: #5c8aaf; font-size: 1.1rem; }
 
+    .size-selector {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 0 20px;
+    }
+
+    .size-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      color: #98bedd;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .size-btn.active {
+      background: rgba(100,160,255,0.2);
+      border-color: rgba(100,160,255,0.5);
+      color: #e8f4fd;
+    }
+
     .mode-card.daily {
       background: linear-gradient(135deg, rgba(255,200,50,0.12) 0%, rgba(255,150,50,0.08) 100%);
       border-color: rgba(255,200,80,0.3);
@@ -573,6 +599,12 @@
       <p>今日の小さな発見を集めよう</p>
     </div>
 
+    <div class="size-selector">
+      <button class="size-btn" id="size-btn-3" onclick="setGridSize(3)">3×3</button>
+      <button class="size-btn" id="size-btn-4" onclick="setGridSize(4)">4×4</button>
+      <button class="size-btn active" id="size-btn-5" onclick="setGridSize(5)">5×5</button>
+    </div>
+
     <div class="mode-cards">
       <div class="mode-card daily" onclick="selectMode('daily')">
         <div class="mode-card-icon">🌟</div>
@@ -664,7 +696,7 @@
   <div class="screen" id="screen-grid">
     <div class="grid-header">
       <div class="grid-label" id="grid-label">今日だけビンゴ</div>
-      <div class="grid-stats" id="grid-stats">0 / 25 チェック済み</div>
+      <div class="grid-stats" id="grid-stats">0 チェック済み</div>
     </div>
 
     <div class="bingo-grid" id="bingo-grid"></div>
@@ -802,11 +834,18 @@
   // ─────────────────────────────────────────
   const state = {
     userId: null,
+    gridSize: 5,
     card: null,   // { id, mode, label, items:[{text,is_lucky}], checks:[{index,memo,checked_at}] }
     modalCell: null,
     bingoLines: [],
     celebrationShown: false
   };
+
+  function setGridSize(n) {
+    state.gridSize = n;
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('size-btn-' + n).classList.add('active');
+  }
 
   // ─────────────────────────────────────────
   // Seeded Random (for daily bingo)
@@ -848,9 +887,9 @@
     return d === 0 || d === 6;
   }
 
-  function makeDailyItems() {
+  function makeDailyItems(n) {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const rand = seededRand(parseInt(today));
+    const rand = seededRand(parseInt(today) + n * 1000);
     const season = getSeason();
     const weekend = isWeekend();
 
@@ -861,28 +900,28 @@
       ...(weekend ? POOLS.weekend : POOLS.weekday).map(t => ({ text: t }))
     ];
 
-    const picked = pickN(pool, 24, rand);
+    const picked = pickN(pool, n - 1, rand);
     const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * 25);
+    const luckyPos = Math.floor(rand() * n);
     picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
   }
 
-  function makeCategoryItems(category) {
+  function makeCategoryItems(category, n) {
     const rand = seededRand(Date.now() & 0xffffffff);
     const season = getSeason();
     const pool = [
       ...POOLS[category].map(t => ({ text: t })),
       ...pickN(POOLS[season].map(t => ({ text: t })), 5, rand)
     ];
-    const picked = pickN(pool, 24, rand);
+    const picked = pickN(pool, n - 1, rand);
     const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * 25);
+    const luckyPos = Math.floor(rand() * n);
     picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
   }
 
-  function makeRandomItems(difficulty) {
+  function makeRandomItems(difficulty, n) {
     const rand = seededRand(Date.now() & 0xffffffff);
     const season = getSeason();
     let pool;
@@ -909,30 +948,33 @@
       ];
     }
 
-    const picked = pickN(pool, 24, rand);
+    const picked = pickN(pool, n - 1, rand);
     const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * 25);
+    const luckyPos = Math.floor(rand() * n);
     picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
   }
 
   // ─────────────────────────────────────────
   // Bingo Detection
   // ─────────────────────────────────────────
-  function detectBingo(checks) {
+  function detectBingo(checks, size) {
     const set = new Set(checks.map(c => c.index));
     const lines = [];
+    const idx = Array.from({length: size}, (_, i) => i);
 
-    for (let r = 0; r < 5; r++) {
-      const row = [0,1,2,3,4].map(c => r*5+c);
+    for (let r = 0; r < size; r++) {
+      const row = idx.map(c => r * size + c);
       if (row.every(i => set.has(i))) lines.push(row);
     }
-    for (let c = 0; c < 5; c++) {
-      const col = [0,1,2,3,4].map(r => r*5+c);
+    for (let c = 0; c < size; c++) {
+      const col = idx.map(r => r * size + c);
       if (col.every(i => set.has(i))) lines.push(col);
     }
-    if ([0,6,12,18,24].every(i => set.has(i))) lines.push([0,6,12,18,24]);
-    if ([4,8,12,16,20].every(i => set.has(i))) lines.push([4,8,12,16,20]);
+    const d1 = idx.map(i => i * size + i);
+    if (d1.every(i => set.has(i))) lines.push(d1);
+    const d2 = idx.map(i => i * size + (size - 1 - i));
+    if (d2.every(i => set.has(i))) lines.push(d2);
     return lines;
   }
 
@@ -955,8 +997,9 @@
     if (!state.userId || !state.card) return;
 
     // localStorage は常に保存
+    const sz = Math.round(Math.sqrt(state.card.items.length));
     if (state.card.mode === 'daily' && state.card.date_str) {
-      lsSave(lsKey('daily_' + state.card.date_str), state.card);
+      lsSave(lsKey(`daily_${state.card.date_str}_${sz}`), state.card);
     }
     lsSave(lsKey('current'), state.card);
 
@@ -980,7 +1023,8 @@
           state.card.id = data.id;
           // Supabase ID を localStorage にも反映
           if (state.card.mode === 'daily' && state.card.date_str) {
-            lsSave(lsKey('daily_' + state.card.date_str), state.card);
+            const szInner = Math.round(Math.sqrt(state.card.items.length));
+            lsSave(lsKey(`daily_${state.card.date_str}_${szInner}`), state.card);
           }
           lsSave(lsKey('current'), state.card);
         }
@@ -1002,11 +1046,14 @@
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        // サイズが一致する場合のみ使用
+        if (Math.round(Math.sqrt((data.items || []).length)) === state.gridSize) return data;
+      }
     } catch {}
 
     // 失敗したら localStorage にフォールバック
-    return lsLoad(lsKey('daily_' + today));
+    return lsLoad(lsKey(`daily_${today}_${state.gridSize}`));
   }
 
   // ─────────────────────────────────────────
@@ -1016,10 +1063,15 @@
     const { card, bingoLines } = state;
     if (!card) return;
 
+    const size = Math.round(Math.sqrt(card.items.length));
+    const total = size * size;
     const bingoSet = new Set(bingoLines.flat());
     const checkedIndices = new Set(card.checks.map(c => c.index));
 
     const grid = document.getElementById('bingo-grid');
+    grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    const fontSizes = { 3: 'clamp(0.82rem,3.6vw,1.05rem)', 4: 'clamp(0.6rem,2.6vw,0.78rem)', 5: 'clamp(0.46rem,2vw,0.62rem)' };
+    grid.style.fontSize = fontSizes[size] || fontSizes[5];
     grid.innerHTML = '';
 
     card.items.forEach((item, i) => {
@@ -1044,7 +1096,7 @@
 
     const checked = card.checks.length;
     document.getElementById('grid-stats').textContent =
-      `${checked} / 25 チェック済み` +
+      `${checked} / ${total} チェック済み` +
       (bingoLines.length > 0 ? ` • ビンゴ ${bingoLines.length}本` : '');
   }
 
@@ -1105,7 +1157,7 @@
     document.getElementById('modal-backdrop').classList.remove('open');
 
     const prevBingoCount = state.bingoLines.length;
-    state.bingoLines = detectBingo(state.card.checks);
+    state.bingoLines = detectBingo(state.card.checks, Math.round(Math.sqrt(state.card.items.length)));
     renderGrid();
     saveCard();
 
@@ -1120,7 +1172,7 @@
   function uncheckCell(cellIndex) {
     state.card.checks = state.card.checks.filter(c => c.index !== cellIndex);
     document.getElementById('modal-backdrop').classList.remove('open');
-    state.bingoLines = detectBingo(state.card.checks);
+    state.bingoLines = detectBingo(state.card.checks, Math.round(Math.sqrt(state.card.items.length)));
     renderGrid();
     saveCard();
   }
@@ -1205,6 +1257,8 @@
 
       const existing = await loadDailyCard();
       if (existing) {
+        const loadedSize = Math.round(Math.sqrt((existing.items || []).length));
+        if (loadedSize >= 3) setGridSize(loadedSize);
         state.card = {
           id: existing.id,
           mode: 'daily',
@@ -1216,12 +1270,13 @@
         showToast('✨ 今日のビンゴを読み込みました');
       } else {
         const today = new Date().toISOString().split('T')[0];
+        const n = state.gridSize * state.gridSize;
         state.card = {
           id: null,
           mode: 'daily',
           label: '今日だけビンゴ',
           date_str: today,
-          items: makeDailyItems(),
+          items: makeDailyItems(n),
           checks: []
         };
         await saveCard();
@@ -1243,7 +1298,7 @@
       mode: 'category',
       label: labels[cat],
       date_str: null,
-      items: makeCategoryItems(cat),
+      items: makeCategoryItems(cat, state.gridSize * state.gridSize),
       checks: []
     };
     saveCard();
@@ -1252,13 +1307,14 @@
 
   function selectDifficulty(diff) {
     const stars = ['', '★', '★★', '★★★'];
+    const n = state.gridSize * state.gridSize;
     const label = `ランダム ${stars[diff]}`;
     state.card = {
       id: null,
       mode: 'random',
       label,
       date_str: null,
-      items: makeRandomItems(diff),
+      items: makeRandomItems(diff, n),
       checks: []
     };
     saveCard();
@@ -1266,7 +1322,7 @@
   }
 
   function openGridScreen(label) {
-    state.bingoLines = detectBingo(state.card.checks);
+    state.bingoLines = detectBingo(state.card.checks, Math.round(Math.sqrt(state.card.items.length)));
     state.celebrationShown = false;
     document.getElementById('grid-label').textContent = label;
     renderGrid();
@@ -1278,14 +1334,15 @@
     if (!confirm('カードを再生成します。現在のチェックは消えます。')) return;
 
     const { mode, label } = state.card;
+    const n = state.gridSize * state.gridSize;
     if (mode === 'daily') {
-      state.card.items = makeDailyItems();
+      state.card.items = makeDailyItems(n);
     } else if (mode === 'category') {
       const catMap = { '🌿 日常': 'everyday', '😊 気持ち': 'feelings', '🏙 都会': 'city', '❤️ 二人限定': 'couple' };
-      state.card.items = makeCategoryItems(catMap[label] || 'everyday');
+      state.card.items = makeCategoryItems(catMap[label] || 'everyday', n);
     } else {
       const diffMap = { 'ランダム ★': 1, 'ランダム ★★': 2, 'ランダム ★★★': 3 };
-      state.card.items = makeRandomItems(diffMap[label] || 2);
+      state.card.items = makeRandomItems(diffMap[label] || 2, n);
     }
     state.card.checks = [];
     state.card.id = null;
