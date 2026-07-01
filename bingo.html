@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>お散歩ビンゴ | Notre Endroit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      background-attachment: fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+      overscroll-behavior: none;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .top-bar a, .top-bar button.back-btn {
+      color: #98bedd;
+      text-decoration: none;
+      font-size: 0.9rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .top-bar h1 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.15rem;
+      color: #e8f4fd;
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      color: #98bedd;
+      padding: 5px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── Mode Select ── */
+    #screen-mode {
+      padding: 24px 20px 40px;
+    }
+
+    .mode-hero {
+      text-align: center;
+      padding: 16px 0 28px;
+    }
+
+    .mode-hero .hero-emoji { font-size: 2.8rem; margin-bottom: 8px; }
+    .mode-hero h2 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.8rem;
+      color: #e8f4fd;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .mode-hero p { font-size: 0.85rem; color: #98bedd; }
+
+    .mode-cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .mode-card {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 18px;
+      padding: 20px 22px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mode-card:active { transform: scale(0.97); background: rgba(255,255,255,0.12); }
+
+    .mode-card-icon { font-size: 2rem; flex-shrink: 0; }
+
+    .mode-card-body { flex: 1; }
+    .mode-card-title { font-size: 1.05rem; font-weight: 400; color: #e8f4fd; margin-bottom: 4px; }
+    .mode-card-desc { font-size: 0.78rem; color: #98bedd; line-height: 1.5; }
+
+    .mode-card-arrow { color: #5c8aaf; font-size: 1.1rem; }
+
+    .mode-card.daily {
+      background: linear-gradient(135deg, rgba(255,200,50,0.12) 0%, rgba(255,150,50,0.08) 100%);
+      border-color: rgba(255,200,80,0.3);
+    }
+
+    .mode-card.daily .mode-card-title { color: #ffd97d; }
+
+    /* ── Category / Difficulty Select ── */
+    #screen-category, #screen-difficulty {
+      padding: 20px 20px 40px;
+    }
+
+    .select-subtitle {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #98bedd;
+      margin-bottom: 20px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .category-card {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 16px;
+      padding: 22px 16px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .category-card:active { transform: scale(0.96); background: rgba(255,255,255,0.12); }
+
+    .category-card-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .category-card-title { font-size: 1rem; color: #e8f4fd; margin-bottom: 4px; }
+    .category-card-hint { font-size: 0.72rem; color: #6a9cbb; line-height: 1.4; }
+
+    .difficulty-cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .difficulty-card {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 16px;
+      padding: 18px 22px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .difficulty-card:active { transform: scale(0.97); background: rgba(255,255,255,0.12); }
+
+    .difficulty-stars { font-size: 1.3rem; min-width: 70px; }
+    .difficulty-body { flex: 1; }
+    .difficulty-title { font-size: 1rem; color: #e8f4fd; margin-bottom: 3px; }
+    .difficulty-desc { font-size: 0.75rem; color: #98bedd; }
+
+    /* ── Grid Screen ── */
+    #screen-grid { padding-bottom: 32px; }
+
+    .grid-header {
+      padding: 10px 16px 4px;
+      text-align: center;
+    }
+
+    .grid-label {
+      font-size: 0.82rem;
+      color: #98bedd;
+      margin-bottom: 2px;
+    }
+
+    .grid-stats {
+      font-size: 0.75rem;
+      color: #5c8aaf;
+    }
+
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      padding: 8px 8px 12px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .bingo-cell {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.12);
+      border-radius: 8px;
+      font-size: clamp(0.46rem, 2vw, 0.62rem);
+      line-height: 1.35;
+      overflow: hidden;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+      color: #c8ddf0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .bingo-cell:active { transform: scale(0.92); }
+
+    .bingo-cell.checked {
+      background: rgba(80,180,120,0.25);
+      border-color: rgba(100,200,140,0.4);
+      color: #a8e0c0;
+    }
+
+    .bingo-cell.checked .cell-text { opacity: 0.7; }
+
+    .bingo-cell.lucky {
+      background: rgba(255,200,50,0.1);
+      border-color: rgba(255,200,80,0.35);
+    }
+
+    .bingo-cell.lucky .cell-text { color: #ffd97d; }
+
+    .bingo-cell.lucky.checked {
+      background: rgba(255,200,50,0.22);
+    }
+
+    .bingo-cell.bingo-line {
+      background: rgba(255,220,80,0.2);
+      border-color: rgba(255,220,80,0.5);
+    }
+
+    .bingo-cell.bingo-line.checked {
+      background: rgba(255,220,80,0.3);
+    }
+
+    .cell-check {
+      position: absolute;
+      top: 2px;
+      right: 3px;
+      font-size: 0.65rem;
+      opacity: 0.9;
+    }
+
+    .cell-lucky-badge {
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      font-size: 0.55rem;
+    }
+
+    .cell-memo-badge {
+      position: absolute;
+      bottom: 1px;
+      right: 2px;
+      font-size: 0.5rem;
+      opacity: 0.6;
+    }
+
+    .cell-text {
+      pointer-events: none;
+      line-height: 1.35;
+    }
+
+    .grid-actions {
+      display: flex;
+      gap: 10px;
+      padding: 4px 12px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .btn-new-card {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      color: #98bedd;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-new-card:active { background: rgba(255,255,255,0.14); }
+
+    .bingo-count-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #1a1a0a;
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Memo Modal ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-backdrop.open { display: flex; align-items: flex-end; }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, #1a2f5a 0%, #0f1e3a 100%);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 24px 24px 0 0;
+      padding: 20px 20px 32px;
+      animation: slide-up 0.25s ease-out;
+    }
+
+    @keyframes slide-up {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(150,200,255,0.25);
+      border-radius: 2px;
+      margin: 0 auto 18px;
+    }
+
+    .modal-cell-text {
+      font-size: 1rem;
+      color: #e8f4fd;
+      text-align: center;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    .modal-cell-lucky {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #ffd97d;
+      margin-bottom: 16px;
+    }
+
+    .modal-memo-label {
+      font-size: 0.78rem;
+      color: #98bedd;
+      margin-bottom: 6px;
+    }
+
+    .modal-memo-input {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #e8f4fd;
+      resize: none;
+      min-height: 80px;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .modal-memo-input:focus {
+      border-color: rgba(150,200,255,0.4);
+    }
+
+    .modal-memo-input::placeholder { color: rgba(150,200,255,0.35); }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-cancel {
+      flex: 0 0 auto;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      color: #98bedd;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-check {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(80,180,120,0.4), rgba(60,150,100,0.4));
+      border: 1.5px solid rgba(100,200,140,0.35);
+      color: #a8e0c0;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      font-weight: 400;
+    }
+
+    .btn-uncheck {
+      flex: 1;
+      background: rgba(255,100,100,0.15);
+      border: 1.5px solid rgba(255,120,120,0.25);
+      color: #ff9999;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+    }
+
+    /* ── Celebration ── */
+    .celebration {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,10,0.75);
+      backdrop-filter: blur(4px);
+    }
+
+    .celebration.show { display: flex; }
+
+    .celebration-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 3.5rem;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(255,150,0,0.3);
+      margin-bottom: 8px;
+      animation: bingo-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes bingo-pop {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-subtitle {
+      font-size: 0.9rem;
+      color: #c8ddf0;
+      margin-bottom: 32px;
+    }
+
+    .celebration-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: #e8f4fd;
+      padding: 13px 28px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+    }
+
+    #confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 199;
+      overflow: hidden;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -10px;
+      animation: confetti-fall linear forwards;
+    }
+
+    @keyframes confetti-fall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(26,48,96,0.95);
+      border: 1.5px solid rgba(150,200,255,0.25);
+      color: #e8f4fd;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 300;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Section header on mode/category screens ── */
+    .screen-section-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: #e8f4fd;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+
+  <div id="confetti-container"></div>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button class="back-btn" id="back-btn" onclick="handleBack()">← ホーム</button>
+    <h1 id="top-title">お散歩ビンゴ</h1>
+    <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
+  </div>
+
+  <!-- ── Screen: Mode Select ── -->
+  <div class="screen active" id="screen-mode">
+    <div class="mode-hero">
+      <div class="hero-emoji">🎯</div>
+      <h2>お散歩ビンゴ</h2>
+      <p>今日の小さな発見を集めよう</p>
+    </div>
+
+    <div class="mode-cards">
+      <div class="mode-card daily" onclick="selectMode('daily')">
+        <div class="mode-card-icon">🌟</div>
+        <div class="mode-card-body">
+          <div class="mode-card-title">今日だけビンゴ</div>
+          <div class="mode-card-desc" id="daily-desc">毎日0時に新しいカードが生まれる<br>今日の季節・曜日に合わせたお題</div>
+        </div>
+        <div class="mode-card-arrow">→</div>
+      </div>
+
+      <div class="mode-card" onclick="showScreen('category')">
+        <div class="mode-card-icon">🗂</div>
+        <div class="mode-card-body">
+          <div class="mode-card-title">カテゴリーから選ぶ</div>
+          <div class="mode-card-desc">日常 / 気持ち / 都会 / 二人限定<br>テーマを絞って楽しもう</div>
+        </div>
+        <div class="mode-card-arrow">→</div>
+      </div>
+
+      <div class="mode-card" onclick="showScreen('difficulty')">
+        <div class="mode-card-icon">🎲</div>
+        <div class="mode-card-body">
+          <div class="mode-card-title">ランダム生成</div>
+          <div class="mode-card-desc">難易度★〜★★★で25マス生成<br>毎回ちがう組み合わせ</div>
+        </div>
+        <div class="mode-card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screen: Category Select ── -->
+  <div class="screen" id="screen-category">
+    <p class="screen-section-title" style="padding:16px 0 4px">カテゴリーを選ぶ</p>
+    <p class="select-subtitle">テーマを決めてビンゴを生成</p>
+    <div style="padding:0 16px" class="category-grid">
+      <div class="category-card" onclick="selectCategory('everyday')">
+        <div class="category-card-icon">🌿</div>
+        <div class="category-card-title">日常</div>
+        <div class="category-card-hint">猫・虹・空<br>身近な発見</div>
+      </div>
+      <div class="category-card" onclick="selectCategory('feelings')">
+        <div class="category-card-icon">😊</div>
+        <div class="category-card-title">気持ち</div>
+        <div class="category-card-hint">笑う・感謝<br>物じゃない宝</div>
+      </div>
+      <div class="category-card" onclick="selectCategory('city')">
+        <div class="category-card-icon">🏙</div>
+        <div class="category-card-title">都会</div>
+        <div class="category-card-hint">カフェ・神社<br>街歩き系</div>
+      </div>
+      <div class="category-card" onclick="selectCategory('couple')">
+        <div class="category-card-icon">❤️</div>
+        <div class="category-card-title">二人限定</div>
+        <div class="category-card-hint">相手を思い出す<br>2人だけのお題</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screen: Difficulty Select ── -->
+  <div class="screen" id="screen-difficulty">
+    <p class="screen-section-title" style="padding:16px 0 4px">難易度を選ぶ</p>
+    <p class="select-subtitle">難しいほどレアなお題が入る</p>
+    <div style="padding:0 16px" class="difficulty-cards">
+      <div class="difficulty-card" onclick="selectDifficulty(1)">
+        <div class="difficulty-stars">⭐</div>
+        <div class="difficulty-body">
+          <div class="difficulty-title">かんたん</div>
+          <div class="difficulty-desc">毎日目にするもの中心。さくさく集まる</div>
+        </div>
+      </div>
+      <div class="difficulty-card" onclick="selectDifficulty(2)">
+        <div class="difficulty-stars">⭐⭐</div>
+        <div class="difficulty-body">
+          <div class="difficulty-title">ふつう</div>
+          <div class="difficulty-desc">いろんなジャンルをミックス</div>
+        </div>
+      </div>
+      <div class="difficulty-card" onclick="selectDifficulty(3)">
+        <div class="difficulty-stars">⭐⭐⭐</div>
+        <div class="difficulty-body">
+          <div class="difficulty-title">むずかしい</div>
+          <div class="difficulty-desc">レアなお題多め。達成したら自慢できる</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screen: Bingo Grid ── -->
+  <div class="screen" id="screen-grid">
+    <div class="grid-header">
+      <div class="grid-label" id="grid-label">今日だけビンゴ</div>
+      <div class="grid-stats" id="grid-stats">0 / 25 チェック済み</div>
+    </div>
+
+    <div class="bingo-grid" id="bingo-grid"></div>
+
+    <div class="grid-actions">
+      <button class="btn-new-card" onclick="handleBack(); showScreen('mode')">
+        ← モード選択に戻る
+      </button>
+      <button class="btn-new-card" onclick="regenerateCard()" style="flex:0 0 auto;padding:12px 16px">
+        🎲 再生成
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Memo Modal ── -->
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-cell-text" id="modal-cell-text"></div>
+      <div class="modal-cell-lucky" id="modal-cell-lucky" style="display:none">⭐ Lucky</div>
+      <div class="modal-memo-label">📝 メモ（任意）</div>
+      <textarea
+        class="modal-memo-input"
+        id="modal-memo"
+        placeholder="どこで見つけた？どんな気持ち？"
+        maxlength="200"
+      ></textarea>
+      <div class="modal-buttons" id="modal-buttons"></div>
+    </div>
+  </div>
+
+  <!-- ── Celebration ── -->
+  <div class="celebration" id="celebration">
+    <div class="celebration-title">BINGO! 🎉</div>
+    <div class="celebration-subtitle" id="celebration-subtitle">ラインが揃った！</div>
+    <button class="celebration-btn" onclick="closeCelebration()">続けてチェック →</button>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ─────────────────────────────────────────
+  // Item Pools
+  // ─────────────────────────────────────────
+  const POOLS = {
+    everyday: [
+      '猫を見る','犬を見る','虹を見る','赤い車','面白い看板','紫色の花',
+      'ハートの形','白い猫','黒い犬','飛行機雲','きれいな空','面白い形の雲',
+      'きれいな夕焼け','水たまり','きれいな花','公園のベンチ','自転車',
+      '子どもの笑い声','鳥の声','面白い形の木','月を見る','シャボン玉',
+      'きれいな石','かわいい子供','猫じゃらし','でかい犬','ちいさい犬',
+      '三毛猫','双子みたいな人','珍しい色の傘'
+    ],
+    feelings: [
+      '誰かに親切にする','笑う','深呼吸する','空を見上げる',
+      '「ありがとう」を言う','新しい発見','美味しいものを食べる','誰かを褒める',
+      '心が温かくなる','いい匂いを嗅ぐ','なんか嬉しい瞬間','ほっとする',
+      'なんか感動する','ゆっくりする','好きな音楽を聴く','きれいだと思う',
+      'ラッキーを感じる','頑張れた','笑顔になる','前向きになる',
+      'なんか幸せ','一人時間を楽しむ','空がきれいだった','今日もいい日',
+      '小さな発見','何かに感謝した','自然を感じた','ほっこりした',
+      '嬉しいことがあった','いい気分で歩けた'
+    ],
+    city: [
+      'コンビニ3社制覇','工事現場','キッチンカー','外国人観光客',
+      'シェアサイクル','タクシー','神社','カフェ','本屋','花屋',
+      'ストリートミュージシャン','珍しい車','犬の散歩','おしゃれなポスター',
+      '路地裏','階段','パン屋','ケーキ屋','八百屋','古着屋','雑貨屋',
+      '自転車屋','美容院','銭湯','居酒屋','喫茶店','商店街','屋台',
+      '子供の自転車練習','夫婦の散歩'
+    ],
+    couple: [
+      '相手を思い出した','LINEしたくなった','同じものを見つけた',
+      '写真を撮りたくなった','「今度一緒に来たい」と思った','お土産候補発見',
+      'あの人なら笑いそう','一緒に食べたいものを発見','あの人に見せたい',
+      '心の中で報告した','「話したい」と思った','好きだなと思った',
+      '一緒にいたいな','連絡した','2人のお気に入りを発見',
+      '思わずLINEした','写真を送った','今日報告することができた',
+      '声が聴きたい','会いたいと思った','「あの子も好きそう」',
+      'お土産にしたい','いつか2人で来たい','内緒話を思った',
+      '相手が好きそうな場所','あの人の話題になった','2人で笑えそう',
+      '今日のことを話したい','この景色を共有したい','連絡がきた'
+    ],
+    summer: [
+      'セミの声','入道雲','かき氷','ひまわり','スイカ',
+      'アイスを食べる','扇風機','麦わら帽子','ビアガーデン','夏祭り',
+      '浴衣','海の匂い','蝉の抜け殻','日焼け止め','サンダル',
+      '冷たいもの飲む','青空','日陰に入る','夕立','蚊取り線香'
+    ],
+    autumn: [
+      '紅葉','ススキ','柿','栗','銀杏','秋晴れ',
+      'コスモス','読書','文化祭','運動会','月見','芋','落ち葉',
+      '秋の風','焼き芋の匂い'
+    ],
+    winter: [
+      'マフラー','吐く息が白い','焼き芋','イルミネーション',
+      '雪','コート','手袋','ホットドリンク','おでんの匂い',
+      '冬の星空','クリスマスの飾り','年末の雰囲気','冬晴れ',
+      '暖房の匂い','ふかふかのコート'
+    ],
+    spring: [
+      '桜','菜の花','チューリップ','花見','うぐいすの声',
+      '春の風','たんぽぽ','れんげ','つくし','春雨',
+      '新緑','花粉','春霞','入学式のランドセル','ふきのとう'
+    ],
+    weekday: [
+      'コーヒーを飲む','今日1回笑う','空を見る','定時退社',
+      'ランチが美味しい','通勤中に発見','仕事うまくいった',
+      '誰かに感謝された','早起きできた','頑張った自分を褒める',
+      'テイクアウト','途中下車','いつもと違う道','朝日','夕焼け'
+    ],
+    weekend: [
+      '15分散歩','カフェ','写真を撮る','木陰に入る','アイスを食べる',
+      '昼ゆっくり起きる','お出かけする','ごはんを作る','映画を見る',
+      'のんびりする','公園に行く','お気に入りのお店','新しい場所',
+      'スーパーでいいもの発見','お散歩コース'
+    ],
+    lucky: [
+      '今日は誰かにいいことをする',
+      '好きな人に連絡する',
+      '空を見て感動する',
+      '今日もいい一日だった',
+      '笑顔で過ごせた',
+      '誰かを幸せにした',
+      '思いがけないプレゼント',
+      '偶然の出会い',
+      '奇跡を感じた',
+      '大切なことに気づいた'
+    ]
+  };
+
+  // ─────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────
+  const state = {
+    userId: null,
+    card: null,   // { id, mode, label, items:[{text,is_lucky}], checks:[{index,memo,checked_at}] }
+    modalCell: null,
+    bingoLines: [],
+    celebrationShown: false
+  };
+
+  // ─────────────────────────────────────────
+  // Seeded Random (for daily bingo)
+  // ─────────────────────────────────────────
+  function seededRand(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+      return (s >>> 0) / 0x100000000;
+    };
+  }
+
+  function shuffle(arr, rand) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function pickN(arr, n, rand) {
+    return shuffle(arr, rand).slice(0, n);
+  }
+
+  // ─────────────────────────────────────────
+  // Card Generation
+  // ─────────────────────────────────────────
+  function getSeason() {
+    const m = new Date().getMonth();
+    if (m >= 2 && m <= 4) return 'spring';
+    if (m >= 5 && m <= 7) return 'summer';
+    if (m >= 8 && m <= 10) return 'autumn';
+    return 'winter';
+  }
+
+  function isWeekend() {
+    const d = new Date().getDay();
+    return d === 0 || d === 6;
+  }
+
+  function makeDailyItems() {
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const rand = seededRand(parseInt(today));
+    const season = getSeason();
+    const weekend = isWeekend();
+
+    const pool = [
+      ...POOLS.everyday.map(t => ({ text: t })),
+      ...POOLS.feelings.map(t => ({ text: t })),
+      ...POOLS[season].map(t => ({ text: t })),
+      ...(weekend ? POOLS.weekend : POOLS.weekday).map(t => ({ text: t }))
+    ];
+
+    const picked = pickN(pool, 24, rand);
+    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
+    const luckyPos = Math.floor(rand() * 25);
+    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
+    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+  }
+
+  function makeCategoryItems(category) {
+    const rand = seededRand(Date.now() & 0xffffffff);
+    const season = getSeason();
+    const pool = [
+      ...POOLS[category].map(t => ({ text: t })),
+      ...pickN(POOLS[season].map(t => ({ text: t })), 5, rand)
+    ];
+    const picked = pickN(pool, 24, rand);
+    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
+    const luckyPos = Math.floor(rand() * 25);
+    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
+    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+  }
+
+  function makeRandomItems(difficulty) {
+    const rand = seededRand(Date.now() & 0xffffffff);
+    const season = getSeason();
+    let pool;
+
+    if (difficulty === 1) {
+      pool = [
+        ...POOLS.everyday.map(t => ({ text: t })),
+        ...POOLS.feelings.map(t => ({ text: t })),
+        ...POOLS[season].slice(0, 6).map(t => ({ text: t }))
+      ];
+    } else if (difficulty === 2) {
+      pool = [
+        ...POOLS.everyday.map(t => ({ text: t })),
+        ...POOLS.feelings.map(t => ({ text: t })),
+        ...POOLS.city.map(t => ({ text: t })),
+        ...POOLS[season].map(t => ({ text: t }))
+      ];
+    } else {
+      pool = [
+        ...POOLS.city.map(t => ({ text: t })),
+        ...POOLS.couple.map(t => ({ text: t })),
+        ...POOLS[season].map(t => ({ text: t })),
+        ...POOLS.everyday.slice(0, 8).map(t => ({ text: t }))
+      ];
+    }
+
+    const picked = pickN(pool, 24, rand);
+    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
+    const luckyPos = Math.floor(rand() * 25);
+    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
+    return picked.slice(0, 25).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+  }
+
+  // ─────────────────────────────────────────
+  // Bingo Detection
+  // ─────────────────────────────────────────
+  function detectBingo(checks) {
+    const set = new Set(checks.map(c => c.index));
+    const lines = [];
+
+    for (let r = 0; r < 5; r++) {
+      const row = [0,1,2,3,4].map(c => r*5+c);
+      if (row.every(i => set.has(i))) lines.push(row);
+    }
+    for (let c = 0; c < 5; c++) {
+      const col = [0,1,2,3,4].map(r => r*5+c);
+      if (col.every(i => set.has(i))) lines.push(col);
+    }
+    if ([0,6,12,18,24].every(i => set.has(i))) lines.push([0,6,12,18,24]);
+    if ([4,8,12,16,20].every(i => set.has(i))) lines.push([4,8,12,16,20]);
+    return lines;
+  }
+
+  // ─────────────────────────────────────────
+  // Supabase Persistence
+  // ─────────────────────────────────────────
+  async function saveCard() {
+    if (!state.userId || !state.card) return;
+    try {
+      if (state.card.id) {
+        await _sb.from('bingo_sessions').update({
+          checks: state.card.checks,
+          updated_at: new Date().toISOString()
+        }).eq('id', state.card.id);
+      } else {
+        const { data, error } = await _sb.from('bingo_sessions').insert({
+          user_id: state.userId,
+          mode: state.card.mode,
+          label: state.card.label,
+          date_str: state.card.date_str || null,
+          items: state.card.items,
+          checks: state.card.checks
+        }).select().single();
+        if (!error && data) state.card.id = data.id;
+      }
+    } catch {}
+  }
+
+  async function loadDailyCard() {
+    if (!state.userId) return null;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const { data } = await _sb.from('bingo_sessions')
+        .select('*')
+        .eq('user_id', state.userId)
+        .eq('mode', 'daily')
+        .eq('date_str', today)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      return data || null;
+    } catch { return null; }
+  }
+
+  // ─────────────────────────────────────────
+  // Rendering
+  // ─────────────────────────────────────────
+  function renderGrid() {
+    const { card, bingoLines } = state;
+    if (!card) return;
+
+    const bingoSet = new Set(bingoLines.flat());
+    const checkedIndices = new Set(card.checks.map(c => c.index));
+
+    const grid = document.getElementById('bingo-grid');
+    grid.innerHTML = '';
+
+    card.items.forEach((item, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'bingo-cell';
+      if (checkedIndices.has(i)) cell.classList.add('checked');
+      if (item.is_lucky) cell.classList.add('lucky');
+      if (bingoSet.has(i)) cell.classList.add('bingo-line');
+
+      const check = card.checks.find(c => c.index === i);
+      const hasMemo = check && check.memo;
+
+      cell.innerHTML = `
+        ${item.is_lucky ? '<span class="cell-lucky-badge">⭐</span>' : ''}
+        ${checkedIndices.has(i) ? '<span class="cell-check">✓</span>' : ''}
+        <span class="cell-text">${item.text}</span>
+        ${hasMemo ? '<span class="cell-memo-badge">📝</span>' : ''}
+      `;
+      cell.addEventListener('click', () => openModal(i));
+      grid.appendChild(cell);
+    });
+
+    const checked = card.checks.length;
+    document.getElementById('grid-stats').textContent =
+      `${checked} / 25 チェック済み` +
+      (bingoLines.length > 0 ? ` • ビンゴ ${bingoLines.length}本` : '');
+  }
+
+  // ─────────────────────────────────────────
+  // Modal
+  // ─────────────────────────────────────────
+  function openModal(cellIndex) {
+    const item = state.card.items[cellIndex];
+    const existing = state.card.checks.find(c => c.index === cellIndex);
+    state.modalCell = cellIndex;
+
+    document.getElementById('modal-cell-text').textContent = item.text;
+    const luckyEl = document.getElementById('modal-cell-lucky');
+    luckyEl.style.display = item.is_lucky ? 'block' : 'none';
+
+    const memoInput = document.getElementById('modal-memo');
+    memoInput.value = existing?.memo || '';
+
+    const btns = document.getElementById('modal-buttons');
+    if (existing) {
+      btns.innerHTML = `
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-uncheck" onclick="uncheckCell(${cellIndex})">チェックを外す</button>
+        <button class="btn-check" onclick="saveCheck(${cellIndex})">メモを保存</button>
+      `;
+    } else {
+      btns.innerHTML = `
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-check" onclick="saveCheck(${cellIndex})">✓ チェックする</button>
+      `;
+    }
+
+    document.getElementById('modal-backdrop').classList.add('open');
+    setTimeout(() => memoInput.focus(), 300);
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modal-backdrop')) return;
+    document.getElementById('modal-backdrop').classList.remove('open');
+    state.modalCell = null;
+  }
+
+  function saveCheck(cellIndex) {
+    const memo = document.getElementById('modal-memo').value.trim();
+    const existing = state.card.checks.findIndex(c => c.index === cellIndex);
+
+    if (existing >= 0) {
+      state.card.checks[existing].memo = memo;
+      state.card.checks[existing].checked_at = new Date().toISOString();
+    } else {
+      state.card.checks.push({
+        index: cellIndex,
+        memo,
+        checked_at: new Date().toISOString()
+      });
+    }
+
+    document.getElementById('modal-backdrop').classList.remove('open');
+
+    const prevBingoCount = state.bingoLines.length;
+    state.bingoLines = detectBingo(state.card.checks);
+    renderGrid();
+    saveCard();
+
+    if (state.bingoLines.length > prevBingoCount && !state.celebrationShown) {
+      state.celebrationShown = true;
+      setTimeout(showCelebration, 200);
+    } else if (state.bingoLines.length > prevBingoCount) {
+      showToast(`🎉 ビンゴ ${state.bingoLines.length}本目！`);
+    }
+  }
+
+  function uncheckCell(cellIndex) {
+    state.card.checks = state.card.checks.filter(c => c.index !== cellIndex);
+    document.getElementById('modal-backdrop').classList.remove('open');
+    state.bingoLines = detectBingo(state.card.checks);
+    renderGrid();
+    saveCard();
+  }
+
+  // ─────────────────────────────────────────
+  // Celebration
+  // ─────────────────────────────────────────
+  function showCelebration() {
+    launchConfetti();
+    const n = state.bingoLines.length;
+    document.getElementById('celebration-subtitle').textContent =
+      n === 1 ? 'ラインが揃った！' : `${n}本のビンゴ！すごい！`;
+    document.getElementById('celebration').classList.add('show');
+  }
+
+  function closeCelebration() {
+    document.getElementById('celebration').classList.remove('show');
+    document.getElementById('confetti-container').innerHTML = '';
+  }
+
+  function launchConfetti() {
+    const colors = ['#ffd700','#ff6b9d','#4ecdc4','#ff8a4c','#9b59b6','#3498db','#2ecc71'];
+    const container = document.getElementById('confetti-container');
+    container.innerHTML = '';
+    for (let i = 0; i < 50; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      const size = Math.random() * 8 + 4;
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        background:${colors[i % colors.length]};
+        width:${size}px;height:${size}px;
+        animation-duration:${Math.random()*2+1.2}s;
+        animation-delay:${Math.random()*0.6}s;
+        border-radius:${Math.random()>0.5?'50%':'3px'};
+      `;
+      container.appendChild(p);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  // Toast
+  // ─────────────────────────────────────────
+  function showToast(msg, ms = 2200) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), ms);
+  }
+
+  // ─────────────────────────────────────────
+  // Screen Navigation
+  // ─────────────────────────────────────────
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+
+    const backBtn = document.getElementById('back-btn');
+    if (name === 'mode') {
+      backBtn.textContent = '← ホーム';
+      backBtn.onclick = () => location.href = '/';
+      document.getElementById('top-title').textContent = 'お散歩ビンゴ';
+    } else if (name === 'category' || name === 'difficulty') {
+      backBtn.textContent = '← 戻る';
+      backBtn.onclick = () => showScreen('mode');
+    } else if (name === 'grid') {
+      backBtn.textContent = '← 戻る';
+      backBtn.onclick = () => showScreen('mode');
+    }
+  }
+
+  function handleBack() {
+    document.getElementById('back-btn').onclick();
+  }
+
+  // ─────────────────────────────────────────
+  // Mode Actions
+  // ─────────────────────────────────────────
+  async function selectMode(mode) {
+    if (mode === 'daily') {
+      showToast('📅 今日のビンゴを準備中…');
+
+      const existing = await loadDailyCard();
+      if (existing) {
+        state.card = {
+          id: existing.id,
+          mode: 'daily',
+          label: '今日だけビンゴ',
+          date_str: existing.date_str,
+          items: existing.items,
+          checks: existing.checks || []
+        };
+        showToast('✨ 今日のビンゴを読み込みました');
+      } else {
+        const today = new Date().toISOString().split('T')[0];
+        state.card = {
+          id: null,
+          mode: 'daily',
+          label: '今日だけビンゴ',
+          date_str: today,
+          items: makeDailyItems(),
+          checks: []
+        };
+        await saveCard();
+      }
+
+      openGridScreen('今日だけビンゴ');
+    }
+  }
+
+  function selectCategory(cat) {
+    const labels = {
+      everyday: '🌿 日常',
+      feelings: '😊 気持ち',
+      city: '🏙 都会',
+      couple: '❤️ 二人限定'
+    };
+    state.card = {
+      id: null,
+      mode: 'category',
+      label: labels[cat],
+      date_str: null,
+      items: makeCategoryItems(cat),
+      checks: []
+    };
+    saveCard();
+    openGridScreen(labels[cat]);
+  }
+
+  function selectDifficulty(diff) {
+    const stars = ['', '★', '★★', '★★★'];
+    const label = `ランダム ${stars[diff]}`;
+    state.card = {
+      id: null,
+      mode: 'random',
+      label,
+      date_str: null,
+      items: makeRandomItems(diff),
+      checks: []
+    };
+    saveCard();
+    openGridScreen(label);
+  }
+
+  function openGridScreen(label) {
+    state.bingoLines = detectBingo(state.card.checks);
+    state.celebrationShown = false;
+    document.getElementById('grid-label').textContent = label;
+    renderGrid();
+    showScreen('grid');
+  }
+
+  function regenerateCard() {
+    if (!state.card) return;
+    if (!confirm('カードを再生成します。現在のチェックは消えます。')) return;
+
+    const { mode, label } = state.card;
+    if (mode === 'daily') {
+      state.card.items = makeDailyItems();
+    } else if (mode === 'category') {
+      const catMap = { '🌿 日常': 'everyday', '😊 気持ち': 'feelings', '🏙 都会': 'city', '❤️ 二人限定': 'couple' };
+      state.card.items = makeCategoryItems(catMap[label] || 'everyday');
+    } else {
+      const diffMap = { 'ランダム ★': 1, 'ランダム ★★': 2, 'ランダム ★★★': 3 };
+      state.card.items = makeRandomItems(diffMap[label] || 2);
+    }
+    state.card.checks = [];
+    state.card.id = null;
+    state.bingoLines = [];
+    state.celebrationShown = false;
+    saveCard();
+    renderGrid();
+  }
+
+  // ─────────────────────────────────────────
+  // Init
+  // ─────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (!session) return;
+    state.userId = session.user.id;
+
+    const season = getSeason();
+    const seasonEmoji = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
+    const today = new Date();
+    const dow = ['日', '月', '火', '水', '木', '金', '土'][today.getDay()];
+    document.getElementById('daily-desc').innerHTML =
+      `毎日0時に新しいカードが生まれる<br>${seasonEmoji[season]} ${today.getMonth()+1}月${today.getDate()}日（${dow}）の特別版`;
+
+    showScreen('mode');
+  }
+
+  init();
+  </script>
+</body>
+</html>
