@@ -937,10 +937,30 @@
   }
 
   // ─────────────────────────────────────────
-  // Supabase Persistence
+  // Persistence: localStorage primary, Supabase secondary
   // ─────────────────────────────────────────
+  function lsKey(suffix) {
+    return `bingo_${state.userId}_${suffix}`;
+  }
+
+  function lsSave(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }
+
+  function lsLoad(key) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
+  }
+
   async function saveCard() {
     if (!state.userId || !state.card) return;
+
+    // localStorage は常に保存
+    if (state.card.mode === 'daily' && state.card.date_str) {
+      lsSave(lsKey('daily_' + state.card.date_str), state.card);
+    }
+    lsSave(lsKey('current'), state.card);
+
+    // Supabase はテーブルがあれば保存（なければ黙って無視）
     try {
       if (state.card.id) {
         await _sb.from('bingo_sessions').update({
@@ -956,7 +976,14 @@
           items: state.card.items,
           checks: state.card.checks
         }).select().single();
-        if (!error && data) state.card.id = data.id;
+        if (!error && data) {
+          state.card.id = data.id;
+          // Supabase ID を localStorage にも反映
+          if (state.card.mode === 'daily' && state.card.date_str) {
+            lsSave(lsKey('daily_' + state.card.date_str), state.card);
+          }
+          lsSave(lsKey('current'), state.card);
+        }
       }
     } catch {}
   }
@@ -964,8 +991,10 @@
   async function loadDailyCard() {
     if (!state.userId) return null;
     const today = new Date().toISOString().split('T')[0];
+
+    // Supabase から取得を試みる
     try {
-      const { data } = await _sb.from('bingo_sessions')
+      const { data, error } = await _sb.from('bingo_sessions')
         .select('*')
         .eq('user_id', state.userId)
         .eq('mode', 'daily')
@@ -973,8 +1002,11 @@
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-      return data || null;
-    } catch { return null; }
+      if (!error && data) return data;
+    } catch {}
+
+    // 失敗したら localStorage にフォールバック
+    return lsLoad(lsKey('daily_' + today));
   }
 
   // ─────────────────────────────────────────
