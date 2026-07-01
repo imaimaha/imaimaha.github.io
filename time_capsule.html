@@ -101,7 +101,7 @@
     .field textarea:focus { outline: none; border-color: rgba(100,200,255,0.6); }
     .field textarea::placeholder { color: #4a6a8a; }
 
-    .field input[type="date"] {
+    .field input[type="datetime-local"] {
       width: 100%; padding: 12px 14px;
       background: rgba(255,255,255,0.08);
       border: 1.5px solid rgba(100,180,255,0.25);
@@ -110,8 +110,8 @@
       transition: border-color 0.2s;
       -webkit-appearance: none;
     }
-    .field input[type="date"]:focus { outline: none; border-color: rgba(100,200,255,0.6); }
-    .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+    .field input[type="datetime-local"]:focus { outline: none; border-color: rgba(100,200,255,0.6); }
+    .field input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 
     .date-hint { font-size: 0.75rem; color: #5a7fa8; margin-top: 4px; }
 
@@ -287,8 +287,8 @@
           <textarea id="msg-input" placeholder="未来の相手へ伝えたいこと..."></textarea>
         </div>
         <div class="field">
-          <label>開封日（空白にするとランダムに設定されます）</label>
-          <input type="date" id="open-date-input">
+          <label>開封日時（空白にするとランダムに設定されます）</label>
+          <input type="datetime-local" id="open-date-input">
           <div class="date-hint" id="date-hint">未設定 → 3日〜3か月後のどこかに自動設定されます 🎲</div>
         </div>
         <button class="send-btn" id="send-btn" onclick="sendCapsule()">🎁 カプセルを送る</button>
@@ -327,10 +327,11 @@
       const badge = document.getElementById('user-badge')
       if (myProfile) badge.textContent = myProfile.emoji + ' ' + myProfile.name
 
-      // 日付の最小値を今日+1
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      document.getElementById('open-date-input').min = tomorrow.toISOString().split('T')[0]
+      // datetime-local の最小値を「今から1時間後」に設定
+      const minDt = new Date(Date.now() + 60 * 60 * 1000)
+      const pad = n => String(n).padStart(2, '0')
+      const minStr = `${minDt.getFullYear()}-${pad(minDt.getMonth()+1)}-${pad(minDt.getDate())}T${pad(minDt.getHours())}:${pad(minDt.getMinutes())}`
+      document.getElementById('open-date-input').min = minStr
 
       // URLパラメータで届いたタブを開く
       if (location.hash === '#received') switchTab('received')
@@ -368,8 +369,8 @@
     function renderReceived(c) {
       const senderEmoji = (c.sender_id === myId ? myProfile?.emoji : partnerProfile?.emoji) || '?'
       const senderName = (c.sender_id === myId ? myProfile?.name : partnerProfile?.name) || '?'
-      const createdDate = new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
-      const openDate = new Date(c.open_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
+      const createdDate = new Date(c.created_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const openDate = new Date(c.open_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
       if (c.is_opened) {
         return `
@@ -449,8 +450,8 @@
       el.innerHTML = data.map(c => {
         const recipientEmoji = (c.recipient_id === myId ? myProfile?.emoji : partnerProfile?.emoji) || '?'
         const recipientName = (c.recipient_id === myId ? myProfile?.name : partnerProfile?.name) || '?'
-        const createdDate = new Date(c.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
-        const openDate = new Date(c.open_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
+        const createdDate = new Date(c.created_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        const openDate = new Date(c.open_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         const now = new Date()
         const isDelivered = new Date(c.open_at) <= now
 
@@ -486,7 +487,8 @@
       const dateInput = document.getElementById('open-date-input').value
       let openAt
       if (dateInput) {
-        openAt = new Date(dateInput + 'T12:00:00').toISOString()
+        // datetime-local の値は "YYYY-MM-DDTHH:mm" 形式（ローカル時刻）
+        openAt = new Date(dateInput).toISOString()
       } else {
         // 3〜90日後のランダム
         const daysLater = 3 + Math.floor(Math.random() * 88)
@@ -510,7 +512,8 @@
       btn.textContent = '🎁 カプセルを送る'
 
       if (error) {
-        showToast('送信に失敗しました')
+        console.error('time_capsule insert error:', error)
+        showToast('送信失敗: ' + (error.message || error.code || 'unknown'))
         return
       }
 
