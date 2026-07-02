@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポイント履歴 | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      background-attachment: fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+    .user-badge { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(150,200,255,0.3); border-radius: 20px; padding: 4px 10px; font-size: 0.85rem; color: #e8f4fd; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    .total-card {
+      background: linear-gradient(135deg, rgba(255,215,100,0.15), rgba(255,180,50,0.08));
+      border: 2px solid rgba(255,215,100,0.35);
+      border-radius: 20px; padding: 28px 24px;
+      text-align: center; margin-bottom: 24px;
+      box-shadow: 0 0 24px rgba(255,215,100,0.1);
+    }
+    .total-label { font-size: 0.85rem; color: #ffd97d; margin-bottom: 6px; }
+    .total-amount { font-family: 'Zen Kurenaido', sans-serif; font-size: 3.2rem; color: #ffd764; letter-spacing: 0.02em; line-height: 1; }
+    .total-unit { font-size: 1rem; color: #ffd97d; margin-left: 6px; }
+
+    .summary-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 14px; padding: 14px 16px;
+    }
+    .summary-icon { font-size: 1.4rem; margin-bottom: 4px; }
+    .summary-label { font-size: 0.75rem; color: #98bedd; margin-bottom: 2px; }
+    .summary-val { font-size: 1.15rem; color: #e8f4fd; }
+
+    .filter-tabs {
+      display: flex; gap: 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px; padding: 3px;
+      margin-bottom: 14px;
+    }
+    .filter-btn {
+      flex: 1; padding: 8px 4px;
+      background: none; border: none; color: #7aadcc;
+      font-size: 0.82rem; font-family: inherit;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn.active { background: rgba(100,160,255,0.28); color: #e8f4fd; }
+
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.12);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .history-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .history-body { flex: 1; min-width: 0; }
+    .history-label { font-size: 0.9rem; color: #e8f4fd; }
+    .history-time { font-size: 0.72rem; color: #6a8a9c; margin-top: 2px; }
+    .history-amount { font-weight: bold; font-size: 1rem; white-space: nowrap; }
+    .amount-plus { color: #7edda1; }
+    .amount-minus { color: #ff9999; }
+
+    .empty { text-align: center; padding: 40px 20px; color: #5a7fa8; }
+    .empty .emoji { font-size: 2.5rem; margin-bottom: 10px; }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>✨ ポイント履歴</h1>
+    <div id="user-badge" class="user-badge"></div>
+  </div>
+
+  <div class="content">
+    <div class="total-card">
+      <div class="total-label">現在のポイント</div>
+      <div><span class="total-amount" id="total-pts">--</span><span class="total-unit">pt</span></div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-icon">📈</div>
+        <div class="summary-label">総獲得</div>
+        <div class="summary-val"><span id="sum-earned">--</span> pt</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">📉</div>
+        <div class="summary-label">総消費</div>
+        <div class="summary-val"><span id="sum-spent">--</span> pt</div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="filter-btn active" onclick="setFilter('all')">全部</button>
+      <button class="filter-btn" onclick="setFilter('earn')">獲得</button>
+      <button class="filter-btn" onclick="setFilter('spend')">消費</button>
+    </div>
+
+    <div id="history" class="history-list"></div>
+  </div>
+
+  <script>
+    const REASON_LABELS = {
+      gauge_tap:   { label: 'ゲージタップ', icon: '✨' },
+      gauge_max:   { label: 'ゲージMAX到達ボーナス', icon: '🌟' },
+      quiz:        { label: 'クイズ回答', icon: '💬' },
+      gacha:       { label: 'ガチャ回転', icon: '🎰' },
+      gacha_bonus: { label: 'ガチャ景品ボーナス', icon: '🎁' },
+    }
+
+    let allRecords = []
+    let currentFilter = 'all'
+
+    async function loadPoints() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      const myId = session.user.id
+
+      // 自分のプロフィール表示
+      const { data: profs } = await _sb.from('profiles').select('*').eq('id', myId)
+      if (profs && profs[0]) document.getElementById('user-badge').textContent = profs[0].emoji + ' ' + profs[0].name
+
+      // 全レコード取得
+      const { data } = await _sb.from('points')
+        .select('*')
+        .eq('user_id', myId)
+        .order('created_at', { ascending: false })
+      allRecords = data || []
+
+      // 集計
+      let earned = 0, spent = 0
+      allRecords.forEach(r => {
+        if (r.amount >= 0) earned += r.amount
+        else spent += r.amount
+      })
+      const total = earned + spent
+      document.getElementById('total-pts').textContent = total.toLocaleString()
+      document.getElementById('sum-earned').textContent = '+' + earned.toLocaleString()
+      document.getElementById('sum-spent').textContent = spent.toLocaleString()
+
+      renderHistory()
+    }
+
+    function setFilter(f) {
+      currentFilter = f
+      document.querySelectorAll('.filter-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['all','earn','spend'][i] === f)
+      })
+      renderHistory()
+    }
+
+    function renderHistory() {
+      const el = document.getElementById('history')
+      let records = allRecords
+      if (currentFilter === 'earn') records = allRecords.filter(r => r.amount >= 0)
+      else if (currentFilter === 'spend') records = allRecords.filter(r => r.amount < 0)
+
+      if (records.length === 0) {
+        el.innerHTML = '<div class="empty"><div class="emoji">📭</div><div>履歴がありません</div></div>'
+        return
+      }
+
+      el.innerHTML = records.map(r => {
+        const info = REASON_LABELS[r.reason] || { label: r.reason, icon: '•' }
+        const time = new Date(r.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+        const cls  = r.amount >= 0 ? 'amount-plus' : 'amount-minus'
+        const sign = r.amount >= 0 ? '+' : ''
+        return `
+          <div class="history-item">
+            <div class="history-icon">${info.icon}</div>
+            <div class="history-body">
+              <div class="history-label">${info.label}</div>
+              <div class="history-time">${time}</div>
+            </div>
+            <div class="history-amount ${cls}">${sign}${r.amount} pt</div>
+          </div>
+        `
+      }).join('')
+    }
+
+    loadPoints()
+  </script>
+</body>
+</html>

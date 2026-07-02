@@ -272,6 +272,11 @@
       <button class="ask-btn" onclick="askOk()">🐾 行っていい？</button>
       <div class="ask-result" id="ask-result"></div>
     </div>
+
+    <div id="line-messages-section" style="margin-top:24px">
+      <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.05rem;color:#e8f4fd;text-align:center;margin-bottom:12px">💬 LINE 最新メッセージ</h3>
+      <div id="line-messages-list" style="display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto"></div>
+    </div>
   </div>
 
   <script>
@@ -401,7 +406,8 @@
           body: JSON.stringify({
             sender_id: session.user.id,
             target: 'partner',
-            message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾`,
+            message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾\nどれか選んで返信してね👇`,
+            quick_reply: ['いいよ ✅', 'きびしい 🚫', '仕事の進み次第 🤔'],
           }),
         })
         if (res.ok) {
@@ -424,12 +430,46 @@
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
+    async function loadLineMessages() {
+      const list = document.getElementById('line-messages-list')
+      const { data } = await _sb.from('line_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10)
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#6a8a9c;font-size:0.85rem;padding:20px 0">まだメッセージはありません</div>'
+        return
+      }
+      list.innerHTML = data.map(m => {
+        const time = new Date(m.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+        const badge = m.source_type === 'group' ? '👥' : '💬'
+        return `
+          <div style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:12px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;color:#98bedd">
+              <span>${badge} ${escHtml(m.sender_emoji || '')} ${escHtml(m.sender_name || '匿名')}</span>
+              <span style="color:#6a8a9c">${time}</span>
+            </div>
+            <div style="font-size:0.95rem;color:#e8f4fd;white-space:pre-wrap;word-break:break-word">${escHtml(m.message)}</div>
+          </div>
+        `
+      }).join('')
+    }
+
+    // 5秒毎に更新（リアルタイムサブスクリプションでもいいがシンプルに）
+    let lineMsgTimer = null
+    function startLineMsgPolling() {
+      loadLineMessages()
+      if (lineMsgTimer) clearInterval(lineMsgTimer)
+      lineMsgTimer = setInterval(loadLineMessages, 5000)
+    }
+
     load().then(() => {
       if (myProfile) {
         document.getElementById('user-emoji-badge').textContent = myProfile.emoji
         document.getElementById('user-name-badge').textContent  = myProfile.name
         document.getElementById('user-badge').style.display = 'flex'
       }
+      startLineMsgPolling()
     })
   </script>
 </body>

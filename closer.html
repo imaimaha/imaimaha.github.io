@@ -482,6 +482,7 @@
       const now      = new Date().toISOString()
       const cur      = effective(myType)
       const newGauge = Math.min(cur + 5, 100)
+      const wasMax   = cur >= 100
       raw[myType]    = { gauge: newGauge, updated_at: now }
       updateDistance()
 
@@ -490,6 +491,21 @@
 
       // タップごとに1pt付与
       _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'gauge_tap' }).then(() => {})
+
+      // MAX到達で相手に通知 + ボーナス+10pt（1回きり: この瞬間だけ）
+      if (!wasMax && newGauge >= 100) {
+        _sb.from('points').insert({ user_id: myId, amount: 10, reason: 'gauge_max' }).then(() => {})
+        const myEmoji = myType === 'fox' ? '🦊' : '🦔'
+        fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender_id: myId,
+            target: 'partner',
+            message: `${myEmoji} ゲージが MAX になったよ！ ✨\n会いたいシグナル 💖`,
+          }),
+        }).catch(() => {})
+      }
     }
 
     // -------- popup --------
