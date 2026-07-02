@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ガチャ | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      background-attachment: fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+
+    /* ====== TOP BAR ====== */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #e8f4fd; }
+    .top-right { display: flex; align-items: center; gap: 8px; }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(150,200,255,0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      color: #e8f4fd;
+    }
+
+    /* ====== POINT BAR ====== */
+    .point-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: rgba(255,215,0,0.08);
+      border-bottom: 1px solid rgba(255,215,0,0.15);
+      font-size: 1rem;
+      color: #ffe066;
+      position: relative;
+      z-index: 1;
+    }
+
+    .point-bar .point-value {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    /* ====== CONTENT ====== */
+    .content {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ====== CAPSULE MACHINE ====== */
+    .gacha-machine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .machine-body {
+      position: relative;
+      width: 200px;
+    }
+
+    /* capsule globe (glass dome) */
+    .machine-globe {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(180,220,255,0.35) 0%, rgba(80,140,220,0.18) 40%, rgba(20,50,120,0.5) 100%);
+      border: 3px solid rgba(100,180,255,0.5);
+      box-shadow:
+        0 0 28px rgba(80,160,255,0.3),
+        inset 0 4px 16px rgba(255,255,255,0.15),
+        inset 0 -4px 12px rgba(0,0,30,0.4);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s;
+    }
+
+    .machine-globe::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 28px;
+      width: 40px;
+      height: 22px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      transform: rotate(-20deg);
+      filter: blur(3px);
+    }
+
+    /* the capsule ball inside */
+    .capsule-ball {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff 0%, #b0d8ff 30%, #4a90d9 60%, #1a3d7c 100%);
+      box-shadow: 0 4px 16px rgba(0,80,200,0.5), inset 0 -4px 8px rgba(0,0,60,0.3);
+      position: relative;
+    }
+
+    .capsule-ball::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 16px;
+      width: 20px;
+      height: 12px;
+      background: rgba(255,255,255,0.55);
+      border-radius: 50%;
+      transform: rotate(-20deg);
+      filter: blur(2px);
+    }
+
+    /* spin animation */
+    @keyframes spinBall {
+      0%   { transform: rotate(0deg) scale(1); }
+      25%  { transform: rotate(90deg) scale(1.12); }
+      50%  { transform: rotate(180deg) scale(1); }
+      75%  { transform: rotate(270deg) scale(1.12); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .capsule-ball.spinning {
+      animation: spinBall 0.5s linear 0s 2;
+    }
+
+    /* machine base */
+    .machine-base {
+      width: 120px;
+      height: 20px;
+      background: linear-gradient(180deg, rgba(60,100,180,0.7) 0%, rgba(20,40,100,0.9) 100%);
+      border-radius: 0 0 12px 12px;
+      margin: -2px auto 0;
+      border: 2px solid rgba(100,160,255,0.3);
+      border-top: none;
+    }
+
+    .machine-stand {
+      width: 60px;
+      height: 24px;
+      background: linear-gradient(180deg, rgba(20,40,100,0.9) 0%, rgba(10,20,60,0.9) 100%);
+      border-radius: 0 0 8px 8px;
+      margin: 0 auto;
+      border: 2px solid rgba(80,130,220,0.25);
+      border-top: none;
+    }
+
+    /* ====== GACHA BUTTON ====== */
+    .gacha-btn {
+      padding: 16px 36px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, #3d7ab5 0%, #5b9bd5 50%, #3d7ab5 100%);
+      color: #fff;
+      border: 2px solid rgba(100,200,255,0.5);
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 20px rgba(60,120,200,0.5), 0 0 0 0 rgba(100,180,255,0);
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+      min-width: 260px;
+    }
+
+    .gacha-btn:active { transform: scale(0.96); }
+    .gacha-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4a8ac8 0%, #6aaee8 50%, #4a8ac8 100%);
+      box-shadow: 0 6px 28px rgba(60,140,220,0.6), 0 0 20px rgba(100,180,255,0.2);
+    }
+
+    .gacha-btn:disabled {
+      background: rgba(60,80,120,0.5);
+      border-color: rgba(80,100,150,0.3);
+      color: #5a7fa8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .gacha-btn-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.65);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .gacha-btn:disabled .gacha-btn-sub { color: #4a6080; }
+
+    /* ====== RESULT OVERLAY ====== */
+    .result-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .result-overlay.open { display: flex; }
+
+    .result-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+    }
+
+    .result-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 340px;
+      border-radius: 24px;
+      padding: 36px 28px 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      animation: popIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.5) rotate(-8deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    /* rarity backgrounds */
+    .result-card.rarity-N {
+      background: linear-gradient(145deg, #0e2a4a 0%, #163a60 60%, #1a4a7a 100%);
+      border: 2px solid rgba(74,127,168,0.7);
+    }
+
+    .result-card.rarity-R {
+      background: linear-gradient(145deg, #1a0a30 0%, #2d0f50 60%, #3d1570 100%);
+      border: 2px solid rgba(138,43,226,0.8);
+    }
+
+    .result-card.rarity-SR {
+      background: linear-gradient(145deg, #1a1200 0%, #2d2000 60%, #3d2e00 100%);
+      border: 2px solid rgba(255,215,0,0.9);
+    }
+
+    /* SR sparkle shimmer */
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .result-card.rarity-SR::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: linear-gradient(105deg, transparent 30%, rgba(255,215,0,0.15) 50%, transparent 70%);
+      background-size: 200% auto;
+      animation: shimmer 2s linear infinite;
+      pointer-events: none;
+    }
+
+    .result-emoji {
+      font-size: 4rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.35));
+    }
+
+    .result-rarity-badge {
+      font-size: 0.8rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      padding: 3px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .rarity-N .result-rarity-badge  { background: rgba(74,127,168,0.3); color: #7ec8f0; border: 1px solid rgba(74,127,168,0.6); }
+    .rarity-R .result-rarity-badge  { background: rgba(138,43,226,0.3); color: #d09aff; border: 1px solid rgba(138,43,226,0.7); }
+    .rarity-SR .result-rarity-badge { background: rgba(255,215,0,0.25); color: #ffd700; border: 1px solid rgba(255,215,0,0.8); }
+
+    .result-name {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.6rem;
+      color: #e8f4fd;
+      line-height: 1.3;
+    }
+
+    .rarity-SR .result-name { color: #ffd700; text-shadow: 0 0 16px rgba(255,215,0,0.5); }
+
+    .result-desc {
+      font-size: 0.9rem;
+      color: #98bedd;
+      line-height: 1.5;
+    }
+
+    .result-bonus {
+      font-size: 0.85rem;
+      color: #ffd700;
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 8px;
+      padding: 4px 14px;
+    }
+
+    .receive-btn {
+      margin-top: 6px;
+      padding: 13px 40px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      background: rgba(255,255,255,0.12);
+      color: #e8f4fd;
+      border: 1.5px solid rgba(150,200,255,0.4);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      width: 100%;
+    }
+
+    .receive-btn:active { transform: scale(0.96); }
+    .receive-btn:hover  { background: rgba(255,255,255,0.2); }
+    .receive-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ====== SECTION TITLE ====== */
+    .section-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.4rem;
+      color: #e8f4fd;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 4px solid #5ba3d0;
+    }
+
+    /* ====== TICKET CARDS ====== */
+    .ticket-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ticket-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(100,160,255,0.2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: background 0.2s;
+    }
+
+    .ticket-card.used {
+      opacity: 0.38;
+      filter: grayscale(0.4);
+    }
+
+    .ticket-emoji { font-size: 2.2rem; flex-shrink: 0; line-height: 1; }
+
+    .ticket-info { flex: 1; min-width: 0; }
+
+    .ticket-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+
+    .ticket-name {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem;
+      color: #e8f4fd;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ticket-badge {
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      padding: 2px 8px;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .badge-N  { background: rgba(74,127,168,0.25);  color: #7ec8f0; border: 1px solid rgba(74,127,168,0.5); }
+    .badge-R  { background: rgba(138,43,226,0.25);  color: #d09aff; border: 1px solid rgba(138,43,226,0.6); }
+    .badge-SR { background: rgba(255,215,0,0.2);    color: #ffd700; border: 1px solid rgba(255,215,0,0.7); }
+
+    .ticket-owner {
+      font-size: 0.75rem;
+      color: #5a8fb8;
+      margin-bottom: 2px;
+    }
+
+    .ticket-desc { font-size: 0.82rem; color: #7a9ec0; }
+
+    .ticket-date { font-size: 0.72rem; color: #4a6f90; margin-top: 2px; }
+
+    .use-btn {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      background: rgba(100,160,255,0.15);
+      border: 1.5px solid rgba(100,160,255,0.35);
+      border-radius: 20px;
+      color: #98bedd;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .use-btn:hover { background: rgba(100,160,255,0.28); }
+    .use-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .used-label {
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      color: #4a6080;
+      padding: 6px 10px;
+      border: 1px solid rgba(80,100,140,0.3);
+      border-radius: 20px;
+    }
+
+    .empty-tickets {
+      text-align: center;
+      color: #5a7fa8;
+      padding: 36px 0;
+      font-size: 0.95rem;
+    }
+
+    /* ====== TOAST ====== */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: rgba(20,40,80,0.95);
+      border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd;
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      z-index: 200;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      max-width: calc(100vw - 40px);
+      text-align: center;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      border-color: rgba(255,100,100,0.5);
+      background: rgba(60,10,10,0.95);
+    }
+
+    /* ====== MISC ====== */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(100,160,255,0.2), transparent);
+      margin: 36px 0;
+    }
+
+    @media (max-width: 480px) {
+      .top-bar { padding: 12px 14px; }
+      .top-bar h1 { font-size: 1.15rem; }
+      .user-badge .user-name { display: none; }
+      .content { padding: 20px 14px 80px; }
+      .gacha-btn { min-width: 220px; font-size: 1.1rem; padding: 14px 28px; }
+      .result-card { padding: 28px 20px 24px; }
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/stars.js?v=3"></script>
+  <script src="assets/js/push.js"></script>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <a href="/">← ホーム</a>
+    <h1>🎰 ガチャ</h1>
+    <div class="top-right">
+      <div class="user-badge" id="user-badge" style="display:none">
+        <span id="user-emoji-badge"></span>
+        <span class="user-name" id="user-name-badge"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- POINT BAR -->
+  <div class="point-bar">
+    現在のポイント: ✨&nbsp;<span class="point-value" id="point-display">…</span>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- GACHA MACHINE -->
+    <div class="gacha-machine">
+      <div class="machine-body">
+        <div class="machine-globe" id="machine-globe">
+          <div class="capsule-ball" id="capsule-ball"></div>
+        </div>
+        <div class="machine-base"></div>
+        <div class="machine-stand"></div>
+      </div>
+
+      <button class="gacha-btn" id="gacha-btn" onclick="startGacha()" disabled>
+        🎰 ガチャを回す（100pt）
+        <span class="gacha-btn-sub" id="gacha-btn-sub">読み込み中…</span>
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- WALLET / TICKET LIST -->
+    <h2 class="section-title">🎒 獲得した券</h2>
+    <div class="ticket-list" id="ticket-list">
+      <div class="empty-tickets">読み込み中…</div>
+    </div>
+
+  </div>
+
+  <!-- RESULT OVERLAY -->
+  <div class="result-overlay" id="result-overlay">
+    <div class="result-backdrop" onclick="void(0)"></div>
+    <div class="result-card" id="result-card">
+      <div class="result-emoji" id="result-emoji"></div>
+      <div class="result-rarity-badge" id="result-rarity-badge"></div>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-desc" id="result-desc"></div>
+      <div class="result-bonus" id="result-bonus" style="display:none"></div>
+      <button class="receive-btn" id="receive-btn" onclick="receivePrize()">受け取る</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===================== PRIZES =====================
+    const PRIZES = [
+      { id:1,  name:'ハグ券',          emoji:'🤗', rarity:'N',  desc:'好きなときに使える' },
+      { id:2,  name:'おやすみ電話券',   emoji:'🌙', rarity:'N',  desc:'今夜おやすみ電話ができる' },
+      { id:3,  name:'ごはん選択権',     emoji:'🍽️', rarity:'N',  desc:'次のごはんのお店を決められる' },
+      { id:4,  name:'写真撮影券',       emoji:'📸', rarity:'N',  desc:'2人の写真を撮ってもらえる' },
+      { id:5,  name:'ポイント+50',      emoji:'⭐', rarity:'N',  desc:'ポイントが50増える', bonus_points:50 },
+      { id:6,  name:'スタンプ送信権',   emoji:'💬', rarity:'N',  desc:'好きなスタンプを送ってもらえる' },
+      { id:7,  name:'デート行き先選択権',emoji:'💑', rarity:'R',  desc:'次のデートの行き先を決められる' },
+      { id:8,  name:'手料理券',         emoji:'🍳', rarity:'R',  desc:'手料理を1品作ってもらえる' },
+      { id:9,  name:'ポイント+200',     emoji:'💫', rarity:'R',  desc:'ポイントが200増える', bonus_points:200 },
+      { id:10, name:'サプライズ計画権', emoji:'🎁', rarity:'R',  desc:'ミニサプライズを計画してもらえる' },
+      { id:11, name:'一日デート券',     emoji:'💖', rarity:'SR', desc:'丸一日好きなプランで過ごせる' },
+      { id:12, name:'ポイント+500',     emoji:'🌟', rarity:'SR', desc:'ポイントが500増える', bonus_points:500 },
+      { id:13, name:'願いごと券',       emoji:'🌠', rarity:'SR', desc:'なんでも1つお願いできる' },
+    ]
+
+    // ===================== DRAW LOGIC =====================
+    function drawPrize() {
+      const weighted = []
+      PRIZES.forEach(p => {
+        const w = p.rarity === 'N' ? 5 : p.rarity === 'R' ? 2 : 0.5
+        const count = Math.round(w * 10) // 50 / 20 / 5
+        for (let i = 0; i < count; i++) weighted.push(p)
+      })
+      return weighted[Math.floor(Math.random() * weighted.length)]
+    }
+
+    // ===================== STATE =====================
+    let currentUser = null
+    let currentPoints = 0
+    let pendingPrize = null
+    let profiles = []
+
+    // ===================== INIT =====================
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      currentUser = session.user
+
+      const { data: profilesData } = await _sb.from('profiles').select('*')
+      if (profilesData) {
+        profiles = profilesData
+        const me = profiles.find(p => p.id === currentUser.id)
+        if (me) {
+          document.getElementById('user-emoji-badge').textContent = me.emoji
+          document.getElementById('user-name-badge').textContent  = me.name
+          document.getElementById('user-badge').style.display = 'flex'
+        }
+      }
+
+      await loadPoints()
+      await loadTickets()
+    }
+
+    // ===================== POINTS =====================
+    async function loadPoints() {
+      const { data, error } = await _sb.from('points').select('amount')
+      if (error) {
+        console.error('points load error:', error)
+        showToast('ポイントの読み込みに失敗しました', true)
+        return
+      }
+      currentPoints = data ? data.reduce((sum, r) => sum + (r.amount || 0), 0) : 0
+      updatePointDisplay()
+    }
+
+    function updatePointDisplay() {
+      document.getElementById('point-display').textContent = currentPoints + 'pt'
+      const btn = document.getElementById('gacha-btn')
+      const sub = document.getElementById('gacha-btn-sub')
+      if (currentPoints >= 100) {
+        btn.disabled = false
+        sub.textContent = '消費: 100pt'
+      } else {
+        btn.disabled = true
+        sub.textContent = `ポイントが足りない (${currentPoints}pt / 100pt必要)`
+      }
+    }
+
+    // ===================== GACHA START =====================
+    function startGacha() {
+      if (currentPoints < 100) {
+        showToast('ポイントが足りません (100pt必要)', true)
+        return
+      }
+
+      const btn = document.getElementById('gacha-btn')
+      btn.disabled = true
+
+      const ball = document.getElementById('capsule-ball')
+      ball.classList.remove('spinning')
+      void ball.offsetWidth // reflow
+      ball.classList.add('spinning')
+
+      pendingPrize = drawPrize()
+
+      setTimeout(() => {
+        ball.classList.remove('spinning')
+        showResult(pendingPrize)
+      }, 900)
+    }
+
+    // ===================== SHOW RESULT =====================
+    function showResult(prize) {
+      const card = document.getElementById('result-card')
+      card.className = 'result-card rarity-' + prize.rarity
+
+      document.getElementById('result-emoji').textContent = prize.emoji
+      document.getElementById('result-rarity-badge').textContent = prize.rarity
+      document.getElementById('result-name').textContent = prize.name
+      document.getElementById('result-desc').textContent = prize.desc
+
+      const bonusEl = document.getElementById('result-bonus')
+      if (prize.bonus_points) {
+        bonusEl.textContent = '✨ ボーナス +' + prize.bonus_points + 'pt 獲得！'
+        bonusEl.style.display = 'block'
+      } else {
+        bonusEl.style.display = 'none'
+      }
+
+      const receiveBtn = document.getElementById('receive-btn')
+      receiveBtn.disabled = false
+
+      document.getElementById('result-overlay').classList.add('open')
+    }
+
+    // ===================== RECEIVE PRIZE =====================
+    async function receivePrize() {
+      if (!pendingPrize || !currentUser) return
+      const prize = pendingPrize
+      pendingPrize = null
+
+      const receiveBtn = document.getElementById('receive-btn')
+      receiveBtn.disabled = true
+
+      try {
+        // Insert gacha result
+        const { error: resErr } = await _sb.from('gacha_results').insert({
+          user_id:      currentUser.id,
+          reward_id:    prize.id,
+          reward_name:  prize.name,
+          reward_emoji: prize.emoji,
+          rarity:       prize.rarity,
+          used:         false,
+        })
+        if (resErr) throw resErr
+
+        // Deduct 100pt
+        const { error: ptErr } = await _sb.from('points').insert({
+          user_id: currentUser.id,
+          amount:  -100,
+          reason:  'gacha',
+        })
+        if (ptErr) throw ptErr
+
+        // Bonus points
+        if (prize.bonus_points) {
+          const { error: bonusErr } = await _sb.from('points').insert({
+            user_id: currentUser.id,
+            amount:  prize.bonus_points,
+            reason:  'gacha_bonus',
+          })
+          if (bonusErr) throw bonusErr
+        }
+
+        // Update UI
+        await loadPoints()
+        await loadTickets()
+
+        document.getElementById('result-overlay').classList.remove('open')
+        showToast(prize.emoji + ' ' + prize.name + ' を獲得！')
+
+      } catch (err) {
+        console.error('receive error:', err)
+        showToast('エラーが発生しました。もう一度お試しください。', true)
+        receiveBtn.disabled = false
+        pendingPrize = prize
+      }
+    }
+
+    // ===================== TICKETS =====================
+    async function loadTickets() {
+      const list = document.getElementById('ticket-list')
+
+      const { data, error } = await _sb
+        .from('gacha_results')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('tickets load error:', error)
+        list.innerHTML = '<div class="empty-tickets">券の読み込みに失敗しました</div>'
+        return
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="empty-tickets">まだ券がありません 🎰</div>'
+        return
+      }
+
+      list.innerHTML = ''
+      data.forEach(ticket => {
+        const owner = profiles.find(p => p.id === ticket.user_id)
+        const ownerLabel = owner ? `${owner.emoji} ${escHtml(owner.name)}` : ''
+        const date = new Date(ticket.created_at).toLocaleDateString('ja-JP')
+        const isUsed = ticket.used
+
+        const card = document.createElement('div')
+        card.className = 'ticket-card' + (isUsed ? ' used' : '')
+        card.innerHTML = `
+          <div class="ticket-emoji">${escHtml(ticket.reward_emoji)}</div>
+          <div class="ticket-info">
+            <div class="ticket-top">
+              <span class="ticket-name">${escHtml(ticket.reward_name)}</span>
+              <span class="ticket-badge badge-${escHtml(ticket.rarity)}">${escHtml(ticket.rarity)}</span>
+            </div>
+            ${ownerLabel ? `<div class="ticket-owner">${ownerLabel}</div>` : ''}
+            <div class="ticket-desc">${escHtml(getPrizeDesc(ticket.reward_id, ticket.reward_name))}</div>
+            <div class="ticket-date">${date}</div>
+          </div>
+          ${isUsed
+            ? `<span class="used-label">使用済み</span>`
+            : `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
+          }
+        `
+        list.appendChild(card)
+      })
+    }
+
+    function getPrizeDesc(id, fallbackName) {
+      const found = PRIZES.find(p => p.id === id)
+      return found ? found.desc : fallbackName
+    }
+
+    async function markUsed(btn, ticketId) {
+      if (!confirm('この券を使用済みにしますか？')) return
+      btn.disabled = true
+
+      const { error } = await _sb
+        .from('gacha_results')
+        .update({ used: true })
+        .eq('id', ticketId)
+
+      if (error) {
+        console.error('markUsed error:', error)
+        showToast('更新に失敗しました', true)
+        btn.disabled = false
+        return
+      }
+
+      showToast('使用済みにしました ✅')
+      await loadTickets()
+    }
+
+    // ===================== TOAST =====================
+    let toastTimer = null
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('toast')
+      el.textContent = msg
+      el.className = 'toast' + (isError ? ' error' : '')
+      void el.offsetWidth
+      el.classList.add('show')
+      if (toastTimer) clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => {
+        el.classList.remove('show')
+      }, 3000)
+    }
+
+    // ===================== UTILS =====================
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+    }
+
+    // ===================== START =====================
+    init()
+  </script>
+</body>
+</html>

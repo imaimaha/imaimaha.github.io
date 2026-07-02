@@ -487,6 +487,9 @@
 
       await _sb.from('closer_gauge')
         .upsert({ user_id: myId, gauge: newGauge, updated_at: now })
+
+      // タップごとに1pt付与
+      _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'gauge_tap' }).then(() => {})
     }
 
     // -------- popup --------
