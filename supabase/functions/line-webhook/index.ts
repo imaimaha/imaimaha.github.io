@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const lineUserId  = event.source?.userId
     const groupId     = event.source?.groupId
 
-    // グループメッセージ → グループID保存 + Web Push送信
+    // グループメッセージ → グループID保存 + Web Push送信 + DB保存
     if (sourceType === 'group' && groupId) {
       await sb.from('settings').upsert({ key: 'line_group_id', value: groupId })
 
@@ -56,6 +56,14 @@ Deno.serve(async (req) => {
           .select('id, name, emoji')
           .eq('line_user_id', lineUserId)
           .single()
+        // Notre側で見られるようにDB保存
+        await sb.from('line_messages').insert({
+          sender_id: senderProfile?.id ?? null,
+          sender_name: senderProfile?.name ?? null,
+          sender_emoji: senderProfile?.emoji ?? null,
+          message: event.message.text,
+          source_type: 'group',
+        })
         sendPush({
           title: senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : 'Notre Endroit',
           body: event.message.text,

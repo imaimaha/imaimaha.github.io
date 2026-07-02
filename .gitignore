@@ -3,3 +3,7 @@ tests/storage/auth.json
 tests/storage/screenshot-*.png
 test-results/
 playwright-report/
+
+# 秘密情報（絶対にコミットしないこと）
+.env
+.env.local

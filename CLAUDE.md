@@ -18,9 +18,18 @@
 | 認証・DB | Supabase (Auth + PostgreSQL) |
 | フロントエンド | バニラ HTML/CSS/JS（フレームワークなし） |
 | Supabase URL | `https://qivnfiqyjfajlzbdqodd.supabase.co` |
-| Supabase Publishable Key | `sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx` |
 | プロジェクト Ref | `qivnfiqyjfajlzbdqodd` |
-| CLIトークン | Claudeのmemory参照 (`reference_supabase_token.md`) |
+| その他秘密情報 | プロジェクトルートの `.env` を参照（`.gitignore`済み） |
+
+### 秘密情報の管理
+
+- **`.env`** — プロジェクトルート、`.gitignore` 済み。以下を保管:
+  - `SUPABASE_URL`, `SUPABASE_PROJECT_REF`, `SUPABASE_PUBLISHABLE_KEY`
+  - `SUPABASE_CLI_TOKEN` (CLI login用)
+  - `SUPABASE_SERVICE_ROLE_KEY` (JWT・pg_cron/管理系用)
+- **`.env.example`** — テンプレート、コミット可
+- Claude の memory / CLAUDE.md / コミット履歴には **絶対に書かない**
+- 読み込み方: `source .env` or `export $(cat .env | grep -v '^#' | xargs)`
 
 ## ページ一覧
 
