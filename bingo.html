@@ -660,6 +660,11 @@
         <div class="category-card-title">二人限定</div>
         <div class="category-card-hint">相手を思い出す<br>2人だけのお題</div>
       </div>
+      <div class="category-card" onclick="selectCategory('okinawa')" style="grid-column:1/-1">
+        <div class="category-card-icon">🌺</div>
+        <div class="category-card-title">沖縄</div>
+        <div class="category-card-hint">海・グルメ・シーサー・国際通り<br>沖縄旅行専用お題</div>
+      </div>
     </div>
   </div>
 
@@ -703,10 +708,13 @@
 
     <div class="grid-actions">
       <button class="btn-new-card" onclick="handleBack(); showScreen('mode')">
-        ← モード選択に戻る
+        ← 戻る
       </button>
       <button class="btn-new-card" onclick="regenerateCard()" style="flex:0 0 auto;padding:12px 16px">
         🎲 再生成
+      </button>
+      <button class="btn-new-card" onclick="shareCard()" style="flex:0 0 auto;padding:12px 16px">
+        📤 シェア
       </button>
     </div>
   </div>
@@ -814,6 +822,16 @@
       '昼ゆっくり起きる','お出かけする','ごはんを作る','映画を見る',
       'のんびりする','公園に行く','お気に入りのお店','新しい場所',
       'スーパーでいいもの発見','お散歩コース'
+    ],
+    okinawa: [
+      '海を見る','シーサーを見る','ゴーヤチャンプルーを食べる','沖縄そばを食べる',
+      'サーターアンダギーを食べる','タコライスを食べる','オリオンビールを飲む',
+      'ガジュマルの木','ブーゲンビリア','青い海','白い砂浜',
+      'シュノーケリングする','国際通りを歩く','首里城','美ら海水族館',
+      '沖縄の空','三線の音','島バナナ','マンゴーを食べる','シークヮーサー',
+      '海の近くに立つ','夕日を見る','ウミガメを見る','ハイビスカス',
+      'ちんすこうを食べる','泡盛を飲む','デイゴの花','珊瑚を見る',
+      '離島に渡る','泡盛で乾杯'
     ],
     lucky: [
       '今日は誰かにいいことをする',
@@ -1291,7 +1309,8 @@
       everyday: '🌿 日常',
       feelings: '😊 気持ち',
       city: '🏙 都会',
-      couple: '❤️ 二人限定'
+      couple: '❤️ 二人限定',
+      okinawa: '🌺 沖縄'
     };
     state.card = {
       id: null,
@@ -1338,7 +1357,7 @@
     if (mode === 'daily') {
       state.card.items = makeDailyItems(n);
     } else if (mode === 'category') {
-      const catMap = { '🌿 日常': 'everyday', '😊 気持ち': 'feelings', '🏙 都会': 'city', '❤️ 二人限定': 'couple' };
+      const catMap = { '🌿 日常': 'everyday', '😊 気持ち': 'feelings', '🏙 都会': 'city', '❤️ 二人限定': 'couple', '🌺 沖縄': 'okinawa' };
       state.card.items = makeCategoryItems(catMap[label] || 'everyday', n);
     } else {
       const diffMap = { 'ランダム ★': 1, 'ランダム ★★': 2, 'ランダム ★★★': 3 };
@@ -1350,6 +1369,69 @@
     state.celebrationShown = false;
     saveCard();
     renderGrid();
+  }
+
+  // ─────────────────────────────────────────
+  // Share
+  // ─────────────────────────────────────────
+  async function shareCard() {
+    if (!state.card) return;
+    const { card, bingoLines } = state;
+    const size = Math.round(Math.sqrt(card.items.length));
+    const total = size * size;
+    const checkedSet = new Set(card.checks.map(c => c.index));
+
+    const today = new Date();
+    const dow = ['日', '月', '火', '水', '木', '金', '土'][today.getDay()];
+    const dateStr = `${today.getMonth()+1}月${today.getDate()}日（${dow}）`;
+
+    // グリッドをテキストで表現
+    let gridText = '';
+    for (let r = 0; r < size; r++) {
+      const row = [];
+      for (let c = 0; c < size; c++) {
+        const i = r * size + c;
+        row.push(checkedSet.has(i) ? `✓${card.items[i].text}` : `　${card.items[i].text}`);
+      }
+      gridText += row.join(' | ') + '\n';
+    }
+
+    // チェック済みの簡易リスト（メモ付き）
+    const checkedItems = card.checks
+      .sort((a, b) => a.index - b.index)
+      .map(c => {
+        const text = card.items[c.index]?.text || '';
+        return c.memo ? `✓ ${text}（${c.memo}）` : `✓ ${text}`;
+      })
+      .join('\n');
+
+    const bingoStr = bingoLines.length > 0 ? `🎉 ビンゴ ${bingoLines.length}本！\n` : '';
+    const text = [
+      `🎯 お散歩ビンゴ「${card.label}」`,
+      dateStr,
+      '',
+      `${checkedItems || '（まだチェックなし）'}`,
+      '',
+      `${bingoStr}${card.checks.length} / ${total} チェック済み`,
+      '',
+      'Notre Endroit ✨'
+    ].join('\n');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'お散歩ビンゴ', text });
+      } catch (e) {
+        if (e.name !== 'AbortError') fallbackCopy(text);
+      }
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('📋 クリップボードにコピーしました'))
+      .catch(() => showToast('コピーできませんでした'));
   }
 
   // ─────────────────────────────────────────
