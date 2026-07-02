@@ -200,19 +200,43 @@
       try {
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
+        const myId = session.user.id
         const now = new Date().toISOString()
-        const { data } = await _sb
+
+        // 自分宛の未開封カプセルがあればポップアップ表示
+        const { data: incoming } = await _sb
           .from('time_capsules')
           .select('id')
-          .eq('recipient_id', session.user.id)
+          .eq('recipient_id', myId)
           .eq('is_opened', false)
           .lte('open_at', now)
-        if (data && data.length > 0) {
+        if (incoming && incoming.length > 0) {
           const desc = document.getElementById('capsule-notify-desc')
-          if (desc) desc.textContent = `${data.length}件のカプセルが届いています`
+          if (desc) desc.textContent = `${incoming.length}件のカプセルが届いています`
           const preview = document.getElementById('capsule-preview')
-          if (preview) preview.textContent = `🎁 ${data.length}件 届いています！ →`
+          if (preview) preview.textContent = `🎁 ${incoming.length}件 届いています！ →`
           document.getElementById('capsule-notify').style.display = 'flex'
+        }
+
+        // 自分が送ったカプセルで開封日時を過ぎたのにまだ通知していないものを通知
+        const { data: toNotify } = await _sb
+          .from('time_capsules')
+          .select('id')
+          .eq('sender_id', myId)
+          .eq('line_notified', false)
+          .lte('open_at', now)
+        if (toNotify && toNotify.length > 0) {
+          const ids = toNotify.map(c => c.id)
+          fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sender_id: myId,
+              target: 'partner',
+              message: `🎁 タイムカプセルが届きました！\nNotre Endroit を開いてみてください ✨`,
+            }),
+          }).catch(() => {})
+          await _sb.from('time_capsules').update({ line_notified: true }).in('id', ids)
         }
       } catch {}
     }
