@@ -1374,29 +1374,91 @@
   // ─────────────────────────────────────────
   // Share
   // ─────────────────────────────────────────
+  async function loadHtml2Canvas() {
+    if (window.html2canvas) return window.html2canvas;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    return window.html2canvas;
+  }
+
+  function buildCaptureCard(dateStr) {
+    const { card, bingoLines } = state;
+    const size = Math.round(Math.sqrt(card.items.length));
+    const checkedSet = new Set(card.checks.map(c => c.index));
+    const bingoSet   = new Set(bingoLines.flat());
+
+    const W = 500;
+    const padX = 28;
+    const gap = 6;
+    const cellSize = (W - padX * 2 - gap * (size - 1)) / size;
+
+    const c = document.createElement('div');
+    c.style.cssText = `position:fixed;left:-9999px;top:0;width:${W}px;padding:32px ${padX}px 24px;background:linear-gradient(160deg,#0a1628 0%,#0d2044 40%,#112a5e 100%);color:#e8f0fc;font-family:'Noto Sans JP',sans-serif;`;
+
+    const title = document.createElement('div');
+    title.style.cssText = `text-align:center;font-family:'Zen Kurenaido',sans-serif;font-size:26px;color:#e8f4fd;margin-bottom:2px;letter-spacing:0.06em`;
+    title.textContent = `🎯 ${card.label}`;
+    c.appendChild(title);
+
+    const date = document.createElement('div');
+    date.style.cssText = `text-align:center;font-size:13px;color:#98bedd;margin-bottom:20px`;
+    date.textContent = dateStr;
+    c.appendChild(date);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${size},${cellSize}px);gap:${gap}px;justify-content:center;margin-bottom:18px`;
+
+    const fontSizes = { 3: 15, 4: 11, 5: 9 };
+    const fz = fontSizes[size] || 9;
+
+    card.items.forEach((item, i) => {
+      const cell = document.createElement('div');
+      const isChecked = checkedSet.has(i);
+      const isBingo   = bingoSet.has(i);
+      const isLucky   = item.is_lucky;
+
+      let bg = 'rgba(255,255,255,0.07)', border = 'rgba(150,200,255,0.12)', color = '#c8ddf0';
+      if (isBingo && isChecked) { bg = 'rgba(255,220,80,0.3)';  border = 'rgba(255,220,80,0.6)';  color = '#ffec8b'; }
+      else if (isChecked)       { bg = 'rgba(80,180,120,0.28)'; border = 'rgba(100,200,140,0.45)'; color = '#b8ecd0'; }
+      else if (isLucky)         { bg = 'rgba(255,200,50,0.1)';  border = 'rgba(255,200,80,0.35)'; color = '#ffd97d'; }
+
+      cell.style.cssText = `width:${cellSize}px;height:${cellSize}px;background:${bg};border:1.5px solid ${border};border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;color:${color};font-size:${fz}px;line-height:1.35;padding:3px;overflow:hidden;word-break:break-all;box-sizing:border-box`;
+      const inner = (isLucky ? '⭐ ' : '') + (isChecked ? '✓ ' : '') + item.text;
+      cell.textContent = inner;
+      grid.appendChild(cell);
+    });
+    c.appendChild(grid);
+
+    const stats = document.createElement('div');
+    stats.style.cssText = `text-align:center;font-size:14px;color:#e8f4fd;margin-bottom:6px`;
+    const bingoStr = bingoLines.length > 0 ? `🎉 ビンゴ ${bingoLines.length}本！  ` : '';
+    stats.textContent = `${bingoStr}${card.checks.length} / ${size*size} チェック`;
+    c.appendChild(stats);
+
+    const footer = document.createElement('div');
+    footer.style.cssText = `text-align:center;font-size:11px;color:#7aadcc;margin-top:14px;letter-spacing:0.1em`;
+    footer.textContent = '✨ Notre Endroit ✨';
+    c.appendChild(footer);
+
+    return c;
+  }
+
   async function shareCard() {
     if (!state.card) return;
     const { card, bingoLines } = state;
     const size = Math.round(Math.sqrt(card.items.length));
     const total = size * size;
-    const checkedSet = new Set(card.checks.map(c => c.index));
 
     const today = new Date();
     const dow = ['日', '月', '火', '水', '木', '金', '土'][today.getDay()];
     const dateStr = `${today.getMonth()+1}月${today.getDate()}日（${dow}）`;
 
-    // グリッドをテキストで表現
-    let gridText = '';
-    for (let r = 0; r < size; r++) {
-      const row = [];
-      for (let c = 0; c < size; c++) {
-        const i = r * size + c;
-        row.push(checkedSet.has(i) ? `✓${card.items[i].text}` : `　${card.items[i].text}`);
-      }
-      gridText += row.join(' | ') + '\n';
-    }
-
-    // チェック済みの簡易リスト（メモ付き）
+    // シェア用テキスト（画像に加えて添える）
     const checkedItems = card.checks
       .sort((a, b) => a.index - b.index)
       .map(c => {
@@ -1404,7 +1466,6 @@
         return c.memo ? `✓ ${text}（${c.memo}）` : `✓ ${text}`;
       })
       .join('\n');
-
     const bingoStr = bingoLines.length > 0 ? `🎉 ビンゴ ${bingoLines.length}本！\n` : '';
     const text = [
       `🎯 お散歩ビンゴ「${card.label}」`,
@@ -1417,20 +1478,57 @@
       'Notre Endroit ✨'
     ].join('\n');
 
+    // キャプチャ生成
+    showToast('📸 画像を作っています...');
+    let imageFile = null;
+    try {
+      const h2c = await loadHtml2Canvas();
+      const cap = buildCaptureCard(dateStr);
+      document.body.appendChild(cap);
+      const canvas = await h2c(cap, { backgroundColor: '#0d2044', scale: 2, logging: false });
+      document.body.removeChild(cap);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      if (blob) {
+        imageFile = new File([blob], `bingo-${today.toISOString().split('T')[0]}.png`, { type: 'image/png' });
+      }
+    } catch (e) {
+      console.error('capture failed', e);
+    }
+
+    // Web Share API（ファイル対応）
+    if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+      try {
+        await navigator.share({ title: 'お散歩ビンゴ', text, files: [imageFile] });
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    // テキストのみでシェア
     if (navigator.share) {
       try {
         await navigator.share({ title: 'お散歩ビンゴ', text });
-      } catch (e) {
-        if (e.name !== 'AbortError') fallbackCopy(text);
-      }
-    } else {
-      fallbackCopy(text);
+        // 画像は別途保存
+        if (imageFile) downloadImage(imageFile);
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
     }
+    // フォールバック: 画像ダウンロード + テキストコピー
+    if (imageFile) downloadImage(imageFile);
+    fallbackCopy(text);
+  }
+
+  function downloadImage(file) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📸 画像を保存しました');
   }
 
   function fallbackCopy(text) {
     navigator.clipboard.writeText(text)
-      .then(() => showToast('📋 クリップボードにコピーしました'))
+      .then(() => showToast('📋 テキストをコピーしました'))
       .catch(() => showToast('コピーできませんでした'));
   }
 
