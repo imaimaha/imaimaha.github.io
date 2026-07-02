@@ -84,10 +84,18 @@ Deno.serve(async (req) => {
 
     const alreadyRegistered = profiles?.some(p => p.line_user_id === lineUserId)
     if (alreadyRegistered) {
-      // 登録済み → 1対1メッセージをWeb Pushで転送
+      // 登録済み → 1対1メッセージをWeb Pushで転送 + DB保存
       if (event.type === 'message' && event.message?.type === 'text') {
         const senderProfile = profiles?.find(p => p.line_user_id === lineUserId)
         const recipientProfile = profiles?.find(p => p.line_user_id !== lineUserId)
+        // Notre側で見られるようにDB保存
+        await sb.from('line_messages').insert({
+          sender_id: senderProfile?.id ?? null,
+          sender_name: senderProfile?.name ?? null,
+          sender_emoji: senderProfile?.emoji ?? null,
+          message: event.message.text,
+          source_type: 'personal',
+        })
         if (recipientProfile) {
           sendPush({
             title: senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : 'Notre Endroit',

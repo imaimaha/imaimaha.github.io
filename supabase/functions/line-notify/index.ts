@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders() })
   }
 
-  const { sender_id, message, target } = await req.json()
+  const { sender_id, message, target, quick_reply } = await req.json()
 
   if (!message) {
     return json({ error: 'message is required' }, 400)
@@ -51,6 +51,16 @@ Deno.serve(async (req) => {
     }
   }
 
+  const lineMessage: Record<string, unknown> = { type: 'text', text: message }
+  if (Array.isArray(quick_reply) && quick_reply.length > 0) {
+    lineMessage.quickReply = {
+      items: quick_reply.slice(0, 13).map((label: string) => ({
+        type: 'action',
+        action: { type: 'message', label: String(label).slice(0, 20), text: String(label) },
+      })),
+    }
+  }
+
   const res = await fetch('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
     headers: {
@@ -59,7 +69,7 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify({
       to,
-      messages: [{ type: 'text', text: message }],
+      messages: [lineMessage],
     }),
   })
 
