@@ -115,6 +115,30 @@
 
     .date-hint { font-size: 0.75rem; color: #5a7fa8; margin-top: 4px; }
 
+    /* 開封タイミング モード切替 */
+    .timing-mode {
+      display: flex; gap: 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px; padding: 3px;
+      margin-bottom: 12px;
+    }
+    .timing-btn {
+      flex: 1; padding: 8px 4px;
+      background: none; border: none; color: #7aadcc;
+      font-size: 0.82rem; font-family: inherit;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .timing-btn.active {
+      background: rgba(100,160,255,0.28);
+      color: #e8f4fd;
+    }
+
+    .range-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .range-row input { flex: 1; min-width: 0; }
+    .range-sep { color: #5a7fa8; font-size: 0.9rem; white-space: nowrap; flex-shrink: 0; }
+
     .send-btn {
       width: 100%; padding: 14px;
       background: linear-gradient(135deg, #2a5298, #3a7bd5);
@@ -287,9 +311,30 @@
           <textarea id="msg-input" placeholder="未来の相手へ伝えたいこと..."></textarea>
         </div>
         <div class="field">
-          <label>開封日時（空白にするとランダムに設定されます）</label>
-          <input type="datetime-local" id="open-date-input">
-          <div class="date-hint" id="date-hint">未設定 → 3日〜3か月後のどこかに自動設定されます 🎲</div>
+          <label>開封タイミング</label>
+          <div class="timing-mode">
+            <button class="timing-btn active" id="tmode-exact" onclick="setTimingMode('exact')">日時指定</button>
+            <button class="timing-btn"        id="tmode-range" onclick="setTimingMode('range')">範囲ランダム</button>
+            <button class="timing-btn"        id="tmode-auto"  onclick="setTimingMode('auto')">おまかせ</button>
+          </div>
+          <!-- 日時指定 -->
+          <div id="timing-exact">
+            <input type="datetime-local" id="open-date-input">
+            <div class="date-hint">届けたい日時をピンポイントで指定</div>
+          </div>
+          <!-- 範囲ランダム -->
+          <div id="timing-range" style="display:none">
+            <div class="range-row">
+              <input type="datetime-local" id="range-from-input">
+              <span class="range-sep">〜</span>
+              <input type="datetime-local" id="range-to-input">
+            </div>
+            <div class="date-hint">この期間の中でランダムに届きます 🎲</div>
+          </div>
+          <!-- おまかせ -->
+          <div id="timing-auto" style="display:none">
+            <div class="date-hint" style="padding:10px 2px;font-size:0.85rem;color:#7aadcc">3日〜3か月後のどこかに自動設定されます 🎲</div>
+          </div>
         </div>
         <button class="send-btn" id="send-btn" onclick="sendCapsule()">🎁 カプセルを送る</button>
       </div>
@@ -332,6 +377,8 @@
       const pad = n => String(n).padStart(2, '0')
       const minStr = `${minDt.getFullYear()}-${pad(minDt.getMonth()+1)}-${pad(minDt.getDate())}T${pad(minDt.getHours())}:${pad(minDt.getMinutes())}`
       document.getElementById('open-date-input').min = minStr
+      document.getElementById('range-from-input').min = minStr
+      document.getElementById('range-to-input').min = minStr
 
       // URLパラメータで届いたタブを開く
       if (location.hash === '#received') switchTab('received')
@@ -479,18 +526,36 @@
       }).join('')
     }
 
+    let timingMode = 'exact'
+
+    function setTimingMode(mode) {
+      timingMode = mode
+      ;['exact', 'range', 'auto'].forEach(m => {
+        document.getElementById('tmode-' + m).classList.toggle('active', m === mode)
+        document.getElementById('timing-' + m).style.display = m === mode ? '' : 'none'
+      })
+    }
+
     async function sendCapsule() {
       const msg = document.getElementById('msg-input').value.trim()
       if (!msg) { showToast('メッセージを入力してください'); return }
       if (!partnerId) { showToast('パートナー情報が取得できませんでした'); return }
 
-      const dateInput = document.getElementById('open-date-input').value
       let openAt
-      if (dateInput) {
-        // datetime-local の値は "YYYY-MM-DDTHH:mm" 形式（ローカル時刻）
+      if (timingMode === 'exact') {
+        const dateInput = document.getElementById('open-date-input').value
+        if (!dateInput) { showToast('日時を選んでください'); return }
         openAt = new Date(dateInput).toISOString()
+      } else if (timingMode === 'range') {
+        const fromVal = document.getElementById('range-from-input').value
+        const toVal   = document.getElementById('range-to-input').value
+        if (!fromVal || !toVal) { showToast('開始と終了の日時を両方選んでください'); return }
+        const fromMs = new Date(fromVal).getTime()
+        const toMs   = new Date(toVal).getTime()
+        if (toMs <= fromMs) { showToast('終了日時は開始より後にしてください'); return }
+        openAt = new Date(fromMs + Math.random() * (toMs - fromMs)).toISOString()
       } else {
-        // 3〜90日後のランダム
+        // おまかせ: 3〜90日後のランダム
         const daysLater = 3 + Math.floor(Math.random() * 88)
         const d = new Date()
         d.setDate(d.getDate() + daysLater)
@@ -517,10 +582,12 @@
         return
       }
 
-      const openDate = new Date(openAt).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
-      showToast(`🎁 ${openDate}に届きます！`)
+      const openDate = new Date(openAt).toLocaleString('ja-JP', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      showToast(`🎁 ${openDate}ごろに届きます！`)
       document.getElementById('msg-input').value = ''
       document.getElementById('open-date-input').value = ''
+      document.getElementById('range-from-input').value = ''
+      document.getElementById('range-to-input').value = ''
       await loadSent()
       switchTab('sent')
     }
