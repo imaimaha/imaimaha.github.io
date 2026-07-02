@@ -29,3 +29,10 @@ create policy "recipient_open" on time_capsules for update
 
 -- ログイン済みユーザーにテーブルアクセス権を付与（RLS で細かく制御）
 grant select, insert, update on time_capsules to authenticated;
+
+-- LINE通知済みフラグ（送信者がトップを開いたときに通知＆更新）
+alter table time_capsules add column if not exists line_notified boolean default false;
+
+-- 送信者が line_notified を更新できる
+create policy "sender_update_notified" on time_capsules for update
+  using (sender_id = auth.uid());
