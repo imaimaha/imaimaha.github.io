@@ -905,9 +905,10 @@
     return d === 0 || d === 6;
   }
 
-  function makeDailyItems(n) {
+  function makeDailyItems(n, seedOverride = null) {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const rand = seededRand(parseInt(today) + n * 1000);
+    const seed = seedOverride ?? (parseInt(today) + n * 1000);
+    const rand = seededRand(seed);
     const season = getSeason();
     const weekend = isWeekend();
 
@@ -926,7 +927,7 @@
   }
 
   function makeCategoryItems(category, n) {
-    const rand = seededRand(Date.now() & 0xffffffff);
+    const rand = seededRand(Math.floor(Math.random() * 0x7fffffff));
     const season = getSeason();
     const pool = [
       ...POOLS[category].map(t => ({ text: t })),
@@ -940,7 +941,7 @@
   }
 
   function makeRandomItems(difficulty, n) {
-    const rand = seededRand(Date.now() & 0xffffffff);
+    const rand = seededRand(Math.floor(Math.random() * 0x7fffffff));
     const season = getSeason();
     let pool;
 
@@ -1355,7 +1356,8 @@
     const { mode, label } = state.card;
     const n = state.gridSize * state.gridSize;
     if (mode === 'daily') {
-      state.card.items = makeDailyItems(n);
+      // 再生成時はランダムシードで別カードに
+      state.card.items = makeDailyItems(n, Math.floor(Math.random() * 0x7fffffff));
     } else if (mode === 'category') {
       const catMap = { '🌿 日常': 'everyday', '😊 気持ち': 'feelings', '🏙 都会': 'city', '❤️ 二人限定': 'couple', '🌺 沖縄': 'okinawa' };
       state.card.items = makeCategoryItems(catMap[label] || 'everyday', n);

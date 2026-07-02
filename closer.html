@@ -436,10 +436,7 @@
         hedEl.classList.toggle('merged', bothMax)
         if (dispEl) dispEl.style.opacity = bothMax ? '0' : '1'
         if (msgEl)  msgEl.style.display  = bothMax ? 'block' : 'none'
-        if (bothMax && !bothMaxNotified) {
-          bothMaxNotified = true
-          sendLineMaxNotification()
-        }
+        // sendLineMaxNotification はタップハンドラ側で自分がトリガーした時だけ発火（二重通知防止）
         if (!bothMax) {
           bothMaxNotified = false
           fl.fox.vx = 0.034; fl.fox.vy = 0.026
@@ -480,10 +477,10 @@
       if (!myType || type !== myType) return
 
       const now      = new Date().toISOString()
-      const cur      = effective(myType)
-      const newGauge = Math.min(cur + 5, 100)
-      const wasMax   = cur >= 100
-      raw[myType]    = { gauge: newGauge, updated_at: now }
+      const cur         = effective(myType)
+      const rawWasMax   = (raw[myType]?.gauge ?? 0) >= 100  // 減衰値でなくraw値で判定
+      const newGauge    = Math.min(cur + 5, 100)
+      raw[myType]       = { gauge: newGauge, updated_at: now }
       updateDistance()
 
       await _sb.from('closer_gauge')
@@ -492,8 +489,8 @@
       // タップごとに1pt付与
       _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'gauge_tap' }).then(() => {})
 
-      // MAX到達で相手に通知 + ボーナス+10pt（1回きり: この瞬間だけ）
-      if (!wasMax && newGauge >= 100) {
+      // MAX到達（自分が初めて100に達した瞬間だけ）
+      if (!rawWasMax && newGauge >= 100) {
         _sb.from('points').insert({ user_id: myId, amount: 10, reason: 'gauge_max' }).then(() => {})
         const myEmoji = myType === 'fox' ? '🦊' : '🦔'
         fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
@@ -505,6 +502,13 @@
             message: `${myEmoji} ゲージが MAX になったよ！ ✨\n会いたいシグナル 💖`,
           }),
         }).catch(() => {})
+
+        // 相手も既にMAXなら「ふたり揃った」通知（片方だけが発火するよう自分から）
+        const partnerType = myType === 'fox' ? 'hed' : 'fox'
+        if ((raw[partnerType]?.gauge ?? 0) >= 100 && effective(partnerType) > 0 && !bothMaxNotified) {
+          bothMaxNotified = true
+          sendLineMaxNotification()
+        }
       }
     }
 
