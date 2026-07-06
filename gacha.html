@@ -302,6 +302,65 @@
       border: 2px solid rgba(255,215,0,0.9);
     }
 
+    /* レア度別演出 */
+    @keyframes rarity-shake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-10px) rotate(-1deg); }
+      30% { transform: translateX(10px) rotate(1deg); }
+      45% { transform: translateX(-8px) rotate(-0.5deg); }
+      60% { transform: translateX(8px) rotate(0.5deg); }
+      75% { transform: translateX(-4px); }
+    }
+    @keyframes sparkle-burst {
+      0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+    }
+    @keyframes gold-rain {
+      0%   { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+    }
+    .result-card.rarity-R { animation: popIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+    .result-card.rarity-SR {
+      animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both, rarity-shake 0.8s ease-out 0.5s;
+    }
+    .result-card.rarity-N .rarity-fx,
+    .result-card.rarity-R .rarity-fx,
+    .result-card.rarity-SR .rarity-fx {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 24px;
+    }
+    /* R burst */
+    .result-card.rarity-R .rarity-fx::before {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(200,120,255,0.55) 0%, transparent 65%);
+      transform: translate(-50%, -50%) scale(0.2);
+      animation: sparkle-burst 1s ease-out both;
+    }
+    /* SR big burst */
+    .result-card.rarity-SR .rarity-fx::before {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,215,0,0.75) 0%, rgba(255,150,50,0.45) 30%, transparent 70%);
+      transform: translate(-50%, -50%) scale(0.2);
+      animation: sparkle-burst 1.2s ease-out both;
+    }
+
+    /* SR: full-screen gold overlay */
+    .sr-overlay {
+      position: fixed; inset: 0; z-index: 99;
+      background: radial-gradient(circle at center, rgba(255,215,0,0.4) 0%, rgba(255,150,50,0.15) 40%, transparent 80%);
+      pointer-events: none;
+      animation: sparkle-burst 1.6s ease-out both;
+    }
+    .sr-overlay.hidden { display: none; }
+    .gold-particle {
+      position: fixed; z-index: 98; font-size: 1.6rem;
+      pointer-events: none;
+      animation: gold-rain 2.5s linear both;
+    }
+
     /* SR sparkle shimmer */
     @keyframes shimmer {
       0%   { background-position: -200% center; }
@@ -579,10 +638,16 @@
         <div class="machine-stand"></div>
       </div>
 
-      <button class="gacha-btn" id="gacha-btn" onclick="startGacha()" disabled>
-        🎰 ガチャを回す（100pt）
-        <span class="gacha-btn-sub" id="gacha-btn-sub">読み込み中…</span>
-      </button>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%;max-width:340px">
+        <button class="gacha-btn" id="gacha-btn" onclick="startGacha()" disabled>
+          🎰 1回まわす（100pt）
+          <span class="gacha-btn-sub" id="gacha-btn-sub">読み込み中…</span>
+        </button>
+        <button class="gacha-btn" id="gacha10-btn" onclick="startGacha10()" disabled style="background:linear-gradient(135deg, #b5893d 0%, #d5ab5b 50%, #b5893d 100%);border-color:rgba(255,215,100,0.55)">
+          🎰🎰 10連ガチャ（1000pt）
+          <span class="gacha-btn-sub" id="gacha10-btn-sub">10回分を一気にまわす</span>
+        </button>
+      </div>
     </div>
 
     <div class="divider"></div>
@@ -651,12 +716,24 @@
   <div class="result-overlay" id="result-overlay">
     <div class="result-backdrop" onclick="void(0)"></div>
     <div class="result-card" id="result-card">
+      <div class="rarity-fx"></div>
       <div class="result-emoji" id="result-emoji"></div>
       <div class="result-rarity-badge" id="result-rarity-badge"></div>
       <div class="result-name" id="result-name"></div>
       <div class="result-desc" id="result-desc"></div>
       <div class="result-bonus" id="result-bonus" style="display:none"></div>
       <button class="receive-btn" id="receive-btn" onclick="receivePrize()">受け取る</button>
+    </div>
+  </div>
+
+  <!-- 10連結果オーバーレイ -->
+  <div class="result-overlay" id="result10-overlay" style="align-items:flex-start;overflow-y:auto;padding:20px 16px">
+    <div class="result-backdrop" onclick="void(0)"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:420px;background:linear-gradient(160deg,rgba(15,25,60,0.98),rgba(25,45,90,0.98));border:2px solid rgba(150,200,255,0.35);border-radius:24px;padding:24px 20px 20px;color:#e8f4fd">
+      <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.4rem;text-align:center;margin-bottom:14px">🎰 10連結果</h3>
+      <div id="result10-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div id="result10-summary" style="text-align:center;font-size:0.9rem;color:#98bedd;margin-bottom:14px"></div>
+      <button class="receive-btn" onclick="closeResult10()" style="width:100%">まとめて受け取る</button>
     </div>
   </div>
 
@@ -858,6 +935,108 @@
         btn.disabled = true
         sub.textContent = `ポイントが足りない (${currentPoints}pt / 100pt必要)`
       }
+      const btn10 = document.getElementById('gacha10-btn')
+      const sub10 = document.getElementById('gacha10-btn-sub')
+      if (currentPoints >= 1000) {
+        btn10.disabled = false
+        sub10.textContent = '消費: 1000pt / 10連'
+      } else {
+        btn10.disabled = true
+        sub10.textContent = `ポイントが足りない (${currentPoints}pt / 1000pt必要)`
+      }
+    }
+
+    // ===================== 10連ガチャ =====================
+    async function startGacha10() {
+      if (currentPoints < 1000) { showToast('ポイントが足りません (1000pt必要)', true); return }
+      const b1 = document.getElementById('gacha-btn')
+      const b10 = document.getElementById('gacha10-btn')
+      b1.disabled = true; b10.disabled = true
+
+      const ball = document.getElementById('capsule-ball')
+      ball.classList.remove('spinning')
+      void ball.offsetWidth
+      ball.classList.add('spinning')
+
+      const prizes = []
+      for (let i = 0; i < 10; i++) prizes.push(drawPrize())
+
+      // 1000pt deduct + 10件insert
+      const inserts = prizes.map(prize => ({
+        user_id:       currentUser.id,
+        reward_name:   prize.name,
+        reward_emoji:  prize.emoji,
+        reward_desc:   prize.desc || prize.description || null,
+        rarity:        prize.rarity,
+        used:          false,
+        bonus_points:  prize.bonus_points || null,
+        reward_id:     prize.isCustom ? null : prize.id,
+        custom_prize_id: prize.isCustom ? prize.id : null,
+      }))
+
+      const { error: pointErr } = await _sb.from('points').insert({ user_id: currentUser.id, amount: -1000, reason: 'gacha10' })
+      if (pointErr) { showToast('エラー: ' + pointErr.message, true); b1.disabled = false; b10.disabled = false; return }
+
+      const { error: insErr } = await _sb.from('gacha_results').insert(inserts)
+      if (insErr) { showToast('エラー: ' + insErr.message, true) }
+
+      setTimeout(() => {
+        ball.classList.remove('spinning')
+        show10Results(prizes)
+      }, 1000)
+
+      await loadPoints()
+      await loadTickets()
+    }
+
+    function show10Results(prizes) {
+      const grid = document.getElementById('result10-grid')
+      const summary = document.getElementById('result10-summary')
+      grid.innerHTML = ''
+      const counts = { N: 0, R: 0, SR: 0 }
+      prizes.forEach((p, idx) => {
+        counts[p.rarity]++
+        const cell = document.createElement('div')
+        cell.style.cssText = `border:2px solid ${p.rarity==='SR'?'rgba(255,215,0,0.8)':p.rarity==='R'?'rgba(180,120,255,0.7)':'rgba(120,180,220,0.4)'};background:${p.rarity==='SR'?'linear-gradient(145deg,#3d2e00,#1a1200)':p.rarity==='R'?'linear-gradient(145deg,#2d0f50,#1a0a30)':'linear-gradient(145deg,#163a60,#0e2a4a)'};border-radius:12px;padding:12px 8px;text-align:center;opacity:0;transform:scale(0.5);transition:all 0.3s`
+        cell.innerHTML = `
+          <div style="font-size:2rem;line-height:1">${escHtml(p.emoji)}</div>
+          <div style="font-size:0.72rem;font-weight:bold;color:${p.rarity==='SR'?'#ffd700':p.rarity==='R'?'#d09aff':'#7ec8f0'};margin:4px 0">${p.rarity}</div>
+          <div style="font-size:0.78rem;color:#e8f4fd;line-height:1.2">${escHtml(p.name)}</div>
+        `
+        grid.appendChild(cell)
+        // ずらしてポップイン
+        setTimeout(() => { cell.style.opacity = '1'; cell.style.transform = 'scale(1)' }, 100 + idx * 90)
+      })
+      summary.textContent = `SR ${counts.SR} · R ${counts.R} · N ${counts.N}`
+      document.getElementById('result10-overlay').classList.add('open')
+
+      // SR があれば派手演出
+      if (counts.SR > 0) triggerSREffect()
+    }
+
+    function closeResult10() {
+      document.getElementById('result10-overlay').classList.remove('open')
+    }
+
+    // SR演出: 金色オーバーレイ + パーティクル降り
+    function triggerSREffect() {
+      const overlay = document.createElement('div')
+      overlay.className = 'sr-overlay'
+      document.body.appendChild(overlay)
+      setTimeout(() => overlay.remove(), 1700)
+
+      const emojis = ['✨','🌟','💫','⭐','🎉']
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div')
+        p.className = 'gold-particle'
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)]
+        p.style.left = (Math.random() * 100) + 'vw'
+        p.style.top = '-40px'
+        p.style.animationDelay = (Math.random() * 0.6) + 's'
+        p.style.animationDuration = (2 + Math.random() * 1.5) + 's'
+        document.body.appendChild(p)
+        setTimeout(() => p.remove(), 4500)
+      }
     }
 
     // ===================== GACHA START =====================
@@ -905,6 +1084,9 @@
       receiveBtn.disabled = false
 
       document.getElementById('result-overlay').classList.add('open')
+
+      // SR ならフルスクリーン演出
+      if (prize.rarity === 'SR') triggerSREffect()
     }
 
     // ===================== RECEIVE PRIZE =====================

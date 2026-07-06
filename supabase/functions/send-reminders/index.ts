@@ -126,15 +126,23 @@ Deno.serve(async (req) => {
       const nYear = next.getUTCFullYear() - START.getUTCFullYear()
       const totalDays = Math.floor((now.getTime() - START.getTime()) / 86400000)
       let msg = ''
-      if (daysToNext === 0) msg = `💖 記念日おめでとう！ ${nYear}周年 ✨`
+      let bonusPt = 0
+      if (daysToNext === 0) { msg = `💖 記念日おめでとう！ ${nYear}周年 ✨ +100pt`; bonusPt = 100 }
       else if (daysToNext === 1) msg = `💖 明日はふたりの ${nYear}周年！`
       else if (daysToNext === 7) msg = `💕 記念日まであと1週間`
       else if (daysToNext === 30) msg = `💕 記念日まであと1ヶ月`
-      else if (totalDays > 0 && totalDays % 30 === 0) msg = `💕 一緒になって ${totalDays} 日目`
+      else if (totalDays > 0 && totalDays % 30 === 0) { msg = `💕 一緒になって ${totalDays} 日目 +30pt`; bonusPt = 30 }
       if (msg) {
         shouldNotify = true
         body = msg
         url = '/'
+        // ポイントボーナス付与
+        if (bonusPt > 0) {
+          await sb.from('points').insert({
+            user_id: p.id, amount: bonusPt,
+            reason: daysToNext === 0 ? 'anniversary_bonus' : 'monthly_milestone',
+          })
+        }
       }
     }
 
