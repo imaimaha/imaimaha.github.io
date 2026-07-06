@@ -161,8 +161,8 @@
   </div>
 
   <script>
-    // 記念日カウンター
-    const START = new Date('2025-11-22')
+    // 記念日カウンター（JST 朝2時をロールオーバー境界に）
+    const START = new Date('2025-11-22T02:00:00+09:00')
     function updateAnniversary() {
       const now = new Date()
       const days = Math.floor((now - START) / 86400000)
