@@ -203,7 +203,21 @@
 - 投稿で **+1pt**、相手に Push 通知
 - 自分の投稿のみ削除可
 
-### 4.14 共通コンポーネント
+### 4.14 ポイント販売所 (`shop.html`)
+
+- 相手向けに商品を「出品」→相手が自分の pt で購入 → **pt が売り手に移動**
+- タブ: 🛍 買う（相手の出品） / 💼 売る（自分の出品管理） / 📦 履歴（購入・販売）
+- 出品項目: 商品名・絵文字・説明・価格・在庫(nullなら無限)・レア度(N/R/SR)・ボーナスpt
+- 購入は Edge Function `purchase-shop-item` が原子的に処理:
+  1. 商品存在・active・buyer一致・在庫チェック
+  2. 買い手 balance チェック
+  3. 在庫デクリメント (optimistic update)
+  4. 買い手 -price / 売り手 +price
+  5. `shop_purchases` にスナップショット記録
+  6. 売り手に Push 通知
+- 購入した券は「使用済」にすると bonus_points があれば加算 (shop_bonus)
+
+### 4.15 共通コンポーネント
 
 - `assets/js/header.js` — 全ページ右上に絵文字ボタン。タップでログアウト確認
 - `assets/js/push.js` — Web Push 購読管理＋状態バッジ（`#push-status-badge` があるページのみ）
@@ -242,6 +256,14 @@
 |------|-----|----|
 | ガチャ回転（1回） | -100 | `gacha` |
 | **10連ガチャ** | -1000 | `gacha10` |
+| 販売所で購入 | -price | `shop_buy` |
+
+### 相手↔自分の移動
+
+| 動作 | 私 | 相手 | reason |
+|------|-----|-----|----|
+| 販売所で私が売った | +price | -price | `shop_earn` (私) / `shop_buy` (相手) |
+| 販売所使用ボーナス | +bonus | — | `shop_bonus` |
 
 ---
 
@@ -334,6 +356,8 @@
 | `push_subscriptions` | user_id, endpoint, subscription | Web Push 購読 |
 | `notifications_sent` | user_id, kind, date_str | リマインダー重複防止・ログインボーナスの日次記録にも使用 |
 | `thanks_posts` | from_user_id, to_user_id, message | 相手への「ありがとう」ポスト |
+| `shop_items` | seller_id, buyer_id, name, emoji, description, price, stock, bonus_points, rarity, active | 販売所の商品 |
+| `shop_purchases` | item_id, buyer_id, seller_id, price, name, emoji, description, bonus_points, rarity, used, purchased_at | 販売所の購入履歴 |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
 ### 7.2 RLS ポリシーの原則
