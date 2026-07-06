@@ -186,11 +186,11 @@
           </div>
           <div class="mode-card-arrow">→</div>
         </div>
-        <div class="mode-card" onclick="showScreen('single-sub')">
+        <div class="mode-card" onclick="openSingle()">
           <div class="mode-card-icon">🎯</div>
           <div>
             <div class="mode-card-title">単発</div>
-            <div class="mode-card-desc">色を指定 or ランダムでハント</div>
+            <div class="mode-card-desc">色を指定 or ランダムでハント<br>前回のセッションがあれば続きから</div>
           </div>
           <div class="mode-card-arrow">→</div>
         </div>
@@ -348,19 +348,23 @@
       (profs || []).forEach(p => { state.profiles[p.id] = p; });
 
       renderPalette();
+      // 自動リダイレクトはしない。単発ボタンを押した時に復元する
+    }
 
-      // 単発のアクティブハントがあれば復元
+    // 単発モードカードのクリックハンドラ: 前回のセッションあれば復元、無ければサブ画面
+    async function openSingle() {
       const activeId = getActiveSingle();
       if (activeId) {
         const { data } = await _sb.from('color_hunts')
-          .select('*').eq('id', activeId).single();
+          .select('*').eq('id', activeId).maybeSingle();
         if (data && data.user_id === state.userId && data.mode === 'single') {
           state.currentHunt = data;
-          openHuntBoard('single');
-        } else {
-          clearActiveSingle();
+          await openHuntBoard('single');
+          return;
         }
+        clearActiveSingle();
       }
+      showScreen('single-sub');
     }
 
     function renderPalette() {
