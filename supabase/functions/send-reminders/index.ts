@@ -20,9 +20,9 @@ function jstMondayStr(d = new Date()): string {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors() })
 
-  // service_role JWT でのみ呼べる（pg_cron 経由）
+  // service_role でのみ呼べる（pg_cron 経由）。新旧 API キー両対応
   const auth = req.headers.get('Authorization') ?? ''
-  if (auth !== `Bearer ${SB_KEY}`) return json({ error: 'Unauthorized' }, 401)
+  if (!isServiceAuth(auth, SB_KEY)) return json({ error: 'Unauthorized' }, 401)
 
   const { kind } = await req.json()
   if (!kind) return json({ error: 'kind is required' }, 400)
@@ -189,4 +189,18 @@ function cors() {
     'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
+}
+
+function isServiceAuth(auth: string, sbKey: string): boolean {
+  if (auth === `Bearer ${sbKey}`) return true
+  const token = auth.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return false
+  const parts = token.split('.')
+  if (parts.length !== 3) return false
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const pad = '='.repeat((4 - b64.length % 4) % 4)
+    const payload = JSON.parse(atob(b64 + pad))
+    return payload?.role === 'service_role' && payload?.iss === 'supabase'
+  } catch { return false }
 }
