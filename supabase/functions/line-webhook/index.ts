@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 
     const alreadyRegistered = profiles?.some(p => p.line_user_id === lineUserId)
     if (alreadyRegistered) {
-      // 登録済み → 1対1メッセージをWeb Pushで転送 + DB保存
+      // 登録済み → 1対1メッセージを 相手のLINE + Web Push で転送 + DB保存
       if (event.type === 'message' && event.message?.type === 'text') {
         const senderProfile = profiles?.find(p => p.line_user_id === lineUserId)
         const recipientProfile = profiles?.find(p => p.line_user_id !== lineUserId)
@@ -97,12 +97,28 @@ Deno.serve(async (req) => {
           source_type: 'personal',
         })
         if (recipientProfile) {
+          // Web Push (画面上)
           sendPush({
             title: senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : 'Notre Endroit',
             body: event.message.text,
             recipient_user_id: recipientProfile.id,
             replier_id: senderProfile?.id ?? null,
           })
+          // 相手のLINEにも relay
+          if (recipientProfile.line_user_id) {
+            const label = senderProfile ? `${senderProfile.emoji} ${senderProfile.name}` : '相手'
+            await fetch('https://api.line.me/v2/bot/message/push', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${LINE_TOKEN}`,
+              },
+              body: JSON.stringify({
+                to: recipientProfile.line_user_id,
+                messages: [{ type: 'text', text: `${label}:\n${event.message.text}` }],
+              }),
+            }).catch(() => {})
+          }
         }
       }
       continue

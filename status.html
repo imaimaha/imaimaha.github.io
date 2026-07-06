@@ -270,6 +270,15 @@
     <div id="line-messages-section" style="margin-top:24px">
       <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.05rem;color:#e8f4fd;text-align:center;margin-bottom:12px">💬 LINE 最新メッセージ</h3>
       <div id="line-messages-list" style="display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto"></div>
+
+      <!-- 画面上から相手のLINEに返信 -->
+      <div style="max-width:520px;margin:12px auto 0;display:flex;gap:8px;align-items:flex-end">
+        <textarea id="line-reply-input" placeholder="ここから相手のLINEに返信できるよ" rows="1"
+          style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(100,180,255,0.25);border-radius:12px;color:#e8f4fd;font-size:15px;font-family:inherit;min-height:42px;max-height:120px;resize:vertical"></textarea>
+        <button id="line-reply-btn" onclick="sendLineReply()"
+          style="padding:10px 16px;background:rgba(80,180,120,0.25);border:1.5px solid rgba(80,220,120,0.5);color:#baffcc;border-radius:12px;font-family:inherit;font-size:0.9rem;cursor:pointer;white-space:nowrap">📤 送る</button>
+      </div>
+      <div id="line-reply-status" style="text-align:center;font-size:0.8rem;color:#98bedd;margin-top:6px;min-height:1em"></div>
     </div>
   </div>
 
@@ -470,6 +479,51 @@
       loadLineMessages()
       if (lineMsgTimer) clearInterval(lineMsgTimer)
       lineMsgTimer = setInterval(loadLineMessages, 5000)
+    }
+
+    // 画面上から相手のLINE(+Push)に返信を送る
+    async function sendLineReply() {
+      const input = document.getElementById('line-reply-input')
+      const status = document.getElementById('line-reply-status')
+      const btn = document.getElementById('line-reply-btn')
+      const text = input.value.trim()
+      if (!text) return
+      if (!myProfile) { status.textContent = 'プロフィール未取得'; return }
+
+      btn.disabled = true
+      status.textContent = '送信中…'
+
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        const { data, error } = await _sb.functions.invoke('line-notify', {
+          body: {
+            sender_id: session.user.id,
+            target: 'partner',
+            message: `${myProfile.emoji} ${myProfile.name}:\n${text}`,
+          },
+        })
+        if (!error) {
+          input.value = ''
+          status.textContent = '✅ 送信しました'
+          // 自分の line_messages にも記録して自画面に表示
+          await _sb.from('line_messages').insert({
+            sender_id: myProfile.id,
+            sender_name: myProfile.name,
+            sender_emoji: myProfile.emoji,
+            message: text,
+            source_type: 'personal',
+          })
+          await loadLineMessages()
+        } else {
+          let errMsg = error?.message || ''
+          try { const j = await error.context?.json?.(); if (j?.error) errMsg = j.error } catch {}
+          status.textContent = '❌ ' + errMsg.slice(0, 60)
+        }
+      } catch (e) {
+        status.textContent = '❌ ' + (e?.message ?? String(e)).slice(0, 60)
+      }
+      btn.disabled = false
+      setTimeout(() => { if (status.textContent.startsWith('✅')) status.textContent = '' }, 4000)
     }
 
     load().then(() => { startLineMsgPolling() })

@@ -206,8 +206,12 @@
   <style>@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>
 
   <!-- プッシュ通知の状態バッジ（クリックで有効化/診断） -->
-  <div id="push-status-badge" role="button" tabindex="0"
-       style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(255,255,255,0.94);color:#5d4037;border:2px solid #e8ddd5;border-radius:22px;padding:8px 18px;font-size:0.82rem;box-shadow:0 3px 12px rgba(0,0,0,0.12);cursor:pointer;user-select:none;max-width:calc(100vw - 40px);white-space:nowrap"></div>
+  <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;gap:8px;flex-direction:column;align-items:center">
+    <div id="push-status-badge" role="button" tabindex="0"
+         style="background:rgba(255,255,255,0.94);color:#5d4037;border:2px solid #e8ddd5;border-radius:22px;padding:8px 18px;font-size:0.82rem;box-shadow:0 3px 12px rgba(0,0,0,0.12);cursor:pointer;user-select:none;max-width:calc(100vw - 40px);white-space:nowrap"></div>
+    <button id="test-push-btn" onclick="sendTestPush()"
+         style="background:rgba(255,255,255,0.85);color:#5d4037;border:1.5px dashed #d7ccc8;border-radius:20px;padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:inherit">🧪 自分にテスト通知</button>
+  </div>
 
   <script>
     // 記念日カウンター（JST 朝2時をロールオーバー境界に）
@@ -276,6 +280,34 @@
       } catch {}
     }
     loadPoints()
+
+    // デバッグ: 自分にテスト通知を送る
+    async function sendTestPush() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      const btn = document.getElementById('test-push-btn')
+      btn.disabled = true
+      btn.textContent = '送信中…'
+
+      const { data, error } = await _sb.functions.invoke('send-push', {
+        body: {
+          title: '🧪 テスト通知',
+          body: `${new Date().toLocaleTimeString('ja-JP')} - 届いた？`,
+          url: '/',
+          recipient_user_id: session.user.id,
+        },
+      })
+
+      if (error) {
+        let msg = error?.message || ''
+        try { const j = await error.context?.json?.(); if (j?.error) msg = j.error } catch {}
+        alert('❌ ' + msg)
+      } else {
+        alert(`✅ 送信完了 (${data?.sent ?? 0}デバイスへ)\nこの端末で通知が届かない場合:\n・PWA(ホーム画面から起動)か？\n・通知許可済みか？\n・push_subscriptions に登録されているか？`)
+      }
+      btn.disabled = false
+      btn.textContent = '🧪 自分にテスト通知'
+    }
 
     // 毎日1回、初回ログインで +5pt ボーナス
     async function grantLoginBonus() {

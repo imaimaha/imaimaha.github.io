@@ -657,8 +657,7 @@
     <div style="background:rgba(255,255,255,0.04);border:1.5px solid rgba(150,200,255,0.15);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.78rem;color:#98bedd;line-height:1.5">
       💡 ここで景品を追加すると、<b>相手のガチャ</b>にラインナップされます。<br>
       • <b>レア度</b>: N(よく出る) / R(そこそこ) / SR(激レア)<br>
-      • <b>出やすさ</b>: カスタム景品同士での相対的な出現率。1.0が標準、大きくすると他より出やすい<br>
-      • <b>ボーナスpt</b>: 券を「使用済み」にした時に相手にpt付与
+      • <b>出やすさ</b>: カスタム景品同士での相対的な出現率。1.0が標準、大きくすると他より出やすい
     </div>
     <div style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:16px;margin-bottom:20px">
       <div style="font-size:0.85rem;color:#98bedd;margin-bottom:12px">
@@ -698,9 +697,8 @@
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
           <label style="font-size:0.8rem;color:#98bedd" title="数字が大きいほど出やすい">出やすさ:</label>
           <input id="new-weight" type="number" value="1" min="0.1" step="0.1" style="width:70px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
-          <label style="font-size:0.8rem;color:#98bedd;margin-left:10px">ボーナスpt(任意):</label>
-          <input id="new-bonus" type="number" placeholder="例: 50" style="width:80px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
         </div>
+        <input id="new-bonus" type="hidden" value="">
         <div style="display:flex;gap:8px">
           <button onclick="toggleAddPrizeForm()" style="flex:1;padding:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.25);border-radius:10px;color:#98bedd;font-family:inherit;font-size:0.9rem;cursor:pointer">キャンセル</button>
           <button onclick="addPartnerPrize()" style="flex:1;padding:10px;background:rgba(100,200,180,0.25);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:10px;font-family:inherit;font-size:0.9rem;cursor:pointer">追加する</button>
