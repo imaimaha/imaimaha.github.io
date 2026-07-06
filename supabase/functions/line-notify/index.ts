@@ -110,8 +110,8 @@ function json(body: unknown, status = 200) {
 
 function corsHeaders() {
   return {
-    'Access-Control-Allow-Origin': 'https://imaimaha.github.io',
-    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
 }
