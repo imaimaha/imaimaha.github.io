@@ -219,6 +219,51 @@
     }
     .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
 
+    /* スレッド返信 */
+    .thread {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(150,200,255,0.2);
+    }
+    .thread-empty {
+      font-size: 0.78rem; color: #5a7fa8; margin-bottom: 8px;
+    }
+    .reply {
+      display: flex; gap: 8px; padding: 8px 0;
+      border-bottom: 1px solid rgba(150,200,255,0.08);
+    }
+    .reply:last-of-type { border-bottom: none; }
+    .reply-emoji { font-size: 1.3rem; flex-shrink: 0; }
+    .reply-body { flex: 1; min-width: 0; }
+    .reply-author { font-size: 0.72rem; color: #7aadcc; margin-bottom: 2px; }
+    .reply-text { font-size: 0.88rem; color: #cfe0f5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .reply-time { font-size: 0.68rem; color: #5a7fa8; margin-top: 2px; }
+    .reply-form {
+      display: flex; gap: 8px; margin-top: 12px;
+      align-items: flex-end;
+    }
+    .reply-input {
+      flex: 1; padding: 10px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(100,180,255,0.2);
+      border-radius: 12px; color: #e8f4fd;
+      font-size: 15px; font-family: inherit;
+      min-height: 42px; max-height: 120px;
+      resize: vertical;
+    }
+    .reply-input:focus { outline: none; border-color: rgba(100,200,255,0.55); }
+    .reply-send {
+      padding: 10px 16px;
+      background: rgba(100,200,180,0.25);
+      border: 1.5px solid rgba(100,220,180,0.5);
+      color: #b0f0d5; border-radius: 12px;
+      font-family: inherit; font-size: 0.85rem; cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .reply-send:hover { background: rgba(100,200,180,0.4); }
+    .reply-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* 開封アニメーション overlay */
     #open-overlay {
       display: none;
@@ -430,19 +475,45 @@
       const canOpen = !c.is_opened && c.recipient_id === myId
 
       if (c.is_opened) {
-        // 自分が受け取ったカプセルにだけ返信ボタン
-        const replyBtn = c.recipient_id === myId
-          ? `<button class="open-btn" style="margin-top:12px" onclick="replyTo('${c.sender_id}', '${escAttr(c.message.slice(0,50))}')">↩️ 返信</button>`
-          : ''
+        // 返信スレッド（sender/recipient両者が投稿できる）
+        const replies = Array.isArray(c.replies) ? c.replies : []
+        const canReply = c.sender_id === myId || c.recipient_id === myId
+        const repliesHtml = replies.length > 0
+          ? replies.map(r => {
+              const p = profileFor(r.user_id)
+              const time = new Date(r.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+              return `
+                <div class="reply">
+                  <div class="reply-emoji">${p?.emoji ?? '?'}</div>
+                  <div class="reply-body">
+                    <div class="reply-author">${escHtml(p?.name ?? '?')}</div>
+                    <div class="reply-text">${escHtml(r.text)}</div>
+                    <div class="reply-time">${time}</div>
+                  </div>
+                </div>
+              `
+            }).join('')
+          : '<div class="thread-empty">まだ返信はありません</div>'
+
+        const formHtml = canReply ? `
+          <div class="reply-form">
+            <textarea class="reply-input" id="reply-input-${c.id}" placeholder="返信を書く..." rows="1"></textarea>
+            <button class="reply-send" onclick="postReply('${c.id}')">送る</button>
+          </div>
+        ` : ''
+
         return `
-          <div class="capsule-card opened">
+          <div class="capsule-card opened" id="capsule-${c.id}" style="opacity:1">
             <div class="capsule-meta">
               <div class="capsule-from">${senderLabel} → ${recipientLabel}</div>
               <span class="capsule-status status-opened">開封済み ✓</span>
             </div>
             <div class="capsule-message">${escHtml(c.message)}</div>
             <div class="capsule-date">📅 送られた日: ${createdDate}　|　開封日: ${openDate}</div>
-            ${replyBtn}
+            <div class="thread">
+              ${repliesHtml}
+              ${formHtml}
+            </div>
           </div>
         `
       }
@@ -477,16 +548,50 @@
       `
     }
 
-    // 返信: 作成タブへ遷移して相手を対象にプレフィル
-    function replyTo(originalSenderId, quotedPreview) {
-      // originalSenderIdは私が「受信した」時の相手→この人に返信を送る
-      const input = document.getElementById('msg-input')
-      const prefix = quotedPreview ? `↩️ 「${decodeURIComponent(quotedPreview)}」への返信\n\n` : '↩️ 返信\n\n'
-      input.value = prefix
-      switchTab('compose')
-      input.focus()
-      // カーソルを末尾に
-      input.setSelectionRange(input.value.length, input.value.length)
+    // スレッド返信: カプセル本体の replies に追記
+    async function postReply(capsuleId) {
+      const input = document.getElementById('reply-input-' + capsuleId)
+      const text = input?.value?.trim()
+      if (!text) return
+
+      const btn = input?.nextElementSibling
+      if (btn) btn.disabled = true
+
+      // 最新の replies を取得して追記
+      const { data: latest, error: fetchErr } = await _sb.from('time_capsules')
+        .select('replies, sender_id, recipient_id')
+        .eq('id', capsuleId)
+        .single()
+      if (fetchErr || !latest) {
+        if (btn) btn.disabled = false
+        showToast('取得に失敗しました', true)
+        return
+      }
+      if (latest.sender_id !== myId && latest.recipient_id !== myId) {
+        showToast('このカプセルに返信できません', true)
+        if (btn) btn.disabled = false
+        return
+      }
+
+      const newReply = {
+        user_id: myId,
+        text,
+        created_at: new Date().toISOString(),
+      }
+      const newReplies = [...(latest.replies || []), newReply]
+
+      const { error } = await _sb.from('time_capsules')
+        .update({ replies: newReplies })
+        .eq('id', capsuleId)
+      if (error) {
+        showToast('送信失敗: ' + error.message, true)
+        if (btn) btn.disabled = false
+        return
+      }
+
+      input.value = ''
+      await loadReceived()
+      showToast('返信しました')
     }
 
     async function openCapsule(id, message, createdDate, openDate, senderEmoji, senderName) {
@@ -502,20 +607,8 @@
       document.getElementById('open-dates').textContent = `送られた日: ${createdDate}　|　届いた日: ${openDate}`
       document.getElementById('open-overlay').classList.add('show')
 
-      // カードを更新
-      const card = document.getElementById('capsule-' + id)
-      if (card) {
-        card.classList.remove('pending')
-        card.classList.add('opened')
-        card.innerHTML = `
-          <div class="capsule-meta">
-            <div class="capsule-from">${senderEmoji} ${senderName} より</div>
-            <span class="capsule-status status-opened">開封済み ✓</span>
-          </div>
-          <div class="capsule-message">${escHtml(decodeURIComponent(message))}</div>
-          <div class="capsule-date">📅 送られた日: ${createdDate}　|　届いた日: ${openDate}</div>
-        `
-      }
+      // カードを再描画してスレッドUIを表示
+      await loadReceived()
     }
 
     function closeOpenModal() {
