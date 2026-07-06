@@ -23,9 +23,8 @@ async function handle(req: Request) {
   const VAPID_MAILTO = Deno.env.get('VAPID_MAILTO') ?? 'mailto:admin@example.com'
 
   const auth = req.headers.get('Authorization') ?? ''
-  // 旧JWT形式 と 新 sb_secret_ 形式のどちらでも service_role として扱う
-  // (Supabase の API キーが 2 世代あるため両方許容)
-  const isService = auth === `Bearer ${SB_KEY}`
+  // 旧JWT形式(role=service_role) と 新 sb_secret_ 形式のどちらでも service_role として扱う
+  const isService = isServiceAuth(auth, SB_KEY)
 
   let authenticatedUid: string | null = null
   if (!isService) {
@@ -98,4 +97,19 @@ function cors() {
     'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
+}
+
+// service_role 判定: 新形式 sb_secret_ or 旧JWT(role=service_role) 両対応
+function isServiceAuth(auth: string, sbKey: string): boolean {
+  if (auth === `Bearer ${sbKey}`) return true
+  const token = auth.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return false
+  const parts = token.split('.')
+  if (parts.length !== 3) return false
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const pad = '='.repeat((4 - b64.length % 4) % 4)
+    const payload = JSON.parse(atob(b64 + pad))
+    return payload?.role === 'service_role' && payload?.iss === 'supabase'
+  } catch { return false }
 }

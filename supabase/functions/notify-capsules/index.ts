@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return res(null, 204)
 
   const auth = req.headers.get('Authorization') ?? ''
-  if (auth !== `Bearer ${SB_KEY}`) return res({ error: 'Unauthorized' }, 401)
+  if (!isServiceAuth(auth, SB_KEY)) return res({ error: 'Unauthorized' }, 401)
 
   const sb = createClient(SB_URL, SB_KEY)
   const now = new Date().toISOString()
@@ -58,4 +58,18 @@ function res(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   })
+}
+
+function isServiceAuth(auth: string, sbKey: string): boolean {
+  if (auth === `Bearer ${sbKey}`) return true
+  const token = auth.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return false
+  const parts = token.split('.')
+  if (parts.length !== 3) return false
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const pad = '='.repeat((4 - b64.length % 4) % 4)
+    const payload = JSON.parse(atob(b64 + pad))
+    return payload?.role === 'service_role' && payload?.iss === 'supabase'
+  } catch { return false }
 }
