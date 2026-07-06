@@ -35,17 +35,25 @@
 
 | ファイル | タイトル | 概要 |
 |----------|----------|------|
-| `index.html` | Notre Endroit | トップ。ポイント表示・全機能への導線・タイムカプセル届き通知 |
+| `index.html` | Notre Endroit | トップ。記念日カウンター(JST朝2時境界)・全機能への導線・クイズ未回答強調・タイムカプセル届き通知・プッシュ通知状態バッジ |
 | `login.html` | — | ログイン。未ログインは全ページからリダイレクト |
-| `closer.html` | One Step Closer | 絵文字ゲージ。タップで+5 & +1pt |
-| `status.html` | 今日の帰宅 | 退勤時間共有。毎朝6時に自動リセット |
+| `closer.html` | One Step Closer | 絵文字ゲージ。タップで+5 & +1pt。MAX到達で+10pt・LINE通知 |
+| `status.html` | 今日の帰宅 | 退勤時間共有。毎朝6時に自動リセット。「行っていい？」でクイックリプライ付きLINE |
 | `calendar.html` | ふたりの予定 | 共有カレンダー |
 | `memories.html` | 思い出アルバム | 写真アルバム |
 | `wishlist.html` | やりたいこと | 4ジャンル |
-| `bingo.html` | お散歩ビンゴ | 5カテゴリ・シェア機能（画像＋テキスト） |
-| `time_capsule.html` | タイムカプセル | 未来へメッセージ。日時指定/範囲ランダム/おまかせ |
+| `bingo.html` | お散歩ビンゴ | 今週のビンゴ（月曜切替）・カテゴリ別・難易度別。カード永続化・履歴閲覧・シェア機能 |
+| `color_hunting.html` | カラーハンティング | 中央の色に合う写真8枚を集めるゲーム。週次テーマ色モード＋単発モード＋履歴 |
+| `time_capsule.html` | タイムカプセル | 未来へメッセージ。届いた/送ったは両者共有ビュー・開封後にスレッド返信可 |
 | `quiz.html` | 今日のクイズ | 日替わり質問30種・+10pt |
-| `gacha.html` | ガチャ | 100ptで抽選・N/R/SR・獲得券は財布に保存 |
+| `gacha.html` | ガチャ | 100ptで抽選・N/R/SR・使用済みにした時にポイント券のボーナス付与。ポイント履歴への導線 |
+| `points.html` | ポイント履歴 | 獲得・消費履歴の一覧、集計 |
+
+### 共通コンポーネント
+
+- `assets/js/header.js` — 全ページ右上に絵文字ボタン。タップでログアウト確認ダイアログ
+- `assets/js/push.js` — Web Push 購読管理＋状態バッジ（`#push-status-badge` があるページのみ）
+- `assets/js/stars.js` — 背景の星アニメーション
 
 ## Supabase テーブル
 
@@ -56,13 +64,14 @@
 | `status` | user_id, finish_time, note | 退勤予定（朝6時DELETE） |
 | `events` | — | カレンダーイベント |
 | `memories` | — | 思い出テキスト |
-| `photos` | — | 写真（未実装） |
+| `photos` | path, memo, user_id | 思い出アルバム写真（Supabase Storage `memories` bucket） |
 | `wishes` | — | Wishlist |
-| `bingo_sessions` | user_id, mode, items, checks | ビンゴ進行状況 |
-| `time_capsules` | sender_id, recipient_id, message, open_at, is_opened, line_notified | タイムカプセル |
+| `bingo_sessions` | user_id, mode('weekly'\|'category'\|'random'), label, date_str(週の月曜), items, checks | ビンゴ進行状況 |
+| `color_hunts` | user_id, mode('weekly'\|'single'), week_key, color_hex, color_name, photos(jsonb) | カラーハンティング |
+| `time_capsules` | sender_id, recipient_id, message, open_at, is_opened, line_notified, replies(jsonb) | タイムカプセル＋スレッド返信 |
 | `points` | user_id, amount, reason | ポイント履歴（SUMで残高計算） |
 | `quiz_answers` | user_id, question_id, answer, date_str | クイズ回答 |
-| `gacha_results` | user_id, reward_id, reward_name, reward_emoji, rarity, used | ガチャ獲得券 |
+| `gacha_results` | user_id, reward_id, reward_name, reward_emoji, rarity, used, bonus_points | ガチャ獲得券。bonus_pointsは使用時に加算 |
 | `push_subscriptions` | user_id, endpoint, subscription | Web Push 購読 |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
@@ -71,12 +80,15 @@
 - `profiles`: 全 authenticated ユーザーが SELECT 可
 - `closer_gauge`: 全操作許可
 - `points/quiz_answers/gacha_results`: 認証済み全員 SELECT / 自分の分のみ INSERT・UPDATE
+- `bingo_sessions`: 認証済み全員 SELECT（履歴共有のため）/ 自分の分のみ INSERT/UPDATE/DELETE
+- `color_hunts`: 同上
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
   - `recipient_view`: 受信者は `open_at <= now()` の分だけ見える
   - `sender_insert`: 送信者として INSERT 可
   - `sender_update_notified`: 送信者は自分の分 UPDATE 可（line_notified 更新用）
   - `recipient_open`: 受信者は自分宛を UPDATE 可（is_opened）
+  - `capsule_replies_update`: sender/recipient両方が UPDATE 可（replies追記用）
 
 ### 重要な注意：GRANT忘れずに
 
@@ -252,12 +264,57 @@ curl -s -H "Authorization: Bearer <CLIトークン>" \
   "https://api.supabase.com/v1/projects/qivnfiqyjfajlzbdqodd/api-keys"
 ```
 
+## 通知フロー まとめ
+
+### LINE通知の発火条件
+
+すべて `line-notify` Edge Function経由。`_sb.functions.invoke('line-notify', {...})` で呼ぶ（apikey+Authorizationヘッダー自動付与）。
+
+| 発火元 | 条件 | target | 送信先 |
+|--------|------|--------|--------|
+| `closer.html` | 自分のゲージが初めて100に到達 (`!rawWasMax && newGauge>=100`) | partner | 相手のLINE |
+| `closer.html` | 2人ともゲージMAX (`sendLineMaxNotification`) | group | LINEグループ |
+| `calendar.html` | 予定を追加した時 | group | LINEグループ |
+| `status.html` | 退勤時間を保存した時 | group | LINEグループ |
+| `status.html` | 「行っていい？」ボタン (quick_reply付き) | partner | 相手のLINE |
+| `index.html` | 自分が送ったタイムカプセルの open_at が過去なのに未通知 | partner | 相手のLINE |
+| `notify-capsules` (pg_cron 5分毎) | サーバ側で開封日時が来た未通知カプセル一括処理 | partner | 相手のLINE |
+
+### プッシュ通知の発火条件
+
+**LINE通知が飛ぶタイミングと完全に同じ**。`line-notify` は LINE 送信後に `send-push` を必ず呼ぶ（サブスクがあれば送信、なければ 0件で return）。
+
+- `target === 'partner'` → 相手ユーザーの `push_subscriptions` にプッシュ
+- `target === 'group'` → 送信者以外全員の `push_subscriptions` にプッシュ
+
+**購読前提**: PWA としてホーム画面追加＋通知許可＋`push_subscriptions` に登録されていないと届かない。iOSは PWA 必須（Safari直接開きでは購読できない）。index.html下部の `#push-status-badge` に状態を表示。
+
+### スレッド返信は通知しない
+
+タイムカプセルの `replies` 追記は LINE/Push どちらも飛ばない（今のところ）。両者アプリを開いた時に見える。
+
 ## これからつけたい機能（TODO）
 
-- [ ] 写真アップロード（memories.html）
 - [ ] カスタムドメイン設定
 - [ ] ガチャ景品追加・レアリティ調整
 - [ ] クイズ結果の集計ビュー（相性度など）
-- [ ] ポイント履歴ページ
-- [ ] ゲージMAX時のプッシュ通知
 - [ ] タイムカプセル: 一覧画面でのカプセル削除機能
+- [ ] タイムカプセル返信の通知 (欲しくなったら)
+- [ ] ビンゴ: マスに写真アップロード
+- [ ] カラーハンティング: 完成した週の集大成表示
+
+## 完成済み（このセッションで対応）
+
+- ガチャ・ポイント精査（ポイント合算バグ・相手券操作・使用時ボーナス付与）
+- LINE通知バグ (verify_jwt=trueに認証ヘッダー無しで401サイレント失敗) → `_sb.functions.invoke()` に統一
+- ビンゴ カテゴリ別・難易度別も再生成まで固定
+- ビンゴ 今日→今週の切り替え
+- ビンゴ 履歴閲覧（2人共有・チェック済のみ）
+- 記念日カウンター JST朝2時境界
+- 全ページ右上ヘッダー統一（絵文字だけ）
+- 記念日横のポイント表示削除
+- セクション並び替え + クイズ未回答強調
+- タイムカプセル 届いた共有 + スレッド返信
+- カラーハンティング たたき
+- プッシュ通知 状態バッジ・エラー可視化・iOSガイダンス
+- ポイント履歴ページ (points.html)
