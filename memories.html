@@ -270,17 +270,11 @@
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
 
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>思い出アルバム</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge" style="display:none">
-        <span id="user-emoji-badge"></span>
-        <span class="user-name" id="user-name-badge"></span>
-      </div>
-      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
-    </div>
   </div>
 
   <div class="content">
@@ -319,16 +313,9 @@
     let profiles = []
 
     async function loadProfile() {
-      const { data: { session } } = await _sb.auth.getSession()
       const { data } = await _sb.from('profiles').select('*')
       if (!data) return
       profiles = data
-      const me = data.find(p => p.id === session.user.id)
-      if (me) {
-        document.getElementById('user-emoji-badge').textContent = me.emoji
-        document.getElementById('user-name-badge').textContent  = me.name
-        document.getElementById('user-badge').style.display = 'flex'
-      }
     }
 
     function handleDrop(e) {

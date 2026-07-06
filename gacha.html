@@ -552,17 +552,12 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
 
   <!-- TOP BAR -->
   <div class="top-bar">
     <a href="/">← ホーム</a>
     <h1>🎰 ガチャ</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge" style="display:none">
-        <span id="user-emoji-badge"></span>
-        <span class="user-name" id="user-name-badge"></span>
-      </div>
-    </div>
   </div>
 
   <!-- POINT BAR -->
@@ -658,15 +653,7 @@
       currentUser = session.user
 
       const { data: profilesData } = await _sb.from('profiles').select('*')
-      if (profilesData) {
-        profiles = profilesData
-        const me = profiles.find(p => p.id === currentUser.id)
-        if (me) {
-          document.getElementById('user-emoji-badge').textContent = me.emoji
-          document.getElementById('user-name-badge').textContent  = me.name
-          document.getElementById('user-badge').style.display = 'flex'
-        }
-      }
+      if (profilesData) profiles = profilesData
 
       await loadPoints()
       await loadTickets()

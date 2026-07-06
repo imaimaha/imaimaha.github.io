@@ -99,10 +99,10 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/header.js"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
     <h1>✨ ポイント履歴</h1>
-    <div id="user-badge" class="user-badge"></div>
   </div>
 
   <div class="content">
@@ -149,10 +149,6 @@
       const { data: { session } } = await _sb.auth.getSession()
       if (!session) return
       const myId = session.user.id
-
-      // 自分のプロフィール表示
-      const { data: profs } = await _sb.from('profiles').select('*').eq('id', myId)
-      if (profs && profs[0]) document.getElementById('user-badge').textContent = profs[0].emoji + ' ' + profs[0].name
 
       // 全レコード取得
       const { data } = await _sb.from('points')

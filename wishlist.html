@@ -248,16 +248,10 @@
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
 
+  <script src="assets/js/header.js"></script>
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>やりたいことリスト</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge">
-        <span id="user-emoji-badge"></span>
-        <span class="user-name" id="user-name-badge"></span>
-      </div>
-      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
-    </div>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -378,15 +372,6 @@
     })
 
     loadWishes()
-
-    // ユーザーバッジ
-    _sb.auth.getSession().then(async ({ data: { session } }) => {
-      const { data } = await _sb.from('profiles').select('*').eq('id', session.user.id).single()
-      if (!data) return
-      document.getElementById('user-emoji-badge').textContent = data.emoji
-      document.getElementById('user-name-badge').textContent  = data.name
-      document.getElementById('user-badge').style.display = 'flex'
-    })
   </script>
 </body>
 </html>
