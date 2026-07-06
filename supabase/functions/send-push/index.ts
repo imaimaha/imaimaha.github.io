@@ -1,49 +1,66 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import webpush from 'npm:web-push'
-
-const SB_URL        = Deno.env.get('SUPABASE_URL')!
-const SB_KEY        = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const SB_ANON       = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')!
-const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
-const VAPID_MAILTO  = Deno.env.get('VAPID_MAILTO') ?? 'mailto:admin@example.com'
-
-webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
+// send-push: 認証ユーザーからも service_role からも呼べる Web Push 送信関数
+// OPTIONS はすぐ返す (preflight)。初期化を handler 内に遅延。
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors() })
 
+  try {
+    return await handle(req)
+  } catch (e) {
+    console.error('[send-push] unhandled:', e)
+    return json({ error: 'Internal error: ' + (e?.message ?? String(e)) }, 500)
+  }
+})
+
+async function handle(req: Request) {
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+
+  const SB_URL = Deno.env.get('SUPABASE_URL')!
+  const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const SB_ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!
+  const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
+  const VAPID_MAILTO = Deno.env.get('VAPID_MAILTO') ?? 'mailto:admin@example.com'
+
   const auth = req.headers.get('Authorization') ?? ''
+  // 旧JWT形式 と 新 sb_secret_ 形式のどちらでも service_role として扱う
+  // (Supabase の API キーが 2 世代あるため両方許容)
   const isService = auth === `Bearer ${SB_KEY}`
 
-  // 認証されたユーザーのIDを取得（クライアント経由の場合）
   let authenticatedUid: string | null = null
   if (!isService) {
     if (!auth.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401)
     try {
       const userSb = createClient(SB_URL, SB_ANON, { global: { headers: { Authorization: auth } } })
       const { data: { user }, error } = await userSb.auth.getUser()
-      if (error || !user) return json({ error: 'Invalid JWT' }, 401)
+      if (error || !user) return json({ error: 'Invalid JWT: ' + (error?.message ?? 'no user') }, 401)
       authenticatedUid = user.id
     } catch (e) {
-      return json({ error: 'Auth check failed' }, 401)
+      return json({ error: 'Auth check failed: ' + (e?.message ?? String(e)) }, 401)
     }
   }
 
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const { title, body: msgBody, url, sender_user_id, recipient_user_id, replier_id } = body
-
-  // クライアント経由の場合は sender を強制的に認証ユーザーに上書き（なりすまし防止）
   const effectiveSender = isService ? sender_user_id : authenticatedUid
 
   const sb = createClient(SB_URL, SB_KEY)
-
   let query = sb.from('push_subscriptions').select('*')
   if (recipient_user_id) query = query.eq('user_id', recipient_user_id)
   else if (effectiveSender) query = query.neq('user_id', effectiveSender)
 
-  const { data: subs } = await query
+  const { data: subs, error: qErr } = await query
+  if (qErr) return json({ error: 'query failed: ' + qErr.message }, 500)
   if (!subs?.length) return json({ ok: true, sent: 0 })
+
+  // web-push を遅延ロード（モジュール初期化を handler 内に）
+  const webpushMod = await import('npm:web-push')
+  const webpush = (webpushMod as any).default ?? webpushMod
+  try {
+    webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
+  } catch (e) {
+    return json({ error: 'vapid setup failed: ' + (e?.message ?? String(e)) }, 500)
+  }
 
   const payload = JSON.stringify({
     title: title ?? 'Notre Endroit',
@@ -55,10 +72,10 @@ Deno.serve(async (req) => {
   let sent = 0
   await Promise.all(subs.map(async (sub: Record<string, unknown>) => {
     try {
-      await webpush.sendNotification(sub.subscription as webpush.PushSubscription, payload)
+      await webpush.sendNotification(sub.subscription, payload)
       sent++
-    } catch (e: unknown) {
-      const status = (e as { statusCode?: number }).statusCode
+    } catch (e: any) {
+      const status = e?.statusCode
       if (status === 410 || status === 404) {
         await sb.from('push_subscriptions').delete().eq('id', sub.id)
       }
@@ -66,7 +83,7 @@ Deno.serve(async (req) => {
   }))
 
   return json({ ok: true, sent })
-})
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
