@@ -156,12 +156,21 @@
 ### 4.8 ガチャ (`gacha.html`)
 
 - **100pt消費**でN/R/SR抽選
-- 景品13種（ハードコード）:
+- **ビルトイン景品13種**（ハードコード）:
   - N (76%): ハグ券 / おやすみ電話券 / ごはん選択権 / 写真撮影券 / +50pt / スタンプ送信権
   - R (20%): デート行き先選択権 / 手料理券 / +200pt / サプライズ計画権
   - SR (4%): 一日デート券 / +500pt / 願いごと券
+- **カスタム景品（相手のラインナップに追加）**:
+  - 各ユーザーが**相手の**ガチャに独自景品を追加できる（`gacha_custom_prizes` テーブル）
+  - フィールド: 名前・絵文字・レア度(N/R/SR)・説明・ボーナスpt・重み・active
+  - 削除・停止・重み変更可能
+- **カスタム/ビルトインの抽選割合**:
+  - `profiles.gacha_custom_share` (0.0〜1.0, default 0.5) で自分のガチャがカスタムを引く確率を設定
+  - スライダーで動的調整
+  - draw ロジック: `Math.random() < custom_share` ならカスタムプールから、そうでなければビルトイン
 - **ポイント景品のボーナスは「使用済み」にした時に付与**（受け取り時ではない）
 - 券のリスト表示: 相手の券は「相手の券」ラベル、自分のみ使用可
+- `gacha_results.reward_id` (int) は nullable。カスタムは `custom_prize_id` (uuid) を使う。説明は `reward_desc` にスナップショット保存
 - ポイント履歴 (`points.html`) への導線あり
 
 ### 4.9 思い出アルバム (`memories.html`)
@@ -187,7 +196,14 @@
 - 自分のポイント履歴（獲得・消費）一覧・集計
 - フィルタ: 全部 / 獲得 / 消費
 
-### 4.13 共通コンポーネント
+### 4.13 ありがとう (`thanks.html`)
+
+- 相手に「ありがとう」メッセージを投稿。両者見えるフィード形式
+- クイックタグ（いつもありがとう、ごはん、話、やさしさ、会えて）でひな形入力
+- 投稿で **+1pt**、相手に Push 通知
+- 自分の投稿のみ削除可
+
+### 4.14 共通コンポーネント
 
 - `assets/js/header.js` — 全ページ右上に絵文字ボタン。タップでログアウト確認
 - `assets/js/push.js` — Web Push 購読管理＋状態バッジ（`#push-status-badge` があるページのみ）
@@ -215,12 +231,17 @@
 | カラーハント 写真追加 | +2 | `color_photo` |
 | カラーハント コンプ(8/8) | +15 | `color_complete` |
 | ガチャ景品ボーナス（使用時に付与） | +50/+200/+500 | `gacha_bonus` |
+| 毎日ログインボーナス（初回ログイン時） | +5 | `login_bonus` |
+| 記念日当日ボーナス | +100 | `anniversary_bonus` |
+| 30日ごとの節目（60日/90日/…） | +30 | `monthly_milestone` |
+| ありがとうポスト送信 | +1 | `thanks_send` |
 
 ### 消費手段
 
 | 動作 | pt | reason |
 |------|-----|----|
-| ガチャ回転 | -100 | `gacha` |
+| ガチャ回転（1回） | -100 | `gacha` |
+| **10連ガチャ** | -1000 | `gacha10` |
 
 ---
 
@@ -308,9 +329,11 @@
 | `time_capsules` | sender_id, recipient_id, message, open_at, is_opened, line_notified, opened_at, replies(jsonb) | タイムカプセル＋スレッド返信 |
 | `points` | user_id, amount, reason | ポイント履歴（SUMで残高計算） |
 | `quiz_answers` | user_id, question_id, answer, date_str | クイズ回答 |
-| `gacha_results` | user_id, reward_id, reward_name, reward_emoji, rarity, used, bonus_points | ガチャ獲得券 |
+| `gacha_results` | user_id, reward_id(nullable), custom_prize_id(nullable), reward_name, reward_emoji, reward_desc, rarity, used, bonus_points | ガチャ獲得券 |
+| `gacha_custom_prizes` | added_by, target_user_id, name, emoji, rarity, description, bonus_points, weight, active | 相手ラインナップに追加する景品 |
 | `push_subscriptions` | user_id, endpoint, subscription | Web Push 購読 |
-| `notifications_sent` | user_id, kind, date_str | リマインダー重複防止 |
+| `notifications_sent` | user_id, kind, date_str | リマインダー重複防止・ログインボーナスの日次記録にも使用 |
+| `thanks_posts` | from_user_id, to_user_id, message | 相手への「ありがとう」ポスト |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
 ### 7.2 RLS ポリシーの原則

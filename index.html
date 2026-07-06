@@ -79,6 +79,7 @@
     <a href="/status.html"        class="menu-item">🕐 今日の帰宅</a>
     <a href="/closer.html"        class="menu-item">✨ ゲージ</a>
     <a href="/quiz.html"          class="menu-item" id="menu-quiz">💬 クイズ</a>
+    <a href="/thanks.html"        class="menu-item">🌸 ありがとう</a>
     <a href="/time_capsule.html"  class="menu-item">🎁 タイムカプセル</a>
     <a href="/bingo.html"         class="menu-item">🎯 ビンゴ</a>
     <a href="/color_hunting.html" class="menu-item">🎨 カラーハント</a>
@@ -109,6 +110,14 @@
       <a href="/quiz.html" id="quiz-card" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
         <div style="font-size:1.5rem;margin-bottom:8px">💬 🤔 💡 ✨</div>
         <div id="quiz-preview" style="font-size:0.95rem;color:#8d6e63">今日の質問に答えてポイントをためよう →</div>
+      </a>
+    </section>
+
+    <section id="thanks" class="section">
+      <h2 class="section-title">ありがとう</h2>
+      <a href="/thanks.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:1.5rem;margin-bottom:8px">🌸 💝 🙏 ✨</div>
+        <div style="font-size:0.95rem;color:#8d6e63">相手に「ありがとう」を送ろう →</div>
       </a>
     </section>
 
@@ -258,6 +267,35 @@
       } catch {}
     }
     loadPoints()
+
+    // 毎日1回、初回ログインで +5pt ボーナス
+    async function grantLoginBonus() {
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        if (!session) return
+        const myId = session.user.id
+        const dateStr = new Date().toLocaleDateString('sv-SE')
+
+        const { data: existing } = await _sb.from('notifications_sent')
+          .select('id').eq('user_id', myId).eq('kind', 'login_bonus').eq('date_str', dateStr).maybeSingle()
+        if (existing) return
+
+        // 先に notifications_sent に記録 (二重付与防止)
+        const { error: nErr } = await _sb.from('notifications_sent')
+          .insert({ user_id: myId, kind: 'login_bonus', date_str: dateStr })
+        if (nErr) { console.debug('login bonus already granted or error:', nErr); return }
+
+        await _sb.from('points').insert({ user_id: myId, amount: 5, reason: 'login_bonus' })
+
+        // 軽くトースト表示
+        const el = document.createElement('div')
+        el.textContent = '✨ ログインボーナス +5pt'
+        el.style.cssText = 'position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(255,215,100,0.92);color:#5d4037;padding:8px 18px;border-radius:20px;font-size:0.85rem;z-index:500;box-shadow:0 3px 12px rgba(0,0,0,0.2)'
+        document.body.appendChild(el)
+        setTimeout(() => el.remove(), 3000)
+      } catch (e) { console.error('grantLoginBonus:', e) }
+    }
+    grantLoginBonus()
 
     // 今日のクイズ未回答チェック
     async function checkQuizUnanswered() {
