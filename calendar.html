@@ -607,13 +607,15 @@
         const { data: { session } } = await _sb.auth.getSession()
         const dateLabel = data.date_end && data.date_end !== data.date
           ? `${data.date}〜${data.date_end}` : data.date
-        _sb.functions.invoke('line-notify', {
+        // Push通知だけ（LINE群通知は廃止）
+        _sb.functions.invoke('send-push', {
           body: {
-            sender_id: session.user.id,
-            target: 'group',
-            message: `📅 予定を追加したよ：${data.title}（${dateLabel}）${data.memo ? '\n' + data.memo : ''}`,
+            title: '📅 予定を追加したよ',
+            body: `${data.title}（${dateLabel}）`,
+            url: '/calendar.html',
+            sender_user_id: session.user.id,
           },
-        }).then(({ error }) => { if (error) console.error('[calendar] line-notify error:', error) })
+        }).then(({ error }) => { if (error) console.error('[calendar] push error:', error) })
       }
       closeModal()
     }

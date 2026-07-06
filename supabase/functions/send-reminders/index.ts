@@ -1,0 +1,184 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const SB_URL = Deno.env.get('SUPABASE_URL')!
+const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// JST 基準の日付 (YYYY-MM-DD)
+function jstDateStr(d = new Date()): string {
+  const jstMs = d.getTime() + 9 * 60 * 60 * 1000
+  return new Date(jstMs).toISOString().split('T')[0]
+}
+function jstMondayStr(d = new Date()): string {
+  const jstMs = d.getTime() + 9 * 60 * 60 * 1000
+  const jd = new Date(jstMs)
+  const dow = jd.getUTCDay()
+  const daysSinceMon = (dow + 6) % 7
+  jd.setUTCDate(jd.getUTCDate() - daysSinceMon)
+  return jd.toISOString().split('T')[0]
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: cors() })
+
+  // service_role JWT でのみ呼べる（pg_cron 経由）
+  const auth = req.headers.get('Authorization') ?? ''
+  if (auth !== `Bearer ${SB_KEY}`) return json({ error: 'Unauthorized' }, 401)
+
+  const { kind } = await req.json()
+  if (!kind) return json({ error: 'kind is required' }, 400)
+
+  const sb = createClient(SB_URL, SB_KEY)
+  const today = jstDateStr()
+  let sent = 0
+  let skipped = 0
+
+  // 各ユーザーごとに条件を判定して push
+  const { data: profiles } = await sb.from('profiles').select('id, emoji, name')
+  if (!profiles) return json({ error: 'profiles fetch failed' }, 500)
+
+  for (const p of profiles) {
+    // 既送信チェック
+    const { data: prevSent } = await sb.from('notifications_sent')
+      .select('id').eq('user_id', p.id).eq('kind', kind).eq('date_str', today).maybeSingle()
+    if (prevSent) { skipped++; continue }
+
+    let shouldNotify = false
+    let title = 'Notre Endroit'
+    let body = ''
+    let url = '/'
+
+    if (kind === 'status_1719' || kind === 'status_1901') {
+      // 今日の status が未登録なら通知
+      const { data: st } = await sb.from('status').select('user_id').eq('user_id', p.id).maybeSingle()
+      if (!st) {
+        shouldNotify = true
+        body = kind === 'status_1719'
+          ? `${p.emoji} 今日の帰宅時間まだ登録してないよ！`
+          : `${p.emoji} 遅くない？帰宅時間まだ未登録だよ⏰`
+        url = '/status.html'
+      }
+
+    } else if (kind === 'quiz_evening') {
+      const { data: qa } = await sb.from('quiz_answers')
+        .select('id').eq('user_id', p.id).eq('date_str', today).maybeSingle()
+      if (!qa) {
+        shouldNotify = true
+        body = `${p.emoji} 今日のクイズまだ答えてないよ！ +10pt`
+        url = '/quiz.html'
+      }
+
+    } else if (kind === 'capsule_morning') {
+      const nowIso = new Date().toISOString()
+      const { data: caps } = await sb.from('time_capsules')
+        .select('id').eq('recipient_id', p.id).eq('is_opened', false).lte('open_at', nowIso).limit(1)
+      if (caps && caps.length > 0) {
+        shouldNotify = true
+        body = `🎁 未開封のタイムカプセルがあるよ`
+        url = '/time_capsule.html'
+      }
+
+    } else if (kind === 'bingo_saturday') {
+      // 今週のビンゴのチェック数が想定より少ないなら通知
+      const weekKey = jstMondayStr()
+      const { data: card } = await sb.from('bingo_sessions')
+        .select('checks').eq('user_id', p.id).eq('mode', 'weekly').eq('date_str', weekKey).maybeSingle()
+      const cnt = card?.checks?.length ?? 0
+      if (cnt < 8) {
+        shouldNotify = true
+        body = `🎯 今週のビンゴ ${cnt}マス済み。週末までに集めよう`
+        url = '/bingo.html'
+      }
+
+    } else if (kind === 'color_saturday') {
+      const weekKey = jstMondayStr()
+      const { data: hunt } = await sb.from('color_hunts')
+        .select('photos').eq('user_id', p.id).eq('mode', 'weekly').eq('week_key', weekKey).maybeSingle()
+      const cnt = (hunt?.photos ?? []).length
+      if (cnt < 4) {
+        shouldNotify = true
+        body = `🎨 今週のカラーハント ${cnt}/8。まだ半分！`
+        url = '/color_hunting.html'
+      }
+
+    } else if (kind === 'gauge_low') {
+      // effective gauge < 30 で通知（減衰計算）
+      const { data: g } = await sb.from('closer_gauge')
+        .select('gauge, updated_at').eq('user_id', p.id).maybeSingle()
+      if (g) {
+        const elapsed = Date.now() - new Date(g.updated_at).getTime()
+        const factor = Math.max(0, 1 - elapsed / (24 * 60 * 60 * 1000))
+        const eff = Math.round((g.gauge ?? 0) * factor)
+        if (eff < 30) {
+          shouldNotify = true
+          body = `✨ ゲージが ${eff}% まで下がってるよ`
+          url = '/closer.html'
+        }
+      }
+
+    } else if (kind === 'anniversary') {
+      // 記念日カウントダウン（毎朝2:05 JST に判定）
+      const START = new Date('2025-11-22T02:00:00+09:00')
+      const now = new Date()
+      const next = new Date(START)
+      next.setUTCFullYear(now.getUTCFullYear())
+      if (next <= now) next.setUTCFullYear(now.getUTCFullYear() + 1)
+      const daysToNext = Math.ceil((next.getTime() - now.getTime()) / 86400000)
+      const nYear = next.getUTCFullYear() - START.getUTCFullYear()
+      const totalDays = Math.floor((now.getTime() - START.getTime()) / 86400000)
+      let msg = ''
+      if (daysToNext === 0) msg = `💖 記念日おめでとう！ ${nYear}周年 ✨`
+      else if (daysToNext === 1) msg = `💖 明日はふたりの ${nYear}周年！`
+      else if (daysToNext === 7) msg = `💕 記念日まであと1週間`
+      else if (daysToNext === 30) msg = `💕 記念日まであと1ヶ月`
+      else if (totalDays > 0 && totalDays % 30 === 0) msg = `💕 一緒になって ${totalDays} 日目`
+      if (msg) {
+        shouldNotify = true
+        body = msg
+        url = '/'
+      }
+    }
+
+    if (shouldNotify) {
+      // send-push を service_role で呼ぶ
+      const res = await fetch(`${SB_URL}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SB_KEY}`,
+        },
+        body: JSON.stringify({
+          title,
+          body,
+          url,
+          recipient_user_id: p.id,
+        }),
+      })
+      if (res.ok) {
+        sent++
+        // 記録
+        await sb.from('notifications_sent').insert({
+          user_id: p.id, kind, date_str: today,
+        })
+      }
+    } else {
+      skipped++
+    }
+  }
+
+  return json({ ok: true, kind, sent, skipped })
+})
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...cors() },
+  })
+}
+
+function cors() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
+}

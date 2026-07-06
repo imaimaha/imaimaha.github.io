@@ -1,5 +1,14 @@
 // 全ページ共通の右上ユーザーメニュー。絵文字だけ表示、タップでログアウト確認
 (function () {
+  // ボタンと重ならないための安全マージン
+  const safety = document.createElement('style')
+  safety.id = 'user-menu-safety'
+  safety.textContent = `
+    .top-bar { padding-right: 66px !important; }
+    .top-bar h1 { max-width: calc(100% - 60px); }
+  `
+  document.head.appendChild(safety)
+
   async function init() {
     if (typeof _sb === 'undefined') return
     let emoji = '👤'

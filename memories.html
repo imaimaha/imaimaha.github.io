@@ -383,6 +383,19 @@
       document.getElementById('upload-btn').disabled = true
       progress.textContent = `${done}枚アップロード完了！`
       setTimeout(() => { progress.style.display = 'none' }, 2000)
+
+      // 相手に push
+      if (done > 0) {
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: '🌸 思い出が追加されたよ',
+            body: `写真 ${done}枚がアップされました`,
+            url: '/memories.html',
+            sender_user_id: userId,
+          },
+        }).then(({ error }) => { if (error) console.error('[memories] push error:', error) })
+      }
+
       loadPhotos()
     }
 
