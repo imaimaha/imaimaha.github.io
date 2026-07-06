@@ -80,6 +80,19 @@
       color: #ffd700;
     }
 
+    .point-bar .point-history-link {
+      margin-left: 14px;
+      font-size: 0.82rem;
+      color: #ffd97d;
+      text-decoration: none;
+      padding: 3px 10px;
+      border: 1px solid rgba(255,215,100,0.35);
+      border-radius: 14px;
+      background: rgba(255,215,100,0.06);
+      transition: background 0.2s;
+    }
+    .point-bar .point-history-link:hover { background: rgba(255,215,100,0.16); }
+
     /* ====== CONTENT ====== */
     .content {
       max-width: 520px;
@@ -442,6 +455,17 @@
 
     .ticket-desc { font-size: 0.82rem; color: #7a9ec0; }
 
+    .ticket-bonus {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.72rem;
+      color: #ffd764;
+      background: rgba(255,215,100,0.1);
+      border: 1px solid rgba(255,215,100,0.3);
+      border-radius: 10px;
+      padding: 1px 8px;
+    }
+
     .ticket-date { font-size: 0.72rem; color: #4a6f90; margin-top: 2px; }
 
     .use-btn {
@@ -543,7 +567,8 @@
 
   <!-- POINT BAR -->
   <div class="point-bar">
-    現在のポイント: ✨&nbsp;<span class="point-value" id="point-display">…</span>
+    <span>現在のポイント: ✨&nbsp;<span class="point-value" id="point-display">…</span></span>
+    <a href="/points.html" class="point-history-link">履歴 →</a>
   </div>
 
   <!-- MAIN CONTENT -->
@@ -649,7 +674,7 @@
 
     // ===================== POINTS =====================
     async function loadPoints() {
-      const { data, error } = await _sb.from('points').select('amount')
+      const { data, error } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
       if (error) {
         console.error('points load error:', error)
         showToast('ポイントの読み込みに失敗しました', true)
@@ -707,7 +732,7 @@
 
       const bonusEl = document.getElementById('result-bonus')
       if (prize.bonus_points) {
-        bonusEl.textContent = '✨ ボーナス +' + prize.bonus_points + 'pt 獲得！'
+        bonusEl.textContent = '✨ 使うと +' + prize.bonus_points + 'pt もらえる'
         bonusEl.style.display = 'block'
       } else {
         bonusEl.style.display = 'none'
@@ -729,14 +754,15 @@
       receiveBtn.disabled = true
 
       try {
-        // Insert gacha result
+        // Insert gacha result (bonus_points は使用時に付与するのでここでは記録のみ)
         const { error: resErr } = await _sb.from('gacha_results').insert({
-          user_id:      currentUser.id,
-          reward_id:    prize.id,
-          reward_name:  prize.name,
-          reward_emoji: prize.emoji,
-          rarity:       prize.rarity,
-          used:         false,
+          user_id:       currentUser.id,
+          reward_id:     prize.id,
+          reward_name:   prize.name,
+          reward_emoji:  prize.emoji,
+          rarity:        prize.rarity,
+          used:          false,
+          bonus_points:  prize.bonus_points || null,
         })
         if (resErr) throw resErr
 
@@ -747,16 +773,6 @@
           reason:  'gacha',
         })
         if (ptErr) throw ptErr
-
-        // Bonus points
-        if (prize.bonus_points) {
-          const { error: bonusErr } = await _sb.from('points').insert({
-            user_id: currentUser.id,
-            amount:  prize.bonus_points,
-            reason:  'gacha_bonus',
-          })
-          if (bonusErr) throw bonusErr
-        }
 
         // Update UI
         await loadPoints()
@@ -799,9 +815,21 @@
         const ownerLabel = owner ? `${owner.emoji} ${escHtml(owner.name)}` : ''
         const date = new Date(ticket.created_at).toLocaleDateString('ja-JP')
         const isUsed = ticket.used
+        const isMine = ticket.user_id === currentUser.id
+        const bonus = ticket.bonus_points
 
         const card = document.createElement('div')
         card.className = 'ticket-card' + (isUsed ? ' used' : '')
+
+        let actionHtml
+        if (isUsed) {
+          actionHtml = `<span class="used-label">使用済み</span>`
+        } else if (isMine) {
+          actionHtml = `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
+        } else {
+          actionHtml = `<span class="used-label">相手の券</span>`
+        }
+
         card.innerHTML = `
           <div class="ticket-emoji">${escHtml(ticket.reward_emoji)}</div>
           <div class="ticket-info">
@@ -811,12 +839,10 @@
             </div>
             ${ownerLabel ? `<div class="ticket-owner">${ownerLabel}</div>` : ''}
             <div class="ticket-desc">${escHtml(getPrizeDesc(ticket.reward_id, ticket.reward_name))}</div>
+            ${bonus && !isUsed ? `<div class="ticket-bonus">使うと +${bonus}pt</div>` : ''}
             <div class="ticket-date">${date}</div>
           </div>
-          ${isUsed
-            ? `<span class="used-label">使用済み</span>`
-            : `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
-          }
+          ${actionHtml}
         `
         list.appendChild(card)
       })
@@ -831,6 +857,32 @@
       if (!confirm('この券を使用済みにしますか？')) return
       btn.disabled = true
 
+      // 更新前に bonus_points を取得（自分の券のみ）
+      const { data: ticket, error: fetchErr } = await _sb
+        .from('gacha_results')
+        .select('bonus_points, used, user_id')
+        .eq('id', ticketId)
+        .single()
+
+      if (fetchErr || !ticket) {
+        console.error('markUsed fetch error:', fetchErr)
+        showToast('更新に失敗しました', true)
+        btn.disabled = false
+        return
+      }
+
+      if (ticket.user_id !== currentUser.id) {
+        showToast('相手の券は使用済みにできません', true)
+        btn.disabled = false
+        return
+      }
+
+      if (ticket.used) {
+        showToast('すでに使用済みです', true)
+        await loadTickets()
+        return
+      }
+
       const { error } = await _sb
         .from('gacha_results')
         .update({ used: true })
@@ -843,8 +895,28 @@
         return
       }
 
-      showToast('使用済みにしました ✅')
+      // ボーナスポイント付与
+      if (ticket.bonus_points && ticket.bonus_points > 0) {
+        const { error: bonusErr } = await _sb.from('points').insert({
+          user_id: currentUser.id,
+          amount:  ticket.bonus_points,
+          reason:  'gacha_bonus',
+        })
+        if (bonusErr) {
+          console.error('bonus insert error:', bonusErr)
+          showToast('ボーナス付与に失敗しました', true)
+          // 券は使用済みになっているのでリロード
+          await loadTickets()
+          await loadPoints()
+          return
+        }
+        showToast(`使用済み ✅ +${ticket.bonus_points}pt もらった！`)
+      } else {
+        showToast('使用済みにしました ✅')
+      }
+
       await loadTickets()
+      await loadPoints()
     }
 
     // ===================== TOAST =====================
