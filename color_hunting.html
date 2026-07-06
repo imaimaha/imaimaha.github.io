@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カラーハンティング | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85), transparent);
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.3rem; color: #e8f4fd; }
+    .content { max-width: 520px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    .mode-cards { display: flex; flex-direction: column; gap: 12px; }
+    .mode-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      border-radius: 16px; padding: 16px 18px;
+      cursor: pointer; transition: background 0.2s, transform 0.15s;
+    }
+    .mode-card:active { transform: scale(0.97); }
+    .mode-card:hover { background: rgba(255,255,255,0.12); }
+    .mode-card-icon { font-size: 2rem; flex-shrink: 0; }
+    .mode-card-title { font-size: 1.05rem; color: #e8f4fd; margin-bottom: 3px; }
+    .mode-card-desc { font-size: 0.78rem; color: #98bedd; line-height: 1.5; }
+    .mode-card-arrow { color: #5c8aaf; font-size: 1.1rem; margin-left: auto; }
+
+    /* Screen switching */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .screen-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.35rem; color: #e8f4fd; margin-bottom: 6px;
+    }
+    .screen-sub { font-size: 0.85rem; color: #98bedd; margin-bottom: 20px; }
+
+    /* Palette */
+    .palette-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 10px; margin-top: 12px;
+    }
+    .palette-swatch {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 4px;
+      transition: transform 0.15s, border-color 0.2s;
+    }
+    .palette-swatch:active { transform: scale(0.94); }
+    .palette-swatch .swatch-name {
+      font-size: 0.65rem; color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 2px 6px; border-radius: 6px;
+    }
+
+    /* Hunt board */
+    .hunt-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0 20px;
+    }
+    .hunt-cell {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px dashed rgba(150,200,255,0.28);
+      display: flex; align-items: center; justify-content: center;
+      color: #7aa;
+      font-size: 1.6rem;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .hunt-cell:hover { background: rgba(255,255,255,0.10); }
+    .hunt-cell.filled { border-style: solid; border-color: rgba(150,200,255,0.5); }
+    .hunt-cell img { width: 100%; height: 100%; object-fit: cover; }
+    .hunt-cell.center {
+      cursor: default;
+      border: 3px solid rgba(255,255,255,0.6);
+      box-shadow: 0 0 20px rgba(255,255,255,0.15);
+    }
+    .hunt-cell.center .center-color-label {
+      position: absolute; bottom: 4px;
+      background: rgba(0,0,0,0.55);
+      color: #fff; font-size: 0.7rem;
+      padding: 3px 8px; border-radius: 8px;
+    }
+
+    .hunt-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.4rem;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px;
+    }
+    .color-chip {
+      display: inline-block; width: 22px; height: 22px;
+      border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+      vertical-align: middle;
+    }
+
+    .hunt-actions {
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .btn {
+      flex: 1; padding: 12px;
+      background: rgba(100,160,255,0.16);
+      border: 1.5px solid rgba(100,160,255,0.4);
+      color: #cfe4ff; border-radius: 12px;
+      font-family: inherit; font-size: 0.9rem; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: rgba(100,160,255,0.28); }
+    .btn.primary { background: rgba(80,180,120,0.2); border-color: rgba(80,180,120,0.5); color: #baffcc; }
+
+    input[type="file"] { display: none; }
+    input[type="color"] {
+      width: 100%; height: 60px; border: none;
+      border-radius: 12px; background: transparent;
+      cursor: pointer; padding: 0;
+    }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: rgba(20,40,80,0.95); border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd; padding: 10px 22px; border-radius: 30px;
+      font-size: 0.9rem; opacity: 0; z-index: 200;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: rgba(80,20,20,0.95); border-color: rgba(255,120,120,0.5); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← ホーム</a>
+    <h1>🎨 カラーハンティング</h1>
+  </div>
+
+  <div class="content">
+    <!-- Screen: mode -->
+    <div class="screen active" id="screen-mode">
+      <div class="screen-title">モードを選ぶ</div>
+      <div class="screen-sub">色を指定して、その色のものを写真で集めよう</div>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="startWeekly()">
+          <div class="mode-card-icon">📅</div>
+          <div>
+            <div class="mode-card-title">今週のテーマ色</div>
+            <div class="mode-card-desc">毎週月曜に色が変わる<br>2人で同じ色を集めよう</div>
+          </div>
+          <div class="mode-card-arrow">→</div>
+        </div>
+        <div class="mode-card" onclick="showScreen('pick')">
+          <div class="mode-card-icon">🎯</div>
+          <div>
+            <div class="mode-card-title">単発（色を選ぶ）</div>
+            <div class="mode-card-desc">好きな色を選んでハント</div>
+          </div>
+          <div class="mode-card-arrow">→</div>
+        </div>
+        <div class="mode-card" onclick="showScreen('history')">
+          <div class="mode-card-icon">📖</div>
+          <div>
+            <div class="mode-card-title">履歴を見る</div>
+            <div class="mode-card-desc">2人の過去のカラーハント</div>
+          </div>
+          <div class="mode-card-arrow">→</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen: pick color -->
+    <div class="screen" id="screen-pick">
+      <div class="screen-title">色を選ぶ</div>
+      <div class="screen-sub">パレットから、または自由に選ぶ</div>
+      <div class="palette-grid" id="palette-grid"></div>
+
+      <div style="margin-top:24px">
+        <div style="font-size:0.85rem;color:#98bedd;margin-bottom:8px">自由に選ぶ:</div>
+        <input type="color" id="custom-color" value="#ff6b6b" onchange="startSingle(this.value, null)">
+      </div>
+    </div>
+
+    <!-- Screen: hunt board -->
+    <div class="screen" id="screen-hunt">
+      <div class="hunt-title">
+        <span id="hunt-mode-label"></span>
+        <span class="color-chip" id="hunt-color-chip"></span>
+        <span id="hunt-color-label"></span>
+      </div>
+      <div class="screen-sub">中央の色に合うものを周りに8枚集めよう</div>
+
+      <div class="hunt-board" id="hunt-board"></div>
+
+      <div class="hunt-actions">
+        <button class="btn" onclick="showScreen('mode')">← モード選択に戻る</button>
+      </div>
+    </div>
+
+    <!-- Screen: history -->
+    <div class="screen" id="screen-history">
+      <div class="screen-title">📖 履歴</div>
+      <div class="screen-sub">2人のカラーハント履歴（写真が入っているもの）</div>
+      <div id="history-list" style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        <div style="text-align:center;color:#7aa;padding:32px 0">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="upload-input" accept="image/*" capture="environment">
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========= Palette =========
+    const PALETTE = [
+      { name: '桜色',   hex: '#F8B7CE' },
+      { name: '朱色',   hex: '#E85C3B' },
+      { name: '橙色',   hex: '#F39C12' },
+      { name: '山吹色', hex: '#F1C40F' },
+      { name: '若草色', hex: '#A9D46F' },
+      { name: '常盤色', hex: '#16A085' },
+      { name: '空色',   hex: '#5DADE2' },
+      { name: '群青',   hex: '#2C3E50' },
+      { name: '藤色',   hex: '#B08AD9' },
+      { name: '紫紺',   hex: '#7D3C98' },
+      { name: '紅梅',   hex: '#E84393' },
+      { name: '赤',     hex: '#E74C3C' },
+      { name: '黄',     hex: '#F4D03F' },
+      { name: '緑',     hex: '#27AE60' },
+      { name: '青',     hex: '#3498DB' },
+      { name: '茶',     hex: '#8B5A3C' },
+      { name: '灰',     hex: '#7F8C8D' },
+      { name: '白',     hex: '#ECF0F1' },
+      { name: '黒',     hex: '#2C3E50' },
+      { name: '金',     hex: '#D4AC0D' },
+    ];
+
+    // ========= State =========
+    const state = {
+      userId: null,
+      currentHunt: null,   // { id, mode, week_key, color_hex, color_name, photos:[] }
+      profiles: {},        // { userId: {emoji,name} }
+      selectingIndex: null // アップロード対象のマス
+    };
+
+    // ========= Utils =========
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast' + (isError ? ' error' : '');
+      void el.offsetWidth;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2500);
+    }
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function getWeekStr(date = new Date()) {
+      const d = new Date(date.getTime());
+      d.setHours(0,0,0,0);
+      const dow = d.getDay();
+      const days = (dow + 6) % 7;
+      d.setDate(d.getDate() - days);
+      return d.toLocaleDateString('sv-SE');
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+      if (name === 'history') loadHistory();
+    }
+
+    // ========= Init =========
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession();
+      if (!session) return;
+      state.userId = session.user.id;
+
+      const { data: profs } = await _sb.from('profiles').select('*');
+      (profs || []).forEach(p => { state.profiles[p.id] = p; });
+
+      renderPalette();
+    }
+
+    function renderPalette() {
+      const grid = document.getElementById('palette-grid');
+      grid.innerHTML = '';
+      PALETTE.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'palette-swatch';
+        div.style.background = c.hex;
+        div.innerHTML = `<span class="swatch-name">${c.name}</span>`;
+        div.onclick = () => startSingle(c.hex, c.name);
+        grid.appendChild(div);
+      });
+    }
+
+    // ========= Weekly Mode =========
+    async function startWeekly() {
+      const weekKey = getWeekStr();
+
+      // 既存の今週のカラーハントを取得（自分のもののみ = 相手のは別セッション）
+      const { data: existing } = await _sb.from('color_hunts')
+        .select('*')
+        .eq('user_id', state.userId)
+        .eq('mode', 'weekly')
+        .eq('week_key', weekKey)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        state.currentHunt = existing[0];
+      } else {
+        // 週キーからパレットの色を決定
+        const seed = parseInt(weekKey.replace(/-/g, ''), 10);
+        const c = PALETTE[seed % PALETTE.length];
+        // 新規作成
+        const { data, error } = await _sb.from('color_hunts').insert({
+          user_id: state.userId,
+          mode: 'weekly',
+          week_key: weekKey,
+          color_hex: c.hex,
+          color_name: c.name,
+          photos: []
+        }).select().single();
+        if (error) { showToast('作成に失敗: ' + error.message, true); return; }
+        state.currentHunt = data;
+      }
+
+      openHuntBoard('weekly');
+    }
+
+    // ========= Single Mode =========
+    async function startSingle(hex, name) {
+      const { data, error } = await _sb.from('color_hunts').insert({
+        user_id: state.userId,
+        mode: 'single',
+        color_hex: hex,
+        color_name: name,
+        photos: []
+      }).select().single();
+      if (error) { showToast('作成に失敗: ' + error.message, true); return; }
+      state.currentHunt = data;
+      openHuntBoard('single');
+    }
+
+    // ========= Hunt Board =========
+    function openHuntBoard(mode) {
+      const h = state.currentHunt;
+      document.getElementById('hunt-mode-label').textContent = mode === 'weekly' ? '今週の' : '';
+      document.getElementById('hunt-color-chip').style.background = h.color_hex;
+      document.getElementById('hunt-color-label').textContent = h.color_name || h.color_hex;
+      renderBoard();
+      showScreen('hunt');
+    }
+
+    function renderBoard() {
+      const h = state.currentHunt;
+      const photos = Array.isArray(h.photos) ? h.photos : [];
+      const board = document.getElementById('hunt-board');
+      board.innerHTML = '';
+
+      // 3x3グリッド: 0..8 のインデックス。中央=4。写真スロットは0-3,5-8 の8個。
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'hunt-cell';
+        if (i === 4) {
+          cell.classList.add('center');
+          cell.style.background = h.color_hex;
+          cell.innerHTML = `<div class="center-color-label">${escHtml(h.color_name || h.color_hex)}</div>`;
+        } else {
+          const slotIndex = i < 4 ? i : i - 1; // 写真スロットのindex 0-7
+          const photo = photos.find(p => p.position === slotIndex);
+          if (photo) {
+            cell.classList.add('filled');
+            const url = _sb.storage.from('memories').getPublicUrl(photo.path).data.publicUrl;
+            cell.innerHTML = `<img src="${url}" alt="">`;
+            cell.onclick = () => {
+              if (photo.user_id && photo.user_id !== state.userId) {
+                showToast('相手が撮った写真です', true);
+                return;
+              }
+              if (confirm('この写真を削除しますか？')) removePhoto(slotIndex);
+            };
+          } else {
+            cell.textContent = '+';
+            cell.onclick = () => triggerUpload(slotIndex);
+          }
+        }
+        board.appendChild(cell);
+      }
+    }
+
+    // ========= Upload =========
+    function triggerUpload(slotIndex) {
+      state.selectingIndex = slotIndex;
+      document.getElementById('upload-input').value = '';
+      document.getElementById('upload-input').click();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('upload-input');
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || state.selectingIndex == null) return;
+
+        showToast('アップロード中…');
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `color_hunts/${state.userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+        const { error: upErr } = await _sb.storage.from('memories').upload(path, file);
+        if (upErr) { showToast('アップロード失敗: ' + upErr.message, true); return; }
+
+        const photos = Array.isArray(state.currentHunt.photos) ? [...state.currentHunt.photos] : [];
+        // 同じposに既に写真があれば置換
+        const existingIdx = photos.findIndex(p => p.position === state.selectingIndex);
+        const entry = {
+          position: state.selectingIndex,
+          path,
+          uploaded_at: new Date().toISOString(),
+          user_id: state.userId
+        };
+        if (existingIdx >= 0) photos[existingIdx] = entry;
+        else photos.push(entry);
+
+        const { error: updErr } = await _sb.from('color_hunts')
+          .update({ photos, updated_at: new Date().toISOString() })
+          .eq('id', state.currentHunt.id);
+        if (updErr) { showToast('保存失敗: ' + updErr.message, true); return; }
+
+        state.currentHunt.photos = photos;
+        renderBoard();
+        showToast('✅ 追加しました');
+      });
+    });
+
+    async function removePhoto(slotIndex) {
+      const photos = (state.currentHunt.photos || []).filter(p => p.position !== slotIndex);
+      const { error } = await _sb.from('color_hunts')
+        .update({ photos, updated_at: new Date().toISOString() })
+        .eq('id', state.currentHunt.id);
+      if (error) { showToast('削除失敗', true); return; }
+      state.currentHunt.photos = photos;
+      renderBoard();
+      showToast('削除しました');
+    }
+
+    // ========= History =========
+    async function loadHistory() {
+      const list = document.getElementById('history-list');
+      list.innerHTML = '<div style="text-align:center;color:#7aa;padding:32px 0">読み込み中…</div>';
+
+      const { data, error } = await _sb.from('color_hunts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) { list.innerHTML = '<div style="text-align:center;color:#f88">読み込み失敗</div>'; return; }
+
+      const filled = (data || []).filter(r => Array.isArray(r.photos) && r.photos.length > 0);
+      if (filled.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#7aa;padding:32px 0">まだ写真がありません</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      filled.forEach(row => {
+        const owner = state.profiles[row.user_id];
+        const label = owner ? `${owner.emoji} ${owner.name}` : '?';
+        const date = new Date(row.created_at).toLocaleDateString('ja-JP');
+        const modeLabel = row.mode === 'weekly' ? `今週 (${row.week_key})` : '単発';
+        const item = document.createElement('div');
+        item.style.cssText = 'background:rgba(255,255,255,0.06);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:14px 16px;cursor:pointer;transition:background 0.2s';
+        item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.10)';
+        item.onmouseout = () => item.style.background = 'rgba(255,255,255,0.06)';
+        item.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="color-chip" style="background:${row.color_hex}"></span>
+            <span style="color:#e8f4fd;font-size:0.95rem">${escHtml(row.color_name || row.color_hex)}</span>
+            <span style="margin-left:auto;color:#7aa;font-size:0.75rem">${date}</span>
+          </div>
+          <div style="font-size:0.78rem;color:#98bedd">${label} · ${modeLabel} · 📸 ${row.photos.length}/8</div>
+        `;
+        item.onclick = () => { state.currentHunt = row; openHuntBoard(row.mode); };
+        list.appendChild(item);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

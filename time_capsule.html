@@ -395,10 +395,13 @@
 
     async function loadReceived() {
       if (!myId) return
-      const { data, error } = await _sb
+      // 2人分の全カプセルを取得（RLSで自分に関係するもののみ返る）
+      // 開封済み or open_atが過去のものだけ = 「届いた」判定
+      const nowIso = new Date().toISOString()
+      const { data } = await _sb
         .from('time_capsules')
         .select('*')
-        .eq('recipient_id', myId)
+        .or(`is_opened.eq.true,open_at.lte.${nowIso}`)
         .order('open_at', { ascending: false })
 
       const el = document.getElementById('received-list')
@@ -410,38 +413,80 @@
       el.innerHTML = data.map(c => renderReceived(c)).join('')
     }
 
+    function profileFor(userId) {
+      if (userId === myId) return myProfile
+      if (userId === partnerId) return partnerProfile
+      return null
+    }
+
     function renderReceived(c) {
-      const senderEmoji = (c.sender_id === myId ? myProfile?.emoji : partnerProfile?.emoji) || '?'
-      const senderName = (c.sender_id === myId ? myProfile?.name : partnerProfile?.name) || '?'
+      const sender    = profileFor(c.sender_id)
+      const recipient = profileFor(c.recipient_id)
+      const senderLabel    = sender    ? `${sender.emoji} ${sender.name}`       : '?'
+      const recipientLabel = recipient ? `${recipient.emoji} ${recipient.name}` : '?'
       const createdDate = new Date(c.created_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       const openDate = new Date(c.open_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const isMyOutgoing = c.sender_id === myId
+      const canOpen = !c.is_opened && c.recipient_id === myId
 
       if (c.is_opened) {
+        // 自分が受け取ったカプセルにだけ返信ボタン
+        const replyBtn = c.recipient_id === myId
+          ? `<button class="open-btn" style="margin-top:12px" onclick="replyTo('${c.sender_id}', '${escAttr(c.message.slice(0,50))}')">↩️ 返信</button>`
+          : ''
         return `
           <div class="capsule-card opened">
             <div class="capsule-meta">
-              <div class="capsule-from">${senderEmoji} ${senderName} より</div>
+              <div class="capsule-from">${senderLabel} → ${recipientLabel}</div>
               <span class="capsule-status status-opened">開封済み ✓</span>
             </div>
             <div class="capsule-message">${escHtml(c.message)}</div>
             <div class="capsule-date">📅 送られた日: ${createdDate}　|　開封日: ${openDate}</div>
+            ${replyBtn}
           </div>
         `
       }
 
-      return `
-        <div class="capsule-card pending" id="capsule-${c.id}">
-          <div class="capsule-meta">
-            <div class="capsule-from">${senderEmoji} ${senderName} より</div>
-            <span class="capsule-status status-pending">未開封 ✨</span>
+      // 未開封（open_at 過ぎている）
+      if (canOpen) {
+        return `
+          <div class="capsule-card pending" id="capsule-${c.id}">
+            <div class="capsule-meta">
+              <div class="capsule-from">${senderLabel} → ${recipientLabel}</div>
+              <span class="capsule-status status-pending">未開封 ✨</span>
+            </div>
+            <div class="capsule-message" style="color:#5a7fa8;font-style:italic">（開封するとメッセージが見られます）</div>
+            <div class="capsule-date">届いた日: ${openDate}</div>
+            <button class="open-btn" onclick="openCapsule('${c.id}', '${escAttr(c.message)}', '${createdDate}', '${openDate}', '${sender?.emoji ?? '?'}', '${sender?.name ?? '?'}')">
+              🎁 開ける
+            </button>
           </div>
-          <div class="capsule-message" style="color:#5a7fa8;font-style:italic">（開封するとメッセージが見られます）</div>
+        `
+      }
+
+      // 相手宛の未開封カプセル: 開けられないが「相手に届いてる」表示
+      return `
+        <div class="capsule-card pending">
+          <div class="capsule-meta">
+            <div class="capsule-from">${senderLabel} → ${recipientLabel}</div>
+            <span class="capsule-status status-pending">${recipientLabel} が未開封</span>
+          </div>
+          <div class="capsule-message" style="color:#5a7fa8;font-style:italic">（${recipient?.name ?? '相手'} が開けるまで内容は見えません）</div>
           <div class="capsule-date">届いた日: ${openDate}</div>
-          <button class="open-btn" onclick="openCapsule('${c.id}', '${escAttr(c.message)}', '${createdDate}', '${openDate}', '${senderEmoji}', '${senderName}')">
-            🎁 開ける
-          </button>
         </div>
       `
+    }
+
+    // 返信: 作成タブへ遷移して相手を対象にプレフィル
+    function replyTo(originalSenderId, quotedPreview) {
+      // originalSenderIdは私が「受信した」時の相手→この人に返信を送る
+      const input = document.getElementById('msg-input')
+      const prefix = quotedPreview ? `↩️ 「${decodeURIComponent(quotedPreview)}」への返信\n\n` : '↩️ 返信\n\n'
+      input.value = prefix
+      switchTab('compose')
+      input.focus()
+      // カーソルを末尾に
+      input.setSelectionRange(input.value.length, input.value.length)
     }
 
     async function openCapsule(id, message, createdDate, openDate, senderEmoji, senderName) {
