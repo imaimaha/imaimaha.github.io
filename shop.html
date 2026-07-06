@@ -304,11 +304,79 @@
               ${it.active ? '' : ' · 停止中'}
             </div>
           </div>
-          <button class="toggle-btn" onclick="toggleActive('${it.id}', ${!it.active})">${it.active ? '停止' : '再開'}</button>
-          <button class="delete-btn" onclick="deleteItem('${it.id}')">🗑</button>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <button class="toggle-btn" onclick="editItem('${it.id}')">✏️</button>
+            <button class="toggle-btn" onclick="toggleActive('${it.id}', ${!it.active})">${it.active ? '停止' : '再開'}</button>
+            <button class="delete-btn" onclick="deleteItem('${it.id}')">🗑</button>
+          </div>
         `
         list.appendChild(card)
       })
+    }
+
+    let editingItemId = null
+
+    function editItem(id) {
+      // load latest data (from cache: 再取得)
+      _sb.from('shop_items').select('*').eq('id', id).single().then(({ data, error }) => {
+        if (error || !data) { showToast('取得失敗', true); return }
+        editingItemId = id
+        document.getElementById('new-name').value = data.name
+        document.getElementById('new-emoji').value = data.emoji
+        document.getElementById('new-desc').value = data.description || ''
+        document.getElementById('new-price').value = data.price
+        document.getElementById('new-stock').value = data.stock ?? ''
+        if (data.rarity) {
+          const r = document.querySelector(`input[name="new-rarity"][value="${data.rarity}"]`)
+          if (r) r.checked = true
+        }
+        document.getElementById('new-bonus').value = data.bonus_points ?? ''
+
+        // フォーム表示 + ボタンラベル変更
+        document.getElementById('add-form').style.display = 'block'
+        const btns = document.querySelectorAll('#add-form .btn-confirm')
+        btns.forEach(b => { b.textContent = '保存する'; b.onclick = saveItem })
+        document.getElementById('add-form').scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    }
+
+    async function saveItem() {
+      if (!editingItemId) return
+      const name = document.getElementById('new-name').value.trim()
+      const emoji = document.getElementById('new-emoji').value.trim() || '🎁'
+      const desc = document.getElementById('new-desc').value.trim() || null
+      const price = Math.max(1, parseInt(document.getElementById('new-price').value, 10) || 100)
+      const stockRaw = document.getElementById('new-stock').value
+      const stock = stockRaw ? Math.max(1, parseInt(stockRaw, 10)) : null
+      const rarity = document.querySelector('input[name="new-rarity"]:checked').value
+      const bonusRaw = document.getElementById('new-bonus').value
+      const bonus_points = bonusRaw ? Math.max(0, parseInt(bonusRaw, 10)) : null
+
+      if (!name) { showToast('商品名を入力してください', true); return }
+
+      const { error } = await _sb.from('shop_items').update({
+        name, emoji, description: desc, price, stock, rarity, bonus_points,
+        updated_at: new Date().toISOString(),
+      }).eq('id', editingItemId)
+      if (error) { showToast('保存失敗: ' + error.message, true); return }
+
+      editingItemId = null
+      resetForm()
+      toggleForm()
+      showToast('✅ 保存しました')
+      await loadSellList()
+      await loadBuyList()
+    }
+
+    function resetForm() {
+      document.getElementById('new-name').value = ''
+      document.getElementById('new-emoji').value = ''
+      document.getElementById('new-desc').value = ''
+      document.getElementById('new-price').value = '100'
+      document.getElementById('new-stock').value = ''
+      document.getElementById('new-bonus').value = ''
+      const btns = document.querySelectorAll('#add-form .btn-confirm')
+      btns.forEach(b => { b.textContent = '出品する'; b.onclick = addItem })
     }
 
     async function loadPurchases() {
@@ -390,7 +458,12 @@
 
     function toggleForm() {
       const f = document.getElementById('add-form')
-      f.style.display = f.style.display === 'none' ? 'block' : 'none'
+      const willOpen = f.style.display === 'none'
+      f.style.display = willOpen ? 'block' : 'none'
+      if (!willOpen) {
+        editingItemId = null
+        resetForm()
+      }
     }
 
     async function addItem() {
