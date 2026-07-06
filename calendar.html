@@ -613,15 +613,13 @@
         const { data: { session } } = await _sb.auth.getSession()
         const dateLabel = data.date_end && data.date_end !== data.date
           ? `${data.date}〜${data.date_end}` : data.date
-        fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        _sb.functions.invoke('line-notify', {
+          body: {
             sender_id: session.user.id,
             target: 'group',
             message: `📅 予定を追加したよ：${data.title}（${dateLabel}）${data.memo ? '\n' + data.memo : ''}`,
-          }),
-        }).catch(() => {})
+          },
+        }).then(({ error }) => { if (error) console.error('[calendar] line-notify error:', error) })
       }
       closeModal()
     }

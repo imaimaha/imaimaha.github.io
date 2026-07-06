@@ -1019,6 +1019,8 @@
     const sz = Math.round(Math.sqrt(state.card.items.length));
     if (state.card.mode === 'daily' && state.card.date_str) {
       lsSave(lsKey(`daily_${state.card.date_str}_${sz}`), state.card);
+    } else if (state.card.mode === 'category' || state.card.mode === 'random') {
+      lsSave(lsKey(`${state.card.mode}_${state.card.label}_${sz}`), state.card);
     }
     lsSave(lsKey('current'), state.card);
 
@@ -1073,6 +1075,27 @@
 
     // 失敗したら localStorage にフォールバック
     return lsLoad(lsKey(`daily_${today}_${state.gridSize}`));
+  }
+
+  // カテゴリ/難易度モード用: 最新の同モード同ラベル同サイズのカードを取得
+  async function loadModeCard(mode, label) {
+    if (!state.userId) return null;
+
+    try {
+      const { data, error } = await _sb.from('bingo_sessions')
+        .select('*')
+        .eq('user_id', state.userId)
+        .eq('mode', mode)
+        .eq('label', label)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (!error && data) {
+        if (Math.round(Math.sqrt((data.items || []).length)) === state.gridSize) return data;
+      }
+    } catch {}
+
+    return lsLoad(lsKey(`${mode}_${label}_${state.gridSize}`));
   }
 
   // ─────────────────────────────────────────
@@ -1305,7 +1328,7 @@
     }
   }
 
-  function selectCategory(cat) {
+  async function selectCategory(cat) {
     const labels = {
       everyday: '🌿 日常',
       feelings: '😊 気持ち',
@@ -1313,31 +1336,58 @@
       couple: '❤️ 二人限定',
       okinawa: '🌺 沖縄'
     };
-    state.card = {
-      id: null,
-      mode: 'category',
-      label: labels[cat],
-      date_str: null,
-      items: makeCategoryItems(cat, state.gridSize * state.gridSize),
-      checks: []
-    };
-    saveCard();
-    openGridScreen(labels[cat]);
+    const label = labels[cat];
+
+    const existing = await loadModeCard('category', label);
+    if (existing) {
+      state.card = {
+        id: existing.id || null,
+        mode: 'category',
+        label,
+        date_str: null,
+        items: existing.items,
+        checks: existing.checks || []
+      };
+    } else {
+      state.card = {
+        id: null,
+        mode: 'category',
+        label,
+        date_str: null,
+        items: makeCategoryItems(cat, state.gridSize * state.gridSize),
+        checks: []
+      };
+      await saveCard();
+    }
+    openGridScreen(label);
   }
 
-  function selectDifficulty(diff) {
+  async function selectDifficulty(diff) {
     const stars = ['', '★', '★★', '★★★'];
     const n = state.gridSize * state.gridSize;
     const label = `ランダム ${stars[diff]}`;
-    state.card = {
-      id: null,
-      mode: 'random',
-      label,
-      date_str: null,
-      items: makeRandomItems(diff, n),
-      checks: []
-    };
-    saveCard();
+
+    const existing = await loadModeCard('random', label);
+    if (existing) {
+      state.card = {
+        id: existing.id || null,
+        mode: 'random',
+        label,
+        date_str: null,
+        items: existing.items,
+        checks: existing.checks || []
+      };
+    } else {
+      state.card = {
+        id: null,
+        mode: 'random',
+        label,
+        date_str: null,
+        items: makeRandomItems(diff, n),
+        checks: []
+      };
+      await saveCard();
+    }
     openGridScreen(label);
   }
 

@@ -262,15 +262,13 @@
           .lte('open_at', now)
         if (toNotify && toNotify.length > 0) {
           const ids = toNotify.map(c => c.id)
-          fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          _sb.functions.invoke('line-notify', {
+            body: {
               sender_id: myId,
               target: 'partner',
               message: `🎁 タイムカプセルが届きました！\nNotre Endroit を開いてみてください ✨`,
-            }),
-          }).catch(() => {})
+            },
+          }).then(({ error }) => { if (error) console.error('[index] line-notify error:', error) })
           await _sb.from('time_capsules').update({ line_notified: true }).in('id', ids)
         }
       } catch {}

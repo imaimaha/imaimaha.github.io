@@ -493,15 +493,13 @@
       if (!rawWasMax && newGauge >= 100) {
         _sb.from('points').insert({ user_id: myId, amount: 10, reason: 'gauge_max' }).then(() => {})
         const myEmoji = myType === 'fox' ? '🦊' : '🦔'
-        fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        _sb.functions.invoke('line-notify', {
+          body: {
             sender_id: myId,
             target: 'partner',
             message: `${myEmoji} ゲージが MAX になったよ！ ✨\n会いたいシグナル 💖`,
-          }),
-        }).catch(() => {})
+          },
+        }).then(({ error }) => { if (error) console.error('[closer] line-notify(partner) error:', error) })
 
         // 相手も既にMAXなら「ふたり揃った」通知（片方だけが発火するよう自分から）
         const partnerType = myType === 'fox' ? 'hed' : 'fox'
@@ -568,16 +566,15 @@
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
         const me = (await _sb.from('profiles').select('emoji,name').eq('id', session.user.id).single()).data
-        await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const { error } = await _sb.functions.invoke('line-notify', {
+          body: {
             sender_id: session.user.id,
             target: 'group',
             message: `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
-          }),
+          },
         })
-      } catch {}
+        if (error) console.error('[closer] line-notify(group) error:', error)
+      } catch (e) { console.error('[closer] sendLineMaxNotification exception:', e) }
     }
 
     // -------- init --------
