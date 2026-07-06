@@ -385,11 +385,9 @@
       if (myProfile) {
         const timeLabel = finish_time ? `${finish_time} 退社` : '時間未定'
         const msg = `${myProfile.emoji} ${myProfile.name} の今日の帰宅予定: ${timeLabel}${note ? '（' + note + '）' : ''}`
-        fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender_id: user_id, message: msg, target: 'group' }),
-        }).catch(() => {})
+        _sb.functions.invoke('line-notify', {
+          body: { sender_id: user_id, message: msg, target: 'group' },
+        }).then(({ error }) => { if (error) console.error('[status] line-notify error:', error) })
       }
     }
 
@@ -400,27 +398,27 @@
       result.textContent = '送信中...'
       try {
         const { data: { session } } = await _sb.auth.getSession()
-        const res = await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const { data, error } = await _sb.functions.invoke('line-notify', {
+          body: {
             sender_id: session.user.id,
             target: 'partner',
             message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾\nどれか選んで返信してね👇`,
             quick_reply: ['いいよ ✅', 'きびしい 🚫', '仕事の進み次第 🤔'],
-          }),
+          },
         })
-        if (res.ok) {
+        if (!error) {
           result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に LINE を送りました！`
         } else {
-          const err = await res.json()
-          if (err.error?.includes('not registered')) {
+          const errMsg = (error?.context?.error || error?.message || '') + ''
+          console.error('[status] askOk error:', error)
+          if (errMsg.includes('not registered')) {
             result.textContent = '⚠️ パートナーがまだ LINE ボットを友達追加していません'
           } else {
             result.textContent = '❌ 送信に失敗しました'
           }
         }
-      } catch {
+      } catch (e) {
+        console.error('[status] askOk exception:', e)
         result.textContent = '❌ ネットワークエラー'
       }
       setTimeout(() => { result.textContent = '' }, 5000)
