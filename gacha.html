@@ -654,6 +654,12 @@
 
     <!-- CUSTOM SHARE / PARTNER PRIZES -->
     <h2 class="section-title">🎨 相手のガチャに景品追加</h2>
+    <div style="background:rgba(255,255,255,0.04);border:1.5px solid rgba(150,200,255,0.15);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.78rem;color:#98bedd;line-height:1.5">
+      💡 ここで景品を追加すると、<b>相手のガチャ</b>にラインナップされます。<br>
+      • <b>レア度</b>: N(よく出る) / R(そこそこ) / SR(激レア)<br>
+      • <b>出やすさ</b>: カスタム景品同士での相対的な出現率。1.0が標準、大きくすると他より出やすい<br>
+      • <b>ボーナスpt</b>: 券を「使用済み」にした時に相手にpt付与
+    </div>
     <div style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:16px;margin-bottom:20px">
       <div style="font-size:0.85rem;color:#98bedd;margin-bottom:12px">
         自分のガチャに<b>相手が追加した景品</b>が出る確率:
@@ -690,7 +696,7 @@
           <label style="font-size:0.85rem;color:#ffd700"><input type="radio" name="new-rarity" value="SR"> SR</label>
         </div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-          <label style="font-size:0.8rem;color:#98bedd">重み:</label>
+          <label style="font-size:0.8rem;color:#98bedd" title="数字が大きいほど出やすい">出やすさ:</label>
           <input id="new-weight" type="number" value="1" min="0.1" step="0.1" style="width:70px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
           <label style="font-size:0.8rem;color:#98bedd;margin-left:10px">ボーナスpt(任意):</label>
           <input id="new-bonus" type="number" placeholder="例: 50" style="width:80px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
@@ -855,18 +861,88 @@
               <span class="ticket-badge badge-${escHtml(p.rarity)}">${escHtml(p.rarity)}</span>
             </div>
             <div class="ticket-desc">${escHtml(p.description || '')}</div>
-            <div class="ticket-date">重み ${p.weight}${p.bonus_points ? ` · +${p.bonus_points}pt` : ''}${p.active ? '' : ' · 停止中'}</div>
+            <div class="ticket-date">出やすさ ${p.weight}${p.bonus_points ? ` · +${p.bonus_points}pt` : ''}${p.active ? '' : ' · 停止中'}</div>
           </div>
-          <button class="use-btn" onclick="toggleActive('${p.id}', ${!p.active})">${p.active ? '停止' : '再開'}</button>
-          <button class="use-btn" style="margin-left:6px;background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.35);color:#ff9d9d" onclick="deletePartnerPrize('${p.id}')">🗑</button>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <button class="use-btn" onclick="editPartnerPrize('${p.id}')">✏️</button>
+            <button class="use-btn" onclick="toggleActive('${p.id}', ${!p.active})">${p.active ? '停止' : '再開'}</button>
+            <button class="use-btn" style="background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.35);color:#ff9d9d" onclick="deletePartnerPrize('${p.id}')">🗑</button>
+          </div>
         `
         list.appendChild(card)
       })
     }
 
+    let editingPrizeId = null
+
+    function editPartnerPrize(id) {
+      const p = myAddedPrizes.find(x => x.id === id)
+      if (!p) return
+      editingPrizeId = id
+      document.getElementById('new-name').value = p.name
+      document.getElementById('new-emoji').value = p.emoji
+      document.getElementById('new-desc').value = p.description || ''
+      document.getElementById('new-weight').value = p.weight
+      document.getElementById('new-bonus').value = p.bonus_points || ''
+      document.querySelector(`input[name="new-rarity"][value="${p.rarity}"]`).checked = true
+      // 追加フォームを開いて、ボタンラベル変更
+      const f = document.getElementById('add-prize-form')
+      f.style.display = 'block'
+      // ボタンを保存モードに
+      const btns = f.querySelectorAll('button')
+      btns.forEach(b => {
+        if (b.textContent.trim() === '追加する') { b.textContent = '保存する'; b.onclick = savePartnerPrize }
+      })
+      // スクロール
+      f.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
+    async function savePartnerPrize() {
+      if (!editingPrizeId) return
+      const name = document.getElementById('new-name').value.trim()
+      const emoji = document.getElementById('new-emoji').value.trim() || '🎁'
+      const rarity = document.querySelector('input[name="new-rarity"]:checked').value
+      const description = document.getElementById('new-desc').value.trim()
+      const weight = Math.max(0.1, Number(document.getElementById('new-weight').value) || 1)
+      const bonus = document.getElementById('new-bonus').value
+      const bonus_points = bonus ? Math.max(0, parseInt(bonus, 10)) : null
+      if (!name) { showToast('景品名を入力してください', true); return }
+
+      const { error } = await _sb.from('gacha_custom_prizes').update({
+        name, emoji, rarity, description, weight, bonus_points,
+        updated_at: new Date().toISOString(),
+      }).eq('id', editingPrizeId)
+      if (error) { showToast('保存失敗: ' + error.message, true); return }
+
+      editingPrizeId = null
+      resetPrizeForm()
+      toggleAddPrizeForm()
+      showToast('✅ 保存しました')
+      await loadCustomPrizes()
+    }
+
+    function resetPrizeForm() {
+      document.getElementById('new-name').value = ''
+      document.getElementById('new-emoji').value = ''
+      document.getElementById('new-desc').value = ''
+      document.getElementById('new-weight').value = '1'
+      document.getElementById('new-bonus').value = ''
+      const f = document.getElementById('add-prize-form')
+      // ボタンを追加モードに戻す
+      const btns = f.querySelectorAll('button')
+      btns.forEach(b => {
+        if (b.textContent.trim() === '保存する') { b.textContent = '追加する'; b.onclick = addPartnerPrize }
+      })
+    }
+
     function toggleAddPrizeForm() {
       const f = document.getElementById('add-prize-form')
-      f.style.display = f.style.display === 'none' ? 'block' : 'none'
+      const willOpen = f.style.display === 'none'
+      f.style.display = willOpen ? 'block' : 'none'
+      if (!willOpen) {
+        editingPrizeId = null
+        resetPrizeForm()
+      }
     }
 
     async function addPartnerPrize() {
