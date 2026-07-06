@@ -406,22 +406,33 @@
             quick_reply: ['いいよ ✅', 'きびしい 🚫', '仕事の進み次第 🤔'],
           },
         })
+        console.log('[status] askOk data:', data, 'error:', error)
         if (!error) {
           result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に LINE を送りました！`
         } else {
-          const errMsg = (error?.context?.error || error?.message || '') + ''
-          console.error('[status] askOk error:', error)
+          // エラーレスポンスのボディを取得（Supabase JS v2: error.context は Response）
+          let errBody = ''
+          try {
+            if (error.context && typeof error.context.json === 'function') {
+              const j = await error.context.json()
+              errBody = j?.error || JSON.stringify(j)
+            } else if (error.context && typeof error.context.text === 'function') {
+              errBody = await error.context.text()
+            }
+          } catch {}
+          const errMsg = (errBody || error?.message || '') + ''
+          console.error('[status] askOk error detail:', { errMsg, error })
           if (errMsg.includes('not registered')) {
             result.textContent = '⚠️ パートナーがまだ LINE ボットを友達追加していません'
           } else {
-            result.textContent = '❌ 送信に失敗しました'
+            result.textContent = '❌ 送信失敗: ' + errMsg.slice(0, 80)
           }
         }
       } catch (e) {
         console.error('[status] askOk exception:', e)
-        result.textContent = '❌ ネットワークエラー'
+        result.textContent = '❌ ネットワークエラー: ' + (e?.message ?? String(e)).slice(0, 80)
       }
-      setTimeout(() => { result.textContent = '' }, 5000)
+      setTimeout(() => { result.textContent = '' }, 8000)
     }
 
     function escHtml(str) {
