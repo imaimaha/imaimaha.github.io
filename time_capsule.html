@@ -275,10 +275,10 @@
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
 
+  <script src="assets/js/header.js"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
     <h1>🎁 タイムカプセル</h1>
-    <div id="user-badge" class="user-badge"></div>
   </div>
 
   <div class="content">
@@ -368,9 +368,6 @@
         partnerProfile = profiles.find(p => p.id !== myId)
         partnerId = partnerProfile?.id
       }
-
-      const badge = document.getElementById('user-badge')
-      if (myProfile) badge.textContent = myProfile.emoji + ' ' + myProfile.name
 
       // datetime-local の最小値を「今から1時間後」に設定
       const minDt = new Date(Date.now() + 60 * 60 * 1000)

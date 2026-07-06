@@ -288,17 +288,11 @@
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
 
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>✨ One Step Closer</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge">
-        <span id="ub-emoji"></span>
-        <span id="ub-name"></span>
-      </div>
-      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
-    </div>
   </div>
 
   <!-- floating emojis (position set by JS) -->
@@ -615,13 +609,6 @@
       document.getElementById('hed-float').onclick  = () => clickEmoji('hed')
 
       updateDistance()
-
-      const me = profiles.find(p => p.id === myId)
-      if (me) {
-        document.getElementById('ub-emoji').textContent = me.emoji
-        document.getElementById('ub-name').textContent  = me.name
-        document.getElementById('user-badge').style.display = 'flex'
-      }
 
       // realtime
       _sb.channel('closer-gauge-rt')

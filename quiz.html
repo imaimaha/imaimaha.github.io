@@ -349,16 +349,12 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
 
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
     <h1>💬 今日のクイズ</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge">
-        <span id="ub-emoji"></span>
-        <span id="ub-name"></span>
-      </div>
-    </div>
   </div>
 
   <div class="content">
@@ -784,13 +780,6 @@
           myProfile      = profiles.find(p => p.id === myId)   || null
           partnerProfile = profiles.find(p => p.id !== myId)   || null
           partnerId      = partnerProfile?.id || null
-        }
-
-        // Show user badge
-        if (myProfile) {
-          document.getElementById('ub-emoji').textContent = myProfile.emoji
-          document.getElementById('ub-name').textContent  = myProfile.name
-          document.getElementById('user-badge').style.display = 'flex'
         }
 
         await loadToday()

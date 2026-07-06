@@ -250,17 +250,11 @@
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
 
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>今日の帰宅</h1>
-    <div class="top-right">
-      <div class="user-badge" id="user-badge" style="display:none;align-items:center;gap:4px;background:#fff;border:2px solid #e8ddd5;border-radius:20px;padding:4px 12px;font-size:0.85rem;color:#5d4037">
-        <span id="user-emoji-badge"></span>
-        <span id="user-name-badge"></span>
-      </div>
-      <button class="logout-btn" onclick="_sb.auth.signOut().then(()=>location.href='/login.html')">ログアウト</button>
-    </div>
   </div>
 
   <div class="content">
@@ -461,14 +455,7 @@
       lineMsgTimer = setInterval(loadLineMessages, 5000)
     }
 
-    load().then(() => {
-      if (myProfile) {
-        document.getElementById('user-emoji-badge').textContent = myProfile.emoji
-        document.getElementById('user-name-badge').textContent  = myProfile.name
-        document.getElementById('user-badge').style.display = 'flex'
-      }
-      startLineMsgPolling()
-    })
+    load().then(() => { startLineMsgPolling() })
   </script>
 </body>
 </html>
