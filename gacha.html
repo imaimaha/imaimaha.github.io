@@ -587,6 +587,58 @@
 
     <div class="divider"></div>
 
+    <!-- CUSTOM SHARE / PARTNER PRIZES -->
+    <h2 class="section-title">🎨 相手のガチャに景品追加</h2>
+    <div style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="font-size:0.85rem;color:#98bedd;margin-bottom:12px">
+        自分のガチャに<b>相手が追加した景品</b>が出る確率:
+        <span id="share-display" style="color:#ffd764;font-weight:bold">50%</span>
+      </div>
+      <input type="range" id="share-slider" min="0" max="100" value="50" step="5" style="width:100%;accent-color:#ffd764">
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#5a8fb8;margin-top:4px">
+        <span>0% (デフォルト景品のみ)</span>
+        <span>100% (カスタムのみ)</span>
+      </div>
+    </div>
+
+    <!-- Prizes I've added for partner -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:0.95rem;color:#e8f4fd">私が相手に追加した景品</div>
+        <button onclick="toggleAddPrizeForm()" style="background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;padding:6px 12px;border-radius:14px;font-family:inherit;font-size:0.8rem;cursor:pointer">➕ 追加</button>
+      </div>
+      <div class="ticket-list" id="my-added-list">
+        <div class="empty-tickets" style="padding:16px 0;font-size:0.85rem">まだ追加した景品はありません</div>
+      </div>
+
+      <!-- Add form -->
+      <div id="add-prize-form" style="display:none;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,200,180,0.35);border-radius:14px;padding:14px;margin-top:10px">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="new-emoji" placeholder="絵文字" maxlength="4" style="width:60px;padding:8px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:10px;color:#e8f4fd;font-size:1.2rem;text-align:center;font-family:inherit">
+          <input id="new-name" placeholder="景品名 (例: 肩もみ券)" style="flex:1;padding:8px 12px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:10px;color:#e8f4fd;font-size:0.95rem;font-family:inherit">
+        </div>
+        <textarea id="new-desc" placeholder="説明 (任意)" rows="2" style="width:100%;padding:8px 12px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:10px;color:#e8f4fd;font-size:0.9rem;font-family:inherit;margin-bottom:10px;resize:vertical"></textarea>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+          <label style="font-size:0.8rem;color:#98bedd">レア度:</label>
+          <label style="font-size:0.85rem;color:#7ec8f0"><input type="radio" name="new-rarity" value="N" checked> N</label>
+          <label style="font-size:0.85rem;color:#d09aff"><input type="radio" name="new-rarity" value="R"> R</label>
+          <label style="font-size:0.85rem;color:#ffd700"><input type="radio" name="new-rarity" value="SR"> SR</label>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <label style="font-size:0.8rem;color:#98bedd">重み:</label>
+          <input id="new-weight" type="number" value="1" min="0.1" step="0.1" style="width:70px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
+          <label style="font-size:0.8rem;color:#98bedd;margin-left:10px">ボーナスpt(任意):</label>
+          <input id="new-bonus" type="number" placeholder="例: 50" style="width:80px;padding:6px 10px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:8px;color:#e8f4fd;font-size:0.9rem;font-family:inherit">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleAddPrizeForm()" style="flex:1;padding:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.25);border-radius:10px;color:#98bedd;font-family:inherit;font-size:0.9rem;cursor:pointer">キャンセル</button>
+          <button onclick="addPartnerPrize()" style="flex:1;padding:10px;background:rgba(100,200,180,0.25);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:10px;font-family:inherit;font-size:0.9rem;cursor:pointer">追加する</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <!-- WALLET / TICKET LIST -->
     <h2 class="section-title">🎒 獲得した券</h2>
     <div class="ticket-list" id="ticket-list">
@@ -630,14 +682,26 @@
     ]
 
     // ===================== DRAW LOGIC =====================
+    // ビルトイン + 相手が私のガチャに追加したカスタム景品を混ぜて抽選
     function drawPrize() {
+      const useCustom = customPrizes.length > 0 && Math.random() < currentShare
+      if (useCustom) {
+        const totalW = customPrizes.reduce((s, p) => s + Number(p.weight || 1), 0)
+        let r = Math.random() * totalW
+        for (const p of customPrizes) {
+          r -= Number(p.weight || 1)
+          if (r <= 0) return { ...p, isCustom: true, desc: p.description }
+        }
+        const last = customPrizes[customPrizes.length - 1]
+        return { ...last, isCustom: true, desc: last.description }
+      }
       const weighted = []
       PRIZES.forEach(p => {
         const w = p.rarity === 'N' ? 5 : p.rarity === 'R' ? 2 : 0.5
-        const count = Math.round(w * 10) // 50 / 20 / 5
+        const count = Math.round(w * 10)
         for (let i = 0; i < count; i++) weighted.push(p)
       })
-      return weighted[Math.floor(Math.random() * weighted.length)]
+      return { ...weighted[Math.floor(Math.random() * weighted.length)], isCustom: false }
     }
 
     // ===================== STATE =====================
@@ -645,6 +709,10 @@
     let currentPoints = 0
     let pendingPrize = null
     let profiles = []
+    let currentShare = 0.5     // 自分のガチャで custom を引く確率
+    let customPrizes = []      // 相手が私に追加した景品
+    let myAddedPrizes = []     // 私が相手に追加した景品
+    let partnerId = null
 
     // ===================== INIT =====================
     async function init() {
@@ -653,10 +721,118 @@
       currentUser = session.user
 
       const { data: profilesData } = await _sb.from('profiles').select('*')
-      if (profilesData) profiles = profilesData
+      if (profilesData) {
+        profiles = profilesData
+        const me = profiles.find(p => p.id === currentUser.id)
+        const partner = profiles.find(p => p.id !== currentUser.id)
+        partnerId = partner?.id || null
+        currentShare = Number(me?.gacha_custom_share ?? 0.5)
+        document.getElementById('share-slider').value = Math.round(currentShare * 100)
+        document.getElementById('share-display').textContent = Math.round(currentShare * 100) + '%'
+      }
+
+      // スライダー変更
+      document.getElementById('share-slider').addEventListener('input', (e) => {
+        const v = Number(e.target.value) / 100
+        document.getElementById('share-display').textContent = e.target.value + '%'
+        currentShare = v
+      })
+      document.getElementById('share-slider').addEventListener('change', async (e) => {
+        const v = Number(e.target.value) / 100
+        const { error } = await _sb.from('profiles').update({ gacha_custom_share: v }).eq('id', currentUser.id)
+        if (error) console.error('share update error:', error)
+      })
 
       await loadPoints()
+      await loadCustomPrizes()
       await loadTickets()
+    }
+
+    // 相手が私のガチャに追加した景品 + 私が相手に追加した景品を読み込み
+    async function loadCustomPrizes() {
+      const { data: forMe } = await _sb.from('gacha_custom_prizes')
+        .select('*').eq('target_user_id', currentUser.id).eq('active', true)
+      customPrizes = forMe || []
+
+      const { data: byMe } = await _sb.from('gacha_custom_prizes')
+        .select('*').eq('added_by', currentUser.id).order('created_at', { ascending: false })
+      myAddedPrizes = byMe || []
+      renderMyAddedList()
+    }
+
+    function renderMyAddedList() {
+      const list = document.getElementById('my-added-list')
+      if (myAddedPrizes.length === 0) {
+        list.innerHTML = '<div class="empty-tickets" style="padding:16px 0;font-size:0.85rem">まだ追加した景品はありません</div>'
+        return
+      }
+      list.innerHTML = ''
+      myAddedPrizes.forEach(p => {
+        const card = document.createElement('div')
+        card.className = 'ticket-card' + (p.active ? '' : ' used')
+        card.innerHTML = `
+          <div class="ticket-emoji">${escHtml(p.emoji)}</div>
+          <div class="ticket-info">
+            <div class="ticket-top">
+              <span class="ticket-name">${escHtml(p.name)}</span>
+              <span class="ticket-badge badge-${escHtml(p.rarity)}">${escHtml(p.rarity)}</span>
+            </div>
+            <div class="ticket-desc">${escHtml(p.description || '')}</div>
+            <div class="ticket-date">重み ${p.weight}${p.bonus_points ? ` · +${p.bonus_points}pt` : ''}${p.active ? '' : ' · 停止中'}</div>
+          </div>
+          <button class="use-btn" onclick="toggleActive('${p.id}', ${!p.active})">${p.active ? '停止' : '再開'}</button>
+          <button class="use-btn" style="margin-left:6px;background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.35);color:#ff9d9d" onclick="deletePartnerPrize('${p.id}')">🗑</button>
+        `
+        list.appendChild(card)
+      })
+    }
+
+    function toggleAddPrizeForm() {
+      const f = document.getElementById('add-prize-form')
+      f.style.display = f.style.display === 'none' ? 'block' : 'none'
+    }
+
+    async function addPartnerPrize() {
+      if (!partnerId) { showToast('相手が見つかりません', true); return }
+      const name = document.getElementById('new-name').value.trim()
+      const emoji = document.getElementById('new-emoji').value.trim() || '🎁'
+      const rarity = document.querySelector('input[name="new-rarity"]:checked').value
+      const description = document.getElementById('new-desc').value.trim()
+      const weight = Math.max(0.1, Number(document.getElementById('new-weight').value) || 1)
+      const bonus = document.getElementById('new-bonus').value
+      const bonus_points = bonus ? Math.max(0, parseInt(bonus, 10)) : null
+
+      if (!name) { showToast('景品名を入力してください', true); return }
+
+      const { error } = await _sb.from('gacha_custom_prizes').insert({
+        added_by: currentUser.id,
+        target_user_id: partnerId,
+        name, emoji, rarity, description, weight, bonus_points,
+      })
+      if (error) { showToast('追加失敗: ' + error.message, true); return }
+
+      document.getElementById('new-name').value = ''
+      document.getElementById('new-emoji').value = ''
+      document.getElementById('new-desc').value = ''
+      document.getElementById('new-weight').value = '1'
+      document.getElementById('new-bonus').value = ''
+      toggleAddPrizeForm()
+      showToast('✅ 追加しました')
+      await loadCustomPrizes()
+    }
+
+    async function toggleActive(id, newActive) {
+      const { error } = await _sb.from('gacha_custom_prizes').update({ active: newActive }).eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+      await loadCustomPrizes()
+    }
+
+    async function deletePartnerPrize(id) {
+      if (!confirm('この景品を削除しますか？（相手のガチャから消えます）')) return
+      const { error } = await _sb.from('gacha_custom_prizes').delete().eq('id', id)
+      if (error) { showToast('削除失敗', true); return }
+      showToast('削除しました')
+      await loadCustomPrizes()
     }
 
     // ===================== POINTS =====================
@@ -742,15 +918,22 @@
 
       try {
         // Insert gacha result (bonus_points は使用時に付与するのでここでは記録のみ)
-        const { error: resErr } = await _sb.from('gacha_results').insert({
+        const insertData = {
           user_id:       currentUser.id,
-          reward_id:     prize.id,
           reward_name:   prize.name,
           reward_emoji:  prize.emoji,
+          reward_desc:   prize.desc || prize.description || null,
           rarity:        prize.rarity,
           used:          false,
           bonus_points:  prize.bonus_points || null,
-        })
+        }
+        if (prize.isCustom) {
+          insertData.custom_prize_id = prize.id
+          insertData.reward_id = null
+        } else {
+          insertData.reward_id = prize.id
+        }
+        const { error: resErr } = await _sb.from('gacha_results').insert(insertData)
         if (resErr) throw resErr
 
         // Deduct 100pt
@@ -825,7 +1008,7 @@
               <span class="ticket-badge badge-${escHtml(ticket.rarity)}">${escHtml(ticket.rarity)}</span>
             </div>
             ${ownerLabel ? `<div class="ticket-owner">${ownerLabel}</div>` : ''}
-            <div class="ticket-desc">${escHtml(getPrizeDesc(ticket.reward_id, ticket.reward_name))}</div>
+            <div class="ticket-desc">${escHtml(ticket.reward_desc || getPrizeDesc(ticket.reward_id, ticket.reward_name))}</div>
             ${bonus && !isUsed ? `<div class="ticket-bonus">使うと +${bonus}pt</div>` : ''}
             <div class="ticket-date">${date}</div>
           </div>

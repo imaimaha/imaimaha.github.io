@@ -1160,11 +1160,8 @@
         <span class="cell-text">${item.text}</span>
         ${hasMemo ? '<span class="cell-memo-badge">📝</span>' : ''}
       `;
-      if (state.readonly) {
-        cell.style.pointerEvents = 'none';
-      } else {
-        cell.addEventListener('click', () => openModal(i));
-      }
+      // readonly でもメモ閲覧のためタップ可能。modal側で編集は不可
+      cell.addEventListener('click', () => openModal(i));
       grid.appendChild(cell);
     });
 
@@ -1190,21 +1187,31 @@
     memoInput.value = existing?.memo || '';
 
     const btns = document.getElementById('modal-buttons');
-    if (existing) {
-      btns.innerHTML = `
-        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-uncheck" onclick="uncheckCell(${cellIndex})">チェックを外す</button>
-        <button class="btn-check" onclick="saveCheck(${cellIndex})">メモを保存</button>
-      `;
+
+    if (state.readonly) {
+      // 履歴閲覧モード: メモ表示のみ、編集/チェック不可
+      memoInput.readOnly = true;
+      memoInput.placeholder = existing?.memo ? '' : 'メモはありません';
+      btns.innerHTML = `<button class="btn-cancel" onclick="closeModal()">閉じる</button>`;
     } else {
-      btns.innerHTML = `
-        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-check" onclick="saveCheck(${cellIndex})">✓ チェックする</button>
-      `;
+      memoInput.readOnly = false;
+      memoInput.placeholder = 'どこで見つけた？どんな気持ち？';
+      if (existing) {
+        btns.innerHTML = `
+          <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+          <button class="btn-uncheck" onclick="uncheckCell(${cellIndex})">チェックを外す</button>
+          <button class="btn-check" onclick="saveCheck(${cellIndex})">メモを保存</button>
+        `;
+      } else {
+        btns.innerHTML = `
+          <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+          <button class="btn-check" onclick="saveCheck(${cellIndex})">✓ チェックする</button>
+        `;
+      }
     }
 
     document.getElementById('modal-backdrop').classList.add('open');
-    setTimeout(() => memoInput.focus(), 300);
+    if (!state.readonly) setTimeout(() => memoInput.focus(), 300);
   }
 
   function closeModal(e) {
