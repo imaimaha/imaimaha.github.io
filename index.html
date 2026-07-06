@@ -209,8 +209,14 @@
   <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;gap:8px;flex-direction:column;align-items:center">
     <div id="push-status-badge" role="button" tabindex="0"
          style="background:rgba(255,255,255,0.94);color:#5d4037;border:2px solid #e8ddd5;border-radius:22px;padding:8px 18px;font-size:0.82rem;box-shadow:0 3px 12px rgba(0,0,0,0.12);cursor:pointer;user-select:none;max-width:calc(100vw - 40px);white-space:nowrap"></div>
-    <button id="test-push-btn" onclick="sendTestPush()"
-         style="background:rgba(255,255,255,0.85);color:#5d4037;border:1.5px dashed #d7ccc8;border-radius:20px;padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:inherit">🧪 自分にテスト通知</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px)">
+      <button id="test-push-btn" onclick="sendTestPush()"
+           style="background:rgba(255,255,255,0.85);color:#5d4037;border:1.5px dashed #d7ccc8;border-radius:20px;padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:inherit">🧪 テスト通知</button>
+      <button id="diag-push-btn" onclick="diagPush()"
+           style="background:rgba(255,255,255,0.85);color:#5d4037;border:1.5px dashed #d7ccc8;border-radius:20px;padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:inherit">🔧 詳細診断</button>
+      <button id="resub-push-btn" onclick="forceResub()"
+           style="background:rgba(255,255,255,0.85);color:#5d4037;border:1.5px dashed #d7ccc8;border-radius:20px;padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:inherit">🔄 再購読</button>
+    </div>
   </div>
 
   <script>
@@ -302,11 +308,99 @@
         let msg = error?.message || ''
         try { const j = await error.context?.json?.(); if (j?.error) msg = j.error } catch {}
         alert('❌ ' + msg)
+      } else if ((data?.sent ?? 0) === 0) {
+        alert('📵 送信完了 (0デバイス)\n\n購読レコードが無いよ。「🔄 再購読」ボタンで登録し直して。')
       } else {
-        alert(`✅ 送信完了 (${data?.sent ?? 0}デバイスへ)\nこの端末で通知が届かない場合:\n・PWA(ホーム画面から起動)か？\n・通知許可済みか？\n・push_subscriptions に登録されているか？`)
+        alert(`✅ 送信完了 (${data?.sent ?? 0}デバイスへ)`)
       }
       btn.disabled = false
-      btn.textContent = '🧪 自分にテスト通知'
+      btn.textContent = '🧪 テスト通知'
+    }
+
+    // 詳細診断: サブスクリプション状態を全部表示
+    async function diagPush() {
+      const btn = document.getElementById('diag-push-btn')
+      btn.disabled = true
+      let out = []
+      try {
+        const isIos = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
+        const standalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches
+        out.push('iOS: ' + isIos)
+        out.push('PWA (standalone): ' + standalone)
+        out.push('Notification: ' + ('Notification' in window))
+        out.push('permission: ' + (('Notification' in window) ? Notification.permission : 'n/a'))
+        out.push('SW: ' + ('serviceWorker' in navigator))
+        out.push('PushManager: ' + ('PushManager' in window))
+
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.getRegistration('/sw.js')
+          out.push('SW registered: ' + !!reg)
+          if (reg) {
+            const sub = await reg.pushManager.getSubscription()
+            out.push('subscription local: ' + !!sub)
+            if (sub) out.push('endpoint: ' + sub.endpoint.slice(0, 60) + '...')
+          }
+        }
+
+        const { data: { session } } = await _sb.auth.getSession()
+        if (session) {
+          const { data: subs, error } = await _sb.from('push_subscriptions').select('id, endpoint').eq('user_id', session.user.id)
+          if (error) out.push('DB query error: ' + error.message)
+          else out.push('DB subscriptions: ' + (subs?.length ?? 0))
+        }
+      } catch (e) {
+        out.push('error: ' + (e?.message ?? String(e)))
+      }
+      alert(out.join('\n'))
+      btn.disabled = false
+    }
+
+    // 強制再購読
+    async function forceResub() {
+      const btn = document.getElementById('resub-push-btn')
+      btn.disabled = true
+      btn.textContent = '登録中…'
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          alert('❌ Service Worker / Push 非対応')
+          return
+        }
+        if (Notification.permission !== 'granted') {
+          const p = await Notification.requestPermission()
+          if (p !== 'granted') { alert('❌ 通知許可がありません: ' + p); return }
+        }
+        const reg = await navigator.serviceWorker.register('/sw.js')
+        await navigator.serviceWorker.ready
+
+        // 既存の subscription を破棄して新規登録
+        const existing = await reg.pushManager.getSubscription()
+        if (existing) {
+          try { await existing.unsubscribe() } catch {}
+        }
+
+        // VAPID key
+        const vapid = 'BPiU1n7YLx_aazNZ1DtFKoxjg21_n6Yfi_jdPpR3ja2vpTQn8Kb5ukqCeDwIR94etciUSRgUPeCbhQxsX9Vy1d8'
+        const pad = '='.repeat((4 - vapid.length % 4) % 4)
+        const raw = atob((vapid + pad).replace(/-/g, '+').replace(/_/g, '/'))
+        const key = Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+
+        const { data: { session } } = await _sb.auth.getSession()
+        if (!session) { alert('❌ 未ログイン'); return }
+
+        const { error } = await _sb.from('push_subscriptions').upsert({
+          user_id: session.user.id,
+          endpoint: sub.endpoint,
+          subscription: sub.toJSON(),
+        }, { onConflict: 'user_id,endpoint' })
+
+        if (error) alert('❌ DB保存失敗: ' + error.message)
+        else alert('✅ 再購読完了！\n\nendpoint: ' + sub.endpoint.slice(0, 60) + '...\n\n「🧪 テスト通知」で確認してみて')
+      } catch (e) {
+        alert('❌ ' + (e?.message ?? String(e)))
+      }
+      btn.disabled = false
+      btn.textContent = '🔄 再購読'
     }
 
     // 毎日1回、初回ログインで +5pt ボーナス
