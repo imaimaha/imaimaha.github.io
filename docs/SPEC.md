@@ -380,6 +380,14 @@
 
 **RLS `CREATE POLICY` だけでは authenticated ロールが表を触れない**。必ず `GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO authenticated;` をセットで書く。過去にこれで permission denied が何度も出た。
 
+**追加の注意**: **bigint autoincrement 列を持つテーブル**は sequence への権限も必要。テーブルの GRANT だけでは INSERT 時に `permission denied for sequence xxx_id_seq` になる。
+
+```sql
+GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;
+```
+
+`uuid` primary key (`gen_random_uuid()`) を使うテーブルは sequence を使わないので不要。
+
 ---
 
 ## 8. ロールオーバー時刻表
