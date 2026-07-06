@@ -186,11 +186,11 @@
           </div>
           <div class="mode-card-arrow">→</div>
         </div>
-        <div class="mode-card" onclick="showScreen('pick')">
+        <div class="mode-card" onclick="showScreen('single-sub')">
           <div class="mode-card-icon">🎯</div>
           <div>
-            <div class="mode-card-title">単発（色を選ぶ）</div>
-            <div class="mode-card-desc">好きな色を選んでハント</div>
+            <div class="mode-card-title">単発</div>
+            <div class="mode-card-desc">色を指定 or ランダムでハント</div>
           </div>
           <div class="mode-card-arrow">→</div>
         </div>
@@ -202,6 +202,33 @@
           </div>
           <div class="mode-card-arrow">→</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Screen: single sub-mode -->
+    <div class="screen" id="screen-single-sub">
+      <div class="screen-title">単発モード</div>
+      <div class="screen-sub">色の指定 or ランダム</div>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="showScreen('pick')">
+          <div class="mode-card-icon">🎨</div>
+          <div>
+            <div class="mode-card-title">色を指定</div>
+            <div class="mode-card-desc">パレット or 自由に色を選ぶ</div>
+          </div>
+          <div class="mode-card-arrow">→</div>
+        </div>
+        <div class="mode-card" onclick="startRandom()">
+          <div class="mode-card-icon">🎲</div>
+          <div>
+            <div class="mode-card-title">ランダム</div>
+            <div class="mode-card-desc">おまかせで色を決めてスタート</div>
+          </div>
+          <div class="mode-card-arrow">→</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="btn" onclick="showScreen('mode')" style="max-width:200px">← モード選択に戻る</button>
       </div>
     </div>
 
@@ -228,9 +255,7 @@
 
       <div class="hunt-board" id="hunt-board"></div>
 
-      <div class="hunt-actions">
-        <button class="btn" onclick="showScreen('mode')">← モード選択に戻る</button>
-      </div>
+      <div class="hunt-actions" id="hunt-actions"></div>
     </div>
 
     <!-- Screen: history -->
@@ -276,8 +301,15 @@
       userId: null,
       currentHunt: null,   // { id, mode, week_key, color_hex, color_name, photos:[] }
       profiles: {},        // { userId: {emoji,name} }
-      selectingIndex: null // アップロード対象のマス
+      selectingIndex: null,// アップロード対象のマス
+      isHuntOwner: true    // 表示中のハントが自分のものか
     };
+
+    // localStorage key for active single hunt id per user
+    function activeSingleKey() { return `color_hunt_active_single_${state.userId || 'anon'}` }
+    function setActiveSingle(id) { try { localStorage.setItem(activeSingleKey(), id) } catch {} }
+    function getActiveSingle() { try { return localStorage.getItem(activeSingleKey()) } catch { return null } }
+    function clearActiveSingle() { try { localStorage.removeItem(activeSingleKey()) } catch {} }
 
     // ========= Utils =========
     function showToast(msg, isError = false) {
@@ -316,6 +348,19 @@
       (profs || []).forEach(p => { state.profiles[p.id] = p; });
 
       renderPalette();
+
+      // 単発のアクティブハントがあれば復元
+      const activeId = getActiveSingle();
+      if (activeId) {
+        const { data } = await _sb.from('color_hunts')
+          .select('*').eq('id', activeId).single();
+        if (data && data.user_id === state.userId && data.mode === 'single') {
+          state.currentHunt = data;
+          openHuntBoard('single');
+        } else {
+          clearActiveSingle();
+        }
+      }
     }
 
     function renderPalette() {
@@ -377,25 +422,76 @@
       }).select().single();
       if (error) { showToast('作成に失敗: ' + error.message, true); return; }
       state.currentHunt = data;
+      setActiveSingle(data.id);
       openHuntBoard('single');
     }
 
+    // ランダム色を生成して単発スタート
+    async function startRandom() {
+      // HSL でランダム生成（彩度・明度は視認しやすい範囲）
+      const h = Math.floor(Math.random() * 360);
+      const s = 55 + Math.floor(Math.random() * 30);   // 55-85%
+      const l = 45 + Math.floor(Math.random() * 20);   // 45-65%
+      const hex = hslToHex(h, s, l);
+      await startSingle(hex, 'ランダム色');
+    }
+
+    function hslToHex(h, s, l) {
+      s /= 100; l /= 100;
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c / 2;
+      let r=0,g=0,b=0;
+      if (h < 60)      { r=c; g=x; b=0; }
+      else if (h<120)  { r=x; g=c; b=0; }
+      else if (h<180)  { r=0; g=c; b=x; }
+      else if (h<240)  { r=0; g=x; b=c; }
+      else if (h<300)  { r=x; g=0; b=c; }
+      else             { r=c; g=0; b=x; }
+      const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2,'0');
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+
+    // 単発の再生成: DBのハント自体は残しつつ、activeフラグを外して初期画面へ
+    function regenerateSingle() {
+      if (!confirm('新しい色でやり直しますか？現在の写真は履歴に残ります。')) return;
+      clearActiveSingle();
+      state.currentHunt = null;
+      showScreen('single-sub');
+    }
+
     // ========= Hunt Board =========
-    function openHuntBoard(mode) {
+    async function openHuntBoard(mode) {
       const h = state.currentHunt;
+      state.isHuntOwner = h.user_id === state.userId;
       document.getElementById('hunt-mode-label').textContent = mode === 'weekly' ? '今週の' : '';
       document.getElementById('hunt-color-chip').style.background = h.color_hex;
       document.getElementById('hunt-color-label').textContent = h.color_name || h.color_hex;
-      renderBoard();
       showScreen('hunt');
+      await renderBoard();
     }
 
-    function renderBoard() {
+    async function renderBoard() {
       const h = state.currentHunt;
       const photos = Array.isArray(h.photos) ? h.photos : [];
       const board = document.getElementById('hunt-board');
-      board.innerHTML = '';
 
+      // 全photosの signed URL を一括取得
+      const urlMap = {};
+      if (photos.length > 0) {
+        const signed = await Promise.all(
+          photos.map(p => _sb.storage.from('memories').createSignedUrl(p.path, 3600))
+        );
+        photos.forEach((p, idx) => {
+          const su = signed[idx]?.data?.signedUrl;
+          if (su) urlMap[p.path] = su;
+        });
+      }
+
+      // アクションボタン更新
+      renderHuntActions();
+
+      board.innerHTML = '';
       // 3x3グリッド: 0..8 のインデックス。中央=4。写真スロットは0-3,5-8 の8個。
       for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
@@ -405,12 +501,16 @@
           cell.style.background = h.color_hex;
           cell.innerHTML = `<div class="center-color-label">${escHtml(h.color_name || h.color_hex)}</div>`;
         } else {
-          const slotIndex = i < 4 ? i : i - 1; // 写真スロットのindex 0-7
+          const slotIndex = i < 4 ? i : i - 1;
           const photo = photos.find(p => p.position === slotIndex);
           if (photo) {
             cell.classList.add('filled');
-            const url = _sb.storage.from('memories').getPublicUrl(photo.path).data.publicUrl;
-            cell.innerHTML = `<img src="${url}" alt="">`;
+            const url = urlMap[photo.path];
+            if (url) {
+              cell.innerHTML = `<img src="${url}" alt="">`;
+            } else {
+              cell.textContent = '⚠︎';
+            }
             cell.onclick = () => {
               if (photo.user_id && photo.user_id !== state.userId) {
                 showToast('相手が撮った写真です', true);
@@ -418,13 +518,36 @@
               }
               if (confirm('この写真を削除しますか？')) removePhoto(slotIndex);
             };
-          } else {
+          } else if (state.isHuntOwner) {
             cell.textContent = '+';
             cell.onclick = () => triggerUpload(slotIndex);
+          } else {
+            cell.textContent = '·';
+            cell.style.opacity = '0.5';
           }
         }
         board.appendChild(cell);
       }
+    }
+
+    function renderHuntActions() {
+      const el = document.getElementById('hunt-actions');
+      if (!el) return;
+      const h = state.currentHunt;
+      const isSingle = h?.mode === 'single';
+      const isOwner = h?.user_id === state.userId;
+      const parts = [];
+      parts.push(`<button class="btn" onclick="backFromHunt()">← 戻る</button>`);
+      if (isSingle && isOwner) {
+        parts.push(`<button class="btn" onclick="regenerateSingle()">🎲 再生成</button>`);
+      }
+      el.innerHTML = parts.join('');
+    }
+
+    function backFromHunt() {
+      // 単発モードの自分のハントは維持したまま戻る（activeSingleに残す）
+      // 週間モード・履歴閲覧はモード選択に戻る
+      showScreen('mode');
     }
 
     // ========= Upload =========
@@ -463,8 +586,33 @@
           .eq('id', state.currentHunt.id);
         if (updErr) { showToast('保存失敗: ' + updErr.message, true); return; }
 
+        const wasComplete = state.currentHunt.photos.length >= 8;
+
         state.currentHunt.photos = photos;
-        renderBoard();
+        await renderBoard();
+
+        // ポイント付与（新規スロット埋めのみ; 置換時は加算しない）
+        if (existingIdx < 0) {
+          _sb.from('points').insert({ user_id: state.userId, amount: 2, reason: 'color_photo' }).then(() => {});
+
+          // 相手に push（コンプ or 4枚以上で報告）
+          const doPush = (msg) => _sb.functions.invoke('send-push', {
+            body: {
+              title: '🎨 カラーハント',
+              body: msg,
+              url: '/color_hunting.html',
+              sender_user_id: state.userId,
+            },
+          }).then(({ error }) => { if (error) console.error('[color] push error:', error) });
+
+          if (!wasComplete && photos.length >= 8) {
+            _sb.from('points').insert({ user_id: state.userId, amount: 15, reason: 'color_complete' }).then(() => {});
+            doPush('🎨 全8枚コンプリート！');
+            showToast('🎨 全8枚コンプリート！+15pt');
+            return;
+          }
+          if (photos.length === 4) doPush('半分の4枚まで集めたよ');
+        }
         showToast('✅ 追加しました');
       });
     });

@@ -590,6 +590,20 @@
       }
 
       input.value = ''
+      // 返信ポイント
+      _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'capsule_reply' }).then(() => {})
+
+      // 相手に push 通知
+      const otherId = latest.sender_id === myId ? latest.recipient_id : latest.sender_id
+      _sb.functions.invoke('send-push', {
+        body: {
+          title: '↩️ タイムカプセルに返信',
+          body: text.length > 40 ? text.slice(0, 40) + '…' : text,
+          url: '/time_capsule.html',
+          recipient_user_id: otherId,
+        },
+      }).then(({ error }) => { if (error) console.error('[capsule reply] push error:', error) })
+
       await loadReceived()
       showToast('返信しました')
     }
@@ -600,6 +614,9 @@
         is_opened: true,
         opened_at: new Date().toISOString()
       }).eq('id', id)
+
+      // 開封ポイント
+      _sb.from('points').insert({ user_id: myId, amount: 3, reason: 'capsule_open' }).then(() => {})
 
       // モーダル表示
       document.getElementById('open-from').textContent = `${senderEmoji} ${senderName} より`
@@ -716,6 +733,9 @@
         showToast('送信失敗: ' + (error.message || error.code || 'unknown'))
         return
       }
+
+      // ポイント付与
+      _sb.from('points').insert({ user_id: myId, amount: 3, reason: 'capsule_send' }).then(() => {})
 
       const openDate = new Date(openAt).toLocaleString('ja-JP', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       showToast(`🎁 ${openDate}ごろに届きます！`)

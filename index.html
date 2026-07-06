@@ -320,13 +320,18 @@
           .lte('open_at', now)
         if (toNotify && toNotify.length > 0) {
           const ids = toNotify.map(c => c.id)
-          _sb.functions.invoke('line-notify', {
-            body: {
-              sender_id: myId,
-              target: 'partner',
-              message: `🎁 タイムカプセルが届きました！\nNotre Endroit を開いてみてください ✨`,
-            },
-          }).then(({ error }) => { if (error) console.error('[index] line-notify error:', error) })
+          // Push通知だけ（LINEは廃止、Pushで十分）
+          const { data: partnerProf } = await _sb.from('profiles').select('id').neq('id', myId).single()
+          if (partnerProf) {
+            _sb.functions.invoke('send-push', {
+              body: {
+                title: '🎁 タイムカプセルが届きました',
+                body: 'Notre Endroit を開いてみてください',
+                url: '/time_capsule.html',
+                recipient_user_id: partnerProf.id,
+              },
+            }).then(({ error }) => { if (error) console.error('[index] push error:', error) })
+          }
           await _sb.from('time_capsules').update({ line_notified: true }).in('id', ids)
         }
       } catch {}

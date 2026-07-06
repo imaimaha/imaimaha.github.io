@@ -548,6 +548,16 @@
         })
         if (ptErr) console.error('points insert error:', ptErr)
 
+        // 相手に push
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: '💬 クイズに回答したよ',
+            body: '今日の質問への回答を見てみよう',
+            url: '/quiz.html',
+            sender_user_id: myId,
+          },
+        }).then(({ error }) => { if (error) console.error('[quiz] push error:', error) })
+
         showToast('✨ +10pt 獲得！')
         await renderTodayAnswered(answer)
         loadHistory()
