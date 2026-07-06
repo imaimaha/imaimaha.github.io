@@ -27,6 +27,9 @@ Notre / imaimaha 関連の作業を始める時は、必ず先に SPEC.md を読
 
 - `CREATE POLICY IF NOT EXISTS` は PostgreSQL に無い → `DROP POLICY IF EXISTS` してから `CREATE POLICY`
 - `CREATE TABLE` + `CREATE POLICY` の後は **必ず `GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO authenticated;`** を書く
+- **bigint autoincrement な id を持つテーブルは sequence にも GRANT が必要**:
+  `GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;`
+  忘れると INSERT 時に `permission denied for sequence` になる
 - 詳細は [docs/SPEC.md § 10.6](docs/SPEC.md)
 
 ## Supabase CLI
