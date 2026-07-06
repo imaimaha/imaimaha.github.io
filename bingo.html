@@ -606,11 +606,11 @@
     </div>
 
     <div class="mode-cards">
-      <div class="mode-card daily" onclick="selectMode('daily')">
+      <div class="mode-card daily" onclick="selectMode('weekly')">
         <div class="mode-card-icon">🌟</div>
         <div class="mode-card-body">
-          <div class="mode-card-title">今日だけビンゴ</div>
-          <div class="mode-card-desc" id="daily-desc">毎日0時に新しいカードが生まれる<br>今日の季節・曜日に合わせたお題</div>
+          <div class="mode-card-title">今週のビンゴ</div>
+          <div class="mode-card-desc" id="daily-desc">毎週月曜に新しいカードが生まれる<br>今週の季節・お題を集めよう</div>
         </div>
         <div class="mode-card-arrow">→</div>
       </div>
@@ -632,6 +632,24 @@
         </div>
         <div class="mode-card-arrow">→</div>
       </div>
+
+      <div class="mode-card" onclick="openHistory()">
+        <div class="mode-card-icon">📖</div>
+        <div class="mode-card-body">
+          <div class="mode-card-title">履歴を見る</div>
+          <div class="mode-card-desc">2人の過去のビンゴカードを閲覧<br>チェックのあるカードだけ表示</div>
+        </div>
+        <div class="mode-card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screen: History ── -->
+  <div class="screen" id="screen-history">
+    <p class="screen-section-title" style="padding:16px 0 4px">📖 履歴</p>
+    <p class="select-subtitle">2人の過去のビンゴ（チェックのあるものだけ）</p>
+    <div id="history-list" style="padding:8px 16px 40px;display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;color:#7aa;padding:32px 0">読み込み中…</div>
     </div>
   </div>
 
@@ -707,13 +725,13 @@
     <div class="bingo-grid" id="bingo-grid"></div>
 
     <div class="grid-actions">
-      <button class="btn-new-card" onclick="handleBack(); showScreen('mode')">
+      <button class="btn-new-card" onclick="handleBack()">
         ← 戻る
       </button>
-      <button class="btn-new-card" onclick="regenerateCard()" style="flex:0 0 auto;padding:12px 16px">
+      <button class="btn-new-card" id="btn-regenerate" onclick="regenerateCard()" style="flex:0 0 auto;padding:12px 16px">
         🎲 再生成
       </button>
-      <button class="btn-new-card" onclick="shareCard()" style="flex:0 0 auto;padding:12px 16px">
+      <button class="btn-new-card" id="btn-share" onclick="shareCard()" style="flex:0 0 auto;padding:12px 16px">
         📤 シェア
       </button>
     </div>
@@ -856,7 +874,8 @@
     card: null,   // { id, mode, label, items:[{text,is_lucky}], checks:[{index,memo,checked_at}] }
     modalCell: null,
     bingoLines: [],
-    celebrationShown: false
+    celebrationShown: false,
+    readonly: false, // 履歴から開いた読み込み専用モード
   };
 
   function setGridSize(n) {
@@ -905,18 +924,29 @@
     return d === 0 || d === 6;
   }
 
+  // JST基準の月曜日(YYYY-MM-DD)を返す
+  function getWeekStr(date = new Date()) {
+    const d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    const dow = d.getDay();                // 0=日, 1=月, ..., 6=土
+    const daysSinceMonday = (dow + 6) % 7; // Mon=0, Sun=6
+    d.setDate(d.getDate() - daysSinceMonday);
+    return d.toLocaleDateString('sv-SE');   // YYYY-MM-DD
+  }
+
   function makeDailyItems(n, seedOverride = null) {
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const seed = seedOverride ?? (parseInt(today) + n * 1000);
+    const weekKey = getWeekStr().replace(/-/g, '');
+    const seed = seedOverride ?? (parseInt(weekKey) + n * 1000);
     const rand = seededRand(seed);
     const season = getSeason();
-    const weekend = isWeekend();
 
+    // 週単位なので平日/週末ミックス
     const pool = [
       ...POOLS.everyday.map(t => ({ text: t })),
       ...POOLS.feelings.map(t => ({ text: t })),
       ...POOLS[season].map(t => ({ text: t })),
-      ...(weekend ? POOLS.weekend : POOLS.weekday).map(t => ({ text: t }))
+      ...POOLS.weekend.map(t => ({ text: t })),
+      ...POOLS.weekday.map(t => ({ text: t }))
     ];
 
     const picked = pickN(pool, n - 1, rand);
@@ -1017,8 +1047,8 @@
 
     // localStorage は常に保存
     const sz = Math.round(Math.sqrt(state.card.items.length));
-    if (state.card.mode === 'daily' && state.card.date_str) {
-      lsSave(lsKey(`daily_${state.card.date_str}_${sz}`), state.card);
+    if (state.card.mode === 'weekly' && state.card.date_str) {
+      lsSave(lsKey(`weekly_${state.card.date_str}_${sz}`), state.card);
     } else if (state.card.mode === 'category' || state.card.mode === 'random') {
       lsSave(lsKey(`${state.card.mode}_${state.card.label}_${sz}`), state.card);
     }
@@ -1043,9 +1073,9 @@
         if (!error && data) {
           state.card.id = data.id;
           // Supabase ID を localStorage にも反映
-          if (state.card.mode === 'daily' && state.card.date_str) {
+          if (state.card.mode === 'weekly' && state.card.date_str) {
             const szInner = Math.round(Math.sqrt(state.card.items.length));
-            lsSave(lsKey(`daily_${state.card.date_str}_${szInner}`), state.card);
+            lsSave(lsKey(`weekly_${state.card.date_str}_${szInner}`), state.card);
           }
           lsSave(lsKey('current'), state.card);
         }
@@ -1053,28 +1083,26 @@
     } catch {}
   }
 
-  async function loadDailyCard() {
+  async function loadWeeklyCard() {
     if (!state.userId) return null;
-    const today = new Date().toISOString().split('T')[0];
+    const weekKey = getWeekStr();
 
     // Supabase から取得を試みる
     try {
       const { data, error } = await _sb.from('bingo_sessions')
         .select('*')
         .eq('user_id', state.userId)
-        .eq('mode', 'daily')
-        .eq('date_str', today)
+        .eq('mode', 'weekly')
+        .eq('date_str', weekKey)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
       if (!error && data) {
-        // サイズが一致する場合のみ使用
         if (Math.round(Math.sqrt((data.items || []).length)) === state.gridSize) return data;
       }
     } catch {}
 
-    // 失敗したら localStorage にフォールバック
-    return lsLoad(lsKey(`daily_${today}_${state.gridSize}`));
+    return lsLoad(lsKey(`weekly_${weekKey}_${state.gridSize}`));
   }
 
   // カテゴリ/難易度モード用: 最新の同モード同ラベル同サイズのカードを取得
@@ -1132,7 +1160,11 @@
         <span class="cell-text">${item.text}</span>
         ${hasMemo ? '<span class="cell-memo-badge">📝</span>' : ''}
       `;
-      cell.addEventListener('click', () => openModal(i));
+      if (state.readonly) {
+        cell.style.pointerEvents = 'none';
+      } else {
+        cell.addEventListener('click', () => openModal(i));
+      }
       grid.appendChild(cell);
     });
 
@@ -1277,12 +1309,15 @@
       backBtn.textContent = '← ホーム';
       backBtn.onclick = () => location.href = '/';
       document.getElementById('top-title').textContent = 'お散歩ビンゴ';
-    } else if (name === 'category' || name === 'difficulty') {
+    } else if (name === 'category' || name === 'difficulty' || name === 'history') {
       backBtn.textContent = '← 戻る';
       backBtn.onclick = () => showScreen('mode');
     } else if (name === 'grid') {
       backBtn.textContent = '← 戻る';
-      backBtn.onclick = () => showScreen('mode');
+      backBtn.onclick = () => {
+        if (state.readonly) { state.readonly = false; showScreen('history'); }
+        else showScreen('mode');
+      };
     }
   }
 
@@ -1294,41 +1329,43 @@
   // Mode Actions
   // ─────────────────────────────────────────
   async function selectMode(mode) {
-    if (mode === 'daily') {
-      showToast('📅 今日のビンゴを準備中…');
+    state.readonly = false;
+    if (mode === 'weekly') {
+      showToast('📅 今週のビンゴを準備中…');
 
-      const existing = await loadDailyCard();
+      const existing = await loadWeeklyCard();
       if (existing) {
         const loadedSize = Math.round(Math.sqrt((existing.items || []).length));
         if (loadedSize >= 3) setGridSize(loadedSize);
         state.card = {
           id: existing.id,
-          mode: 'daily',
-          label: '今日だけビンゴ',
+          mode: 'weekly',
+          label: '今週のビンゴ',
           date_str: existing.date_str,
           items: existing.items,
           checks: existing.checks || []
         };
-        showToast('✨ 今日のビンゴを読み込みました');
+        showToast('✨ 今週のビンゴを読み込みました');
       } else {
-        const today = new Date().toISOString().split('T')[0];
+        const weekKey = getWeekStr();
         const n = state.gridSize * state.gridSize;
         state.card = {
           id: null,
-          mode: 'daily',
-          label: '今日だけビンゴ',
-          date_str: today,
+          mode: 'weekly',
+          label: '今週のビンゴ',
+          date_str: weekKey,
           items: makeDailyItems(n),
           checks: []
         };
         await saveCard();
       }
 
-      openGridScreen('今日だけビンゴ');
+      openGridScreen('今週のビンゴ');
     }
   }
 
   async function selectCategory(cat) {
+    state.readonly = false;
     const labels = {
       everyday: '🌿 日常',
       feelings: '😊 気持ち',
@@ -1363,6 +1400,7 @@
   }
 
   async function selectDifficulty(diff) {
+    state.readonly = false;
     const stars = ['', '★', '★★', '★★★'];
     const n = state.gridSize * state.gridSize;
     const label = `ランダム ${stars[diff]}`;
@@ -1395,8 +1433,87 @@
     state.bingoLines = detectBingo(state.card.checks, Math.round(Math.sqrt(state.card.items.length)));
     state.celebrationShown = false;
     document.getElementById('grid-label').textContent = label;
+    // 読み込み専用（履歴閲覧）時は編集ボタンを隠す
+    document.getElementById('btn-regenerate').style.display = state.readonly ? 'none' : '';
+    document.getElementById('btn-share').style.display = state.readonly ? 'none' : '';
     renderGrid();
     showScreen('grid');
+  }
+
+  // ─────────────────────────────────────────
+  // History (2人の過去カード閲覧)
+  // ─────────────────────────────────────────
+  async function openHistory() {
+    showScreen('history');
+    const list = document.getElementById('history-list');
+    list.innerHTML = '<div style="text-align:center;color:#7aa;padding:32px 0">読み込み中…</div>';
+
+    try {
+      const { data, error } = await _sb.from('bingo_sessions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+
+      const [profRes] = await Promise.all([_sb.from('profiles').select('id, emoji, name')]);
+      const profileMap = {};
+      (profRes.data || []).forEach(p => { profileMap[p.id] = p; });
+
+      // 何かしら「更新された」= チェックが1つ以上ある
+      const filtered = (data || []).filter(r => Array.isArray(r.checks) && r.checks.length > 0);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#7aa;padding:32px 0">まだ何も記録されてません</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      filtered.forEach(row => {
+        const owner = profileMap[row.user_id];
+        const ownerLabel = owner ? `${owner.emoji} ${owner.name}` : '(?)';
+        const checkCount = row.checks?.length ?? 0;
+        const memoCount = (row.checks || []).filter(c => c.memo && c.memo.trim()).length;
+        const size = Math.round(Math.sqrt((row.items || []).length));
+        const createdLabel = new Date(row.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+        const item = document.createElement('div');
+        item.style.cssText = 'background:rgba(255,255,255,0.06);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:14px 16px;cursor:pointer;transition:background 0.2s;';
+        item.onmouseover = () => { item.style.background = 'rgba(255,255,255,0.10)'; };
+        item.onmouseout  = () => { item.style.background = 'rgba(255,255,255,0.06)'; };
+        item.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:0.95rem;color:#e8f4fd">${ownerLabel}</span>
+            <span style="font-size:0.75rem;color:#7aa;margin-left:auto">${createdLabel}</span>
+          </div>
+          <div style="font-size:1rem;color:#ffd97d;margin-bottom:4px">${escHtml(row.label || row.mode)}</div>
+          <div style="font-size:0.8rem;color:#98bedd">${size}×${size} · ✅ ${checkCount}マス${memoCount > 0 ? ` · 📝 ${memoCount}メモ` : ''}</div>
+        `;
+        item.onclick = () => viewHistoryCard(row);
+        list.appendChild(item);
+      });
+    } catch (e) {
+      console.error('history load error:', e);
+      list.innerHTML = '<div style="text-align:center;color:#f88;padding:32px 0">読み込みに失敗しました</div>';
+    }
+  }
+
+  function viewHistoryCard(row) {
+    const size = Math.round(Math.sqrt((row.items || []).length));
+    if (size >= 3) setGridSize(size);
+    state.readonly = true;
+    state.card = {
+      id: row.id,
+      mode: row.mode,
+      label: row.label,
+      date_str: row.date_str,
+      items: row.items,
+      checks: row.checks || []
+    };
+    openGridScreen(row.label || row.mode);
+  }
+
+  function escHtml(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function regenerateCard() {
@@ -1405,7 +1522,7 @@
 
     const { mode, label } = state.card;
     const n = state.gridSize * state.gridSize;
-    if (mode === 'daily') {
+    if (mode === 'weekly') {
       // 再生成時はランダムシードで別カードに
       state.card.items = makeDailyItems(n, Math.floor(Math.random() * 0x7fffffff));
     } else if (mode === 'category') {
