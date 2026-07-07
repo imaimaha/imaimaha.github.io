@@ -1,11 +1,20 @@
 const EMOJIS = ['❤️', '😊', '💨', '😫', '👍']
+const ASK_ACTIONS = [
+  { action: 'ok',    title: 'いいよ ✅' },
+  { action: 'ng',    title: 'きびしい 🚫' },
+  { action: 'maybe', title: '仕事の進み次第 🤔' },
+]
+const ASK_LABELS = { ok: 'いいよ ✅', ng: 'きびしい 🚫', maybe: '仕事の進み次第 🤔' }
 
 self.addEventListener('push', event => {
   if (!event.data) return
   let payload = {}
   try { payload = event.data.json() } catch { payload = { body: event.data.text() } }
 
-  const { title = 'Notre Endroit', body = '', url = '/', replier_id = '' } = payload
+  const { title = 'Notre Endroit', body = '', url = '/', replier_id = '', ask_ok = false } = payload
+
+  const actions = ask_ok ? ASK_ACTIONS
+    : (replier_id ? EMOJIS.map((e, i) => ({ action: `r${i}`, title: e })) : [])
 
   const options = {
     body,
@@ -13,9 +22,8 @@ self.addEventListener('push', event => {
     badge: '/badge.svg',
     vibrate: [200, 100, 200],
     requireInteraction: true,
-    data: { url, replier_id },
-    // 絵文字クイックリプライは replier_id がある時だけ（従来のLINE用）
-    ...(replier_id ? { actions: EMOJIS.map((e, i) => ({ action: `r${i}`, title: e })) } : {}),
+    data: { url, replier_id, ask_ok },
+    ...(actions.length ? { actions } : {}),
   }
 
   event.waitUntil(self.registration.showNotification(title, options))
@@ -24,25 +32,44 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close()
 
-  const idx = parseInt(event.action?.replace('r', '') ?? '-1', 10)
-  if (idx >= 0 && idx < EMOJIS.length && event.notification.data?.replier_id) {
-    const emoji = EMOJIS[idx]
-    const replierId = event.notification.data.replier_id
+  const { ask_ok, replier_id, url } = event.notification.data ?? {}
+
+  // 「行っていい？」3択返答
+  if (ask_ok && event.action && replier_id) {
+    const label = ASK_LABELS[event.action] ?? event.action
     event.waitUntil(
-      fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+      fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/send-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender_id: replierId, target: 'group', message: emoji }),
+        body: JSON.stringify({
+          ask_reply: true,
+          replier_id,
+          title: label,
+          body: 'パートナーが返答しました',
+          url: '/status.html',
+        }),
       }).catch(() => {})
     )
     return
   }
 
-  const targetUrl = event.notification.data?.url || '/'
+  // 旧 LINE 絵文字クイックリプライ（後方互換）
+  const idx = parseInt(event.action?.replace('r', '') ?? '-1', 10)
+  if (idx >= 0 && idx < EMOJIS.length && replier_id && !ask_ok) {
+    event.waitUntil(
+      fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/line-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender_id: replier_id, target: 'group', message: EMOJIS[idx] }),
+      }).catch(() => {})
+    )
+    return
+  }
+
+  const targetUrl = url || '/'
   const fullUrl = targetUrl.startsWith('http') ? targetUrl : `https://imaimaha.github.io${targetUrl}`
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
-      // 既に開いているウィンドウがあれば targetUrl に navigate してフォーカス
       const existing = cs.find(c => c.url.startsWith('https://imaimaha.github.io'))
       if (existing) {
         return existing.navigate(fullUrl).then(() => existing.focus()).catch(() => existing.focus())

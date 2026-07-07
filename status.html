@@ -407,38 +407,24 @@
       result.textContent = '送信中...'
       try {
         const { data: { session } } = await _sb.auth.getSession()
-        const { data, error } = await _sb.functions.invoke('line-notify', {
+        const { data, error } = await _sb.functions.invoke('send-push', {
           body: {
-            sender_id: session.user.id,
-            target: 'partner',
-            message: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「行っていい？」と聞いています 🐾\nどれか選んで返信してね👇`,
-            quick_reply: ['いいよ ✅', 'きびしい 🚫', '仕事の進み次第 🤔'],
+            title: '🐾 行っていい？',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が行っていいか聞いています`,
+            url: '/status.html',
+            recipient_user_id: partnerProfile.id,
+            ask_ok: true,
+            replier_id: session.user.id,
           },
         })
-        console.log('[status] askOk data:', data, 'error:', error)
         if (!error) {
-          result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に LINE を送りました！`
+          result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に送りました！`
         } else {
-          // エラーレスポンスのボディを取得（Supabase JS v2: error.context は Response）
-          let errBody = ''
-          try {
-            if (error.context && typeof error.context.json === 'function') {
-              const j = await error.context.json()
-              errBody = j?.error || JSON.stringify(j)
-            } else if (error.context && typeof error.context.text === 'function') {
-              errBody = await error.context.text()
-            }
-          } catch {}
-          const errMsg = (errBody || error?.message || '') + ''
-          console.error('[status] askOk error detail:', { errMsg, error })
-          if (errMsg.includes('not registered')) {
-            result.textContent = '⚠️ パートナーがまだ LINE ボットを友達追加していません'
-          } else {
-            result.textContent = '❌ 送信失敗: ' + errMsg.slice(0, 80)
-          }
+          let errMsg = error?.message || ''
+          try { const j = await error.context?.json?.(); if (j?.error) errMsg = j.error } catch {}
+          result.textContent = '❌ 送信失敗: ' + errMsg.slice(0, 80)
         }
       } catch (e) {
-        console.error('[status] askOk exception:', e)
         result.textContent = '❌ ネットワークエラー: ' + (e?.message ?? String(e)).slice(0, 80)
       }
       setTimeout(() => { result.textContent = '' }, 8000)

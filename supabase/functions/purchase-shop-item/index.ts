@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
   // 商品取得
   const { data: item, error: itemErr } = await sb.from('shop_items')
     .select('*').eq('id', item_id).single()
-  if (itemErr || !item) return json({ error: 'item not found' }, 404)
+  if (itemErr) return json({ error: 'item query failed: ' + itemErr.message + ' (code: ' + itemErr.code + ')' }, 404)
+  if (!item) return json({ error: 'item not found: ' + item_id }, 404)
   if (!item.active) return json({ error: 'この商品は販売停止中です' }, 400)
   if (item.buyer_id !== buyerUid) return json({ error: 'あなた宛の商品ではありません' }, 403)
   if (item.stock !== null && item.stock <= 0) return json({ error: 'sold out' }, 400)
