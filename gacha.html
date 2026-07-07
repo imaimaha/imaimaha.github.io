@@ -647,6 +647,17 @@
           🎰🎰 10連ガチャ（1000pt）
           <span class="gacha-btn-sub" id="gacha10-btn-sub">10回分を一気にまわす</span>
         </button>
+        <button onclick="toggleLineup()" style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.25);border-radius:16px;padding:10px;color:#98bedd;font-family:inherit;font-size:0.85rem;cursor:pointer" id="lineup-toggle-btn">
+          📋 排出ラインナップを見る
+        </button>
+      </div>
+    </div>
+
+    <!-- LINEUP PANEL -->
+    <div id="lineup-panel" style="display:none;width:100%;max-width:500px;margin-bottom:8px">
+      <div style="background:rgba(10,20,50,0.85);border:1.5px solid rgba(150,200,255,0.25);border-radius:16px;padding:16px">
+        <div style="font-size:0.8rem;color:#5a8fb8;margin-bottom:12px;text-align:center" id="lineup-note"></div>
+        <div id="lineup-list"></div>
       </div>
     </div>
 
@@ -785,6 +796,90 @@
       return { ...weighted[Math.floor(Math.random() * weighted.length)], isCustom: false }
     }
 
+    // ===================== LINEUP =====================
+    function calcRates() {
+      // ビルトインの重み計算
+      const builtinTotal = PRIZES.reduce((s, p) => {
+        const w = p.rarity === 'N' ? 5 : p.rarity === 'R' ? 2 : 0.5
+        return s + Math.round(w * 10)
+      }, 0)
+
+      const hasCustom = customPrizes.length > 0
+      const customTotal = hasCustom
+        ? customPrizes.reduce((s, p) => s + Number(p.weight || 1), 0)
+        : 0
+      const pCustom = (hasCustom && currentShare > 0) ? currentShare : 0
+      const pBuiltin = 1 - pCustom
+
+      const rows = []
+
+      // ビルトイン
+      PRIZES.forEach(p => {
+        const w = p.rarity === 'N' ? 5 : p.rarity === 'R' ? 2 : 0.5
+        const entryCount = Math.round(w * 10)
+        const rate = pBuiltin * (entryCount / builtinTotal) * 100
+        rows.push({ emoji: p.emoji, name: p.name, rarity: p.rarity, rate, isCustom: false })
+      })
+
+      // カスタム
+      if (hasCustom && pCustom > 0) {
+        customPrizes.forEach(p => {
+          const w = Number(p.weight || 1)
+          const rate = pCustom * (w / customTotal) * 100
+          rows.push({ emoji: p.emoji, name: p.name, rarity: p.rarity, rate, isCustom: true })
+        })
+      }
+
+      return { rows, pCustom, pBuiltin }
+    }
+
+    function renderLineup() {
+      const panel = document.getElementById('lineup-list')
+      const note = document.getElementById('lineup-note')
+      const { rows, pCustom, pBuiltin } = calcRates()
+
+      if (pCustom > 0) {
+        note.textContent = `ビルトイン ${Math.round(pBuiltin * 100)}% / カスタム ${Math.round(pCustom * 100)}% の確率で各プールから抽選`
+      } else {
+        note.textContent = 'カスタム景品なし（ビルトインのみ）'
+      }
+
+      const colors = { N: '#7ec8f0', R: '#d09aff', SR: '#ffd700' }
+      const sorted = [...rows].sort((a, b) => b.rate - a.rate)
+      panel.innerHTML = sorted.map(r => `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid rgba(150,200,255,0.1)">
+          <span style="font-size:1.3rem;width:28px;text-align:center">${r.emoji}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.9rem;color:#e8f4fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${r.name}${r.isCustom ? ' <span style="font-size:0.65rem;color:#98bedd;background:rgba(150,200,255,0.15);padding:1px 5px;border-radius:6px">カスタム</span>' : ''}
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:4px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(r.rate * 3, 100)}%;background:${colors[r.rarity] || '#7ec8f0'};border-radius:2px;transition:width 0.4s"></div>
+            </div>
+          </div>
+          <div style="text-align:right;min-width:44px">
+            <div style="font-size:0.85rem;font-weight:bold;color:${colors[r.rarity] || '#7ec8f0'}">${r.rate.toFixed(1)}%</div>
+            <div style="font-size:0.65rem;color:#5a8fb8">${r.rarity}</div>
+          </div>
+        </div>
+      `).join('')
+    }
+
+    let lineupOpen = false
+    function toggleLineup() {
+      lineupOpen = !lineupOpen
+      const panel = document.getElementById('lineup-panel')
+      const btn = document.getElementById('lineup-toggle-btn')
+      if (lineupOpen) {
+        renderLineup()
+        panel.style.display = 'block'
+        btn.textContent = '📋 ラインナップを閉じる'
+      } else {
+        panel.style.display = 'none'
+        btn.textContent = '📋 排出ラインナップを見る'
+      }
+    }
+
     // ===================== STATE =====================
     let currentUser = null
     let currentPoints = 0
@@ -817,6 +912,7 @@
         const v = Number(e.target.value) / 100
         document.getElementById('share-display').textContent = e.target.value + '%'
         currentShare = v
+        if (lineupOpen) renderLineup()
       })
       document.getElementById('share-slider').addEventListener('change', async (e) => {
         const v = Number(e.target.value) / 100
@@ -839,6 +935,7 @@
         .select('*').eq('added_by', currentUser.id).order('created_at', { ascending: false })
       myAddedPrizes = byMe || []
       renderMyAddedList()
+      if (lineupOpen) renderLineup()
     }
 
     function renderMyAddedList() {
