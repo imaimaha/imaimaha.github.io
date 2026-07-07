@@ -440,6 +440,36 @@
 
     .modal-memo-input::placeholder { color: rgba(150,200,255,0.35); }
 
+    .modal-photo-area {
+      margin-bottom: 14px;
+    }
+    .modal-photo-label {
+      font-size: 0.78rem;
+      color: #98bedd;
+      margin-bottom: 6px;
+    }
+    .modal-photo-preview {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .modal-photo-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px dashed rgba(150,200,255,0.3);
+      border-radius: 12px;
+      color: #98bedd;
+      font-size: 0.85rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      text-align: center;
+    }
+    .modal-photo-btn:active { background: rgba(255,255,255,0.12); }
+
     .modal-buttons {
       display: flex;
       gap: 10px;
@@ -743,6 +773,7 @@
       <div class="modal-handle"></div>
       <div class="modal-cell-text" id="modal-cell-text"></div>
       <div class="modal-cell-lucky" id="modal-cell-lucky" style="display:none">⭐ Lucky</div>
+      <div class="modal-photo-area" id="modal-photo-area"></div>
       <div class="modal-memo-label">📝 メモ（任意）</div>
       <textarea
         class="modal-memo-input"
@@ -751,6 +782,7 @@
         maxlength="200"
       ></textarea>
       <div class="modal-buttons" id="modal-buttons"></div>
+      <input type="file" id="bingo-photo-input" accept="image/*" capture="environment" style="display:none">
     </div>
   </div>
 
@@ -1153,12 +1185,14 @@
 
       const check = card.checks.find(c => c.index === i);
       const hasMemo = check && check.memo;
+      const hasPhoto = check && check.photo_path;
 
       cell.innerHTML = `
         ${item.is_lucky ? '<span class="cell-lucky-badge">⭐</span>' : ''}
         ${checkedIndices.has(i) ? '<span class="cell-check">✓</span>' : ''}
         <span class="cell-text">${item.text}</span>
         ${hasMemo ? '<span class="cell-memo-badge">📝</span>' : ''}
+        ${hasPhoto ? '<span class="cell-memo-badge">📷</span>' : ''}
       `;
       // readonly でもメモ閲覧のためタップ可能。modal側で編集は不可
       cell.addEventListener('click', () => openModal(i));
@@ -1185,6 +1219,27 @@
 
     const memoInput = document.getElementById('modal-memo');
     memoInput.value = existing?.memo || '';
+
+    // 写真エリア
+    const photoArea = document.getElementById('modal-photo-area')
+    photoArea.innerHTML = ''
+    if (existing?.photo_path) {
+      photoArea.innerHTML = '<div class="modal-photo-label">📷 写真</div><div id="modal-photo-loading" style="color:#5a8fb8;font-size:0.8rem;margin-bottom:6px">読み込み中...</div>'
+      _sb.storage.from('memories').createSignedUrl(existing.photo_path, 3600).then(({ data }) => {
+        if (data?.signedUrl) {
+          document.getElementById('modal-photo-loading').outerHTML =
+            `<img src="${data.signedUrl}" class="modal-photo-preview" id="modal-photo-img">`
+        }
+      })
+      if (!state.readonly) {
+        photoArea.insertAdjacentHTML('beforeend',
+          `<button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を変更</button>`)
+      }
+    } else if (!state.readonly) {
+      photoArea.innerHTML = `
+        <div class="modal-photo-label">📷 写真（任意）</div>
+        <button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を追加</button>`
+    }
 
     const btns = document.getElementById('modal-buttons');
 
@@ -1218,6 +1273,45 @@
     if (e && e.target !== document.getElementById('modal-backdrop')) return;
     document.getElementById('modal-backdrop').classList.remove('open');
     state.modalCell = null;
+  }
+
+  function triggerPhotoUpload(cellIndex) {
+    const input = document.getElementById('bingo-photo-input')
+    input.onchange = () => uploadCellPhoto(cellIndex, input.files[0])
+    input.value = ''
+    input.click()
+  }
+
+  async function uploadCellPhoto(cellIndex, file) {
+    if (!file || !state.card?.id) return
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `bingo/${state.card.id}/${cellIndex}.${ext}`
+    const photoArea = document.getElementById('modal-photo-area')
+    const btn = photoArea.querySelector('.modal-photo-btn')
+    if (btn) { btn.disabled = true; btn.textContent = 'アップロード中...' }
+
+    const { error } = await _sb.storage.from('memories').upload(path, file, { upsert: true })
+    if (error) { showToast('写真のアップロードに失敗しました', true); if (btn) { btn.disabled = false; btn.textContent = '📷 写真を追加' }; return }
+
+    // checks に photo_path を保存
+    const existing = state.card.checks.findIndex(c => c.index === cellIndex)
+    if (existing >= 0) {
+      state.card.checks[existing].photo_path = path
+    } else {
+      state.card.checks.push({ index: cellIndex, memo: '', checked_at: new Date().toISOString(), photo_path: path })
+    }
+    await saveCard()
+    renderGrid()
+
+    // プレビュー更新
+    const { data } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
+    if (data?.signedUrl) {
+      photoArea.innerHTML =
+        `<div class="modal-photo-label">📷 写真</div>
+         <img src="${data.signedUrl}" class="modal-photo-preview">
+         <button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を変更</button>`
+    }
+    showToast('📷 写真を保存しました')
   }
 
   function saveCheck(cellIndex) {
