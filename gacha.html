@@ -688,12 +688,8 @@
         <div style="font-size:0.95rem;color:#e8f4fd">私が相手に追加した景品</div>
         <button onclick="toggleAddPrizeForm()" style="background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;padding:6px 12px;border-radius:14px;font-family:inherit;font-size:0.8rem;cursor:pointer">➕ 追加</button>
       </div>
-      <div class="ticket-list" id="my-added-list">
-        <div class="empty-tickets" style="padding:16px 0;font-size:0.85rem">まだ追加した景品はありません</div>
-      </div>
-
       <!-- Add form -->
-      <div id="add-prize-form" style="display:none;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,200,180,0.35);border-radius:14px;padding:14px;margin-top:10px">
+      <div id="add-prize-form" style="display:none;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,200,180,0.35);border-radius:14px;padding:14px;margin-bottom:10px">
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <input id="new-emoji" placeholder="絵文字" maxlength="4" style="width:60px;padding:8px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:10px;color:#e8f4fd;font-size:1.2rem;text-align:center;font-family:inherit">
           <input id="new-name" placeholder="景品名 (例: 肩もみ券)" style="flex:1;padding:8px 12px;background:rgba(0,0,0,0.2);border:1.5px solid rgba(150,200,255,0.3);border-radius:10px;color:#e8f4fd;font-size:0.95rem;font-family:inherit">
@@ -714,6 +710,10 @@
           <button onclick="toggleAddPrizeForm()" style="flex:1;padding:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.25);border-radius:10px;color:#98bedd;font-family:inherit;font-size:0.9rem;cursor:pointer">キャンセル</button>
           <button onclick="addPartnerPrize()" style="flex:1;padding:10px;background:rgba(100,200,180,0.25);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:10px;font-family:inherit;font-size:0.9rem;cursor:pointer">追加する</button>
         </div>
+      </div>
+
+      <div class="ticket-list" id="my-added-list">
+        <div class="empty-tickets" style="padding:16px 0;font-size:0.85rem">まだ追加した景品はありません</div>
       </div>
     </div>
 
