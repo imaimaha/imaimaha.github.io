@@ -20,7 +20,8 @@ async function handle(req: Request) {
   const SB_ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!
   const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
-  const VAPID_MAILTO = Deno.env.get('VAPID_MAILTO') ?? 'mailto:admin@example.com'
+  const _vapidRaw = Deno.env.get('VAPID_MAILTO') ?? 'admin@example.com'
+  const VAPID_MAILTO = _vapidRaw.startsWith('mailto:') ? _vapidRaw : `mailto:${_vapidRaw}`
 
   const auth = req.headers.get('Authorization') ?? ''
   // 旧JWT形式(role=service_role) と 新 sb_secret_ 形式のどちらでも service_role として扱う
