@@ -23,6 +23,18 @@ async function handle(req: Request) {
   const _vapidRaw = Deno.env.get('VAPID_MAILTO') ?? 'admin@example.com'
   const VAPID_MAILTO = _vapidRaw.startsWith('mailto:') ? _vapidRaw : `mailto:${_vapidRaw}`
 
+  const body = await req.json().catch(() => ({}))
+
+  // ask_reply: SW からの「行っていい？」返答。認証不要（replier_id 宛にのみ送信）
+  if (body.ask_reply && body.replier_id) {
+    const sb = createClient(SB_URL, SB_KEY)
+    return await sendToUser(sb, body.replier_id, {
+      title: body.title ?? 'Notre Endroit',
+      body: body.body ?? '',
+      url: body.url ?? '/status.html',
+    }, VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
+  }
+
   const auth = req.headers.get('Authorization') ?? ''
   // 旧JWT形式(role=service_role) と 新 sb_secret_ 形式のどちらでも service_role として扱う
   const isService = isServiceAuth(auth, SB_KEY)
@@ -40,8 +52,7 @@ async function handle(req: Request) {
     }
   }
 
-  const body = await req.json().catch(() => ({}))
-  const { title, body: msgBody, url, sender_user_id, recipient_user_id, replier_id } = body
+  const { title, body: msgBody, url, sender_user_id, recipient_user_id, replier_id, ask_ok } = body
   const effectiveSender = isService ? sender_user_id : authenticatedUid
 
   const sb = createClient(SB_URL, SB_KEY)
@@ -53,34 +64,14 @@ async function handle(req: Request) {
   if (qErr) return json({ error: 'query failed: ' + qErr.message }, 500)
   if (!subs?.length) return json({ ok: true, sent: 0 })
 
-  // web-push を遅延ロード（モジュール初期化を handler 内に）
-  const webpushMod = await import('npm:web-push')
-  const webpush = (webpushMod as any).default ?? webpushMod
-  try {
-    webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
-  } catch (e) {
-    return json({ error: 'vapid setup failed: ' + (e?.message ?? String(e)) }, 500)
-  }
-
-  const payload = JSON.stringify({
+  const sent = await pushToSubs(sb, subs, {
     title: title ?? 'Notre Endroit',
     body: msgBody ?? '',
     url: url ?? '/',
     replier_id: replier_id ?? null,
-  })
-
-  let sent = 0
-  await Promise.all(subs.map(async (sub: Record<string, unknown>) => {
-    try {
-      await webpush.sendNotification(sub.subscription, payload)
-      sent++
-    } catch (e: any) {
-      const status = e?.statusCode
-      if (status === 410 || status === 404) {
-        await sb.from('push_subscriptions').delete().eq('id', sub.id)
-      }
-    }
-  }))
+    ask_ok: ask_ok ?? false,
+  }, VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
+  if (typeof sent === 'string') return json({ error: sent }, 500)
 
   return json({ ok: true, sent })
 }
@@ -98,6 +89,49 @@ function cors() {
     'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
+}
+
+// ask_reply 用: 指定 user_id にのみ push 送信
+async function sendToUser(
+  sb: ReturnType<typeof import('https://esm.sh/@supabase/supabase-js@2').createClient>,
+  userId: string,
+  msg: { title: string; body: string; url: string },
+  vapidMailto: string, vapidPub: string, vapidPriv: string,
+): Promise<Response> {
+  const { data: subs } = await sb.from('push_subscriptions').select('*').eq('user_id', userId)
+  if (!subs?.length) return json({ ok: true, sent: 0 })
+  const sent = await pushToSubs(sb, subs, { ...msg, replier_id: null, ask_ok: false }, vapidMailto, vapidPub, vapidPriv)
+  if (typeof sent === 'string') return json({ error: sent }, 500)
+  return json({ ok: true, sent })
+}
+
+// 購読リストに push 送信。成功数 or エラー文字列を返す
+async function pushToSubs(
+  sb: ReturnType<typeof import('https://esm.sh/@supabase/supabase-js@2').createClient>,
+  subs: Record<string, unknown>[],
+  payload: { title: string; body: string; url: string; replier_id: unknown; ask_ok: unknown },
+  vapidMailto: string, vapidPub: string, vapidPriv: string,
+): Promise<number | string> {
+  const webpushMod = await import('npm:web-push')
+  const webpush = (webpushMod as any).default ?? webpushMod
+  try {
+    webpush.setVapidDetails(vapidMailto, vapidPub, vapidPriv)
+  } catch (e: any) {
+    return 'vapid setup failed: ' + (e?.message ?? String(e))
+  }
+  const data = JSON.stringify(payload)
+  let sent = 0
+  await Promise.all(subs.map(async (sub) => {
+    try {
+      await webpush.sendNotification(sub.subscription, data)
+      sent++
+    } catch (e: any) {
+      if (e?.statusCode === 410 || e?.statusCode === 404) {
+        await sb.from('push_subscriptions').delete().eq('id', sub.id)
+      }
+    }
+  }))
+  return sent
 }
 
 // service_role 判定: 新形式 sb_secret_ or 旧JWT(role=service_role) 両対応
