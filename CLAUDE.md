@@ -26,11 +26,38 @@ Notre / imaimaha 関連の作業を始める時は、必ず先に SPEC.md を読
 ## SQL 実行の注意
 
 - `CREATE POLICY IF NOT EXISTS` は PostgreSQL に無い → `DROP POLICY IF EXISTS` してから `CREATE POLICY`
-- `CREATE TABLE` + `CREATE POLICY` の後は **必ず `GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO authenticated;`** を書く
+- `CREATE TABLE` + `CREATE POLICY` の後は **`authenticated` と `service_role` の両方に GRANT が必要**:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO service_role;
+```
+
+  `authenticated` だけだと Edge Function (service_role) から `permission denied` になる。
+
 - **bigint autoincrement な id を持つテーブルは sequence にも GRANT が必要**:
-  `GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;`
+
+```sql
+GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO service_role;
+```
+
   忘れると INSERT 時に `permission denied for sequence` になる
+
+- service_role GRANT 状況の確認:
+
+```bash
+supabase db query --linked -o table "SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee='service_role' AND table_schema='public' ORDER BY table_name;"
+```
+
 - 詳細は [docs/SPEC.md § 10.6](docs/SPEC.md)
+
+## プッシュ通知
+
+- VAPID_MAILTO 環境変数は `mailto:` プレフィックスがなくても send-push が自動補完する
+- iOS は PWA（ホーム画面に追加）として起動しないとプッシュが届かない
+- push_subscriptions が空だと通知は一切届かない（購読登録が必要）
+- 「行っていい？」は LINE ではなくプッシュ通知の3択ボタンで返答する仕組みに変更済み
 
 ## Supabase CLI
 
@@ -38,6 +65,13 @@ Notre / imaimaha 関連の作業を始める時は、必ず先に SPEC.md を読
 export PATH="$HOME/.local/share/supabase:$HOME/.local/bin:$PATH"
 source .env
 supabase login --token $SUPABASE_CLI_TOKEN
+
+# SQL実行（インライン） ※ -o table を付けること
+supabase db query --linked -o table "SELECT ..."
+
+# SQL実行（ファイル）
 supabase db query --linked -f path/to/migration.sql
+
+# Edge Function デプロイ
 supabase functions deploy <name> --project-ref $SUPABASE_PROJECT_REF
 ```

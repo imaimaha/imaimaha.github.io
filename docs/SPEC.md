@@ -286,7 +286,7 @@
 | `closer.html` | ふたり同時MAX | 両者（sender以外） | 「ふたりMAX✨」（LINE群通知も併用） |
 | `calendar.html` | 予定追加 | 相手 | 「📅 予定を追加したよ: {title}」 |
 | `status.html` | 帰宅時間保存 | 相手 | 「🕐 {emoji} {name} の今日の帰宅: {time}」 |
-| `status.html` | 「行っていい？」ボタン | 相手 | **LINE併用（クイックリプライ）** |
+| `status.html` | 「行っていい？」ボタン | 相手 | **Push通知で3択ボタン**（いいよ✅/きびしい🚫/仕事の進み次第🤔）。相手がタップすると send-push ask_reply で返答が届く |
 | `index.html` | 自分の送ったカプセル配達時（フォールバック） | 相手 | 「🎁 タイムカプセルが届きました」 |
 | `notify-capsules` (pg_cron 5分毎) | サーバサイドで配達検知 | 相手 | 同上 |
 | `time_capsule.html` | 返信投稿時 | もう一方 | 「↩️ タイムカプセルに返信」 |
@@ -497,7 +497,24 @@ curl -s -H "Authorization: Bearer $SUPABASE_CLI_TOKEN" \
 
 - SQL ファイルは `supabase/migrations/` に配置
 - `CREATE POLICY IF NOT EXISTS` は PostgreSQL の構文に無い。`DO $$ BEGIN ... END $$` で判定するか、`DROP POLICY IF EXISTS` してから `CREATE POLICY`
-- テーブル作成時は必ず `GRANT ... TO authenticated` を書く
+- テーブル作成時は **`authenticated` と `service_role` の両方** に GRANT が必要:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON <table> TO service_role;
+-- bigint autoincrement の場合は sequence にも必要:
+GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO service_role;
+```
+
+`authenticated` だけだと Edge Functions (service_role) から `permission denied for table xxx` になる。
+（`purchase-shop-item` で「ポイント不足 残高0pt」が出たのはこれが原因。）
+
+既存テーブルの service_role GRANT 漏れ確認:
+
+```bash
+supabase db query --linked -o table "SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee='service_role' AND table_schema='public' ORDER BY table_name;"
+```
 
 ---
 
