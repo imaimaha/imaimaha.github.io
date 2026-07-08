@@ -423,6 +423,16 @@
 
         let actionHtml = ''
         if (canUse) {
+          // 買った側: 未使用なら使用、使用済なら取り消し申請
+          if (!p.used) {
+            actionHtml = `<button class="buy-btn" onclick="markUsed('${p.id}')">使用済にする</button>`
+          } else if (p.cancel_requested) {
+            actionHtml = `<span class="cancel-pending">申請中...</span>`
+          } else {
+            actionHtml = `<button class="cancel-btn" onclick="requestCancel('${p.id}')">取り消し申請</button>`
+          }
+        } else {
+          // 売った側: 取り消し申請が来たら承認/否認
           if (p.cancel_requested) {
             actionHtml = `
               <div class="cancel-alert" style="width:100%;flex-direction:column;align-items:flex-start;gap:6px">
@@ -432,14 +442,6 @@
                   <button class="deny-btn" onclick="denyCancel('${p.id}')">却下</button>
                 </div>
               </div>`
-          } else if (!p.used) {
-            actionHtml = `<button class="buy-btn" onclick="markUsed('${p.id}')">使用済にする</button>`
-          }
-        } else {
-          if (p.used && p.cancel_requested) {
-            actionHtml = `<span class="cancel-pending">申請中...</span>`
-          } else if (p.used && !p.cancel_requested) {
-            actionHtml = `<button class="cancel-btn" onclick="requestCancel('${p.id}')">取り消し申請</button>`
           }
         }
 
@@ -504,17 +506,18 @@
     }
 
     async function requestCancel(purchaseId) {
+      // 買った側が申請 → 売った側（seller）に通知
       const p = _purchases.get(purchaseId)
       const { error } = await _sb.from('shop_purchases')
         .update({ cancel_requested: true })
         .eq('id', purchaseId)
       if (error) { showToast('申請失敗', true); return }
-      if (p?.buyer_id) {
+      if (p?.seller_id) {
         _sb.functions.invoke('send-push', { body: {
           title: '↩️ 取り消し申請',
-          body: `「${p?.name ?? '券'}」の使用済取り消しを申請しました`,
+          body: `「${p?.name ?? '券'}」の使用済取り消しを申請されました`,
           url: '/shop.html',
-          recipient_user_id: p.buyer_id,
+          recipient_user_id: p.seller_id,
         }}).catch(() => {})
       }
       showToast('取り消しを申請しました')
@@ -522,40 +525,37 @@
     }
 
     async function approveCancel(purchaseId) {
+      // 売った側が承認 → 買った側（buyer）に通知
       const p = _purchases.get(purchaseId)
       const { error } = await _sb.from('shop_purchases')
         .update({ used: false, used_at: null, cancel_requested: false })
         .eq('id', purchaseId)
       if (error) { showToast('承認失敗', true); return }
-      const bonusPoints = p?.bonus_points || 0
-      if (bonusPoints > 0) {
-        await _sb.from('points').insert({ user_id: currentUser.id, amount: -bonusPoints, reason: 'shop_cancel' })
-      }
-      if (p?.seller_id) {
+      if (p?.buyer_id) {
         _sb.functions.invoke('send-push', { body: {
           title: '✅ 取り消し承認',
           body: `「${p?.name ?? '券'}」の取り消しが承認されました`,
           url: '/shop.html',
-          recipient_user_id: p.seller_id,
+          recipient_user_id: p.buyer_id,
         }}).catch(() => {})
       }
       showToast('取り消しを承認しました')
-      await loadPoints()
       await loadPurchases()
     }
 
     async function denyCancel(purchaseId) {
+      // 売った側が却下 → 買った側（buyer）に通知
       const p = _purchases.get(purchaseId)
       const { error } = await _sb.from('shop_purchases')
         .update({ cancel_requested: false })
         .eq('id', purchaseId)
       if (error) { showToast('更新失敗', true); return }
-      if (p?.seller_id) {
+      if (p?.buyer_id) {
         _sb.functions.invoke('send-push', { body: {
           title: '❌ 取り消し却下',
           body: `「${p?.name ?? '券'}」の申請が却下されました`,
           url: '/shop.html',
-          recipient_user_id: p.seller_id,
+          recipient_user_id: p.buyer_id,
         }}).catch(() => {})
       }
       showToast('申請を却下しました')

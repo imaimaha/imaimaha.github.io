@@ -553,6 +553,31 @@
       border-radius: 20px;
     }
 
+    .cancel-req-btn {
+      flex-shrink: 0; padding: 6px 10px; border-radius: 16px;
+      font-family: inherit; font-size: 0.75rem; cursor: pointer;
+      background: rgba(255,180,50,0.12); border: 1.5px solid rgba(255,200,80,0.4); color: #ffd080;
+      white-space: nowrap;
+    }
+    .cancel-pending-label {
+      flex-shrink: 0; font-size: 0.72rem; color: #a08030;
+      padding: 6px 8px; border: 1px solid rgba(160,120,0,0.3); border-radius: 16px;
+    }
+    .gacha-cancel-alert {
+      width: 100%; margin-top: 8px; padding: 8px 10px;
+      background: rgba(255,180,50,0.1); border: 1px solid rgba(255,200,80,0.35);
+      border-radius: 10px; font-size: 0.78rem; color: #ffd080;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .gacha-approve-btn {
+      padding: 5px 12px; border-radius: 12px; font-family: inherit; font-size: 0.78rem; cursor: pointer;
+      background: rgba(80,220,120,0.2); border: 1.5px solid rgba(80,220,120,0.5); color: #baffcc;
+    }
+    .gacha-deny-btn {
+      padding: 5px 12px; border-radius: 12px; font-family: inherit; font-size: 0.78rem; cursor: pointer;
+      background: rgba(255,100,100,0.12); border: 1.5px solid rgba(255,100,100,0.4); color: #ff9d9d;
+    }
+
     .empty-tickets {
       text-align: center;
       color: #5a7fa8;
@@ -1342,20 +1367,39 @@
         const bonus = ticket.bonus_points
 
         const card = document.createElement('div')
-        card.className = 'ticket-card' + (isUsed ? ' used' : '')
+        const hasCancelAlert = !isMine && ticket.cancel_requested
+        card.className = 'ticket-card' + (isUsed && !hasCancelAlert ? ' used' : '')
+        if (hasCancelAlert) card.style.borderColor = 'rgba(255,200,80,0.55)'
 
         let actionHtml
-        if (isUsed) {
-          actionHtml = `<span class="used-label">使用済み</span>`
-        } else if (isMine) {
-          actionHtml = `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
+        if (isMine) {
+          if (!isUsed) {
+            actionHtml = `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
+          } else if (ticket.cancel_requested) {
+            actionHtml = `<span class="cancel-pending-label">申請中...</span>`
+          } else {
+            actionHtml = `<button class="cancel-req-btn" onclick="gachaCancelReq('${ticket.id}')">取り消し申請</button>`
+          }
         } else {
-          actionHtml = `<span class="used-label">相手の券</span>`
+          if (ticket.cancel_requested) {
+            actionHtml = '' // cancel alert は下に表示
+          } else if (isUsed) {
+            actionHtml = `<span class="used-label">使用済み</span>`
+          } else {
+            actionHtml = `<span class="used-label">相手の券</span>`
+          }
         }
+
+        const cancelAlertHtml = hasCancelAlert ? `
+          <div class="gacha-cancel-alert">
+            <span>↩️ 取り消し申請あり</span>
+            <button class="gacha-approve-btn" onclick="gachaCancelApprove('${ticket.id}')">承認</button>
+            <button class="gacha-deny-btn" onclick="gachaCancelDeny('${ticket.id}')">却下</button>
+          </div>` : ''
 
         card.innerHTML = `
           <div class="ticket-emoji">${escHtml(ticket.reward_emoji)}</div>
-          <div class="ticket-info">
+          <div class="ticket-info" style="flex:1">
             <div class="ticket-top">
               <span class="ticket-name">${escHtml(ticket.reward_name)}</span>
               <span class="ticket-badge badge-${escHtml(ticket.rarity)}">${escHtml(ticket.rarity)}</span>
@@ -1364,6 +1408,7 @@
             <div class="ticket-desc">${escHtml(ticket.reward_desc || getPrizeDesc(ticket.reward_id, ticket.reward_name))}</div>
             ${bonus && !isUsed ? `<div class="ticket-bonus">使うと +${bonus}pt</div>` : ''}
             <div class="ticket-date">${date}</div>
+            ${cancelAlertHtml}
           </div>
           ${actionHtml}
         `
@@ -1428,7 +1473,6 @@
         if (bonusErr) {
           console.error('bonus insert error:', bonusErr)
           showToast('ボーナス付与に失敗しました', true)
-          // 券は使用済みになっているのでリロード
           await loadTickets()
           await loadPoints()
           return
@@ -1438,8 +1482,82 @@
         showToast('使用済みにしました ✅')
       }
 
+      // 相手（partner）に通知
+      if (partnerId) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '🎰 ガチャ券が使われました',
+          body: ticket.reward_name,
+          url: '/gacha.html',
+          recipient_user_id: partnerId,
+        }}).catch(() => {})
+      }
+
       await loadTickets()
       await loadPoints()
+    }
+
+    async function gachaCancelReq(ticketId) {
+      // 自分（使った側）が取り消し申請 → パートナーに通知
+      const { error } = await _sb.from('gacha_results')
+        .update({ cancel_requested: true })
+        .eq('id', ticketId)
+      if (error) { showToast('申請失敗', true); return }
+      if (partnerId) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '↩️ ガチャ券 取り消し申請',
+          body: '使用済みの取り消しを申請されました',
+          url: '/gacha.html',
+          recipient_user_id: partnerId,
+        }}).catch(() => {})
+      }
+      showToast('取り消しを申請しました')
+      await loadTickets()
+    }
+
+    async function gachaCancelApprove(ticketId) {
+      // パートナーが承認 → 取り消し＋自分（申請者）に通知
+      const { data: ticket } = await _sb.from('gacha_results')
+        .select('bonus_points, user_id, reward_name')
+        .eq('id', ticketId).single()
+      const { error } = await _sb.from('gacha_results')
+        .update({ used: false, cancel_requested: false })
+        .eq('id', ticketId)
+      if (error) { showToast('承認失敗', true); return }
+      if (ticket?.bonus_points > 0 && ticket?.user_id) {
+        await _sb.from('points').insert({ user_id: ticket.user_id, amount: -ticket.bonus_points, reason: 'gacha_cancel' })
+      }
+      if (ticket?.user_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '✅ 取り消し承認',
+          body: `「${ticket.reward_name}」の取り消しが承認されました`,
+          url: '/gacha.html',
+          recipient_user_id: ticket.user_id,
+        }}).catch(() => {})
+      }
+      showToast('取り消しを承認しました')
+      await loadTickets()
+      await loadPoints()
+    }
+
+    async function gachaCancelDeny(ticketId) {
+      // パートナーが却下 → 申請者に通知
+      const { data: ticket } = await _sb.from('gacha_results')
+        .select('user_id, reward_name')
+        .eq('id', ticketId).single()
+      const { error } = await _sb.from('gacha_results')
+        .update({ cancel_requested: false })
+        .eq('id', ticketId)
+      if (error) { showToast('更新失敗', true); return }
+      if (ticket?.user_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '❌ 取り消し却下',
+          body: `「${ticket?.reward_name}」の申請が却下されました`,
+          url: '/gacha.html',
+          recipient_user_id: ticket.user_id,
+        }}).catch(() => {})
+      }
+      showToast('申請を却下しました')
+      await loadTickets()
     }
 
     // ===================== TOAST =====================
