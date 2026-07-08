@@ -592,6 +592,8 @@
       })
       if (error) { showToast('出品失敗: ' + error.message, true); return }
 
+      _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'shop_item_add' }).then(() => {})
+
       document.getElementById('new-name').value = ''
       document.getElementById('new-emoji').value = ''
       document.getElementById('new-desc').value = ''
