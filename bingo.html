@@ -1845,7 +1845,7 @@
     const today = new Date();
     const dow = ['日', '月', '火', '水', '木', '金', '土'][today.getDay()];
     document.getElementById('daily-desc').innerHTML =
-      `毎日0時に新しいカードが生まれる<br>${seasonEmoji[season]} ${today.getMonth()+1}月${today.getDate()}日（${dow}）の特別版`;
+      `毎週月曜に新しいカードが生まれる<br>${seasonEmoji[season]} ${today.getMonth()+1}月${today.getDate()}日（${dow}）の特別版`;
 
     showScreen('mode');
   }
