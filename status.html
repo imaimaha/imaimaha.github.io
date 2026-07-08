@@ -388,15 +388,17 @@
       if (myProfile) {
         const timeLabel = finish_time ? `${finish_time} 退社` : '時間未定'
         const msg = `${myProfile.emoji} ${myProfile.name} の今日の帰宅予定: ${timeLabel}${note ? '（' + note + '）' : ''}`
-        // Push通知だけ（LINE群通知は廃止）
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '🕐 帰宅時間',
-            body: msg,
-            url: '/status.html',
-            sender_user_id: user_id,
-          },
-        }).then(({ error }) => { if (error) console.error('[status] push error:', error) })
+        // LINE + Push（line-notify が両方送る）
+        _sb.functions.invoke('line-notify', {
+          body: { sender_id: user_id, target: 'partner', message: msg },
+        }).then(({ error }) => {
+          if (error) {
+            // LINE失敗時はpush通知だけ
+            _sb.functions.invoke('send-push', {
+              body: { title: '🕐 帰宅時間', body: msg, url: '/status.html', sender_user_id: user_id },
+            })
+          }
+        })
       }
     }
 
