@@ -329,20 +329,12 @@
   <div class="content">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('received')">届いた</button>
-      <button class="tab-btn" onclick="switchTab('sent')">送った</button>
       <button class="tab-btn" onclick="switchTab('compose')">作る ✏️</button>
     </div>
 
     <!-- 届いたカプセル -->
     <div id="tab-received" class="tab-panel active">
       <div id="received-list" class="capsule-list">
-        <div class="empty-state"><div class="empty-icon">📭</div><div>読み込み中...</div></div>
-      </div>
-    </div>
-
-    <!-- 送ったカプセル -->
-    <div id="tab-sent" class="tab-panel">
-      <div id="sent-list" class="capsule-list">
         <div class="empty-state"><div class="empty-icon">📭</div><div>読み込み中...</div></div>
       </div>
     </div>
@@ -426,12 +418,11 @@
       if (location.hash === '#received') switchTab('received')
 
       await loadReceived()
-      await loadSent()
     }
 
     function switchTab(name) {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-        const names = ['received', 'sent', 'compose']
+        const names = ['received', 'compose']
         btn.classList.toggle('active', names[i] === name)
       })
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
@@ -632,52 +623,6 @@
       document.getElementById('open-overlay').classList.remove('show')
     }
 
-    async function loadSent() {
-      if (!myId) return
-      const { data } = await _sb
-        .from('time_capsules')
-        .select('*')
-        .eq('sender_id', myId)
-        .order('created_at', { ascending: false })
-
-      const el = document.getElementById('sent-list')
-      if (!data || data.length === 0) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📤</div><div>まだカプセルを送っていません</div></div>'
-        return
-      }
-
-      el.innerHTML = data.map(c => {
-        const recipientEmoji = (c.recipient_id === myId ? myProfile?.emoji : partnerProfile?.emoji) || '?'
-        const recipientName = (c.recipient_id === myId ? myProfile?.name : partnerProfile?.name) || '?'
-        const createdDate = new Date(c.created_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        const openDate = new Date(c.open_at).toLocaleString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        const now = new Date()
-        const isDelivered = new Date(c.open_at) <= now
-
-        let statusHtml
-        if (c.is_opened) {
-          statusHtml = '<span class="capsule-status status-opened">開封済み ✓</span>'
-        } else if (isDelivered) {
-          statusHtml = '<span class="capsule-status status-pending">未開封 ✨</span>'
-        } else {
-          statusHtml = '<span class="capsule-status status-waiting">配達待ち ⏳</span>'
-        }
-
-        const previewMsg = c.message.length > 30 ? c.message.slice(0, 30) + '…' : c.message
-
-        return `
-          <div class="capsule-card${c.is_opened ? ' opened' : ''}">
-            <div class="capsule-meta">
-              <div class="capsule-from">→ ${recipientEmoji} ${recipientName} へ</div>
-              ${statusHtml}
-            </div>
-            <div class="capsule-message" style="font-size:0.88rem">${escHtml(previewMsg)}</div>
-            <div class="capsule-date">📅 送った日: ${createdDate}　|　開封予定: ${openDate}</div>
-          </div>
-        `
-      }).join('')
-    }
-
     let timingMode = 'exact'
 
     function setTimingMode(mode) {
@@ -737,14 +682,19 @@
       // ポイント付与
       _sb.from('points').insert({ user_id: myId, amount: 3, reason: 'capsule_send' }).then(() => {})
 
-      const openDate = new Date(openAt).toLocaleString('ja-JP', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-      showToast(`🎁 ${openDate}ごろに届きます！`)
+      let toastMsg
+      if (timingMode === 'exact') {
+        const openDate = new Date(openAt).toLocaleString('ja-JP', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        toastMsg = `🎁 ${openDate}ごろに届きます！`
+      } else {
+        toastMsg = '🎁 カプセルを送りました。いつか届きます 🎲'
+      }
+      showToast(toastMsg)
       document.getElementById('msg-input').value = ''
       document.getElementById('open-date-input').value = ''
       document.getElementById('range-from-input').value = ''
       document.getElementById('range-to-input').value = ''
-      await loadSent()
-      switchTab('sent')
+      switchTab('received')
     }
 
     function showToast(msg) {
