@@ -669,8 +669,8 @@
           <span class="gacha-btn-sub" id="gacha-btn-sub">読み込み中…</span>
         </button>
         <button class="gacha-btn" id="gacha10-btn" onclick="startGacha10()" disabled style="background:linear-gradient(135deg, #b5893d 0%, #d5ab5b 50%, #b5893d 100%);border-color:rgba(255,215,100,0.55)">
-          🎰🎰 10連ガチャ（1000pt）
-          <span class="gacha-btn-sub" id="gacha10-btn-sub">10回分を一気にまわす</span>
+          🎰🎰 10+1ガチャ（1000pt）
+          <span class="gacha-btn-sub" id="gacha10-btn-sub">10回＋おまけ1回（R以上確定）</span>
         </button>
         <button onclick="toggleLineup()" style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.25);border-radius:16px;padding:10px;color:#98bedd;font-family:inherit;font-size:0.85rem;cursor:pointer" id="lineup-toggle-btn">
           📋 排出ラインナップを見る
@@ -770,7 +770,7 @@
   <div class="result-overlay" id="result10-overlay" style="align-items:flex-start;overflow-y:auto;padding:20px 16px">
     <div class="result-backdrop" onclick="void(0)"></div>
     <div style="position:relative;z-index:1;width:100%;max-width:420px;background:linear-gradient(160deg,rgba(15,25,60,0.98),rgba(25,45,90,0.98));border:2px solid rgba(150,200,255,0.35);border-radius:24px;padding:24px 20px 20px;color:#e8f4fd">
-      <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.4rem;text-align:center;margin-bottom:14px">🎰 10連結果</h3>
+      <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.4rem;text-align:center;margin-bottom:14px">🎰 10+1 結果</h3>
       <div id="result10-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
       <div id="result10-summary" style="text-align:center;font-size:0.9rem;color:#98bedd;margin-bottom:14px"></div>
       <button class="receive-btn" onclick="closeResult10()" style="width:100%">まとめて受け取る</button>
@@ -800,6 +800,26 @@
 
     // ===================== DRAW LOGIC =====================
     // ビルトイン + 相手が私のガチャに追加したカスタム景品を混ぜて抽選
+    // R以上確定の抽選（おまけ用）
+    function drawPrizeROrBetter() {
+      const pool = []
+      PRIZES.filter(p => p.rarity !== 'N').forEach(p => {
+        const w = p.rarity === 'SR' ? 0.5 : 2
+        const count = Math.round(w * 10)
+        for (let i = 0; i < count; i++) pool.push({ ...p, isCustom: false })
+      })
+      if (customPrizes.length > 0) {
+        customPrizes.filter(p => p.rarity !== 'N').forEach(p => {
+          const w = Number(p.weight || 1)
+          for (let i = 0; i < Math.max(1, Math.round(w * 5)); i++) {
+            pool.push({ ...p, isCustom: true, desc: p.description })
+          }
+        })
+      }
+      if (pool.length === 0) return drawPrize() // fallback
+      return { ...pool[Math.floor(Math.random() * pool.length)] }
+    }
+
     function drawPrize() {
       const useCustom = customPrizes.length > 0 && Math.random() < currentShare
       if (useCustom) {
@@ -1158,6 +1178,10 @@
 
       const prizes = []
       for (let i = 0; i < 10; i++) prizes.push(drawPrize())
+      // おまけ: R以上確定の+1
+      const bonusPrize = drawPrizeROrBetter()
+      bonusPrize._isBonus = true
+      prizes.push(bonusPrize)
 
       // 1000pt deduct + 10件insert
       const inserts = prizes.map(prize => ({
@@ -1194,15 +1218,23 @@
       const counts = { N: 0, R: 0, SR: 0 }
       prizes.forEach((p, idx) => {
         counts[p.rarity]++
+        const isBonus = !!p._isBonus
         const cell = document.createElement('div')
-        cell.style.cssText = `border:2px solid ${p.rarity==='SR'?'rgba(255,215,0,0.8)':p.rarity==='R'?'rgba(180,120,255,0.7)':'rgba(120,180,220,0.4)'};background:${p.rarity==='SR'?'linear-gradient(145deg,#3d2e00,#1a1200)':p.rarity==='R'?'linear-gradient(145deg,#2d0f50,#1a0a30)':'linear-gradient(145deg,#163a60,#0e2a4a)'};border-radius:12px;padding:12px 8px;text-align:center;opacity:0;transform:scale(0.5);transition:all 0.3s`
+        const borderColor = isBonus ? 'rgba(255,215,0,0.9)' : p.rarity==='SR' ? 'rgba(255,215,0,0.8)' : p.rarity==='R' ? 'rgba(180,120,255,0.7)' : 'rgba(120,180,220,0.4)'
+        const bg = isBonus
+          ? `linear-gradient(145deg,#3d2e00,#1a1200)`
+          : p.rarity==='SR' ? 'linear-gradient(145deg,#3d2e00,#1a1200)' : p.rarity==='R' ? 'linear-gradient(145deg,#2d0f50,#1a0a30)' : 'linear-gradient(145deg,#163a60,#0e2a4a)'
+        // おまけは2カラム全幅
+        if (isBonus) cell.style.gridColumn = '1 / -1'
+        cell.style.cssText += `border:2px solid ${borderColor};background:${bg};border-radius:12px;padding:12px 8px;text-align:center;opacity:0;transform:scale(0.5);transition:all 0.3s`
+        const rarityColor = p.rarity==='SR' ? '#ffd700' : p.rarity==='R' ? '#d09aff' : '#7ec8f0'
         cell.innerHTML = `
-          <div style="font-size:2rem;line-height:1">${escHtml(p.emoji)}</div>
-          <div style="font-size:0.72rem;font-weight:bold;color:${p.rarity==='SR'?'#ffd700':p.rarity==='R'?'#d09aff':'#7ec8f0'};margin:4px 0">${p.rarity}</div>
+          ${isBonus ? `<div style="font-size:0.65rem;color:#ffd700;letter-spacing:0.08em;margin-bottom:4px">⭐ おまけ</div>` : ''}
+          <div style="font-size:${isBonus ? '2.4' : '2'}rem;line-height:1">${escHtml(p.emoji)}</div>
+          <div style="font-size:0.72rem;font-weight:bold;color:${rarityColor};margin:4px 0">${p.rarity}</div>
           <div style="font-size:0.78rem;color:#e8f4fd;line-height:1.2">${escHtml(p.name)}</div>
         `
         grid.appendChild(cell)
-        // ずらしてポップイン
         setTimeout(() => { cell.style.opacity = '1'; cell.style.transform = 'scale(1)' }, 100 + idx * 90)
       })
       summary.textContent = `SR ${counts.SR} · R ${counts.R} · N ${counts.N}`
