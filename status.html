@@ -239,6 +239,21 @@
       min-height: 20px;
     }
 
+    .status-action-row {
+      display: flex; gap: 10px; justify-content: center; margin-top: 14px;
+    }
+    .status-action-btn {
+      flex: 1; max-width: 160px;
+      padding: 12px 8px; border-radius: 24px;
+      font-family: inherit; font-size: 0.95rem; cursor: pointer;
+      transition: all 0.2s; border: 2px solid;
+    }
+    .status-action-btn:active { transform: scale(0.96); }
+    .btn-left  { background: #fff; border-color: #90caf9; color: #1565c0; box-shadow: 0 3px 10px rgba(21,101,192,0.1); }
+    .btn-left:hover  { background: #e3f2fd; }
+    .btn-home  { background: #fff; border-color: #a5d6a7; color: #2e7d32; box-shadow: 0 3px 10px rgba(46,125,50,0.1); }
+    .btn-home:hover  { background: #e8f5e9; }
+
     @media (max-width: 480px) {
       .status-time { font-size: 1.9rem; }
       .content { padding: 16px 14px 60px; }
@@ -266,6 +281,11 @@
       <button class="ask-btn" onclick="askOk()">🐾 行っていい？</button>
       <div class="ask-result" id="ask-result"></div>
     </div>
+    <div class="status-action-row">
+      <button class="status-action-btn btn-left" onclick="sendStatusEvent('left')">🏃 会社出た</button>
+      <button class="status-action-btn btn-home" onclick="sendStatusEvent('home')">🏠 帰宅</button>
+    </div>
+    <div id="status-event-result" style="text-align:center;margin-top:10px;font-size:0.85rem;color:#a1887f;min-height:18px"></div>
 
     <div id="line-messages-section" style="margin-top:24px">
       <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.05rem;color:#e8f4fd;text-align:center;margin-bottom:12px">💬 LINE 最新メッセージ</h3>
@@ -400,6 +420,30 @@
           }
         })
       }
+    }
+
+    async function sendStatusEvent(type) {
+      if (!myProfile) return
+      const { data: { session } } = await _sb.auth.getSession()
+      const labels = {
+        left: `${myProfile.emoji} ${myProfile.name} が会社を出ました 🏃`,
+        home: `${myProfile.emoji} ${myProfile.name} が帰宅しました 🏠`,
+      }
+      const titles = { left: '🏃 会社出た', home: '🏠 帰宅' }
+      const msg = labels[type]
+      const resultEl = document.getElementById('status-event-result')
+      resultEl.textContent = '送信中...'
+
+      const { error } = await _sb.functions.invoke('line-notify', {
+        body: { sender_id: session.user.id, target: 'partner', message: msg },
+      })
+      if (error) {
+        await _sb.functions.invoke('send-push', {
+          body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id },
+        })
+      }
+      resultEl.textContent = '✅ 送りました！'
+      setTimeout(() => { resultEl.textContent = '' }, 4000)
     }
 
     async function askOk() {

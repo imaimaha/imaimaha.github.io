@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1on1 | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 20px 16px 80px; }
+
+    .new-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, rgba(100,160,255,0.25), rgba(80,140,255,0.2));
+      border: 1.5px solid rgba(100,180,255,0.45);
+      border-radius: 14px; color: #c5ddf5;
+      font-size: 1rem; font-family: inherit; cursor: pointer;
+      margin-bottom: 20px; transition: background 0.2s;
+    }
+    .new-btn:active { opacity: 0.85; }
+
+    /* フォーム */
+    .compose-card {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.25);
+      border-radius: 20px; padding: 20px;
+      margin-bottom: 20px; backdrop-filter: blur(4px);
+    }
+    .compose-card h2 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem; color: #c5ddf5; margin-bottom: 16px;
+    }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.78rem; color: #7aadcc; margin-bottom: 5px; }
+    .field input[type="date"], .field textarea {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.22);
+      border-radius: 10px; color: #e8f4fd;
+      font-size: 15px; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .field input[type="date"] { -webkit-appearance: none; }
+    .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+    .field textarea { resize: vertical; min-height: 72px; }
+    .field input:focus, .field textarea:focus { outline: none; border-color: rgba(100,200,255,0.6); }
+    .field input::placeholder, .field textarea::placeholder { color: #3a5a7a; }
+    .form-btns { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-cancel {
+      flex: 1; padding: 11px; border-radius: 10px;
+      background: rgba(255,255,255,0.07); border: 1.5px solid rgba(150,200,255,0.2);
+      color: #98bedd; font-family: inherit; font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-save {
+      flex: 2; padding: 11px; border-radius: 10px;
+      background: linear-gradient(135deg, #2a5298, #3a7bd5);
+      border: none; color: #fff; font-family: inherit; font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-save:disabled { opacity: 0.5; }
+
+    /* 記録リスト */
+    .record-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .record-card {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.18);
+      border-radius: 16px; overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .record-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .record-header:active { background: rgba(255,255,255,0.04); }
+    .record-date {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem; color: #c5ddf5;
+    }
+    .record-meta { font-size: 0.75rem; color: #5a8fb8; margin-top: 2px; }
+    .record-chevron { color: #5a8fb8; font-size: 0.85rem; transition: transform 0.2s; }
+    .record-chevron.open { transform: rotate(180deg); }
+
+    .record-body { display: none; padding: 0 16px 16px; }
+    .record-body.open { display: block; }
+
+    .record-section { margin-bottom: 12px; }
+    .record-section-label {
+      font-size: 0.72rem; color: #7aadcc; margin-bottom: 4px; font-weight: bold;
+    }
+    .record-section-text {
+      font-size: 0.9rem; color: #c8dff0; line-height: 1.6;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .record-section-empty { font-size: 0.82rem; color: #3a5a7a; font-style: italic; }
+
+    .record-actions { display: flex; gap: 6px; margin-top: 12px; }
+    .edit-btn-small {
+      padding: 6px 14px; border-radius: 12px; font-family: inherit; font-size: 0.78rem; cursor: pointer;
+      background: rgba(100,180,255,0.12); border: 1.5px solid rgba(100,180,255,0.3); color: #98bedd;
+    }
+    .delete-btn-small {
+      padding: 6px 14px; border-radius: 12px; font-family: inherit; font-size: 0.78rem; cursor: pointer;
+      background: rgba(255,100,100,0.1); border: 1.5px solid rgba(255,100,100,0.3); color: #ff9d9d;
+    }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: #4a6a8a; }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+    #toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(30,60,120,0.95); color: #e8f4fd;
+      padding: 10px 20px; border-radius: 12px; font-size: 0.85rem;
+      z-index: 300; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/header.js"></script>
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>💬 1on1</h1>
+  </div>
+
+  <div class="content">
+    <button class="new-btn" id="new-btn" onclick="openForm()">✏️ 新しい1on1を記録する</button>
+
+    <!-- 記録フォーム -->
+    <div class="compose-card" id="compose-card" style="display:none">
+      <h2 id="form-title">📝 1on1の記録</h2>
+      <div class="field">
+        <label>📅 実施日</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>🙏 感謝（お互いに伝えたこと）</label>
+        <textarea id="f-thanks" placeholder="例: 先週忙しかったのに連絡くれてありがとう"></textarea>
+      </div>
+      <div class="field">
+        <label>🌱 KPT（Keep / Problem / Try）</label>
+        <textarea id="f-kpt" placeholder="Keep: よかったこと&#10;Problem: 気になること&#10;Try: 次にやること"></textarea>
+      </div>
+      <div class="field">
+        <label>💭 相手に思っていること・気になること</label>
+        <textarea id="f-concerns" placeholder="少し気になっていること、伝えたかったことなど"></textarea>
+      </div>
+      <div class="field">
+        <label>🔮 将来の話</label>
+        <textarea id="f-future" placeholder="将来やりたいこと、2人の方向性など"></textarea>
+      </div>
+      <div class="field">
+        <label>🗓️ 再来月以降の遊ぶ予定</label>
+        <textarea id="f-plans" placeholder="例: 8月に海、秋に旅行したい"></textarea>
+      </div>
+      <div class="field">
+        <label>📌 その他・メモ</label>
+        <textarea id="f-notes" placeholder="その他話したこと、気づきなど"></textarea>
+      </div>
+      <div class="form-btns">
+        <button class="btn-cancel" onclick="closeForm()">キャンセル</button>
+        <button class="btn-save" id="save-btn" onclick="saveRecord()">保存する</button>
+      </div>
+    </div>
+
+    <!-- 記録一覧 -->
+    <div class="record-list" id="record-list">
+      <div class="empty-state"><div class="empty-icon">💬</div><div>読み込み中...</div></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let myId = null
+    let profiles = {}
+    let editingId = null
+
+    const FIELDS = [
+      { key: 'thanks',   id: 'f-thanks',   label: '🙏 感謝' },
+      { key: 'kpt',      id: 'f-kpt',      label: '🌱 KPT' },
+      { key: 'concerns', id: 'f-concerns', label: '💭 気になること' },
+      { key: 'future',   id: 'f-future',   label: '🔮 将来の話' },
+      { key: 'plans',    id: 'f-plans',    label: '🗓️ 遊ぶ予定' },
+      { key: 'notes',    id: 'f-notes',    label: '📌 メモ' },
+    ]
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      myId = session.user.id
+      const { data: profs } = await _sb.from('profiles').select('*')
+      ;(profs || []).forEach(p => { profiles[p.id] = p })
+
+      const today = new Date()
+      document.getElementById('f-date').value = today.toISOString().slice(0, 10)
+
+      await loadRecords()
+    }
+
+    function openForm(record = null) {
+      editingId = record?.id ?? null
+      document.getElementById('compose-card').style.display = 'block'
+      document.getElementById('new-btn').style.display = 'none'
+      document.getElementById('form-title').textContent = editingId ? '✏️ 編集' : '📝 1on1の記録'
+
+      if (record) {
+        document.getElementById('f-date').value = record.date
+        document.getElementById('f-thanks').value = record.thanks || ''
+        document.getElementById('f-kpt').value = record.kpt || ''
+        document.getElementById('f-concerns').value = record.concerns || ''
+        document.getElementById('f-future').value = record.future || ''
+        document.getElementById('f-plans').value = record.plans || ''
+        document.getElementById('f-notes').value = record.notes || ''
+      } else {
+        const today = new Date().toISOString().slice(0, 10)
+        document.getElementById('f-date').value = today
+        FIELDS.forEach(f => { document.getElementById(f.id).value = '' })
+      }
+      document.getElementById('compose-card').scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    function closeForm() {
+      editingId = null
+      document.getElementById('compose-card').style.display = 'none'
+      document.getElementById('new-btn').style.display = 'block'
+    }
+
+    async function saveRecord() {
+      const date = document.getElementById('f-date').value
+      if (!date) { showToast('日付を入力してください'); return }
+
+      const payload = {
+        created_by: myId,
+        date,
+        thanks:   document.getElementById('f-thanks').value.trim() || null,
+        kpt:      document.getElementById('f-kpt').value.trim() || null,
+        concerns: document.getElementById('f-concerns').value.trim() || null,
+        future:   document.getElementById('f-future').value.trim() || null,
+        plans:    document.getElementById('f-plans').value.trim() || null,
+        notes:    document.getElementById('f-notes').value.trim() || null,
+        updated_at: new Date().toISOString(),
+      }
+
+      const btn = document.getElementById('save-btn')
+      btn.disabled = true
+
+      let error
+      if (editingId) {
+        ;({ error } = await _sb.from('one_on_ones').update(payload).eq('id', editingId))
+      } else {
+        ;({ error } = await _sb.from('one_on_ones').insert(payload))
+      }
+
+      btn.disabled = false
+      if (error) { showToast('保存失敗: ' + error.message); return }
+
+      showToast(editingId ? '✅ 更新しました' : '✅ 記録しました')
+      closeForm()
+      await loadRecords()
+    }
+
+    async function loadRecords() {
+      const { data, error } = await _sb.from('one_on_ones')
+        .select('*').order('date', { ascending: false })
+      const list = document.getElementById('record-list')
+
+      if (error || !data || data.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><div>まだ記録がありません<br><span style="font-size:0.85rem">上のボタンから最初の1on1を記録しよう</span></div></div>'
+        return
+      }
+
+      list.innerHTML = ''
+      data.forEach(r => list.appendChild(makeCard(r)))
+    }
+
+    function makeCard(r) {
+      const creator = profiles[r.created_by]
+      const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
+      const isMine = r.created_by === myId
+
+      const card = document.createElement('div')
+      card.className = 'record-card'
+      card.id = 'card-' + r.id
+
+      const bodyId = 'body-' + r.id
+      const chevId = 'chev-' + r.id
+
+      const fieldRows = FIELDS.map(f => {
+        const val = r[f.key]
+        return `
+          <div class="record-section">
+            <div class="record-section-label">${f.label}</div>
+            ${val
+              ? `<div class="record-section-text">${escHtml(val)}</div>`
+              : `<div class="record-section-empty">記録なし</div>`}
+          </div>`
+      }).join('')
+
+      card.innerHTML = `
+        <div class="record-header" onclick="toggleCard('${r.id}')">
+          <div>
+            <div class="record-date">${dateStr}</div>
+            <div class="record-meta">記録: ${creator?.emoji ?? ''} ${escHtml(creator?.name ?? '?')}</div>
+          </div>
+          <span class="record-chevron" id="${chevId}">▼</span>
+        </div>
+        <div class="record-body" id="${bodyId}">
+          ${fieldRows}
+          ${isMine ? `
+            <div class="record-actions">
+              <button class="edit-btn-small" onclick="editRecord('${r.id}')">✏️ 編集</button>
+              <button class="delete-btn-small" onclick="deleteRecord('${r.id}')">🗑</button>
+            </div>` : ''}
+        </div>
+      `
+      return card
+    }
+
+    function toggleCard(id) {
+      const body = document.getElementById('body-' + id)
+      const chev = document.getElementById('chev-' + id)
+      const isOpen = body.classList.toggle('open')
+      chev.classList.toggle('open', isOpen)
+    }
+
+    async function editRecord(id) {
+      const { data } = await _sb.from('one_on_ones').select('*').eq('id', id).single()
+      if (data) openForm(data)
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('この記録を削除しますか？')) return
+      const { error } = await _sb.from('one_on_ones').delete().eq('id', id)
+      if (error) { showToast('削除失敗'); return }
+      showToast('削除しました')
+      await loadRecords()
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast')
+      el.textContent = msg
+      el.classList.add('show')
+      setTimeout(() => el.classList.remove('show'), 2800)
+    }
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    init()
+  </script>
+</body>
+</html>
