@@ -6,7 +6,7 @@
   <title>1on1 | Notre Endroit</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,7 +47,6 @@
     }
     .new-btn:active { opacity: 0.85; }
 
-    /* フォーム */
     .compose-card {
       background: rgba(255,255,255,0.07);
       border: 1.5px solid rgba(100,180,255,0.25);
@@ -60,19 +59,43 @@
     }
     .field { margin-bottom: 14px; }
     .field label { display: block; font-size: 0.78rem; color: #7aadcc; margin-bottom: 5px; }
-    .field input[type="date"], .field textarea {
+    .field input[type="date"],
+    .field input[type="text"],
+    .field textarea,
+    .field select {
       width: 100%; padding: 10px 12px;
       background: rgba(255,255,255,0.07);
       border: 1.5px solid rgba(100,180,255,0.22);
       border-radius: 10px; color: #e8f4fd;
       font-size: 15px; font-family: inherit;
       transition: border-color 0.2s;
+      -webkit-appearance: none;
     }
-    .field input[type="date"] { -webkit-appearance: none; }
-    .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+    .field select option { background: #0d2044; color: #e8f4fd; }
     .field textarea { resize: vertical; min-height: 72px; }
-    .field input:focus, .field textarea:focus { outline: none; border-color: rgba(100,200,255,0.6); }
+    .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: rgba(100,200,255,0.6); }
     .field input::placeholder, .field textarea::placeholder { color: #3a5a7a; }
+
+    .ym-row { display: flex; gap: 8px; }
+    .ym-row select { flex: 1; }
+
+    /* 写真 */
+    .photo-area {
+      border: 2px dashed rgba(100,180,255,0.3);
+      border-radius: 12px; padding: 16px;
+      text-align: center; cursor: pointer;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+    .photo-area:hover { border-color: rgba(100,200,255,0.6); }
+    .photo-area input { display: none; }
+    .photo-preview {
+      width: 100%; max-height: 200px; object-fit: cover;
+      border-radius: 8px; display: none;
+    }
+    .photo-placeholder { color: #4a6a8a; font-size: 0.9rem; }
+    .photo-placeholder .ph-icon { font-size: 2rem; margin-bottom: 6px; }
+
     .form-btns { display: flex; gap: 8px; margin-top: 4px; }
     .btn-cancel {
       flex: 1; padding: 11px; border-radius: 10px;
@@ -86,7 +109,7 @@
     }
     .btn-save:disabled { opacity: 0.5; }
 
-    /* 記録リスト */
+    /* 一覧 */
     .record-list { display: flex; flex-direction: column; gap: 12px; }
 
     .record-card {
@@ -98,28 +121,28 @@
     .record-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px; cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s; gap: 10px;
     }
     .record-header:active { background: rgba(255,255,255,0.04); }
-    .record-date {
+    .record-ym {
       font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.05rem; color: #c5ddf5;
+      font-size: 1.1rem; color: #c5ddf5;
     }
-    .record-meta { font-size: 0.75rem; color: #5a8fb8; margin-top: 2px; }
-    .record-chevron { color: #5a8fb8; font-size: 0.85rem; transition: transform 0.2s; }
+    .record-sub { font-size: 0.75rem; color: #5a8fb8; margin-top: 2px; }
+    .record-chevron { color: #5a8fb8; font-size: 0.85rem; transition: transform 0.2s; flex-shrink: 0; }
     .record-chevron.open { transform: rotate(180deg); }
 
     .record-body { display: none; padding: 0 16px 16px; }
     .record-body.open { display: block; }
 
+    .record-photo {
+      width: 100%; max-height: 220px; object-fit: cover;
+      border-radius: 10px; margin-bottom: 14px;
+    }
+
     .record-section { margin-bottom: 12px; }
-    .record-section-label {
-      font-size: 0.72rem; color: #7aadcc; margin-bottom: 4px; font-weight: bold;
-    }
-    .record-section-text {
-      font-size: 0.9rem; color: #c8dff0; line-height: 1.6;
-      white-space: pre-wrap; word-break: break-word;
-    }
+    .record-section-label { font-size: 0.72rem; color: #7aadcc; margin-bottom: 4px; font-weight: bold; }
+    .record-section-text { font-size: 0.9rem; color: #c8dff0; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
     .record-section-empty { font-size: 0.82rem; color: #3a5a7a; font-style: italic; }
 
     .record-actions { display: flex; gap: 6px; margin-top: 12px; }
@@ -149,19 +172,52 @@
   <script src="assets/js/header.js"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
-    <h1>💬 1on1</h1>
+    <h1>🤝 1on1</h1>
   </div>
 
   <div class="content">
     <button class="new-btn" id="new-btn" onclick="openForm()">✏️ 新しい1on1を記録する</button>
 
-    <!-- 記録フォーム -->
     <div class="compose-card" id="compose-card" style="display:none">
       <h2 id="form-title">📝 1on1の記録</h2>
+
+      <div class="field">
+        <label>📅 何年何月度</label>
+        <div class="ym-row">
+          <select id="f-year"></select>
+          <select id="f-month">
+            <option value="1">1月</option><option value="2">2月</option>
+            <option value="3">3月</option><option value="4">4月</option>
+            <option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option>
+            <option value="9">9月</option><option value="10">10月</option>
+            <option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div>
+      </div>
+
       <div class="field">
         <label>📅 実施日</label>
         <input type="date" id="f-date">
       </div>
+
+      <div class="field">
+        <label>📍 開催場所</label>
+        <input type="text" id="f-location" placeholder="例: 恵比寿のカフェ、家など">
+      </div>
+
+      <div class="field">
+        <label>📷 写真（1枚）</label>
+        <div class="photo-area" id="photo-area" onclick="document.getElementById('f-photo').click()">
+          <input type="file" id="f-photo" accept="image/*" onchange="onPhotoSelected(this)">
+          <img id="photo-preview" class="photo-preview">
+          <div class="photo-placeholder" id="photo-placeholder">
+            <div class="ph-icon">📷</div>
+            <div>タップして写真を追加</div>
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>🙏 感謝（お互いに伝えたこと）</label>
         <textarea id="f-thanks" placeholder="例: 先週忙しかったのに連絡くれてありがとう"></textarea>
@@ -186,15 +242,15 @@
         <label>📌 その他・メモ</label>
         <textarea id="f-notes" placeholder="その他話したこと、気づきなど"></textarea>
       </div>
+
       <div class="form-btns">
         <button class="btn-cancel" onclick="closeForm()">キャンセル</button>
         <button class="btn-save" id="save-btn" onclick="saveRecord()">保存する</button>
       </div>
     </div>
 
-    <!-- 記録一覧 -->
     <div class="record-list" id="record-list">
-      <div class="empty-state"><div class="empty-icon">💬</div><div>読み込み中...</div></div>
+      <div class="empty-state"><div class="empty-icon">🤝</div><div>読み込み中...</div></div>
     </div>
   </div>
 
@@ -204,6 +260,7 @@
     let myId = null
     let profiles = {}
     let editingId = null
+    let pendingPhotoFile = null
 
     const FIELDS = [
       { key: 'thanks',   id: 'f-thanks',   label: '🙏 感謝' },
@@ -221,29 +278,72 @@
       const { data: profs } = await _sb.from('profiles').select('*')
       ;(profs || []).forEach(p => { profiles[p.id] = p })
 
-      const today = new Date()
-      document.getElementById('f-date').value = today.toISOString().slice(0, 10)
+      // 年セレクト生成（3年前〜来年）
+      const yearSel = document.getElementById('f-year')
+      const now = new Date()
+      for (let y = now.getFullYear() + 1; y >= now.getFullYear() - 3; y--) {
+        const opt = document.createElement('option')
+        opt.value = y; opt.textContent = y + '年'
+        if (y === now.getFullYear()) opt.selected = true
+        yearSel.appendChild(opt)
+      }
+      document.getElementById('f-month').value = now.getMonth() + 1
+      document.getElementById('f-date').value = now.toISOString().slice(0, 10)
 
       await loadRecords()
     }
 
+    function onPhotoSelected(input) {
+      const file = input.files[0]
+      if (!file) return
+      pendingPhotoFile = file
+      const url = URL.createObjectURL(file)
+      const preview = document.getElementById('photo-preview')
+      preview.src = url
+      preview.style.display = 'block'
+      document.getElementById('photo-placeholder').style.display = 'none'
+    }
+
     function openForm(record = null) {
       editingId = record?.id ?? null
+      pendingPhotoFile = null
       document.getElementById('compose-card').style.display = 'block'
       document.getElementById('new-btn').style.display = 'none'
       document.getElementById('form-title').textContent = editingId ? '✏️ 編集' : '📝 1on1の記録'
 
+      const preview = document.getElementById('photo-preview')
+      preview.style.display = 'none'
+      preview.src = ''
+      document.getElementById('photo-placeholder').style.display = 'block'
+      document.getElementById('f-photo').value = ''
+
       if (record) {
-        document.getElementById('f-date').value = record.date
-        document.getElementById('f-thanks').value = record.thanks || ''
-        document.getElementById('f-kpt').value = record.kpt || ''
-        document.getElementById('f-concerns').value = record.concerns || ''
-        document.getElementById('f-future').value = record.future || ''
-        document.getElementById('f-plans').value = record.plans || ''
-        document.getElementById('f-notes').value = record.notes || ''
+        // year_month を分解
+        const ym = record.year_month || ''
+        const ymMatch = ym.match(/(\d+)年(\d+)月/)
+        if (ymMatch) {
+          document.getElementById('f-year').value = ymMatch[1]
+          document.getElementById('f-month').value = parseInt(ymMatch[2])
+        }
+        document.getElementById('f-date').value = record.date || ''
+        document.getElementById('f-location').value = record.location || ''
+        FIELDS.forEach(f => { document.getElementById(f.id).value = record[f.key] || '' })
+        // 既存写真プレビュー
+        if (record.photo_path) {
+          _sb.storage.from('memories').createSignedUrl(record.photo_path, 3600).then(({ data }) => {
+            if (data?.signedUrl) {
+              preview.src = data.signedUrl
+              preview.style.display = 'block'
+              document.getElementById('photo-placeholder').style.display = 'none'
+            }
+          })
+        }
       } else {
-        const today = new Date().toISOString().slice(0, 10)
-        document.getElementById('f-date').value = today
+        const now = new Date()
+        document.getElementById('f-year').value = now.getFullYear()
+        document.getElementById('f-month').value = now.getMonth() + 1
+        document.getElementById('f-date').value = now.toISOString().slice(0, 10)
+        document.getElementById('f-location').value = ''
         FIELDS.forEach(f => { document.getElementById(f.id).value = '' })
       }
       document.getElementById('compose-card').scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -251,39 +351,55 @@
 
     function closeForm() {
       editingId = null
+      pendingPhotoFile = null
       document.getElementById('compose-card').style.display = 'none'
       document.getElementById('new-btn').style.display = 'block'
     }
 
     async function saveRecord() {
-      const date = document.getElementById('f-date').value
-      if (!date) { showToast('日付を入力してください'); return }
-
-      const payload = {
-        created_by: myId,
-        date,
-        thanks:   document.getElementById('f-thanks').value.trim() || null,
-        kpt:      document.getElementById('f-kpt').value.trim() || null,
-        concerns: document.getElementById('f-concerns').value.trim() || null,
-        future:   document.getElementById('f-future').value.trim() || null,
-        plans:    document.getElementById('f-plans').value.trim() || null,
-        notes:    document.getElementById('f-notes').value.trim() || null,
-        updated_at: new Date().toISOString(),
-      }
+      const year = document.getElementById('f-year').value
+      const month = document.getElementById('f-month').value
+      const year_month = `${year}年${month}月`
+      const date = document.getElementById('f-date').value || null
+      const location = document.getElementById('f-location').value.trim() || null
 
       const btn = document.getElementById('save-btn')
       btn.disabled = true
+      btn.textContent = '保存中...'
 
+      const payload = {
+        created_by: myId, year_month, date, location,
+        updated_at: new Date().toISOString(),
+      }
+      FIELDS.forEach(f => { payload[f.key] = document.getElementById(f.id).value.trim() || null })
+
+      let recordId = editingId
       let error
+
       if (editingId) {
         ;({ error } = await _sb.from('one_on_ones').update(payload).eq('id', editingId))
       } else {
-        ;({ error } = await _sb.from('one_on_ones').insert(payload))
+        const { data, error: insErr } = await _sb.from('one_on_ones').insert(payload).select('id').single()
+        error = insErr
+        if (data) recordId = data.id
       }
 
-      btn.disabled = false
-      if (error) { showToast('保存失敗: ' + error.message); return }
+      if (error) {
+        btn.disabled = false; btn.textContent = '保存する'
+        showToast('保存失敗: ' + error.message); return
+      }
 
+      // 写真アップロード
+      if (pendingPhotoFile && recordId) {
+        const ext = pendingPhotoFile.name.split('.').pop()
+        const path = `1on1/${recordId}.${ext}`
+        const { error: upErr } = await _sb.storage.from('memories').upload(path, pendingPhotoFile, { upsert: true })
+        if (!upErr) {
+          await _sb.from('one_on_ones').update({ photo_path: path }).eq('id', recordId)
+        }
+      }
+
+      btn.disabled = false; btn.textContent = '保存する'
       showToast(editingId ? '✅ 更新しました' : '✅ 記録しました')
       closeForm()
       await loadRecords()
@@ -291,56 +407,71 @@
 
     async function loadRecords() {
       const { data, error } = await _sb.from('one_on_ones')
-        .select('*').order('date', { ascending: false })
+        .select('*').order('year_month', { ascending: false })
       const list = document.getElementById('record-list')
 
       if (error || !data || data.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><div>まだ記録がありません<br><span style="font-size:0.85rem">上のボタンから最初の1on1を記録しよう</span></div></div>'
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤝</div><div>まだ記録がありません<br><span style="font-size:0.85rem">最初の1on1を記録しよう</span></div></div>'
         return
       }
 
       list.innerHTML = ''
-      data.forEach(r => list.appendChild(makeCard(r)))
+      for (const r of data) {
+        list.appendChild(await makeCard(r))
+      }
     }
 
-    function makeCard(r) {
+    async function makeCard(r) {
       const creator = profiles[r.created_by]
-      const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
+      const ym = r.year_month || (r.date ? r.date.slice(0, 7).replace('-', '年') + '月' : '日付不明')
+      const dateStr = r.date
+        ? new Date(r.date + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
+        : ''
       const isMine = r.created_by === myId
 
       const card = document.createElement('div')
       card.className = 'record-card'
-      card.id = 'card-' + r.id
 
       const bodyId = 'body-' + r.id
       const chevId = 'chev-' + r.id
 
+      // 写真 signed URL
+      let photoHtml = ''
+      if (r.photo_path) {
+        const { data: urlData } = await _sb.storage.from('memories').createSignedUrl(r.photo_path, 3600)
+        if (urlData?.signedUrl) {
+          photoHtml = `<img class="record-photo" src="${urlData.signedUrl}" alt="1on1写真">`
+        }
+      }
+
       const fieldRows = FIELDS.map(f => {
         const val = r[f.key]
-        return `
-          <div class="record-section">
-            <div class="record-section-label">${f.label}</div>
-            ${val
-              ? `<div class="record-section-text">${escHtml(val)}</div>`
-              : `<div class="record-section-empty">記録なし</div>`}
-          </div>`
+        return `<div class="record-section">
+          <div class="record-section-label">${f.label}</div>
+          ${val ? `<div class="record-section-text">${escHtml(val)}</div>` : `<div class="record-section-empty">記録なし</div>`}
+        </div>`
       }).join('')
+
+      const locationHtml = r.location
+        ? `<div class="record-section"><div class="record-section-label">📍 場所</div><div class="record-section-text">${escHtml(r.location)}</div></div>`
+        : ''
 
       card.innerHTML = `
         <div class="record-header" onclick="toggleCard('${r.id}')">
-          <div>
-            <div class="record-date">${dateStr}</div>
-            <div class="record-meta">記録: ${creator?.emoji ?? ''} ${escHtml(creator?.name ?? '?')}</div>
+          <div style="flex:1;min-width:0">
+            <div class="record-ym">${escHtml(ym)}度</div>
+            <div class="record-sub">${dateStr ? dateStr + '　' : ''}${r.location ? '📍' + escHtml(r.location) + '　' : ''}記録: ${creator?.emoji ?? ''} ${escHtml(creator?.name ?? '?')}</div>
           </div>
           <span class="record-chevron" id="${chevId}">▼</span>
         </div>
         <div class="record-body" id="${bodyId}">
+          ${photoHtml}
+          ${locationHtml}
           ${fieldRows}
-          ${isMine ? `
-            <div class="record-actions">
-              <button class="edit-btn-small" onclick="editRecord('${r.id}')">✏️ 編集</button>
-              <button class="delete-btn-small" onclick="deleteRecord('${r.id}')">🗑</button>
-            </div>` : ''}
+          ${isMine ? `<div class="record-actions">
+            <button class="edit-btn-small" onclick="editRecord('${r.id}')">✏️ 編集</button>
+            <button class="delete-btn-small" onclick="deleteRecord('${r.id}')">🗑</button>
+          </div>` : ''}
         </div>
       `
       return card
@@ -360,6 +491,10 @@
 
     async function deleteRecord(id) {
       if (!confirm('この記録を削除しますか？')) return
+      const { data } = await _sb.from('one_on_ones').select('photo_path').eq('id', id).single()
+      if (data?.photo_path) {
+        await _sb.storage.from('memories').remove([data.photo_path])
+      }
       const { error } = await _sb.from('one_on_ones').delete().eq('id', id)
       if (error) { showToast('削除失敗'); return }
       showToast('削除しました')
