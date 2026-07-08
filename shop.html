@@ -81,7 +81,7 @@
     .item-meta { font-size: 0.72rem; color: #5a8fb8; }
     .item-price { font-family: 'Zen Kurenaido', sans-serif; color: #ffd764; font-weight: bold; }
 
-    .buy-btn, .toggle-btn, .delete-btn {
+    .buy-btn, .toggle-btn, .delete-btn, .cancel-btn, .approve-btn, .deny-btn {
       flex-shrink: 0;
       padding: 8px 14px;
       border-radius: 18px;
@@ -95,6 +95,17 @@
     .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .toggle-btn { background: rgba(100,160,255,0.15); border-color: rgba(100,160,255,0.35); color: #98bedd; }
     .delete-btn { background: rgba(255,100,100,0.12); border-color: rgba(255,100,100,0.35); color: #ff9d9d; margin-left: 4px; }
+    .cancel-btn { background: rgba(255,180,50,0.12); border-color: rgba(255,200,80,0.4); color: #ffd080; font-size: 0.75rem; padding: 6px 10px; }
+    .approve-btn { background: rgba(80,220,120,0.2); border-color: rgba(80,220,120,0.5); color: #baffcc; font-size: 0.78rem; padding: 6px 10px; }
+    .deny-btn { background: rgba(255,100,100,0.12); border-color: rgba(255,100,100,0.4); color: #ff9d9d; font-size: 0.78rem; padding: 6px 10px; }
+
+    .cancel-alert {
+      margin-top: 8px; padding: 8px 10px;
+      background: rgba(255,180,50,0.1); border: 1px solid rgba(255,200,80,0.35);
+      border-radius: 10px; font-size: 0.78rem; color: #ffd080;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .cancel-pending { font-size: 0.72rem; color: #a08030; margin-top: 6px; }
 
     .empty { text-align: center; color: #5a7fa8; padding: 30px 0; font-size: 0.9rem; }
 
@@ -213,6 +224,7 @@
     let currentUser = null
     let profiles = {}
     let partnerId = null
+    const _purchases = new Map()
 
     async function init() {
       const { data: { session } } = await _sb.auth.getSession()
@@ -380,17 +392,17 @@
     }
 
     async function loadPurchases() {
-      // 買ったもの
       const { data: mine } = await _sb.from('shop_purchases')
         .select('*').eq('buyer_id', currentUser.id)
         .order('purchased_at', { ascending: false }).limit(50)
       renderPurchases('my-purchases-list', mine || [], true)
 
-      // 売れたもの
       const { data: sold } = await _sb.from('shop_purchases')
         .select('*').eq('seller_id', currentUser.id)
         .order('purchased_at', { ascending: false }).limit(50)
       renderPurchases('my-sales-list', sold || [], false)
+
+      ;(mine || []).concat(sold || []).forEach(p => _purchases.set(p.id, p))
     }
 
     function renderPurchases(elId, list, canUse) {
@@ -405,18 +417,44 @@
         const other = profiles[otherUid]
         const dt = new Date(p.purchased_at).toLocaleDateString('ja-JP')
         const card = document.createElement('div')
-        card.className = 'item-card' + (p.used ? ' inactive' : '') + (p.rarity ? ' ' + p.rarity : '')
+        const hasCancelAlert = canUse && p.cancel_requested
+        card.className = 'item-card' + (p.used && !hasCancelAlert ? ' inactive' : '') + (p.rarity ? ' ' + p.rarity : '') + (hasCancelAlert ? '' : '')
+        if (hasCancelAlert) card.style.borderColor = 'rgba(255,200,80,0.55)'
+
+        let actionHtml = ''
+        if (canUse) {
+          if (p.cancel_requested) {
+            actionHtml = `
+              <div class="cancel-alert" style="width:100%;flex-direction:column;align-items:flex-start;gap:6px">
+                <div>↩️ 取り消し申請あり</div>
+                <div style="display:flex;gap:6px">
+                  <button class="approve-btn" onclick="approveCancel('${p.id}')">承認</button>
+                  <button class="deny-btn" onclick="denyCancel('${p.id}')">却下</button>
+                </div>
+              </div>`
+          } else if (!p.used) {
+            actionHtml = `<button class="buy-btn" onclick="markUsed('${p.id}')">使用済にする</button>`
+          }
+        } else {
+          if (p.used && p.cancel_requested) {
+            actionHtml = `<span class="cancel-pending">申請中...</span>`
+          } else if (p.used && !p.cancel_requested) {
+            actionHtml = `<button class="cancel-btn" onclick="requestCancel('${p.id}')">取り消し申請</button>`
+          }
+        }
+
         card.innerHTML = `
           <div class="item-emoji">${escHtml(p.emoji)}</div>
-          <div class="item-info">
+          <div class="item-info" style="flex:1">
             <div class="item-name">${escHtml(p.name)}${p.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}</div>
             ${p.description ? `<div class="item-desc">${escHtml(p.description)}</div>` : ''}
             <div class="item-meta">
               ${canUse ? '購入' : '販売'}: ${dt} · ${p.price}pt
               · ${canUse ? '出品' : '購入者'}: ${other?.emoji ?? '?'} ${escHtml(other?.name ?? '?')}
             </div>
+            ${hasCancelAlert ? actionHtml : ''}
           </div>
-          ${canUse && !p.used ? `<button class="buy-btn" onclick="markUsed('${p.id}', ${p.bonus_points || 0})">使用済にする</button>` : ''}
+          ${!hasCancelAlert ? actionHtml : ''}
         `
         el.appendChild(card)
       })
@@ -428,7 +466,6 @@
         body: { item_id: itemId },
       })
       if (error) {
-        // extract error body
         let msg = error.message || ''
         try { const j = await error.context?.json?.(); if (j?.error) msg = j.error } catch {}
         showToast('❌ ' + msg, true)
@@ -440,19 +477,88 @@
       await loadPurchases()
     }
 
-    async function markUsed(purchaseId, bonusPoints) {
+    async function markUsed(purchaseId) {
+      const p = _purchases.get(purchaseId)
       if (!confirm('この券を使用済にしますか？')) return
       const { error } = await _sb.from('shop_purchases')
         .update({ used: true, used_at: new Date().toISOString() })
         .eq('id', purchaseId)
       if (error) { showToast('更新失敗', true); return }
+      const bonusPoints = p?.bonus_points || 0
       if (bonusPoints > 0) {
         await _sb.from('points').insert({ user_id: currentUser.id, amount: bonusPoints, reason: 'shop_bonus' })
         showToast(`使用済 ✅ +${bonusPoints}pt`)
       } else {
         showToast('使用済にしました ✅')
       }
+      if (p?.seller_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '🎁 券が使われました',
+          body: p.name,
+          url: '/shop.html',
+          recipient_user_id: p.seller_id,
+        }}).catch(() => {})
+      }
       await loadPoints()
+      await loadPurchases()
+    }
+
+    async function requestCancel(purchaseId) {
+      const p = _purchases.get(purchaseId)
+      const { error } = await _sb.from('shop_purchases')
+        .update({ cancel_requested: true })
+        .eq('id', purchaseId)
+      if (error) { showToast('申請失敗', true); return }
+      if (p?.buyer_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '↩️ 取り消し申請',
+          body: `「${p?.name ?? '券'}」の使用済取り消しを申請しました`,
+          url: '/shop.html',
+          recipient_user_id: p.buyer_id,
+        }}).catch(() => {})
+      }
+      showToast('取り消しを申請しました')
+      await loadPurchases()
+    }
+
+    async function approveCancel(purchaseId) {
+      const p = _purchases.get(purchaseId)
+      const { error } = await _sb.from('shop_purchases')
+        .update({ used: false, used_at: null, cancel_requested: false })
+        .eq('id', purchaseId)
+      if (error) { showToast('承認失敗', true); return }
+      const bonusPoints = p?.bonus_points || 0
+      if (bonusPoints > 0) {
+        await _sb.from('points').insert({ user_id: currentUser.id, amount: -bonusPoints, reason: 'shop_cancel' })
+      }
+      if (p?.seller_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '✅ 取り消し承認',
+          body: `「${p?.name ?? '券'}」の取り消しが承認されました`,
+          url: '/shop.html',
+          recipient_user_id: p.seller_id,
+        }}).catch(() => {})
+      }
+      showToast('取り消しを承認しました')
+      await loadPoints()
+      await loadPurchases()
+    }
+
+    async function denyCancel(purchaseId) {
+      const p = _purchases.get(purchaseId)
+      const { error } = await _sb.from('shop_purchases')
+        .update({ cancel_requested: false })
+        .eq('id', purchaseId)
+      if (error) { showToast('更新失敗', true); return }
+      if (p?.seller_id) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '❌ 取り消し却下',
+          body: `「${p?.name ?? '券'}」の申請が却下されました`,
+          url: '/shop.html',
+          recipient_user_id: p.seller_id,
+        }}).catch(() => {})
+      }
+      showToast('申請を却下しました')
       await loadPurchases()
     }
 
