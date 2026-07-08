@@ -209,7 +209,7 @@
       <div class="field">
         <label>📷 写真（1枚）</label>
         <div class="photo-area" id="photo-area" onclick="document.getElementById('f-photo').click()">
-          <input type="file" id="f-photo" accept="image/*" onchange="onPhotoSelected(this)">
+          <input type="file" id="f-photo" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
           <img id="photo-preview" class="photo-preview">
           <div class="photo-placeholder" id="photo-placeholder">
             <div class="ph-icon">📷</div>
