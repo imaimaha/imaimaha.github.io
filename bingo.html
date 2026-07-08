@@ -1843,9 +1843,14 @@
     const season = getSeason();
     const seasonEmoji = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };
     const today = new Date();
-    const dow = ['日', '月', '火', '水', '木', '金', '土'][today.getDay()];
+    const dayOfWeek = today.getDay(); // 0=日
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
     document.getElementById('daily-desc').innerHTML =
-      `毎週月曜に新しいカードが生まれる<br>${seasonEmoji[season]} ${today.getMonth()+1}月${today.getDate()}日（${dow}）の特別版`;
+      `毎週月曜に新しいカードが生まれる<br>${seasonEmoji[season]} ${fmt(monday)}〜${fmt(sunday)} の特別版`;
 
     showScreen('mode');
   }
