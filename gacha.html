@@ -1377,8 +1377,10 @@
             actionHtml = `<button class="use-btn" data-id="${ticket.id}" onclick="markUsed(this,'${ticket.id}')">使用済みにする</button>`
           } else if (ticket.cancel_requested) {
             actionHtml = `<span class="cancel-pending-label">申請中...</span>`
-          } else {
+          } else if (!ticket.bonus_points) {
             actionHtml = `<button class="cancel-req-btn" onclick="gachaCancelReq('${ticket.id}')">取り消し申請</button>`
+          } else {
+            actionHtml = `<span class="used-label">使用済み</span>`
           }
         } else {
           if (ticket.cancel_requested) {

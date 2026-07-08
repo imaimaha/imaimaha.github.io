@@ -423,12 +423,12 @@
 
         let actionHtml = ''
         if (canUse) {
-          // 買った側: 未使用なら使用、使用済なら取り消し申請
+          // 買った側: 未使用なら使用、使用済かつボーナスなしなら取り消し申請可
           if (!p.used) {
             actionHtml = `<button class="buy-btn" onclick="markUsed('${p.id}')">使用済にする</button>`
           } else if (p.cancel_requested) {
             actionHtml = `<span class="cancel-pending">申請中...</span>`
-          } else {
+          } else if (!p.bonus_points) {
             actionHtml = `<button class="cancel-btn" onclick="requestCancel('${p.id}')">取り消し申請</button>`
           }
         } else {
