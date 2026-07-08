@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今ここにいるよ | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 100;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 20px 16px 80px; }
+
+    /* チェックインボタン */
+    .checkin-area {
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.25);
+      border-radius: 20px; padding: 20px;
+      margin-bottom: 20px; text-align: center;
+    }
+    .checkin-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(135deg, #1a3a6e, #2a5298);
+      border: 2px solid rgba(100,160,255,0.5);
+      border-radius: 16px; color: #e8f4fd;
+      font-size: 1.1rem; font-family: inherit; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 4px 20px rgba(42,82,152,0.35);
+    }
+    .checkin-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .checkin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .note-input {
+      width: 100%; padding: 10px 14px; margin-top: 12px;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.22);
+      border-radius: 10px; color: #e8f4fd;
+      font-size: 15px; font-family: inherit;
+    }
+    .note-input:focus { outline: none; border-color: rgba(100,200,255,0.6); }
+    .note-input::placeholder { color: #3a5a7a; }
+
+    .checkin-status { margin-top: 10px; font-size: 0.85rem; color: #7aadcc; min-height: 18px; }
+
+    /* 日付ナビ */
+    .date-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .date-nav-btn {
+      padding: 8px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.08); border: 1.5px solid rgba(100,180,255,0.2);
+      color: #98bedd; font-size: 1rem; cursor: pointer; font-family: inherit;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .date-nav-btn:active { background: rgba(255,255,255,0.15); }
+    .date-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .date-label {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1rem; color: #c5ddf5; text-align: center; flex: 1;
+    }
+
+    /* 地図 */
+    #map {
+      width: 100%; height: 300px;
+      border-radius: 16px; overflow: hidden;
+      border: 1.5px solid rgba(100,180,255,0.2);
+      margin-bottom: 16px;
+    }
+
+    /* チェックイン一覧 */
+    .checkin-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .checkin-card {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(100,180,255,0.15);
+      border-radius: 14px; padding: 14px 16px;
+    }
+    .checkin-user-emoji { font-size: 1.8rem; flex-shrink: 0; line-height: 1; }
+    .checkin-info { flex: 1; min-width: 0; }
+    .checkin-name { font-size: 0.85rem; color: #7aadcc; margin-bottom: 2px; }
+    .checkin-place { font-size: 0.95rem; color: #e8f4fd; margin-bottom: 2px; }
+    .checkin-note { font-size: 0.82rem; color: #98bedd; font-style: italic; }
+    .checkin-time { font-size: 0.72rem; color: #4a6a8a; margin-top: 4px; }
+    .checkin-delete {
+      flex-shrink: 0; padding: 4px 10px; border-radius: 10px;
+      background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3);
+      color: #ff9d9d; font-size: 0.72rem; cursor: pointer; font-family: inherit;
+      align-self: flex-start;
+    }
+
+    .empty-state { text-align: center; padding: 32px 20px; color: #4a6a8a; font-size: 0.9rem; }
+
+    #toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(30,60,120,0.95); color: #e8f4fd;
+      padding: 10px 20px; border-radius: 12px; font-size: 0.85rem;
+      z-index: 300; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>📍 今ここにいるよ</h1>
+  </div>
+
+  <div class="content">
+    <!-- チェックインボタン -->
+    <div class="checkin-area">
+      <button class="checkin-btn" id="checkin-btn" onclick="doCheckin()">
+        📍 今ここにいるよ
+      </button>
+      <input class="note-input" id="note-input" type="text" placeholder="ひとことメモ（任意）" maxlength="40">
+      <div class="checkin-status" id="checkin-status"></div>
+    </div>
+
+    <!-- 日付ナビ -->
+    <div class="date-nav">
+      <button class="date-nav-btn" id="prev-btn" onclick="changeDay(-1)">◀</button>
+      <div class="date-label" id="date-label"></div>
+      <button class="date-nav-btn" id="next-btn" onclick="changeDay(+1)" disabled>▶</button>
+    </div>
+
+    <!-- 地図 -->
+    <div id="map"></div>
+
+    <!-- チェックイン一覧 -->
+    <div class="checkin-list" id="checkin-list">
+      <div class="empty-state">読み込み中...</div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let myId = null, partnerId = null
+    let myProfile = null, partnerProfile = null
+    let currentDate = new Date()
+    let map = null
+    let markers = []
+
+    // 日付を YYYY-MM-DD 文字列に
+    function toDateStr(d) {
+      return d.toLocaleDateString('sv-SE') // "2026-07-09"
+    }
+
+    function isTodaySelected() {
+      return toDateStr(currentDate) === toDateStr(new Date())
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      myId = session.user.id
+
+      const { data: profs } = await _sb.from('profiles').select('*')
+      if (profs) {
+        myProfile = profs.find(p => p.id === myId)
+        partnerProfile = profs.find(p => p.id !== myId)
+        partnerId = partnerProfile?.id
+      }
+
+      initMap()
+      updateDateLabel()
+      await loadCheckins()
+    }
+
+    function initMap() {
+      map = L.map('map', { zoomControl: true, attributionControl: false })
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+      }).addTo(map)
+      // デフォルト: 東京
+      map.setView([35.6762, 139.6503], 12)
+    }
+
+    function updateDateLabel() {
+      const today = new Date()
+      const isToday = toDateStr(currentDate) === toDateStr(today)
+      const d = currentDate
+      const label = isToday
+        ? `今日 (${d.getMonth()+1}/${d.getDate()})`
+        : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`
+      document.getElementById('date-label').textContent = label
+      document.getElementById('next-btn').disabled = isToday
+    }
+
+    function changeDay(delta) {
+      const d = new Date(currentDate)
+      d.setDate(d.getDate() + delta)
+      currentDate = d
+      updateDateLabel()
+      loadCheckins()
+    }
+
+    async function loadCheckins() {
+      const dateStr = toDateStr(currentDate)
+      const from = dateStr + 'T00:00:00+09:00'
+      const to   = dateStr + 'T23:59:59+09:00'
+
+      const { data } = await _sb.from('location_checkins')
+        .select('*')
+        .gte('created_at', from)
+        .lte('created_at', to)
+        .order('created_at', { ascending: true })
+
+      // マーカーをクリア
+      markers.forEach(m => map.removeLayer(m))
+      markers = []
+
+      const list = document.getElementById('checkin-list')
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="empty-state">この日のチェックインはまだありません</div>'
+        return
+      }
+
+      const bounds = []
+      list.innerHTML = ''
+
+      data.forEach(c => {
+        const profile = c.user_id === myId ? myProfile : partnerProfile
+        const emoji = profile?.emoji ?? '📍'
+        const name = profile?.name ?? '?'
+        const time = new Date(c.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+        const isMine = c.user_id === myId
+
+        // マーカー
+        const icon = L.divIcon({
+          html: `<div style="font-size:24px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${emoji}</div>`,
+          className: '',
+          iconSize: [30, 30],
+          iconAnchor: [15, 28],
+        })
+        const marker = L.marker([c.lat, c.lng], { icon })
+          .addTo(map)
+          .bindPopup(`<b>${emoji} ${escHtml(name)}</b><br>${time}${c.note ? '<br>' + escHtml(c.note) : ''}${c.place_name ? '<br><small>' + escHtml(c.place_name) + '</small>' : ''}`)
+        markers.push(marker)
+        bounds.push([c.lat, c.lng])
+
+        // カード
+        const card = document.createElement('div')
+        card.className = 'checkin-card'
+        card.innerHTML = `
+          <div class="checkin-user-emoji">${emoji}</div>
+          <div class="checkin-info">
+            <div class="checkin-name">${escHtml(name)}</div>
+            ${c.place_name ? `<div class="checkin-place">📍 ${escHtml(c.place_name)}</div>` : ''}
+            ${c.note ? `<div class="checkin-note">"${escHtml(c.note)}"</div>` : ''}
+            <div class="checkin-time">${time}</div>
+          </div>
+          ${isMine ? `<button class="checkin-delete" onclick="deleteCheckin(${c.id})">削除</button>` : ''}
+        `
+        list.appendChild(card)
+      })
+
+      // 地図をフィット
+      if (bounds.length === 1) {
+        map.setView(bounds[0], 15)
+      } else if (bounds.length > 1) {
+        map.fitBounds(bounds, { padding: [40, 40] })
+      }
+    }
+
+    async function doCheckin() {
+      const btn = document.getElementById('checkin-btn')
+      const status = document.getElementById('checkin-status')
+      btn.disabled = true
+      status.textContent = '📡 現在地を取得中...'
+
+      if (!navigator.geolocation) {
+        status.textContent = '❌ このブラウザは位置情報に対応していません'
+        btn.disabled = false
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude
+          const lng = pos.coords.longitude
+          const note = document.getElementById('note-input').value.trim() || null
+
+          // Nominatim で地名取得（失敗しても続行）
+          let place_name = null
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
+              { headers: { 'Accept-Language': 'ja' } }
+            )
+            const geo = await res.json()
+            const addr = geo.address
+            place_name = addr?.suburb || addr?.neighbourhood || addr?.quarter
+              || addr?.city_district || addr?.city || addr?.town || addr?.village
+              || null
+          } catch (_) {}
+
+          const { error } = await _sb.from('location_checkins').insert({
+            user_id: myId, lat, lng, place_name, note,
+          })
+
+          if (error) {
+            status.textContent = '❌ 保存失敗: ' + error.message
+            btn.disabled = false
+            return
+          }
+
+          // 相手にプッシュ通知
+          if (partnerId && myProfile) {
+            const body = `${myProfile.emoji} ${myProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}${note ? '「' + note + '」' : ''}`
+            _sb.functions.invoke('send-push', {
+              body: { title: '📍 今ここにいるよ', body, url: '/location.html', recipient_user_id: partnerId }
+            }).catch(() => {})
+          }
+
+          document.getElementById('note-input').value = ''
+          status.textContent = '✅ 送りました！' + (place_name ? '（' + place_name + '）' : '')
+          setTimeout(() => { status.textContent = ''; btn.disabled = false }, 3000)
+
+          // 今日表示中なら再読込
+          if (isTodaySelected()) {
+            currentDate = new Date()
+            updateDateLabel()
+            await loadCheckins()
+          }
+        },
+        (err) => {
+          const msgs = { 1: '位置情報の許可が必要です', 2: '位置情報を取得できません', 3: 'タイムアウトしました' }
+          status.textContent = '❌ ' + (msgs[err.code] || err.message)
+          btn.disabled = false
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      )
+    }
+
+    async function deleteCheckin(id) {
+      const { error } = await _sb.from('location_checkins').delete().eq('id', id)
+      if (error) { showToast('削除失敗'); return }
+      showToast('削除しました')
+      await loadCheckins()
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast')
+      el.textContent = msg
+      el.classList.add('show')
+      setTimeout(() => el.classList.remove('show'), 2500)
+    }
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    init()
+  </script>
+</body>
+</html>
