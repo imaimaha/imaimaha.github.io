@@ -165,6 +165,7 @@
       <button class="tab-btn active" onclick="switchTab('buy')" id="tab-btn-buy">🛍 買う</button>
       <button class="tab-btn" onclick="switchTab('sell')" id="tab-btn-sell">💼 売る</button>
       <button class="tab-btn" onclick="switchTab('purchases')" id="tab-btn-purchases">📦 履歴</button>
+      <button class="tab-btn" onclick="switchTab('requests')" id="tab-btn-requests">📝 リクエスト</button>
     </div>
 
     <!-- 相手が売っている商品を買う -->
@@ -216,6 +217,38 @@
       <div style="font-size:0.85rem;color:#98bedd;margin-bottom:10px">💰 売れたもの</div>
       <div id="my-sales-list"><div class="empty">読み込み中…</div></div>
     </div>
+
+    <!-- リクエスト -->
+    <div class="tab-panel" id="panel-requests">
+      <!-- 自分のリクエスト投稿フォーム -->
+      <div style="margin-bottom:16px">
+        <button onclick="toggleRequestForm()" style="background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;padding:8px 16px;border-radius:14px;font-family:inherit;font-size:0.85rem;cursor:pointer;width:100%">➕ リクエストを送る</button>
+      </div>
+      <div id="request-form" style="display:none;background:rgba(255,255,255,0.05);border:1.5px solid rgba(100,180,255,0.2);border-radius:14px;padding:16px;margin-bottom:16px">
+        <input id="req-title" placeholder="何をお願いしたい？ (例: マッサージ券)" maxlength="50"
+          style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,180,255,0.22);border-radius:10px;color:#e8f4fd;font-size:15px;font-family:inherit;margin-bottom:10px">
+        <textarea id="req-desc" placeholder="詳細・メモ（任意）" rows="2" maxlength="200"
+          style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,180,255,0.22);border-radius:10px;color:#e8f4fd;font-size:14px;font-family:inherit;resize:none;margin-bottom:10px"></textarea>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+          <label style="font-size:0.85rem;color:#98bedd">💰 希望価格:</label>
+          <input id="req-price" type="number" value="100" min="1" step="10"
+            style="width:90px;padding:8px 12px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,180,255,0.22);border-radius:10px;color:#e8f4fd;font-size:14px;font-family:inherit">
+          <label style="font-size:0.85rem;color:#98bedd">pt</label>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleRequestForm()" style="flex:1;padding:10px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,180,255,0.2);border-radius:10px;color:#98bedd;font-family:inherit;cursor:pointer">キャンセル</button>
+          <button onclick="submitRequest()" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(100,180,100,0.3),rgba(60,140,60,0.4));border:1.5px solid rgba(100,200,100,0.5);border-radius:10px;color:#b0f0d5;font-family:inherit;cursor:pointer;font-weight:bold">送る</button>
+        </div>
+      </div>
+
+      <!-- 相手のリクエスト（自分が対応する）-->
+      <div style="font-size:0.85rem;color:#98bedd;margin-bottom:10px">📩 相手からのリクエスト</div>
+      <div id="partner-requests-list"><div class="empty">読み込み中…</div></div>
+      <div style="height:16px"></div>
+      <!-- 自分のリクエスト -->
+      <div style="font-size:0.85rem;color:#98bedd;margin-bottom:10px">📤 自分のリクエスト</div>
+      <div id="my-requests-list"><div class="empty">読み込み中…</div></div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -242,10 +275,11 @@
     }
 
     function switchTab(name) {
-      ;['buy','sell','purchases'].forEach(n => {
+      ;['buy','sell','purchases','requests'].forEach(n => {
         document.getElementById('tab-btn-' + n).classList.toggle('active', n === name)
         document.getElementById('panel-' + n).classList.toggle('active', n === name)
       })
+      if (name === 'requests') loadRequests()
     }
 
     async function loadPoints() {
@@ -620,6 +654,163 @@
     }
 
     function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    let _hasRequestsTable = null
+
+    async function checkRequestsTable() {
+      if (_hasRequestsTable !== null) return _hasRequestsTable
+      const { error } = await _sb.from('shop_requests').select('id').limit(1)
+      _hasRequestsTable = !error
+      return _hasRequestsTable
+    }
+
+    function toggleRequestForm() {
+      const f = document.getElementById('request-form')
+      f.style.display = f.style.display === 'none' ? 'block' : 'none'
+    }
+
+    async function loadRequests() {
+      const hasTable = await checkRequestsTable()
+      if (!hasTable) {
+        document.getElementById('partner-requests-list').innerHTML = '<div class="empty">機能準備中です</div>'
+        document.getElementById('my-requests-list').innerHTML = ''
+        return
+      }
+
+      // 相手のリクエスト（pending）
+      const { data: partnerReqs } = await _sb.from('shop_requests')
+        .select('*')
+        .eq('requester_id', partnerId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      const pEl = document.getElementById('partner-requests-list')
+      if (!partnerReqs || partnerReqs.length === 0) {
+        pEl.innerHTML = '<div class="empty">リクエストはありません</div>'
+      } else {
+        pEl.innerHTML = ''
+        partnerReqs.forEach(r => {
+          const card = document.createElement('div')
+          card.style.cssText = 'background:rgba(255,255,255,0.06);border:1.5px solid rgba(100,180,255,0.2);border-radius:14px;padding:14px 16px;margin-bottom:10px'
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:1rem;color:#ffd97d;font-weight:bold">${escReq(r.title)}</span>
+              <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
+            </div>
+            ${r.description ? `<div style="font-size:0.82rem;color:#98bedd;margin-bottom:8px">${escReq(r.description)}</div>` : ''}
+            <div style="display:flex;gap:8px">
+              <button onclick="respondRequest('${r.id}','accepted')" style="flex:1;padding:8px;background:rgba(100,200,100,0.2);border:1.5px solid rgba(100,200,100,0.4);border-radius:10px;color:#b0f0d5;font-family:inherit;font-size:0.85rem;cursor:pointer">✅ 承諾</button>
+              <button onclick="respondRequest('${r.id}','rejected')" style="flex:1;padding:8px;background:rgba(200,80,80,0.15);border:1.5px solid rgba(200,80,80,0.35);border-radius:10px;color:#f0a0a0;font-family:inherit;font-size:0.85rem;cursor:pointer">❌ 断る</button>
+            </div>
+          `
+          pEl.appendChild(card)
+        })
+      }
+
+      // 自分のリクエスト
+      const { data: myReqs } = await _sb.from('shop_requests')
+        .select('*')
+        .eq('requester_id', currentUser.id)
+        .order('created_at', { ascending: false })
+
+      const mEl = document.getElementById('my-requests-list')
+      if (!myReqs || myReqs.length === 0) {
+        mEl.innerHTML = '<div class="empty">リクエストはありません</div>'
+      } else {
+        mEl.innerHTML = ''
+        myReqs.forEach(r => {
+          const statusMap = { pending: '⏳ 待ち中', accepted: '✅ 承諾された', rejected: '❌ 断られた' }
+          const statusColor = { pending: '#98bedd', accepted: '#b0f0d5', rejected: '#f0a0a0' }
+          const card = document.createElement('div')
+          card.style.cssText = 'background:rgba(255,255,255,0.05);border:1.5px solid rgba(100,180,255,0.15);border-radius:14px;padding:14px 16px;margin-bottom:10px'
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:1rem;color:#e8f4fd">${escReq(r.title)}</span>
+              <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
+            </div>
+            ${r.description ? `<div style="font-size:0.82rem;color:#7aadcc;margin-bottom:6px">${escReq(r.description)}</div>` : ''}
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:0.82rem;color:${statusColor[r.status] || '#98bedd'}">${statusMap[r.status] || r.status}</span>
+              ${r.status === 'pending' ? `<button onclick="deleteRequest('${r.id}')" style="padding:4px 10px;background:rgba(200,80,80,0.1);border:1px solid rgba(200,80,80,0.3);border-radius:8px;color:#f0a0a0;font-family:inherit;font-size:0.75rem;cursor:pointer">削除</button>` : ''}
+            </div>
+          `
+          mEl.appendChild(card)
+        })
+      }
+    }
+
+    async function submitRequest() {
+      const title = document.getElementById('req-title').value.trim()
+      const price = parseInt(document.getElementById('req-price').value) || 100
+      const description = document.getElementById('req-desc').value.trim() || null
+
+      if (!title) { showToast('タイトルを入力してください', true); return }
+      if (price < 1) { showToast('価格を入力してください', true); return }
+
+      const hasTable = await checkRequestsTable()
+      if (!hasTable) { showToast('機能準備中です', true); return }
+
+      const { error } = await _sb.from('shop_requests').insert({
+        requester_id: currentUser.id,
+        title, price, description,
+        status: 'pending'
+      })
+
+      if (error) { showToast('送信失敗: ' + error.message, true); return }
+
+      // 相手に通知
+      if (partnerId) {
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: '📝 リクエストが届きました',
+            body: `「${title}」(${price}pt)`,
+            url: '/shop.html',
+            recipient_user_id: partnerId
+          }
+        }).catch(() => {})
+      }
+
+      document.getElementById('req-title').value = ''
+      document.getElementById('req-desc').value = ''
+      document.getElementById('req-price').value = '100'
+      toggleRequestForm()
+      showToast('リクエストを送りました！')
+      await loadRequests()
+    }
+
+    async function respondRequest(id, status) {
+      const { error } = await _sb.from('shop_requests').update({ status }).eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+
+      const msg = status === 'accepted' ? '承諾しました' : '断りました'
+      showToast(msg)
+
+      // リクエスト主（パートナー）に通知
+      if (partnerId) {
+        const label = status === 'accepted' ? '承諾しました ✅' : '断りました ❌'
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: `📝 リクエストへの返答`,
+            body: label,
+            url: '/shop.html',
+            recipient_user_id: partnerId
+          }
+        }).catch(() => {})
+      }
+
+      await loadRequests()
+    }
+
+    async function deleteRequest(id) {
+      const { error } = await _sb.from('shop_requests').delete().eq('id', id)
+      if (error) { showToast('削除失敗', true); return }
+      showToast('削除しました')
+      await loadRequests()
+    }
+
+    function escReq(s) {
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 

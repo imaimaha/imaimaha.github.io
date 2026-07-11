@@ -198,10 +198,13 @@
 
     <section id="location" class="section">
       <h2 class="section-title">今ここにいるよ</h2>
-      <a href="/location.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">📍 🗺️ 🏠 🚶</div>
-        <div style="font-size:0.95rem;color:#8d6e63">今いる場所を共有・1日の足跡を振り返る →</div>
-      </a>
+      <div style="background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
+        <button id="loc-top-btn" onclick="doCheckinTop()" style="width:100%;padding:16px;background:linear-gradient(135deg,#e8f4fd,#d0e8ff);border:2px solid rgba(100,160,255,0.4);border-radius:14px;color:#2a4080;font-size:1.05rem;font-family:inherit;cursor:pointer;font-weight:bold;transition:all 0.2s;box-shadow:0 2px 10px rgba(42,82,152,0.15)">
+          📍 今ここにいるよ
+        </button>
+        <div id="loc-top-status" style="font-size:0.82rem;color:#8d6e63;margin-top:8px;min-height:18px;text-align:center"></div>
+        <a href="/location.html" style="display:block;text-align:center;font-size:0.8rem;color:#8a9fb5;margin-top:10px;text-decoration:none">🗺️ 過去の記録を見る →</a>
+      </div>
     </section>
   </main>
 
@@ -431,6 +434,80 @@
       } catch {}
     }
     loadHeroEmoji()
+
+    // 今ここにいるよ（トップから直接チェックイン）
+    let _locMyId = null, _locPartnerId = null, _locMyProfile = null
+    async function _locEnsureProfile() {
+      if (_locMyId) return
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      _locMyId = session.user.id
+      const { data: profs } = await _sb.from('profiles').select('*')
+      if (profs) {
+        _locMyProfile = profs.find(p => p.id === _locMyId)
+        _locPartnerId = profs.find(p => p.id !== _locMyId)?.id
+      }
+    }
+
+    async function doCheckinTop() {
+      const btn = document.getElementById('loc-top-btn')
+      const statusEl = document.getElementById('loc-top-status')
+      btn.disabled = true
+      statusEl.textContent = '📡 現在地を取得中...'
+
+      if (!navigator.geolocation) {
+        statusEl.textContent = '❌ このブラウザは位置情報に対応していません'
+        btn.disabled = false
+        return
+      }
+
+      await _locEnsureProfile()
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude
+          const lng = pos.coords.longitude
+
+          let place_name = null
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
+              { headers: { 'Accept-Language': 'ja' } }
+            )
+            const geo = await res.json()
+            const addr = geo.address
+            place_name = addr?.suburb || addr?.neighbourhood || addr?.quarter
+              || addr?.city_district || addr?.city || addr?.town || addr?.village || null
+          } catch (_) {}
+
+          const { error } = await _sb.from('location_checkins').insert({
+            user_id: _locMyId, lat, lng, place_name, note: null
+          })
+
+          if (error) {
+            statusEl.textContent = '❌ 保存失敗'
+            btn.disabled = false
+            return
+          }
+
+          if (_locPartnerId && _locMyProfile) {
+            const body = `${_locMyProfile.emoji} ${_locMyProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}`
+            _sb.functions.invoke('send-push', {
+              body: { title: '📍 今ここにいるよ', body, url: '/location.html', recipient_user_id: _locPartnerId }
+            }).catch(() => {})
+          }
+
+          statusEl.textContent = '✅ 送りました！' + (place_name ? '（' + place_name + '）' : '')
+          setTimeout(() => { statusEl.textContent = ''; btn.disabled = false }, 4000)
+        },
+        (err) => {
+          const msgs = { 1: '位置情報の許可が必要です', 2: '位置情報を取得できません', 3: 'タイムアウト' }
+          statusEl.textContent = '❌ ' + (msgs[err.code] || err.message)
+          btn.disabled = false
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      )
+    }
   </script>
 
 </body>
