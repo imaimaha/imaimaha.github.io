@@ -110,11 +110,18 @@
     .checkin-place { font-size: 0.95rem; color: #e8f4fd; margin-bottom: 2px; }
     .checkin-note { font-size: 0.82rem; color: #98bedd; font-style: italic; }
     .checkin-time { font-size: 0.72rem; color: #4a6a8a; margin-top: 4px; }
+    .checkin-actions {
+      flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; align-self: flex-start;
+    }
     .checkin-delete {
-      flex-shrink: 0; padding: 4px 10px; border-radius: 10px;
+      padding: 4px 10px; border-radius: 10px;
       background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3);
       color: #ff9d9d; font-size: 0.72rem; cursor: pointer; font-family: inherit;
-      align-self: flex-start;
+    }
+    .checkin-edit {
+      padding: 4px 10px; border-radius: 10px;
+      background: rgba(100,180,255,0.1); border: 1px solid rgba(100,180,255,0.3);
+      color: #7aadcc; font-size: 0.72rem; cursor: pointer; font-family: inherit;
     }
 
     .empty-state { text-align: center; padding: 32px 20px; color: #4a6a8a; font-size: 0.9rem; }
@@ -273,15 +280,19 @@
         // カード
         const card = document.createElement('div')
         card.className = 'checkin-card'
+        card.dataset.id = c.id
         card.innerHTML = `
           <div class="checkin-user-emoji">${emoji}</div>
           <div class="checkin-info">
             <div class="checkin-name">${escHtml(name)}</div>
             ${c.place_name ? `<div class="checkin-place">📍 ${escHtml(c.place_name)}</div>` : ''}
-            ${c.note ? `<div class="checkin-note">"${escHtml(c.note)}"</div>` : ''}
+            <div class="checkin-note" id="note-display-${c.id}">${c.note ? `"${escHtml(c.note)}"` : '<span style="color:#3a5a7a;font-style:normal;font-size:0.78rem">メモなし</span>'}</div>
             <div class="checkin-time">${time}</div>
           </div>
-          ${isMine ? `<button class="checkin-delete" onclick="deleteCheckin(${c.id})">削除</button>` : ''}
+          ${isMine ? `<div class="checkin-actions">
+            <button class="checkin-edit" onclick="startEditNote(${JSON.stringify(c.id)}, ${JSON.stringify(c.note || '')})">✏️ メモ</button>
+            <button class="checkin-delete" onclick="deleteCheckin(${JSON.stringify(c.id)})">削除</button>
+          </div>` : ''}
         `
         list.appendChild(card)
       })
@@ -362,6 +373,30 @@
         },
         { enableHighAccuracy: true, timeout: 10000 }
       )
+    }
+
+    function startEditNote(id, currentNote) {
+      const noteEl = document.getElementById('note-display-' + id)
+      if (!noteEl) return
+      noteEl.innerHTML = `
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input id="edit-note-${id}" type="text" value="${currentNote.replace(/"/g,'&quot;')}" maxlength="40"
+            style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(100,200,255,0.4);border-radius:8px;color:#e8f4fd;font-size:0.82rem;font-family:inherit">
+          <button onclick="saveNote(${JSON.stringify(id)})" style="padding:5px 10px;background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:8px;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">保存</button>
+        </div>
+      `
+      const input = document.getElementById('edit-note-' + id)
+      if (input) { input.focus(); input.select() }
+    }
+
+    async function saveNote(id) {
+      const input = document.getElementById('edit-note-' + id)
+      if (!input) return
+      const newNote = input.value.trim() || null
+      const { error } = await _sb.from('location_checkins').update({ note: newNote }).eq('id', id)
+      if (error) { showToast('更新失敗'); return }
+      showToast('メモを更新しました')
+      await loadCheckins()
     }
 
     async function deleteCheckin(id) {
