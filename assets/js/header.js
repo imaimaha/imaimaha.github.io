@@ -159,24 +159,41 @@
         </div>
 
         <div class="rules-group">
-          <h3>✨ ポイント付与ルール</h3>
+          <h3>✨ ポイント付与</h3>
           <div class="rules-item"><div class="r-desc">毎日ログインボーナス</div><div class="r-val">+5pt</div></div>
           <div class="rules-item"><div class="r-desc">クイズの質問に答える</div><div class="r-val">+10pt</div></div>
+          <div class="rules-item"><div class="r-desc">ゲージタップ（％が増えた時のみ）</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">ゲージMAX到達（初回100）</div><div class="r-val">+5pt</div></div>
           <div class="rules-item"><div class="r-desc">ビンゴのマスをチェック</div><div class="r-val">+1pt</div></div>
           <div class="rules-item"><div class="r-desc">ビンゴ 1ライン達成</div><div class="r-val">+5pt</div></div>
           <div class="rules-item"><div class="r-desc">ビンゴ コンプリート</div><div class="r-val">+20pt</div></div>
+          <div class="rules-item"><div class="r-desc">カラーハント 写真追加</div><div class="r-val">+2pt</div></div>
+          <div class="rules-item"><div class="r-desc">カラーハント コンプ(8/8)</div><div class="r-val">+15pt</div></div>
+          <div class="rules-item"><div class="r-desc">タイムカプセル 送信</div><div class="r-val">+3pt</div></div>
+          <div class="rules-item"><div class="r-desc">タイムカプセル 開封</div><div class="r-val">+3pt</div></div>
+          <div class="rules-item"><div class="r-desc">タイムカプセル 返信</div><div class="r-val">+1pt</div></div>
           <div class="rules-item"><div class="r-desc">ありがとう送信</div><div class="r-val">+1pt</div></div>
           <div class="rules-item"><div class="r-desc">販売所への出品追加</div><div class="r-val">+1pt</div></div>
           <div class="rules-item"><div class="r-desc">ガチャ賞品ラインナップ追加</div><div class="r-val">+1pt</div></div>
-          <div class="rules-item"><div class="r-desc">思い出（メモリー）投稿</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">記念日当日ボーナス</div><div class="r-val">+100pt</div></div>
+          <div class="rules-item"><div class="r-desc">30日毎の節目ボーナス</div><div class="r-val">+30pt</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャN券使用ボーナス（該当券のみ）</div><div class="r-val">+50pt</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャR券使用ボーナス（該当券のみ）</div><div class="r-val">+200pt</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャSR券使用ボーナス（該当券のみ）</div><div class="r-val">+500pt</div></div>
         </div>
 
         <div class="rules-group">
-          <h3>💸 ポイント消費ルール</h3>
+          <h3>💸 ポイント消費</h3>
           <div class="rules-item"><div class="r-desc">ガチャ 1回</div><div class="r-val">-100pt</div></div>
           <div class="rules-item"><div class="r-desc">ガチャ 10+1連（R以上確定）</div><div class="r-val">-1000pt</div></div>
           <div class="rules-item"><div class="r-desc">販売所で購入</div><div class="r-val">-商品価格</div></div>
           <div class="rules-item"><div class="r-desc">ポイントプレゼント（相手に2倍で送る）</div><div class="r-val">-任意pt</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>🔄 相手↔自分の移動</h3>
+          <div class="rules-item"><div class="r-desc">販売所で自分の商品が売れた</div><div class="r-val">+商品価格</div></div>
+          <div class="rules-item"><div class="r-desc">ポイントプレゼント受取（相手が送ってくれた）</div><div class="r-val">+送信額×2</div></div>
         </div>
       </div>
     `
