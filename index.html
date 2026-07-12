@@ -72,6 +72,15 @@
         <span id="hero-emoji-right">🦔</span>
       </div>
       <div class="anniversary-badge" id="anniversary-badge"></div>
+
+      <!-- 今ここにいるよ: 記念日直下、hero内に統合 -->
+      <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <button id="loc-top-btn" onclick="doCheckinTop()" style="min-width:220px;padding:12px 24px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(150,200,255,0.4);border-radius:24px;color:#e8f4fd;font-size:0.95rem;font-family:inherit;cursor:pointer;font-weight:bold;backdrop-filter:blur(6px);box-shadow:0 2px 12px rgba(0,0,0,0.15);transition:all 0.2s">
+          📍 今ここにいるよ
+        </button>
+        <div id="loc-top-status" style="font-size:0.78rem;color:#98bedd;min-height:16px;text-align:center"></div>
+        <a href="/location.html" style="font-size:0.72rem;color:#7aadcc;text-decoration:none;opacity:0.85">🗺️ 過去の記録 →</a>
+      </div>
     </div>
   </header>
 
@@ -187,16 +196,6 @@
       </a>
     </section>
 
-    <section id="location" class="section">
-      <h2 class="section-title">今ここにいるよ</h2>
-      <div style="background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);">
-        <button id="loc-top-btn" onclick="doCheckinTop()" style="width:100%;padding:16px;background:linear-gradient(135deg,#e8f4fd,#d0e8ff);border:2px solid rgba(100,160,255,0.4);border-radius:14px;color:#2a4080;font-size:1.05rem;font-family:inherit;cursor:pointer;font-weight:bold;transition:all 0.2s;box-shadow:0 2px 10px rgba(42,82,152,0.15)">
-          📍 今ここにいるよ
-        </button>
-        <div id="loc-top-status" style="font-size:0.82rem;color:#8d6e63;margin-top:8px;min-height:18px;text-align:center"></div>
-        <a href="/location.html" style="display:block;text-align:center;font-size:0.8rem;color:#8a9fb5;margin-top:10px;text-decoration:none">🗺️ 過去の記録を見る →</a>
-      </div>
-    </section>
   </main>
 
   <footer>

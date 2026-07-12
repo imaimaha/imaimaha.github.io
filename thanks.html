@@ -119,20 +119,18 @@
         <span class="quick-tag" onclick="addTag('やさしくしてくれてありがとう ')">やさしさ</span>
         <span class="quick-tag" onclick="addTag('会えて嬉しかった ')">会えて</span>
       </div>
-      <button class="send-btn" id="send-btn" onclick="sendThanks()">🌸 送る（+1pt）</button>
-    </div>
 
-    <div class="compose-card" style="background:linear-gradient(135deg,#fff8ec,#fff2d8);border:1.5px solid rgba(255,180,80,0.35)">
-      <div class="compose-title">🎁 ポイントをプレゼント</div>
-      <div style="font-size:0.82rem;color:#8d6e63;margin-bottom:10px">自分のポイントを消費して、相手に<b>2倍</b>のポイントを送れます</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <label style="font-size:0.9rem;color:#6d4c41">送るpt:</label>
-        <input id="gift-amount" type="number" value="10" min="1" step="1"
-          style="width:100px;padding:8px 12px;background:#fff;border:1.5px solid #e8ddd5;border-radius:10px;color:#5d4037;font-size:15px;font-family:inherit">
-        <span style="font-size:0.9rem;color:#8d6e63">→ 相手 <span id="gift-preview" style="font-weight:bold;color:#e07a5f">+20pt</span></span>
+      <div style="margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,#fff8ec,#fff2d8);border:1.5px solid rgba(255,180,80,0.35);border-radius:12px">
+        <div style="font-size:0.85rem;color:#6d4c41;margin-bottom:8px;font-weight:bold">🎁 感謝の気持ちをptで（任意）</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <input id="gift-amount" type="number" value="0" min="0" step="1"
+            style="width:90px;padding:7px 10px;background:#fff;border:1.5px solid #e8ddd5;border-radius:10px;color:#5d4037;font-size:14px;font-family:inherit">
+          <span style="font-size:0.85rem;color:#8d6e63">pt → 相手 <span id="gift-preview" style="font-weight:bold;color:#e07a5f">+0pt</span></span>
+        </div>
+        <div style="font-size:0.75rem;color:#8d6e63">自分のptを消費して相手に<b>2倍</b>で届きます (残高: <span id="gift-balance" style="font-weight:bold;color:#e07a5f">…</span>)</div>
       </div>
-      <div style="font-size:0.8rem;color:#8d6e63;margin-bottom:10px">現在の残高: <span id="gift-balance" style="font-weight:bold;color:#e07a5f">…</span></div>
-      <button class="send-btn" id="gift-btn" onclick="sendGift()" style="background:linear-gradient(135deg,#f4a261,#e07a5f)">🎁 プレゼントする</button>
+
+      <button class="send-btn" id="send-btn" onclick="sendThanks()">🌸 送る</button>
     </div>
 
     <h2 class="section-title">ふたりのありがとう</h2>
@@ -174,41 +172,6 @@
       return total
     }
 
-    async function sendGift() {
-      if (!partnerId) { showToast('相手情報が取得できません'); return }
-      const amount = parseInt(document.getElementById('gift-amount').value) || 0
-      if (amount < 1) { showToast('1pt以上を指定してください'); return }
-
-      const balance = await loadBalance()
-      if (amount > balance) { showToast(`残高不足（${balance}pt しかありません）`); return }
-
-      const btn = document.getElementById('gift-btn')
-      btn.disabled = true
-
-      // 自分から -amount、相手に +2*amount を同時にinsert
-      const { error } = await _sb.from('points').insert([
-        { user_id: currentUser.id, amount: -amount, reason: 'thanks_gift_sent' },
-        { user_id: partnerId, amount: amount * 2, reason: 'thanks_gift_received' },
-      ])
-
-      if (error) { showToast('プレゼント失敗: ' + error.message); btn.disabled = false; return }
-
-      // Push通知
-      const myEmoji = profiles[currentUser.id]?.emoji || ''
-      const myName = profiles[currentUser.id]?.name || ''
-      _sb.functions.invoke('send-push', {
-        body: {
-          title: '🎁 ポイントが届きました',
-          body: `${myEmoji} ${myName} から +${amount * 2}pt`,
-          url: '/thanks.html',
-          recipient_user_id: partnerId,
-        },
-      }).catch(() => {})
-
-      showToast(`🎁 プレゼント完了！ (${amount}pt → +${amount * 2}pt)`)
-      btn.disabled = false
-      await loadBalance()
-    }
 
     function addTag(text) {
       const input = document.getElementById('msg-input')
@@ -218,8 +181,20 @@
 
     async function sendThanks() {
       const msg = document.getElementById('msg-input').value.trim()
+      const giftAmount = parseInt(document.getElementById('gift-amount').value) || 0
+
       if (!msg) { showToast('メッセージを入力してください'); return }
       if (!partnerId) { showToast('相手情報が取得できません'); return }
+
+      // ギフトあり時は残高チェック
+      if (giftAmount > 0) {
+        const balance = await loadBalance()
+        if (giftAmount > balance) {
+          showToast(`残高不足（${balance}pt しかありません）`)
+          return
+        }
+      }
+
       const btn = document.getElementById('send-btn')
       btn.disabled = true
 
@@ -227,20 +202,25 @@
         from_user_id: currentUser.id,
         to_user_id: partnerId,
         message: msg,
+        gift_amount: giftAmount > 0 ? giftAmount : null,
       })
       if (error) { showToast('送信失敗: ' + error.message); btn.disabled = false; return }
 
-      // ポイント: 送信 +1pt / 相手にも +1pt (thanks_receive)
-      await _sb.from('points').insert([
+      // ポイント: 送信 +1pt (通常)、ギフトありは -giftAmount / 相手 +giftAmount*2
+      const pointRows = [
         { user_id: currentUser.id, amount: 1, reason: 'thanks_send' },
-      ])
-      // 相手側のポイントも入れたい → RLSで自分の分しかINSERTできないので断念（or send-remindersで補正できるが省略）
-      // 代わりに: 「受信 +1pt」は受信者が自分で読み込んだタイミングで claim させるか、Function 経由。今回は簡易に送信のみ加算
+      ]
+      if (giftAmount > 0) {
+        pointRows.push({ user_id: currentUser.id, amount: -giftAmount, reason: 'thanks_gift_sent' })
+        pointRows.push({ user_id: partnerId, amount: giftAmount * 2, reason: 'thanks_gift_received' })
+      }
+      await _sb.from('points').insert(pointRows)
 
-      // Push通知
+      // Push通知（ギフトありは金額もタイトルに含める）
+      const notifTitle = giftAmount > 0 ? `🎁 ありがとう +${giftAmount * 2}pt` : '🌸 ありがとう'
       _sb.functions.invoke('send-push', {
         body: {
-          title: '🌸 ありがとう',
+          title: notifTitle,
           body: msg.length > 50 ? msg.slice(0, 50) + '…' : msg,
           url: '/thanks.html',
           recipient_user_id: partnerId,
@@ -248,7 +228,10 @@
       }).then(({ error }) => { if (error) console.error('[thanks] push:', error) })
 
       document.getElementById('msg-input').value = ''
+      document.getElementById('gift-amount').value = '0'
+      document.getElementById('gift-preview').textContent = '+0pt'
       btn.disabled = false
+      await loadBalance()
       await loadPosts()
     }
 
@@ -279,6 +262,7 @@
             <span>${escHtml(to?.name ?? '?')}</span>
           </div>
           <div class="post-message">${escHtml(p.message)}</div>
+          ${p.gift_amount ? `<div style="margin-top:6px;padding:6px 10px;background:linear-gradient(135deg,#fff8ec,#ffe8c8);border-radius:10px;font-size:0.82rem;color:#8d4a37;font-weight:bold">🎁 +${p.gift_amount * 2}pt プレゼント（消費: ${p.gift_amount}pt）</div>` : ''}
           <div class="post-time">${time}</div>
         `
         list.appendChild(el)

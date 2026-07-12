@@ -359,6 +359,7 @@
           .select('*').eq('id', activeId).maybeSingle();
         if (data && data.user_id === state.userId && data.mode === 'single') {
           state.currentHunt = data;
+      state.viewingHistory = false;
           await openHuntBoard('single');
           return;
         }
@@ -395,6 +396,7 @@
 
       if (existing && existing.length > 0) {
         state.currentHunt = existing[0];
+        state.viewingHistory = false;
       } else {
         // 週キーからパレットの色を決定
         const seed = parseInt(weekKey.replace(/-/g, ''), 10);
@@ -410,6 +412,7 @@
         }).select().single();
         if (error) { showToast('作成に失敗: ' + error.message, true); return; }
         state.currentHunt = data;
+      state.viewingHistory = false;
       }
 
       openHuntBoard('weekly');
@@ -426,6 +429,7 @@
       }).select().single();
       if (error) { showToast('作成に失敗: ' + error.message, true); return; }
       state.currentHunt = data;
+      state.viewingHistory = false;
       setActiveSingle(data.id);
       openHuntBoard('single');
     }
@@ -468,7 +472,9 @@
     async function openHuntBoard(mode) {
       const h = state.currentHunt;
       state.isHuntOwner = h.user_id === state.userId;
-      document.getElementById('hunt-mode-label').textContent = mode === 'weekly' ? '今週の' : '';
+      const modeLabel = mode === 'weekly' ? '今週の' : ''
+      const historyLabel = state.viewingHistory ? '（履歴・閲覧のみ）' : ''
+      document.getElementById('hunt-mode-label').textContent = modeLabel + historyLabel;
       document.getElementById('hunt-color-chip').style.background = h.color_hex;
       document.getElementById('hunt-color-label').textContent = h.color_name || h.color_hex;
       showScreen('hunt');
@@ -515,14 +521,16 @@
             } else {
               cell.textContent = '⚠︎';
             }
-            cell.onclick = () => {
-              if (photo.user_id && photo.user_id !== state.userId) {
-                showToast('相手が撮った写真です', true);
-                return;
-              }
-              if (confirm('この写真を削除しますか？')) removePhoto(slotIndex);
-            };
-          } else if (state.isHuntOwner) {
+            if (!state.viewingHistory) {
+              cell.onclick = () => {
+                if (photo.user_id && photo.user_id !== state.userId) {
+                  showToast('相手が撮った写真です', true);
+                  return;
+                }
+                if (confirm('この写真を削除しますか？')) removePhoto(slotIndex);
+              };
+            }
+          } else if (state.isHuntOwner && !state.viewingHistory) {
             cell.textContent = '+';
             cell.onclick = () => triggerUpload(slotIndex);
           } else {
@@ -668,7 +676,7 @@
           </div>
           <div style="font-size:0.78rem;color:#98bedd">${label} · ${modeLabel} · 📸 ${row.photos.length}/8</div>
         `;
-        item.onclick = () => { state.currentHunt = row; openHuntBoard(row.mode); };
+        item.onclick = () => { state.currentHunt = row; state.viewingHistory = true; openHuntBoard(row.mode); };
         list.appendChild(item);
       });
     }
