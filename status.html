@@ -266,6 +266,13 @@
       backdrop-filter: blur(6px);
     }
     .status-action-btn:active { transform: scale(0.96); }
+    .btn-late {
+      background: linear-gradient(135deg, rgba(255,167,38,0.22), rgba(255,140,50,0.32));
+      border-color: rgba(255,180,80,0.6);
+      color: #ffd7a3;
+      box-shadow: 0 4px 16px rgba(230,120,40,0.28);
+    }
+    .btn-late:hover { background: linear-gradient(135deg, rgba(255,167,38,0.32), rgba(255,140,50,0.42)); }
     .btn-left {
       background: linear-gradient(135deg, rgba(96,165,250,0.2), rgba(96,165,250,0.32));
       border-color: rgba(144,202,249,0.6);
@@ -310,6 +317,7 @@
       <div class="ask-result" id="ask-result"></div>
     </div>
     <div class="status-action-row">
+      <button class="status-action-btn btn-late" onclick="sendStatusEvent('late')">⏰ 遅れそう</button>
       <button class="status-action-btn btn-left" onclick="sendStatusEvent('left')">🏃 会社出た</button>
       <button class="status-action-btn btn-home" onclick="sendStatusEvent('home')">🏠 帰宅</button>
     </div>
@@ -467,21 +475,29 @@
       if (!myProfile) return
       const { data: { session } } = await _sb.auth.getSession()
       const labels = {
+        late: `${myProfile.emoji} ${myProfile.name} は予定より遅れそう ⏰`,
         left: `${myProfile.emoji} ${myProfile.name} が会社を出ました 🏃`,
         home: `${myProfile.emoji} ${myProfile.name} が帰宅しました 🏠`,
       }
-      const titles = { left: '🏃 会社出た', home: '🏠 帰宅' }
+      const titles = { late: '⏰ 遅れそう', left: '🏃 会社出た', home: '🏠 帰宅' }
       const msg = labels[type]
       const resultEl = document.getElementById('status-event-result')
       resultEl.textContent = '送信中...'
 
-      const { error } = await _sb.functions.invoke('line-notify', {
-        body: { sender_id: session.user.id, target: 'partner', message: msg },
-      })
-      if (error) {
+      // 「遅れそう」は Push 通知のみ (LINE には流さない — 帰宅系だけ LINE)
+      if (type === 'late') {
         await _sb.functions.invoke('send-push', {
-          body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id },
+          body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
         })
+      } else {
+        const { error } = await _sb.functions.invoke('line-notify', {
+          body: { sender_id: session.user.id, target: 'partner', message: msg },
+        })
+        if (error) {
+          await _sb.functions.invoke('send-push', {
+            body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
+          })
+        }
       }
       resultEl.textContent = '✅ 送りました！'
       setTimeout(() => { resultEl.textContent = '' }, 4000)
