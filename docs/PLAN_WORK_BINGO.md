@@ -6,6 +6,35 @@
 
 ---
 
+## 0. 併せて実施したい既存の仕様変更
+
+### 0.1 週間ビンゴでは「再生成」「過去から復元」ボタンを非表示にする
+
+**理由**:
+- 週間ビンゴは週次シード固定（`makeDailyItems` は月曜YYYY-MM-DDから
+  seedを算出）で、同じ週なら誰が引いても同じカードになる仕様。
+  再生成すると意味的に破綻する（週替わりの共通お題を書き換えることになる）。
+- 過去から復元は「過去に開いた別のカードを引き継ぐ」機能なので、
+  週次固定のweeklyには不要（意味的にランダム/カテゴリ用の機能）。
+
+**実装方針**:
+- `openGridScreen` または `renderGrid` で `state.card.mode === 'weekly'` の時、
+  `#btn-regenerate` と `#btn-restore` を display:none にする
+- 既存の `state.readonly` 分岐と並列に mode 分岐を追加
+
+```js
+// bingo.html 1567-1568行目付近
+const isWeekly = state.card?.mode === 'weekly';
+document.getElementById('btn-regenerate').style.display =
+  (state.readonly || isWeekly) ? 'none' : '';
+document.getElementById('btn-restore').style.display =
+  (state.readonly || isWeekly) ? 'none' : '';
+```
+
+シェアボタンは残しておく（週間カードもシェアしたいはず）。
+
+---
+
 ## 1. 目的
 
 エンジニアである作者の日常的な仕事風景（会社での出来事・開発中の出来事・
