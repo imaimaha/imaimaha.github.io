@@ -9,7 +9,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -22,69 +22,270 @@
     })
   </script>
   <style>
-    /* カテゴリピル */
-    .cat-tabs {
-      display: flex; gap: 8px;
-      padding: 12px 16px 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    .cat-tabs::-webkit-scrollbar { display: none; }
-    .cat-tab {
-      flex-shrink: 0;
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 9px 15px;
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(150,200,255,0.18);
-      border-radius: 999px;
-      color: #98bedd;
-      font-family: inherit; font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.14s;
-      backdrop-filter: blur(6px);
-    }
-    .cat-tab:active { transform: scale(0.95); }
-    .cat-tab.active {
-      background: rgba(140,240,180,0.22);
-      border-color: rgba(140,240,180,0.55);
-      color: #d6ffe4;
-    }
-    .cat-tab .cat-icon { font-size: 1rem; }
-    .cat-tab .cat-count {
-      font-size: 0.7rem;
-      color: #7aadcc;
-      padding: 1px 6px;
-      background: rgba(0,0,0,0.24);
-      border-radius: 999px;
-      min-width: 18px;
-      text-align: center;
-    }
-    .cat-tab.active .cat-count { color: #d6ffe4; background: rgba(140,240,180,0.18); }
-
+    /* コンテンツラッパー — FAB分の余白を下に確保 */
     .content {
       max-width: 720px;
       margin: 0 auto;
-      padding: 16px 16px 40px;
+      padding: 12px 16px calc(120px + env(safe-area-inset-bottom, 0px));
+      position: relative;
+      z-index: 1;
     }
 
-    /* 追加フォーム */
-    .add-card {
+    /* サマリー */
+    .summary {
+      display: flex; gap: 8px;
+      padding: 4px 4px 14px;
+    }
+    .summary-chip {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .summary-chip .n {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem;
+      color: #f0f6ff;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .summary-chip .label {
+      font-size: 0.7rem;
+      color: #98bedd;
+    }
+
+    /* セクション (カテゴリごと) */
+    .section {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .section-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.18s;
+    }
+    .section-head:hover { background: rgba(255,255,255,0.06); }
+    .section-emoji { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .section-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem;
+      color: #f0f6ff;
+      letter-spacing: 0.04em;
+    }
+    .section-count {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: #98bedd;
+      background: rgba(0,0,0,0.24);
+      padding: 3px 10px;
+      border-radius: 999px;
+      min-width: 36px;
+      text-align: center;
+    }
+    .section-toggle {
+      color: #7aadcc;
+      font-size: 0.9rem;
+      transition: transform 0.2s;
+    }
+    .section.collapsed .section-toggle { transform: rotate(-90deg); }
+    .section-body {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.28s ease, opacity 0.2s;
+    }
+    .section.collapsed .section-body {
+      max-height: 0;
+      opacity: 0;
+    }
+    .section-body-inner {
+      padding: 4px 12px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    /* 達成済みセクション */
+    .section.done-section {
+      border-color: rgba(140,240,180,0.28);
+    }
+    .section.done-section .section-emoji {
+      filter: drop-shadow(0 0 6px rgba(140,240,180,0.4));
+    }
+
+    /* 項目 */
+    .item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(150,200,255,0.12);
+      border-radius: 12px;
+      transition: background 0.18s, border-color 0.18s, opacity 0.24s, transform 0.14s;
+    }
+    .item.done {
+      background: rgba(140,240,180,0.06);
+      border-color: rgba(140,240,180,0.22);
+    }
+    .item.done .title { text-decoration: line-through; color: #98bedd; }
+    .item.leaving { opacity: 0; transform: translateX(20px) scale(0.96); }
+    .item.enter { animation: itemEnter 0.32s cubic-bezier(0.32,0.72,0,1) both; }
+    @keyframes itemEnter {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .check {
+      width: 28px; height: 28px;
+      min-width: 28px; min-height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(140,240,180,0.38);
+      background: rgba(140,240,180,0.06);
+      display: flex; align-items: center; justify-content: center;
+      color: transparent;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.14s, color 0.18s;
+      flex-shrink: 0;
+    }
+    .check:active { transform: scale(0.88); }
+    .item.done .check {
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      border-color: #6fd8a0;
+      color: #04150c;
+      box-shadow: 0 0 12px rgba(140,240,180,0.45);
+    }
+    .item.done .check::before { content: '✓'; }
+
+    .title {
+      flex: 1; min-width: 0;
+      font-size: 0.95rem;
+      color: #e8f4fd;
+      line-height: 1.4;
+      word-break: break-word;
+      cursor: pointer;
+    }
+
+    /* アクションアイコンボタン */
+    .icon-btn {
+      width: 32px; height: 32px;
+      min-width: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none;
+      color: #5a7fa8;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color 0.18s, background 0.18s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.08); color: #e8f4fd; }
+    .icon-btn.del:hover { color: #ff9d9d; }
+
+    /* 空状態 */
+    .empty-inline {
+      padding: 8px 12px 4px;
+      color: #6a8aa8;
+      font-size: 0.82rem;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      z-index: 90;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
+      border: none;
+      font-size: 1.6rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(80,200,140,0.45), 0 2px 8px rgba(0,0,0,0.25);
+      transition: transform 0.14s, box-shadow 0.18s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fab:hover  { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(80,200,140,0.55); }
+    .fab:active { transform: scale(0.93); }
+
+    /* ボトムシート (追加・確認・編集で共用) */
+    .sheet-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 200;
+      background: rgba(5,15,40,0.72);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.24s;
+    }
+    .sheet-overlay.open { display: block; opacity: 1; }
+    .sheet {
+      position: fixed;
+      left: 50%; bottom: 0;
+      z-index: 201;
+      width: min(100%, 560px);
+      transform: translateX(-50%) translateY(102%);
+      transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+      background: linear-gradient(180deg, #0f1f48 0%, #060e24 100%);
+      border-top: 1.5px solid rgba(100,180,255,0.28);
+      border-radius: 22px 22px 0 0;
+      padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+      max-height: 84vh;
+      overflow-y: auto;
+    }
+    .sheet.open { transform: translateX(-50%) translateY(0); }
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: rgba(200,220,255,0.3);
+      border-radius: 4px;
+      margin: 0 auto 14px;
+    }
+    .sheet h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.15rem; color: #e8f4fd;
+      text-align: center; letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    /* カテゴリピル (追加シート内) */
+    .cat-pills {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .cat-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px;
       background: rgba(255,255,255,0.05);
       border: 1.5px solid rgba(150,200,255,0.2);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 16px;
-      display: flex; gap: 8px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: border-color 0.18s;
+      border-radius: 12px;
+      color: #98bedd;
+      font-family: inherit; font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
     }
-    .add-card:focus-within { border-color: rgba(140,240,180,0.5); }
-    .add-input {
-      flex: 1;
-      padding: 11px 14px;
+    .cat-pill:active { transform: scale(0.96); }
+    .cat-pill.active {
+      background: rgba(140,240,180,0.2);
+      border-color: rgba(140,240,180,0.55);
+      color: #d6ffe4;
+    }
+    .cat-pill .icon { font-size: 1.2rem; }
+
+    /* 入力 */
+    .sheet-input {
+      width: 100%;
+      padding: 12px 14px;
       background: rgba(0,0,0,0.24);
       border: 1.5px solid rgba(150,200,255,0.28);
       border-radius: 12px;
@@ -92,136 +293,69 @@
       font-size: 16px;
       font-family: inherit;
       outline: none;
+      margin-bottom: 12px;
     }
-    .add-input::placeholder { color: rgba(200,220,255,0.35); }
-    .add-input:focus { border-color: rgba(140,240,180,0.55); }
-    .add-btn {
-      padding: 11px 20px;
+    .sheet-input::placeholder { color: rgba(200,220,255,0.35); }
+    .sheet-input:focus { border-color: rgba(140,240,180,0.5); }
+
+    /* シートボタン */
+    .sheet-actions {
+      display: flex; gap: 10px;
+    }
+    .btn-primary, .btn-secondary, .btn-danger {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.14s, box-shadow 0.18s, background 0.18s;
+    }
+    .btn-primary {
       background: linear-gradient(135deg, #58c58f, #6fd8a0);
       color: #04150c;
       border: none;
-      border-radius: 12px;
-      font-family: inherit; font-size: 0.95rem;
-      font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: transform 0.14s, box-shadow 0.18s;
       box-shadow: 0 4px 16px rgba(80,200,140,0.32);
     }
-    .add-btn:hover  { box-shadow: 0 6px 22px rgba(80,200,140,0.45); }
-    .add-btn:active { transform: scale(0.96); }
-    .add-card.hidden { display: none; }
-
-    /* カテゴリヘッダ */
-    .cat-header {
-      display: flex; align-items: center; gap: 10px;
-      margin: 10px 4px 12px;
+    .btn-primary:hover  { box-shadow: 0 6px 22px rgba(80,200,140,0.45); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+    .btn-danger {
+      background: linear-gradient(135deg, #d94f4f, #e57373);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(217,79,79,0.32);
     }
-    .cat-header .cat-emoji { font-size: 1.6rem; }
-    .cat-header h2 {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.2rem;
-      color: #f0f6ff;
-      letter-spacing: 0.04em;
-    }
-    .cat-header .sub {
-      margin-left: auto;
-      font-size: 0.75rem;
-      color: #7aadcc;
-    }
-
-    /* リスト */
-    .wish-list {
-      display: flex; flex-direction: column;
-      gap: 10px;
-    }
-    .wish-item {
-      display: flex; align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(150,200,255,0.15);
-      border-radius: 14px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: background 0.18s, border-color 0.18s, transform 0.14s, opacity 0.22s;
-    }
-    .wish-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(150,200,255,0.28); }
-    .wish-item.done {
-      background: rgba(140,240,180,0.06);
-      border-color: rgba(140,240,180,0.24);
-      opacity: 0.66;
-    }
-    .wish-item.done .wish-title { text-decoration: line-through; color: #98bedd; }
-    .wish-item.enter { animation: wishEnter 0.35s cubic-bezier(0.32,0.72,0,1) both; }
-    .wish-item.leaving { opacity: 0; transform: translateX(20px) scale(0.96); }
-    @keyframes wishEnter {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .check-btn {
-      width: 32px; height: 32px;
-      min-width: 32px; min-height: 32px;
-      border-radius: 50%;
-      border: 2px solid rgba(140,240,180,0.4);
-      background: rgba(140,240,180,0.06);
-      cursor: pointer;
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.9rem; color: #baffcc;
-      transition: background 0.18s, border-color 0.18s, transform 0.14s;
-    }
-    .check-btn:hover  { background: rgba(140,240,180,0.16); }
-    .check-btn:active { transform: scale(0.9); }
-    .check-btn.checked {
-      background: linear-gradient(135deg, #58c58f, #6fd8a0);
-      border-color: #6fd8a0;
-      color: #04150c;
-      box-shadow: 0 0 12px rgba(140,240,180,0.4);
-    }
-
-    .wish-title {
-      flex: 1;
-      font-size: 0.95rem;
-      color: #e8f4fd;
-      line-height: 1.4;
-      word-break: break-word;
-      cursor: text;
-    }
-    .wish-title[contenteditable="true"] {
-      outline: none;
+    .btn-danger:active { transform: scale(0.97); }
+    .btn-secondary {
       background: rgba(255,255,255,0.06);
-      padding: 4px 8px;
+      border: 1.5px solid rgba(150,200,255,0.22);
+      color: #98bedd;
+    }
+    .btn-secondary:active { transform: scale(0.97); }
+
+    /* 削除確認内の対象プレビュー */
+    .del-preview {
+      background: rgba(255,80,80,0.08);
+      border: 1px solid rgba(255,120,120,0.28);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #ffd0d0;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+    .del-preview .cat {
+      display: inline-block;
+      font-size: 0.72rem;
+      color: #98bedd;
+      background: rgba(150,200,255,0.14);
+      border: 1px solid rgba(150,200,255,0.3);
+      padding: 2px 8px;
       border-radius: 8px;
-      margin: -4px -8px;
-    }
-
-    .del-btn {
-      background: none; border: none;
-      color: #5a7fa8;
-      cursor: pointer;
-      padding: 8px;
-      font-size: 1rem;
-      transition: color 0.18s;
-      flex-shrink: 0;
-    }
-    .del-btn:hover { color: #ff9d9d; }
-
-    /* 空状態 */
-    .empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: #7aadcc;
-    }
-    .empty-emoji { font-size: 3.2rem; margin-bottom: 12px; }
-    .empty-title {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.1rem;
-      color: #f0f6ff;
       margin-bottom: 6px;
     }
-    .empty-sub { font-size: 0.85rem; }
 
     /* トースト */
     .toast {
@@ -241,6 +375,20 @@
       z-index: 500;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* エンプティ (全カテゴリで0件) */
+    .all-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #7aadcc;
+    }
+    .all-empty .em { font-size: 3.6rem; margin-bottom: 12px; }
+    .all-empty .t {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.15rem;
+      color: #e8f4fd;
+      margin-bottom: 6px;
+    }
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
@@ -255,36 +403,70 @@
     <h1>💫 やりたいこと</h1>
   </div>
 
-  <div class="cat-tabs" id="cat-tabs"></div>
-
   <div class="content">
-    <div class="add-card" id="add-card">
-      <input type="text" id="new-title" class="add-input" placeholder="追加したいこと" maxlength="120">
-      <button class="add-btn" onclick="addWish()">＋ 追加</button>
-    </div>
+    <!-- サマリー -->
+    <div class="summary" id="summary"></div>
 
-    <div class="cat-header" id="cat-header">
-      <span class="cat-emoji" id="cat-header-emoji">📍</span>
-      <h2 id="cat-header-title">行きたい場所</h2>
-      <span class="sub" id="cat-header-sub"></span>
-    </div>
+    <!-- セクション一覧 -->
+    <div id="sections"></div>
+  </div>
 
-    <div class="wish-list" id="wish-list"></div>
+  <!-- FAB (追加) -->
+  <button class="fab" id="fab" onclick="openAddSheet()" aria-label="追加">＋</button>
+
+  <!-- 共用オーバーレイ -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="closeAllSheets()"></div>
+
+  <!-- 追加シート -->
+  <div class="sheet" id="add-sheet">
+    <div class="sheet-handle"></div>
+    <h3>💫 追加する</h3>
+    <div class="cat-pills" id="add-cat-pills"></div>
+    <input type="text" id="add-input" class="sheet-input" placeholder="やりたいこと..." maxlength="120">
+    <div class="sheet-actions">
+      <button class="btn-secondary" onclick="closeAllSheets()">キャンセル</button>
+      <button class="btn-primary" onclick="submitAdd()">＋ 追加</button>
+    </div>
+  </div>
+
+  <!-- 編集シート -->
+  <div class="sheet" id="edit-sheet">
+    <div class="sheet-handle"></div>
+    <h3>✏️ 編集</h3>
+    <input type="text" id="edit-input" class="sheet-input" maxlength="120">
+    <div class="sheet-actions">
+      <button class="btn-secondary" onclick="closeAllSheets()">キャンセル</button>
+      <button class="btn-primary" onclick="submitEdit()">💾 保存</button>
+    </div>
+  </div>
+
+  <!-- 削除確認シート -->
+  <div class="sheet" id="del-sheet">
+    <div class="sheet-handle"></div>
+    <h3>🗑 削除しますか？</h3>
+    <div class="del-preview" id="del-preview"></div>
+    <div style="font-size:0.8rem;color:#98bedd;margin-bottom:14px;text-align:center">この操作は取り消せません</div>
+    <div class="sheet-actions">
+      <button class="btn-secondary" onclick="closeAllSheets()">キャンセル</button>
+      <button class="btn-danger" onclick="submitDelete()">🗑 削除する</button>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
     const CATEGORIES = [
-      { id: '行きたい場所', icon: '📍', hint: '次のデートの候補地に' },
-      { id: '食べたいもの', icon: '🍽️', hint: '外食・お取り寄せ・作りたいの' },
-      { id: '見たいもの',   icon: '🎬', hint: '映画・展示・イベント' },
-      { id: 'ほしいもの',   icon: '🎁', hint: 'お互いへのプレゼント案' },
-      { id: '達成済み',     icon: '✅', hint: 'これまで叶ったこと' },
+      { id: '行きたい場所', icon: '📍', accent: '#a5c9ff' },
+      { id: '食べたいもの', icon: '🍽️', accent: '#ffb3c7' },
+      { id: '見たいもの',   icon: '🎬', accent: '#c084fc' },
+      { id: 'ほしいもの',   icon: '🎁', accent: '#ffd764' },
     ]
 
-    let currentCategory = CATEGORIES[0].id
-    let allWishes = []  // 全カテゴリ・全 done 状態を保持
+    let allWishes = []
+    let addCategory = CATEGORIES[0].id
+    let editTarget = null   // { id, currentTitle }
+    let delTarget = null    // { id, title, category }
+    let collapsed = { '達成': false }  // 達成セクション初期閉じ
 
     function escHtml(s) {
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
@@ -296,171 +478,251 @@
       setTimeout(() => t.classList.remove('show'), 1800)
     }
 
-    function renderTabs() {
-      const tabs = document.getElementById('cat-tabs')
-      const counts = countPerCategory()
-      tabs.innerHTML = ''
-      CATEGORIES.forEach(cat => {
-        const btn = document.createElement('button')
-        btn.className = 'cat-tab' + (cat.id === currentCategory ? ' active' : '')
-        btn.innerHTML = `<span class="cat-icon">${cat.icon}</span><span>${cat.id}</span><span class="cat-count">${counts[cat.id] ?? 0}</span>`
-        btn.onclick = () => switchCategory(cat.id)
-        tabs.appendChild(btn)
-      })
-    }
-
-    function countPerCategory() {
-      const c = {}
-      allWishes.forEach(w => {
-        if (w.done) c['達成済み'] = (c['達成済み'] ?? 0) + 1
-        else        c[w.category] = (c[w.category] ?? 0) + 1
-      })
-      return c
-    }
-
-    function switchCategory(id) {
-      currentCategory = id
-      const cat = CATEGORIES.find(c => c.id === id)
-      document.getElementById('cat-header-emoji').textContent = cat.icon
-      document.getElementById('cat-header-title').textContent = cat.id
-      document.getElementById('cat-header-sub').textContent = cat.hint
-      document.getElementById('add-card').classList.toggle('hidden', id === '達成済み')
-      renderTabs()
-      renderList()
-    }
-
     async function loadAll() {
-      const { data } = await _sb.from('wishes').select('*').order('created_at', { ascending: true })
+      const { data, error } = await _sb.from('wishes').select('*').order('created_at', { ascending: true })
+      if (error) { showToast('読み込み失敗'); return }
       allWishes = data || []
-      renderTabs()
-      switchCategory(currentCategory)
+      render()
     }
 
-    function filteredWishes() {
-      if (currentCategory === '達成済み') return allWishes.filter(w => w.done)
-      return allWishes.filter(w => w.category === currentCategory && !w.done)
+    function render() {
+      renderSummary()
+      renderSections()
+      renderAddPills()
     }
 
-    function renderList() {
-      const list = document.getElementById('wish-list')
-      const items = filteredWishes()
-      if (items.length === 0) {
-        const cat = CATEGORIES.find(c => c.id === currentCategory)
-        const msg = currentCategory === '達成済み'
-          ? { emoji: '🌱', title: 'まだ達成したことがありません', sub: 'チェックで達成済みに' }
-          : { emoji: cat.icon, title: 'まだ何もありません', sub: '追加してみよう' }
-        list.innerHTML = `<div class="empty"><div class="empty-emoji">${msg.emoji}</div><div class="empty-title">${msg.title}</div><div class="empty-sub">${msg.sub}</div></div>`
+    function renderSummary() {
+      const el = document.getElementById('summary')
+      const totalOpen = allWishes.filter(w => !w.done).length
+      const totalDone = allWishes.filter(w => w.done).length
+      el.innerHTML = `
+        <div class="summary-chip">
+          <div class="n">${totalOpen}</div>
+          <div class="label">やりたい</div>
+        </div>
+        <div class="summary-chip">
+          <div class="n">${totalDone}</div>
+          <div class="label">✅ 達成</div>
+        </div>
+      `
+    }
+
+    function renderSections() {
+      const container = document.getElementById('sections')
+
+      // 全て0件の場合はエンプティ表示
+      if (allWishes.length === 0) {
+        container.innerHTML = `
+          <div class="all-empty">
+            <div class="em">💫</div>
+            <div class="t">やりたいことを追加しよう</div>
+            <div>右下の ＋ ボタンから</div>
+          </div>`
         return
       }
-      list.innerHTML = ''
-      items.forEach(w => {
-        const el = document.createElement('div')
-        el.className = 'wish-item' + (w.done ? ' done' : '')
-        el.dataset.id = w.id
-        el.innerHTML = `
-          <button class="check-btn ${w.done ? 'checked' : ''}" data-action="check" data-id="${w.id}" data-done="${w.done}" aria-label="チェック">
-            ${w.done ? '✓' : ''}
-          </button>
-          <span class="wish-title" data-id="${w.id}" tabindex="0">${escHtml(w.title)}</span>
-          <button class="del-btn" data-action="delete" data-id="${w.id}" aria-label="削除">✕</button>
-        `
-        list.appendChild(el)
+
+      container.innerHTML = ''
+
+      CATEGORIES.forEach(cat => {
+        const items = allWishes.filter(w => w.category === cat.id && !w.done)
+        const section = buildSection({
+          key: cat.id,
+          emoji: cat.icon,
+          title: cat.id,
+          items,
+          isDone: false,
+        })
+        container.appendChild(section)
       })
+
+      // 達成セクション (最下部、折りたたみ可)
+      const doneItems = allWishes.filter(w => w.done)
+      if (doneItems.length > 0) {
+        const section = buildSection({
+          key: '達成',
+          emoji: '✅',
+          title: '達成したこと',
+          items: doneItems,
+          isDone: true,
+        })
+        container.appendChild(section)
+      }
     }
 
-    async function toggleDone(id, currentDone) {
-      const newDone = !currentDone
-      // 楽観更新
-      allWishes = allWishes.map(w => w.id.toString() === id.toString() ? { ...w, done: newDone } : w)
-      // アニメで「消える」表現
-      const el = document.querySelector(`.wish-item[data-id="${id}"]`)
-      if (el && currentCategory !== '達成済み' && newDone) {
-        el.classList.add('leaving')
-        setTimeout(() => { renderTabs(); renderList() }, 260)
-      } else if (el && currentCategory === '達成済み' && !newDone) {
-        el.classList.add('leaving')
-        setTimeout(() => { renderTabs(); renderList() }, 260)
+    function buildSection({ key, emoji, title, items, isDone }) {
+      const isCollapsed = collapsed[key]
+      const el = document.createElement('div')
+      el.className = 'section' + (isDone ? ' done-section' : '') + (isCollapsed ? ' collapsed' : '')
+      el.innerHTML = `
+        <div class="section-head" onclick="toggleSection('${key}')">
+          <span class="section-emoji">${emoji}</span>
+          <span class="section-title">${escHtml(title)}</span>
+          <span class="section-count">${items.length}</span>
+          <span class="section-toggle">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="section-body-inner"></div>
+        </div>
+      `
+      const inner = el.querySelector('.section-body-inner')
+      if (items.length === 0) {
+        inner.innerHTML = '<div class="empty-inline">まだありません</div>'
       } else {
-        renderTabs(); renderList()
+        items.forEach(w => inner.appendChild(buildItem(w)))
       }
-      const { error } = await _sb.from('wishes').update({ done: newDone }).eq('id', id)
+      return el
+    }
+
+    function buildItem(w) {
+      const it = document.createElement('div')
+      it.className = 'item' + (w.done ? ' done' : '')
+      it.dataset.id = w.id
+      it.innerHTML = `
+        <button class="check" data-action="toggle" aria-label="チェック"></button>
+        <span class="title" data-action="edit">${escHtml(w.title)}</span>
+        <button class="icon-btn" data-action="edit" aria-label="編集">✏️</button>
+        <button class="icon-btn del" data-action="delete" aria-label="削除">🗑</button>
+      `
+      it.addEventListener('click', e => {
+        const el = e.target.closest('[data-action]')
+        if (!el) return
+        const action = el.dataset.action
+        if (action === 'toggle') toggleDone(w)
+        if (action === 'edit')   openEditSheet(w)
+        if (action === 'delete') openDelSheet(w)
+      })
+      return it
+    }
+
+    function toggleSection(key) {
+      collapsed[key] = !collapsed[key]
+      renderSections()
+    }
+
+    // -------- Toggle done --------
+    async function toggleDone(w) {
+      const newDone = !w.done
+      const target = allWishes.find(x => x.id === w.id)
+      if (target) target.done = newDone
+      // アニメで消える表現
+      const el = document.querySelector(`.item[data-id="${w.id}"]`)
+      if (el) el.classList.add('leaving')
+      setTimeout(() => { render() }, 240)
+      const { error } = await _sb.from('wishes').update({ done: newDone }).eq('id', w.id)
       if (error) { showToast('更新失敗'); await loadAll() }
       else if (newDone) showToast('達成 🎉')
     }
 
-    async function deleteWish(id) {
-      if (!confirm('削除しますか？')) return
-      const el = document.querySelector(`.wish-item[data-id="${id}"]`)
-      if (el) el.classList.add('leaving')
-      allWishes = allWishes.filter(w => w.id.toString() !== id.toString())
-      setTimeout(() => { renderTabs(); renderList() }, 220)
-      const { error } = await _sb.from('wishes').delete().eq('id', id)
-      if (error) { showToast('削除失敗'); await loadAll() }
+    // -------- Add --------
+    function openAddSheet(prefillCategory) {
+      if (prefillCategory) addCategory = prefillCategory
+      renderAddPills()
+      document.getElementById('add-input').value = ''
+      openSheet('add-sheet')
+      setTimeout(() => document.getElementById('add-input').focus(), 260)
     }
 
-    async function editWishTitle(id, newTitle) {
-      const w = allWishes.find(x => x.id.toString() === id.toString())
-      if (!w) return
-      if (newTitle === w.title || !newTitle.trim()) return
-      w.title = newTitle
-      const { error } = await _sb.from('wishes').update({ title: newTitle }).eq('id', id)
-      if (error) { showToast('編集失敗'); await loadAll() }
-    }
-
-    // クリック委譲
-    document.getElementById('wish-list').addEventListener('click', e => {
-      const btn = e.target.closest('[data-action]')
-      if (!btn) return
-      const id = btn.dataset.id
-      if (btn.dataset.action === 'check') toggleDone(id, btn.dataset.done === 'true')
-      if (btn.dataset.action === 'delete') deleteWish(id)
-    })
-
-    // タイトルクリックでインライン編集
-    document.getElementById('wish-list').addEventListener('dblclick', e => {
-      const title = e.target.closest('.wish-title')
-      if (!title) return
-      title.contentEditable = 'true'
-      title.focus()
-    })
-    document.getElementById('wish-list').addEventListener('blur', e => {
-      const title = e.target.closest?.('.wish-title')
-      if (!title || title.contentEditable !== 'true') return
-      title.contentEditable = 'false'
-      const id = title.dataset.id
-      editWishTitle(id, title.textContent.trim())
-    }, true)
-    document.getElementById('wish-list').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const title = e.target.closest?.('.wish-title')
-        if (title && title.contentEditable === 'true') { e.preventDefault(); title.blur() }
-      }
-    })
-
-    async function addWish() {
-      const input = document.getElementById('new-title')
-      const title = input.value.trim()
-      if (!title) return
-      if (currentCategory === '達成済み') return
-      const { data, error } = await _sb.from('wishes').insert({
-        title,
-        category: currentCategory,
-        done: false
-      }).select().single()
-      if (error) { showToast('追加失敗: ' + error.message); return }
-      allWishes.push(data)
-      input.value = ''
-      renderTabs()
-      renderList()
-      // 新規追加項目にアニメ (次のフレームで class 追加)
-      requestAnimationFrame(() => {
-        const el = document.querySelector(`.wish-item[data-id="${data.id}"]`)
-        if (el) el.classList.add('enter')
+    function renderAddPills() {
+      const el = document.getElementById('add-cat-pills')
+      el.innerHTML = ''
+      CATEGORIES.forEach(cat => {
+        const p = document.createElement('button')
+        p.className = 'cat-pill' + (cat.id === addCategory ? ' active' : '')
+        p.innerHTML = `<span class="icon">${cat.icon}</span><span>${cat.id}</span>`
+        p.onclick = () => { addCategory = cat.id; renderAddPills() }
+        el.appendChild(p)
       })
     }
 
-    document.getElementById('new-title').addEventListener('keydown', e => {
-      if (e.key === 'Enter') addWish()
+    async function submitAdd() {
+      const input = document.getElementById('add-input')
+      const title = input.value.trim()
+      if (!title) { showToast('内容を入力してください'); return }
+      const { data, error } = await _sb.from('wishes').insert({
+        title, category: addCategory, done: false
+      }).select().single()
+      if (error) { showToast('追加失敗'); return }
+      allWishes.push(data)
+      // 追加したカテゴリが閉じてたら開く
+      if (collapsed[addCategory]) collapsed[addCategory] = false
+      closeAllSheets()
+      render()
+      showToast('追加しました')
+      // 新規アイテムをフラッシュ
+      setTimeout(() => {
+        const el = document.querySelector(`.item[data-id="${data.id}"]`)
+        if (el) el.classList.add('enter')
+      }, 30)
+    }
+
+    // -------- Edit --------
+    function openEditSheet(w) {
+      editTarget = { id: w.id, currentTitle: w.title }
+      document.getElementById('edit-input').value = w.title
+      openSheet('edit-sheet')
+      setTimeout(() => document.getElementById('edit-input').focus(), 260)
+    }
+
+    async function submitEdit() {
+      if (!editTarget) return
+      const newTitle = document.getElementById('edit-input').value.trim()
+      if (!newTitle) { showToast('内容を入力してください'); return }
+      if (newTitle === editTarget.currentTitle) { closeAllSheets(); return }
+      const { error } = await _sb.from('wishes').update({ title: newTitle }).eq('id', editTarget.id)
+      if (error) { showToast('編集失敗'); return }
+      const w = allWishes.find(x => x.id === editTarget.id)
+      if (w) w.title = newTitle
+      editTarget = null
+      closeAllSheets()
+      render()
+      showToast('更新しました')
+    }
+
+    // -------- Delete --------
+    function openDelSheet(w) {
+      delTarget = { id: w.id, title: w.title, category: w.category, done: w.done }
+      const catInfo = CATEGORIES.find(c => c.id === w.category)
+      const catLabel = w.done ? '✅ 達成' : (catInfo ? `${catInfo.icon} ${catInfo.id}` : w.category)
+      document.getElementById('del-preview').innerHTML = `
+        <div class="cat">${escHtml(catLabel)}</div>
+        <div>${escHtml(w.title)}</div>
+      `
+      openSheet('del-sheet')
+    }
+
+    async function submitDelete() {
+      if (!delTarget) return
+      const id = delTarget.id
+      delTarget = null
+      const el = document.querySelector(`.item[data-id="${id}"]`)
+      if (el) el.classList.add('leaving')
+      allWishes = allWishes.filter(w => w.id !== id)
+      closeAllSheets()
+      setTimeout(() => render(), 220)
+      const { error } = await _sb.from('wishes').delete().eq('id', id)
+      if (error) { showToast('削除失敗'); await loadAll() }
+      else showToast('削除しました')
+    }
+
+    // -------- Sheet plumbing --------
+    function openSheet(id) {
+      const overlay = document.getElementById('sheet-overlay')
+      const sheet = document.getElementById(id)
+      overlay.classList.add('open')
+      void sheet.offsetWidth
+      sheet.classList.add('open')
+    }
+    function closeAllSheets() {
+      document.getElementById('sheet-overlay').classList.remove('open')
+      document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'))
+    }
+
+    // Enter で確定
+    document.getElementById('add-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitAdd()
+    })
+    document.getElementById('edit-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitEdit()
     })
 
     loadAll()
