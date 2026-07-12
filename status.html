@@ -390,9 +390,10 @@
               <input type="time" id="input-time" value="${escHtml(timeText)}">
             </div>
             <div class="quick-time-row">
-              <button type="button" class="quick-btn" onclick="setQuickTime(30)">+30分</button>
-              <button type="button" class="quick-btn" onclick="setQuickTime(60)">+1時間</button>
-              <button type="button" class="quick-btn" onclick="setQuickTime(90)">+1.5時間</button>
+              <button type="button" class="quick-btn" onclick="setTimeExact('19:00')">19:00</button>
+              <button type="button" class="quick-btn" onclick="setTimeExact('22:00')">22:00</button>
+              <button type="button" class="quick-btn" onclick="adjustTime(-30)">−30分</button>
+              <button type="button" class="quick-btn" onclick="adjustTime(30)">+30分</button>
             </div>
             <div class="form-row">
               <label>メモ</label>
@@ -411,12 +412,24 @@
       btn.textContent = form.classList.contains('open') ? '閉じる' : '編集'
     }
 
-    function setQuickTime(minutes) {
-      const now = new Date()
-      now.setMinutes(now.getMinutes() + minutes)
-      const hh = String(now.getHours()).padStart(2, '0')
-      const mm = String(now.getMinutes()).padStart(2, '0')
-      document.getElementById('input-time').value = `${hh}:${mm}`
+    // 直接指定（例: 19:00 ボタン）
+    function setTimeExact(hhmm) {
+      document.getElementById('input-time').value = hhmm
+    }
+    // 入力欄の値を分単位で加減（現在時刻ではなく入力に対して）
+    function adjustTime(deltaMin) {
+      const inp = document.getElementById('input-time')
+      let base = inp.value
+      // 未入力なら 20:00 スタート
+      if (!base) base = '20:00'
+      const [h, m] = base.split(':').map(Number)
+      let total = h * 60 + m + deltaMin
+      // 0..24*60 にクランプ
+      if (total < 0) total = 0
+      if (total > 23 * 60 + 59) total = 23 * 60 + 59
+      const nh = String(Math.floor(total / 60)).padStart(2, '0')
+      const nm = String(total % 60).padStart(2, '0')
+      inp.value = `${nh}:${nm}`
     }
 
     async function saveStatus() {
