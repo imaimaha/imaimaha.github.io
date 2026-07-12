@@ -115,6 +115,39 @@ Deno.serve(async (req) => {
         }
       }
 
+    } else if (kind === 'status_5min_before' || kind === 'status_arrival') {
+      // このユーザーの帰宅予定 finish_time (HH:MM) と現在時刻(JST)を比較
+      // 該当したら「パートナー」に Push を送る
+      const { data: st } = await sb.from('status').select('finish_time').eq('user_id', p.id).maybeSingle()
+      if (!st?.finish_time) continue
+      // finish_time は "HH:MM" or "HH:MM:SS" 形式
+      const [fh, fm] = st.finish_time.split(':').map(Number)
+      // 現在の JST 時刻を分単位で算出
+      const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
+      const nowMin = jstNow.getUTCHours() * 60 + jstNow.getUTCMinutes()
+      const finishMin = fh * 60 + fm
+      const targetMin = kind === 'status_5min_before' ? finishMin - 5 : finishMin
+      // 5分毎のcron前提。abs(now - target) < 2.5 で発火
+      const diff = nowMin - targetMin
+      if (Math.abs(diff) > 3) continue
+
+      // パートナーを探す
+      const partner = profiles.find(x => x.id !== p.id)
+      if (!partner) continue
+
+      // 二重送信防止: notifications_sent には kind + owner user_id + date_str で記録
+      // 既送信チェックは冒頭で p.id (owner) 基準で行っているので OK
+      const timeStr = `${String(fh).padStart(2,'0')}:${String(fm).padStart(2,'0')}`
+      shouldNotify = true
+      // 送り先を partner に切替
+      title = kind === 'status_5min_before' ? '⏰ もうすぐ帰宅時間' : '🏠 帰宅時間になりました'
+      body = kind === 'status_5min_before'
+        ? `${p.emoji} ${p.name} の予定時刻 ${timeStr} まであと5分`
+        : `${p.emoji} ${p.name} の予定時刻 ${timeStr} になりました`
+      url = '/status.html'
+      // notify を partner に送るために recipient を切替。既送信チェックは owner (p.id) で記録
+      // 特殊フラグで下の送信ロジックに伝える
+      p._notifyToPartnerId = partner.id
     } else if (kind === 'anniversary') {
       // 記念日カウントダウン（毎朝2:05 JST に判定）
       const START = new Date('2025-11-22T02:00:00+09:00')
@@ -147,7 +180,9 @@ Deno.serve(async (req) => {
     }
 
     if (shouldNotify) {
-      // send-push を service_role で呼ぶ
+      // recipient は基本 self だが、status arrival 系はパートナーに送る
+      const recipientId = (p as any)._notifyToPartnerId ?? p.id
+      const kindTag = (kind === 'status_5min_before' || kind === 'status_arrival') ? 'status' : undefined
       const res = await fetch(`${SB_URL}/functions/v1/send-push`, {
         method: 'POST',
         headers: {
@@ -158,12 +193,13 @@ Deno.serve(async (req) => {
           title,
           body,
           url,
-          recipient_user_id: p.id,
+          recipient_user_id: recipientId,
+          ...(kindTag ? { kind: kindTag } : {}),
         }),
       })
       if (res.ok) {
         sent++
-        // 記録
+        // 記録 (owner の user_id で dedup。arrival 系は owner=p.id で正しい)
         await sb.from('notifications_sent').insert({
           user_id: p.id, kind, date_str: today,
         })
