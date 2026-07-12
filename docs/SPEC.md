@@ -246,10 +246,30 @@
   6. 売り手に Push 通知
 - 購入した券は「使用済」にすると bonus_points があれば加算 (shop_bonus)
 
-### 4.15 共通コンポーネント
+### 4.15 割り勘 (`expenses.html`)
 
-- `assets/js/header.js` — 全ページ右上に絵文字ボタン。タップでログアウト確認
-- `assets/js/push.js` — Web Push 購読管理＋状態バッジ（`#push-status-badge` があるページのみ）
+- 同棲・共同生活の支出（食費/光熱費/家賃/デート/交通/日用品/旅行/その他）を記録し、「今どちらが多く払ってるか」を可視化
+- **サマリーカード**（画面上部）: 未精算バランス、今月総支出、未精算件数、精算ボタン
+- **入力フォーム**（折りたたみ）: 金額・カテゴリ・メモ・支払者（自分/相手切替）・割合（折半/相手全額/自分全額）・日付
+- **履歴タイムライン**: 全部 / 未精算のみ / 精算済のみ フィルタ
+- **精算モーダル**: 未精算の合計を確定し、`expenses.settled_at` と `settlement_id` をまとめて記入
+- **バランス計算**: `net = Σ(未精算 e).amount × split_ratio × (paid_by === me ? +1 : -1)` → 正なら相手が私に返す、負なら私が相手に返す
+- 記録追加時 +1pt、精算実行時 +3pt。相手に Push (kind: `expense`)
+
+### 4.16 お知らせセンター (`notifications.html`)
+
+- send-push で受信した全通知の一覧・既読管理
+- Edge Function `send-push` は subscription への push 送信と並列に `notifications_log` テーブルに insert する。recipient_user_id 指定時はその1人、未指定時は sender 以外の全プロフィールに記録
+- **UI**: 一覧はカード形式、未読は左に青ドット＋薄青ハイライト、カテゴリ絵文字（thanks 🌸 / gacha 🎰 / shop 🛍 / capsule 🎁 / bingo 🎯 / color 🎨 / location 📍 / status 🕐 / expense 💰）
+- **フィルタチップ**: すべて / 未読 / カテゴリ別
+- **アクション**: 「すべて既読にする」、個別削除、タップで url に遷移し既読化
+- **ヘッダーの🔔ベルボタン**: 全ページ右上の絵文字ボタンの左に常設。未読件数バッジ（99+ で丸め）、visibilitychange で復帰時に自動更新
+
+### 4.17 共通コンポーネント
+
+- `assets/js/header.js` — 全ページ右上に絵文字ボタン(設定) と🔔ベルボタン(お知らせ) を挿入
+- `assets/js/nav.js` — 全ページ底部にタブナビ (ホーム/ふたり/遊ぶ/ショップ/もっと)。「遊ぶ」と「もっと」タップでシート表示
+- `assets/js/push.js` — Web Push 購読管理＋状態バッジ
 - `assets/js/stars.js` — 背景の星アニメーション
 
 ---
@@ -278,6 +298,8 @@
 | 記念日当日ボーナス | +100 | `anniversary_bonus` |
 | 30日ごとの節目（60日/90日/…） | +30 | `monthly_milestone` |
 | ありがとうポスト送信 | +1 | `thanks_send` |
+| 割り勘 支出記録 | +1 | `expense_add` |
+| 割り勘 精算実行 | +3 | `expense_settle` |
 
 ### 消費手段
 
@@ -341,6 +363,10 @@
 | `quiz.html` | 回答時 | 相手 |
 | `gacha.html` | 券使用時 | 相手 |
 | `shop.html` | 券使用・取り消し申請/承認/却下 | 相手 |
+| `expenses.html` | 支出記録追加 | 相手 (kind: `expense`) |
+| `expenses.html` | 精算実行 | 相手 (kind: `expense`) |
+
+**注**: `send-push` は全ての push 送信時に `notifications_log` テーブルにも受信者ごとに insert する。お知らせセンター (`notifications.html`) で一覧・既読管理される。呼び出し時に `kind` を指定するとカテゴリフィルタで絞れる。
 
 ### 6.3 プッシュ通知の発火条件（scheduled / リマインダー）
 
@@ -405,6 +431,10 @@
 | `thanks_posts` | from_user_id, to_user_id, message | 相手への「ありがとう」ポスト |
 | `shop_items` | seller_id, buyer_id, name, emoji, description, price, stock, bonus_points, rarity, active | 販売所の商品 |
 | `shop_purchases` | item_id, buyer_id, seller_id, price, name, emoji, description, bonus_points, rarity, used, purchased_at | 販売所の購入履歴 |
+| `shop_requests` | requester_id, title, price, description, status('pending'\|'accepted'\|'rejected') | 販売所リクエスト |
+| `expenses` | paid_by, amount, category, description, split_ratio, spent_at, settled_at, settlement_id | 割り勘の支出記録 |
+| `settlements` | settled_by, net_amount, payer_id, receiver_id, period_from, period_to | 割り勘の精算履歴 |
+| `notifications_log` | user_id, sender_id, title, body, url, kind, read_at | send-push で送信された通知の受信者記録（お知らせセンター用） |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
 ### 7.2 RLS ポリシーの原則

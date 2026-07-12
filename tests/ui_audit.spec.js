@@ -25,6 +25,8 @@ const PAGES = [
   { path: '/one_on_one.html',   name: 'one_on_one' },
   { path: '/location.html',     name: 'location' },
   { path: '/points.html',       name: 'points' },
+  { path: '/expenses.html',     name: 'expenses' },
+  { path: '/notifications.html',name: 'notifications' },
 ]
 
 const issues = []
