@@ -165,8 +165,8 @@
           <div class="rules-item"><div class="r-desc">ゲージタップ（％が増えた時のみ）</div><div class="r-val">+1pt</div></div>
           <div class="rules-item"><div class="r-desc">ゲージMAX到達（初回100）</div><div class="r-val">+5pt</div></div>
           <div class="rules-item"><div class="r-desc">ビンゴのマスをチェック</div><div class="r-val">+1pt</div></div>
-          <div class="rules-item"><div class="r-desc">ビンゴ 1ライン達成</div><div class="r-val">+5pt</div></div>
-          <div class="rules-item"><div class="r-desc">ビンゴ コンプリート</div><div class="r-val">+20pt</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴ 1ライン達成（3×3 / 4×4 / 5×5）</div><div class="r-val">+3 / +4 / +6pt</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴ コンプ（3×3 / 4×4 / 5×5）</div><div class="r-val">+10 / +16 / +30pt</div></div>
           <div class="rules-item"><div class="r-desc">カラーハント 写真追加</div><div class="r-val">+2pt</div></div>
           <div class="rules-item"><div class="r-desc">カラーハント コンプ(8/8)</div><div class="r-val">+15pt</div></div>
           <div class="rules-item"><div class="r-desc">タイムカプセル 送信</div><div class="r-val">+3pt</div></div>
