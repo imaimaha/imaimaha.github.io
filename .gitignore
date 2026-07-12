@@ -7,3 +7,4 @@ playwright-report/
 # 秘密情報（絶対にコミットしないこと）
 .env
 .env.local
+.claude/settings.json
