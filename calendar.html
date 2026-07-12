@@ -26,9 +26,10 @@
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed; background-attachment: fixed;
-      color: #4a3f35;
+      color: #e8f4fd;
       min-height: 100vh;
     }
+    .clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 
     .top-bar {
       display: flex;
@@ -75,48 +76,55 @@
     }
 
     .cal-nav button {
-      background: #fff;
-      border: 2px solid #e8ddd5;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.25);
       border-radius: 50%;
-      width: 36px; height: 36px;
-      font-size: 1rem;
+      width: 40px; height: 40px;
+      font-size: 1.1rem;
       cursor: pointer;
-      color: #8d6e63;
-      transition: background 0.2s;
+      color: #e8f4fd;
+      transition: background 0.18s, transform 0.14s;
+      backdrop-filter: blur(6px);
     }
 
-    .cal-nav button:hover { background: #f1f8f1; }
+    .cal-nav button:hover  { background: rgba(255,255,255,0.14); }
+    .cal-nav button:active { transform: scale(0.94); }
 
     .cal-month {
       font-family: 'Zen Kurenaido', sans-serif;
       font-size: 1.4rem;
-      color: #5d4037;
+      color: #f0f6ff;
+      letter-spacing: 0.06em;
     }
 
     /* カレンダーグリッド */
     .cal-grid {
-      background: #fff;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
       border-radius: 16px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.28);
       overflow: hidden;
       margin-bottom: 32px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .cal-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      background: #e8f5e9;
+      background: rgba(140,240,180,0.10);
+      border-bottom: 1px solid rgba(150,200,255,0.14);
     }
 
     .cal-weekday {
       text-align: center;
       padding: 10px 0;
       font-size: 0.8rem;
-      color: #8d6e63;
+      color: #98bedd;
       font-weight: bold;
     }
 
-    .cal-weekday:first-child { color: #ef9a9a; }
+    .cal-weekday:first-child { color: #ffb3c7; }
     .cal-weekday:last-child  { color: #90caf9; }
 
     .cal-days {
@@ -128,8 +136,8 @@
       min-height: 64px;
       min-width: 0;
       overflow: hidden;
-      border-top: 1px solid #f0ebe3;
-      border-right: 1px solid #f0ebe3;
+      border-top: 1px solid rgba(150,200,255,0.08);
+      border-right: 1px solid rgba(150,200,255,0.08);
       padding: 6px;
       cursor: pointer;
       transition: background 0.15s;
@@ -138,16 +146,17 @@
 
     .cal-day:nth-child(7n) { border-right: none; }
 
-    .cal-day:hover { background: #f9fbe7; }
+    .cal-day:hover { background: rgba(140,240,180,0.10); }
 
     .cal-day.other-month { opacity: 0.3; pointer-events: none; }
 
     .cal-day.today .day-num {
-      background: #81c784;
-      color: #fff;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
       border-radius: 50%;
       width: 24px; height: 24px;
       display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 12px rgba(140,240,180,0.55);
     }
 
     .cal-day.has-anniversary .day-num::after {
@@ -159,12 +168,12 @@
 
     .day-num {
       font-size: 0.85rem;
-      color: #5d4037;
+      color: #e8f4fd;
       width: 24px; height: 24px;
       display: flex; align-items: center; justify-content: center;
     }
 
-    .cal-day:nth-child(7n+1) .day-num { color: #ef9a9a; }
+    .cal-day:nth-child(7n+1) .day-num { color: #ffb3c7; }
     .cal-day:nth-child(7n) .day-num   { color: #90caf9; }
 
     .day-events {
@@ -176,10 +185,11 @@
 
     .day-event-dot {
       font-size: 0.7rem;
-      background: #c8e6c9;
-      color: #5d4037;
-      border-radius: 4px;
-      padding: 1px 4px;
+      background: rgba(140,240,180,0.22);
+      border: 1px solid rgba(140,240,180,0.35);
+      color: #d6ffe4;
+      border-radius: 6px;
+      padding: 1px 5px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -190,10 +200,10 @@
     .events-title {
       font-family: 'Zen Kurenaido', sans-serif;
       font-size: 1.3rem;
-      color: #5d4037;
+      color: #f0f6ff;
       margin-bottom: 16px;
       padding-left: 12px;
-      border-left: 4px solid #a5d6a7;
+      border-left: 4px solid #58c58f;
     }
 
     .event-list {
@@ -203,17 +213,21 @@
     }
 
     .event-item {
-      background: #fff;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.15);
       border-radius: 12px;
       padding: 14px 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       gap: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .event-date-badge {
-      background: #e8f5e9;
+      background: linear-gradient(135deg, rgba(140,240,180,0.16), rgba(140,240,180,0.28));
+      border: 1px solid rgba(140,240,180,0.4);
       border-radius: 10px;
       padding: 8px 12px;
       text-align: center;
@@ -221,29 +235,30 @@
       flex-shrink: 0;
     }
 
-    .event-date-month { font-size: 0.7rem; color: #8d6e63; }
-    .event-date-day   { font-size: 1.3rem; font-weight: bold; color: #5d4037; line-height: 1; }
+    .event-date-month { font-size: 0.7rem; color: #baffcc; }
+    .event-date-day   { font-size: 1.3rem; font-weight: bold; color: #f0f6ff; line-height: 1; }
 
     .event-info { flex: 1; }
-    .event-title { font-size: 0.95rem; color: #4a3f35; }
-    .event-memo  { font-size: 0.8rem; color: #a1887f; margin-top: 2px; }
+    .event-title { font-size: 0.95rem; color: #e8f4fd; }
+    .event-memo  { font-size: 0.8rem; color: #98bedd; margin-top: 2px; }
 
     .event-past { opacity: 0.45; }
 
     .delete-event-btn {
-      background: none; border: none; color: #d7ccc8;
+      background: none; border: none; color: #5a7fa8;
       cursor: pointer; font-size: 1rem; padding: 4px;
-      transition: color 0.2s;
+      transition: color 0.18s;
     }
-    .delete-event-btn:hover { color: #ef9a9a; }
+    .delete-event-btn:hover { color: #ff9d9d; }
 
-    .empty { text-align: center; color: #bcaaa4; padding: 32px 0; }
+    .empty { text-align: center; color: #7aadcc; padding: 32px 0; }
 
     /* モーダル */
     .modal-overlay {
       display: none;
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: rgba(5,15,40,0.72);
+      backdrop-filter: blur(6px);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -251,40 +266,43 @@
     .modal-overlay.open { display: flex; }
 
     .modal {
-      background: #fff;
+      background: linear-gradient(180deg, #0f1f48 0%, #060e24 100%);
+      border: 1.5px solid rgba(100,180,255,0.28);
       border-radius: 20px;
       padding: 28px;
       width: min(400px, 90vw);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      color: #e8f4fd;
     }
 
     .modal h3 {
       font-family: 'Zen Kurenaido', sans-serif;
       font-size: 1.2rem;
-      color: #5d4037;
+      color: #f0f6ff;
       margin-bottom: 20px;
     }
 
     .modal label {
       display: block;
       font-size: 0.85rem;
-      color: #8d6e63;
+      color: #98bedd;
       margin-bottom: 6px;
     }
 
     .modal input, .modal textarea {
       width: 100%;
       padding: 10px 14px;
-      border: 2px solid #e8ddd5;
+      background: rgba(0,0,0,0.24);
+      border: 1.5px solid rgba(150,200,255,0.28);
       border-radius: 10px;
       font-size: 0.95rem;
       font-family: inherit;
-      color: #4a3f35;
+      color: #e8f4fd;
       outline: none;
       margin-bottom: 14px;
     }
-
-    .modal input:focus, .modal textarea:focus { border-color: #a5d6a7; }
+    .modal input::placeholder, .modal textarea::placeholder { color: rgba(200,220,255,0.35); }
+    .modal input:focus, .modal textarea:focus { border-color: rgba(140,240,180,0.55); }
     .modal textarea { resize: none; height: 72px; }
 
     .modal-btns {
@@ -296,28 +314,33 @@
 
     .btn-cancel {
       padding: 10px 20px;
-      background: #fff;
-      border: 2px solid #e8ddd5;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(150,200,255,0.28);
       border-radius: 10px;
-      color: #8d6e63;
+      color: #98bedd;
       cursor: pointer;
       font-family: inherit;
       font-size: 0.9rem;
+      transition: background 0.18s;
     }
+    .btn-cancel:hover { background: rgba(255,255,255,0.13); }
 
     .btn-save {
       padding: 10px 24px;
-      background: #81c784;
-      color: #fff;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
       border: none;
       border-radius: 10px;
       font-family: inherit;
       font-size: 0.9rem;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: box-shadow 0.18s, transform 0.14s;
+      box-shadow: 0 4px 16px rgba(80,200,140,0.32);
     }
 
-    .btn-save:hover { background: #66bb6a; }
+    .btn-save:hover  { box-shadow: 0 6px 22px rgba(80,200,140,0.46); }
+    .btn-save:active { transform: scale(0.97); }
 
     /* スマホ対応 */
     @media (max-width: 480px) {
@@ -350,18 +373,24 @@
 
     /* 記念日マーク */
     .anniversary-row {
-      background: #fff9e6;
-      border: 2px solid #ffe082;
+      background: linear-gradient(135deg, rgba(255,215,100,0.12), rgba(255,180,50,0.18));
+      border: 1.5px solid rgba(255,215,100,0.4);
       border-radius: 12px;
       padding: 14px 16px;
       display: flex;
       align-items: center;
       gap: 16px;
       margin-bottom: 10px;
+      backdrop-filter: blur(10px);
     }
+
+    /* コンテンツを星背景の上に */
+    .top-bar, .content { position: relative; z-index: 1; }
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/header.js"></script>
   <script src="assets/js/nav.js"></script>
   <div class="top-bar">
