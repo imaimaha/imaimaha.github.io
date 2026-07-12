@@ -1759,11 +1759,13 @@
 
       // 相手（partner）に通知
       if (partnerId) {
+        const bodyMsg = `${ticket.reward_emoji || '🎁'} ${ticket.reward_name}${ticket.reward_desc ? ' — ' + ticket.reward_desc : ''}`
         _sb.functions.invoke('send-push', { body: {
           title: '🎰 ガチャ券が使われました',
-          body: ticket.reward_name,
+          body: bodyMsg,
           url: '/gacha.html',
           recipient_user_id: partnerId,
+          kind: 'gacha',
         }}).catch(() => {})
       }
 
@@ -1778,11 +1780,15 @@
         .eq('id', ticketId)
       if (error) { showToast('申請失敗', true); return }
       if (partnerId) {
+        // ticket 情報を含めて具体的にする
+        const ticket = allTickets ? allTickets.find(t => t.id === ticketId) : null
+        const targetName = ticket ? `${ticket.reward_emoji || '🎁'} ${ticket.reward_name}` : '使用済みの券'
         _sb.functions.invoke('send-push', { body: {
           title: '↩️ ガチャ券 取り消し申請',
-          body: '使用済みの取り消しを申請されました',
+          body: `${targetName} の取り消しを申請されました`,
           url: '/gacha.html',
           recipient_user_id: partnerId,
+          kind: 'gacha',
         }}).catch(() => {})
       }
       showToast('取り消しを申請しました')

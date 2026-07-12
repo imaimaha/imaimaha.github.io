@@ -3,8 +3,17 @@
   const safety = document.createElement('style')
   safety.id = 'user-menu-safety'
   safety.textContent = `
-    .top-bar { padding-right: 118px !important; }
+    .top-bar {
+      padding-right: 118px !important;
+      padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+    }
     .top-bar h1 { max-width: calc(100% - 112px); }
+    /* hero も iOS ステータスバー分を吸収 */
+    .hero { padding-top: calc(48px + env(safe-area-inset-top, 0px)) !important; }
+    /* 右上ボタン群を safe-area の下に寄せる */
+    #user-menu-btn, #notify-bell-btn {
+      top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+    }
   `
   document.head.appendChild(safety)
 
@@ -156,6 +165,8 @@
           <div class="rules-item"><div class="r-desc">販売所リクエスト送信・返答</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">「今ここにいるよ」チェックイン</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">クイズの回答</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">割り勘の記録追加・精算</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item" style="border-top:1px solid rgba(100,180,255,0.15);padding-top:6px;margin-top:2px"><div class="r-desc">🔔 全てのお知らせは<b>お知らせセンター</b>に自動記録される</div><div class="r-val" style="font-size:0.7rem">履歴・未読管理可</div></div>
         </div>
 
         <div class="rules-group">
@@ -180,6 +191,8 @@
           <div class="rules-item"><div class="r-desc">ガチャN券使用ボーナス（該当券のみ）</div><div class="r-val">+50pt</div></div>
           <div class="rules-item"><div class="r-desc">ガチャR券使用ボーナス（該当券のみ）</div><div class="r-val">+200pt</div></div>
           <div class="rules-item"><div class="r-desc">ガチャSR券使用ボーナス（該当券のみ）</div><div class="r-val">+500pt</div></div>
+          <div class="rules-item"><div class="r-desc">💰 割り勘 支出記録</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">💰 割り勘 精算実行</div><div class="r-val">+3pt</div></div>
         </div>
 
         <div class="rules-group">

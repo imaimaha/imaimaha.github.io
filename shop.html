@@ -530,11 +530,13 @@
         showToast('使用済にしました ✅')
       }
       if (p?.seller_id) {
+        const bodyMsg = `${p.emoji || '🎁'} ${p.name}${p.description ? ' — ' + p.description : ''}`
         _sb.functions.invoke('send-push', { body: {
           title: '🎁 券が使われました',
-          body: p.name,
+          body: bodyMsg,
           url: '/shop.html',
           recipient_user_id: p.seller_id,
+          kind: 'shop',
         }}).catch(() => {})
       }
       await loadPoints()
