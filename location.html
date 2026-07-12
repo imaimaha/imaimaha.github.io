@@ -290,8 +290,8 @@
             <div class="checkin-time">${time}</div>
           </div>
           ${isMine ? `<div class="checkin-actions">
-            <button class="checkin-edit" onclick="startEditNote(${JSON.stringify(c.id)}, ${JSON.stringify(c.note || '')})">✏️ メモ</button>
-            <button class="checkin-delete" onclick="deleteCheckin(${JSON.stringify(c.id)})">削除</button>
+            <button class="checkin-edit" data-id="${c.id}" data-note="${escHtml(c.note || '')}" onclick="startEditNote(Number(this.dataset.id), this.dataset.note)">✏️ メモ</button>
+            <button class="checkin-delete" data-id="${c.id}" onclick="deleteCheckin(Number(this.dataset.id))">削除</button>
           </div>` : ''}
         `
         list.appendChild(card)
@@ -380,9 +380,9 @@
       if (!noteEl) return
       noteEl.innerHTML = `
         <div style="display:flex;gap:6px;margin-top:4px">
-          <input id="edit-note-${id}" type="text" value="${currentNote.replace(/"/g,'&quot;')}" maxlength="40"
+          <input id="edit-note-${id}" type="text" value="${String(currentNote).replace(/"/g,'&quot;')}" maxlength="40"
             style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(100,200,255,0.4);border-radius:8px;color:#e8f4fd;font-size:0.82rem;font-family:inherit">
-          <button onclick="saveNote(${JSON.stringify(id)})" style="padding:5px 10px;background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:8px;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">保存</button>
+          <button data-id="${id}" onclick="saveNote(Number(this.dataset.id))" style="padding:5px 10px;background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:8px;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">保存</button>
         </div>
       `
       const input = document.getElementById('edit-note-' + id)
