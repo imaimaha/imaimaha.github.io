@@ -122,6 +122,19 @@
       <button class="send-btn" id="send-btn" onclick="sendThanks()">🌸 送る（+1pt）</button>
     </div>
 
+    <div class="compose-card" style="background:linear-gradient(135deg,#fff8ec,#fff2d8);border:1.5px solid rgba(255,180,80,0.35)">
+      <div class="compose-title">🎁 ポイントをプレゼント</div>
+      <div style="font-size:0.82rem;color:#8d6e63;margin-bottom:10px">自分のポイントを消費して、相手に<b>2倍</b>のポイントを送れます</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <label style="font-size:0.9rem;color:#6d4c41">送るpt:</label>
+        <input id="gift-amount" type="number" value="10" min="1" step="1"
+          style="width:100px;padding:8px 12px;background:#fff;border:1.5px solid #e8ddd5;border-radius:10px;color:#5d4037;font-size:15px;font-family:inherit">
+        <span style="font-size:0.9rem;color:#8d6e63">→ 相手 <span id="gift-preview" style="font-weight:bold;color:#e07a5f">+20pt</span></span>
+      </div>
+      <div style="font-size:0.8rem;color:#8d6e63;margin-bottom:10px">現在の残高: <span id="gift-balance" style="font-weight:bold;color:#e07a5f">…</span></div>
+      <button class="send-btn" id="gift-btn" onclick="sendGift()" style="background:linear-gradient(135deg,#f4a261,#e07a5f)">🎁 プレゼントする</button>
+    </div>
+
     <h2 class="section-title">ふたりのありがとう</h2>
     <div id="posts-list"></div>
   </div>
@@ -140,6 +153,61 @@
       const partner = (profs || []).find(p => p.id !== currentUser.id)
       partnerId = partner?.id || null
       await loadPosts()
+      await loadBalance()
+
+      // ギフトプレビューの更新
+      const gAmount = document.getElementById('gift-amount')
+      const gPreview = document.getElementById('gift-preview')
+      const upd = () => {
+        const n = parseInt(gAmount.value) || 0
+        gPreview.textContent = '+' + (n * 2) + 'pt'
+      }
+      gAmount.addEventListener('input', upd)
+      upd()
+    }
+
+    async function loadBalance() {
+      const { data } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
+      const total = (data || []).reduce((s, r) => s + r.amount, 0)
+      const el = document.getElementById('gift-balance')
+      if (el) el.textContent = total + 'pt'
+      return total
+    }
+
+    async function sendGift() {
+      if (!partnerId) { showToast('相手情報が取得できません'); return }
+      const amount = parseInt(document.getElementById('gift-amount').value) || 0
+      if (amount < 1) { showToast('1pt以上を指定してください'); return }
+
+      const balance = await loadBalance()
+      if (amount > balance) { showToast(`残高不足（${balance}pt しかありません）`); return }
+
+      const btn = document.getElementById('gift-btn')
+      btn.disabled = true
+
+      // 自分から -amount、相手に +2*amount を同時にinsert
+      const { error } = await _sb.from('points').insert([
+        { user_id: currentUser.id, amount: -amount, reason: 'thanks_gift_sent' },
+        { user_id: partnerId, amount: amount * 2, reason: 'thanks_gift_received' },
+      ])
+
+      if (error) { showToast('プレゼント失敗: ' + error.message); btn.disabled = false; return }
+
+      // Push通知
+      const myEmoji = profiles[currentUser.id]?.emoji || ''
+      const myName = profiles[currentUser.id]?.name || ''
+      _sb.functions.invoke('send-push', {
+        body: {
+          title: '🎁 ポイントが届きました',
+          body: `${myEmoji} ${myName} から +${amount * 2}pt`,
+          url: '/thanks.html',
+          recipient_user_id: partnerId,
+        },
+      }).catch(() => {})
+
+      showToast(`🎁 プレゼント完了！ (${amount}pt → +${amount * 2}pt)`)
+      btn.disabled = false
+      await loadBalance()
     }
 
     function addTag(text) {

@@ -54,6 +54,43 @@
       font-family: inherit; font-size: 0.95rem; cursor: pointer;
       background: rgba(255,100,100,0.12); border: 1.5px solid rgba(255,100,100,0.4); color: #ff9d9d;
     }
+    .s-rules-btn {
+      width: 100%; padding: 12px; border-radius: 12px; margin-top: 6px; margin-bottom: 6px;
+      font-family: inherit; font-size: 0.9rem; cursor: pointer;
+      background: rgba(100,180,255,0.1); border: 1.5px solid rgba(100,180,255,0.3); color: #98bedd;
+    }
+    #settings-sheet.rules-open #settings-main { display: none; }
+    #settings-sheet .rules-panel {
+      display: none; max-height: 68vh; overflow-y: auto; padding-right: 4px;
+    }
+    #settings-sheet.rules-open .rules-panel { display: block; }
+    .rules-group {
+      margin-bottom: 16px; padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(100,180,255,0.15);
+      border-radius: 12px;
+    }
+    .rules-group h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 0.95rem; color: #ffd97d;
+      margin-bottom: 8px;
+    }
+    .rules-item {
+      font-size: 0.82rem; color: #c5ddf5;
+      padding: 5px 0; border-bottom: 1px solid rgba(100,180,255,0.08);
+      display: flex; justify-content: space-between; gap: 12px;
+    }
+    .rules-item:last-child { border-bottom: none; }
+    .rules-item .r-desc { flex: 1; }
+    .rules-item .r-val {
+      color: #ffd97d; font-weight: bold; flex-shrink: 0; white-space: nowrap;
+    }
+    .rules-back {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: transparent; border: none; color: #7aadcc;
+      font-size: 0.85rem; cursor: pointer; font-family: inherit;
+      margin-bottom: 10px;
+    }
   `
   document.head.appendChild(style)
 
@@ -80,15 +117,68 @@
     const sheet = document.createElement('div')
     sheet.id = 'settings-sheet'
     sheet.innerHTML = `
-      <h2>⚙️ 設定</h2>
-      <div class="s-row">
-        <div>
-          <div class="s-row-label">🔔 プッシュ通知</div>
-          <div class="s-row-sub" id="s-push-status">確認中...</div>
+      <div id="settings-main">
+        <h2>⚙️ 設定</h2>
+        <div class="s-row">
+          <div>
+            <div class="s-row-label">🔔 プッシュ通知</div>
+            <div class="s-row-sub" id="s-push-status">確認中...</div>
+          </div>
+          <button class="s-push-btn" id="s-push-btn" onclick="window.__settingsPushTap()">…</button>
         </div>
-        <button class="s-push-btn" id="s-push-btn" onclick="window.__settingsPushTap()">…</button>
+        <button class="s-rules-btn" onclick="window.__settingsOpenRules()">📖 通知・ポイントのルールを見る</button>
+        <button class="s-logout-btn" onclick="window.__settingsLogout()">ログアウト</button>
       </div>
-      <button class="s-logout-btn" onclick="window.__settingsLogout()">ログアウト</button>
+      <div class="rules-panel">
+        <button class="rules-back" onclick="window.__settingsCloseRules()">← 設定に戻る</button>
+        <h2 style="margin-bottom:14px">📖 通知・ポイントのルール</h2>
+
+        <div class="rules-group">
+          <h3>📱 LINE通知（個人）</h3>
+          <div class="rules-item"><div class="r-desc">今日の帰宅時間を設定した</div><div class="r-val">→ 相手のLINE</div></div>
+          <div class="rules-item"><div class="r-desc">「会社出た」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
+          <div class="rules-item"><div class="r-desc">「帰宅」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>👥 LINE通知（グループ）</h3>
+          <div class="rules-item"><div class="r-desc">2人の会いたいゲージが同時にMAXになった</div><div class="r-val">→ グループ</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>🔔 Push通知（相手のみ）</h3>
+          <div class="rules-item"><div class="r-desc">「今 家 行っていい？」ボタン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">タイムカプセルが届いた</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴでコンプ・ライン達成</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャ券・ショップの券を使った</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">券の取り消し申請・承諾・却下</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">ありがとうメッセージ・ポイントプレゼント</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">販売所リクエスト送信・返答</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">「今ここにいるよ」チェックイン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">クイズの回答</div><div class="r-val">→ 相手</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>✨ ポイント付与ルール</h3>
+          <div class="rules-item"><div class="r-desc">毎日ログインボーナス</div><div class="r-val">+5pt</div></div>
+          <div class="rules-item"><div class="r-desc">クイズの質問に答える</div><div class="r-val">+10pt</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴのマスをチェック</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴ 1ライン達成</div><div class="r-val">+5pt</div></div>
+          <div class="rules-item"><div class="r-desc">ビンゴ コンプリート</div><div class="r-val">+20pt</div></div>
+          <div class="rules-item"><div class="r-desc">ありがとう送信</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">販売所への出品追加</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャ賞品ラインナップ追加</div><div class="r-val">+1pt</div></div>
+          <div class="rules-item"><div class="r-desc">思い出（メモリー）投稿</div><div class="r-val">+1pt</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>💸 ポイント消費ルール</h3>
+          <div class="rules-item"><div class="r-desc">ガチャ 1回</div><div class="r-val">-100pt</div></div>
+          <div class="rules-item"><div class="r-desc">ガチャ 10+1連（R以上確定）</div><div class="r-val">-1000pt</div></div>
+          <div class="rules-item"><div class="r-desc">販売所で購入</div><div class="r-val">-商品価格</div></div>
+          <div class="rules-item"><div class="r-desc">ポイントプレゼント（相手に2倍で送る）</div><div class="r-val">-任意pt</div></div>
+        </div>
+      </div>
     `
     document.body.appendChild(sheet)
 
@@ -126,6 +216,12 @@
       if (typeof requestPush === 'function') await requestPush()
       await updatePushStatus()
     }
+    window.__settingsOpenRules = () => {
+      document.getElementById('settings-sheet').classList.add('rules-open')
+    }
+    window.__settingsCloseRules = () => {
+      document.getElementById('settings-sheet').classList.remove('rules-open')
+    }
 
     updatePushStatus()
   }
@@ -137,8 +233,11 @@
   }
 
   function closeSettings() {
+    const sheet = document.getElementById('settings-sheet')
     document.getElementById('settings-overlay').classList.remove('open')
-    document.getElementById('settings-sheet').classList.remove('open')
+    sheet.classList.remove('open')
+    // 閉じるときはルールパネルも戻す
+    setTimeout(() => sheet.classList.remove('rules-open'), 300)
   }
 
   async function ensurePushJs() {
