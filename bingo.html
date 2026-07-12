@@ -3260,13 +3260,46 @@
   // ─────────────────────────────────────────
   // Card Generation
   // ─────────────────────────────────────────
+  // 月ごとの季節割り当て（1-12月）。実感に合わせて調整可能。
+  const MONTH_SEASONS = {
+    1: 'winter',  2: 'winter',
+    3: 'spring',  4: 'spring',  5: 'spring',
+    6: 'summer',  7: 'summer',  8: 'summer',
+    9: 'autumn', 10: 'autumn', 11: 'autumn',
+    12: 'winter'
+  };
   function getSeason() {
-    const m = new Date().getMonth();
-    if (m >= 2 && m <= 4) return 'spring';
-    if (m >= 5 && m <= 7) return 'summer';
-    if (m >= 8 && m <= 10) return 'autumn';
-    return 'winter';
+    const m = new Date().getMonth() + 1; // 1-12
+    return MONTH_SEASONS[m] || 'summer';
   }
+
+  // カテゴリのメタ情報（新カテゴリ追加時はここも更新）
+  // weekly: 週間ビンゴに含める
+  // random: どの難易度のランダムに含めるか [1|2|3]
+  // category: カテゴリ別ビンゴのボタンを出す
+  // seasonKey: この項目自体を季節扱いする（月に応じて自動選択）
+  const POOL_META = {
+    everyday: { weekly: true,  random: [1, 2, 3], category: true },
+    feelings: { weekly: true,  random: [1, 2],    category: true },
+    city:     { weekly: false, random: [2, 3],    category: true },
+    couple:   { weekly: true,  random: [3],       category: true },
+    weekday:  { weekly: true,  random: [],        category: false },
+    weekend:  { weekly: true,  random: [],        category: false },
+    okinawa:  { weekly: false, random: [],        category: true },  // カテゴリ限定
+    spring:   { seasonKey: true },
+    summer:   { seasonKey: true },
+    autumn:   { seasonKey: true },
+    winter:   { seasonKey: true },
+    lucky:    { special: 'lucky' },  // 1マス確定挿入
+  };
+
+  // サイズ別のポイント傾斜（マスが多いほど価値が高い）
+  const BINGO_POINTS = {
+    3: { check: 1, linePer: 3, complete: 10 },
+    4: { check: 1, linePer: 4, complete: 16 },
+    5: { check: 1, linePer: 6, complete: 30 },
+  };
+  function pointsForSize(size) { return BINGO_POINTS[size] || BINGO_POINTS[5]; }
 
   function isWeekend() {
     const d = new Date().getDay();
@@ -3283,26 +3316,31 @@
     return d.toLocaleDateString('sv-SE');   // YYYY-MM-DD
   }
 
+  // ラッキー1マスを挿入して返す共通処理
+  function addLuckyAndFinalize(pool, n, rand) {
+    const picked = pickN(pool, n - 1, rand);
+    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
+    const luckyPos = Math.floor(rand() * n);
+    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
+    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+  }
+
   function makeDailyItems(n, seedOverride = null) {
     const weekKey = getWeekStr().replace(/-/g, '');
     const seed = seedOverride ?? (parseInt(weekKey) + n * 1000);
     const rand = seededRand(seed);
     const season = getSeason();
 
-    // 週単位なので平日/週末ミックス
-    const pool = [
-      ...POOLS.everyday.map(t => ({ text: t })),
-      ...POOLS.feelings.map(t => ({ text: t })),
-      ...POOLS[season].map(t => ({ text: t })),
-      ...POOLS.weekend.map(t => ({ text: t })),
-      ...POOLS.weekday.map(t => ({ text: t }))
-    ];
+    // POOL_META から weekly: true のカテゴリを全部集める + 今の季節を追加
+    const pool = [];
+    for (const [key, meta] of Object.entries(POOL_META)) {
+      if (meta.weekly === true) {
+        pool.push(...POOLS[key].map(t => ({ text: t })));
+      }
+    }
+    pool.push(...POOLS[season].map(t => ({ text: t })));
 
-    const picked = pickN(pool, n - 1, rand);
-    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * n);
-    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return addLuckyAndFinalize(pool, n, rand);
   }
 
   function makeCategoryItems(category, n) {
@@ -3312,45 +3350,29 @@
       ...POOLS[category].map(t => ({ text: t })),
       ...pickN(POOLS[season].map(t => ({ text: t })), 5, rand)
     ];
-    const picked = pickN(pool, n - 1, rand);
-    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * n);
-    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return addLuckyAndFinalize(pool, n, rand);
   }
 
   function makeRandomItems(difficulty, n) {
     const rand = seededRand(Math.floor(Math.random() * 0x7fffffff));
     const season = getSeason();
-    let pool;
 
+    // POOL_META から random に difficulty を含むカテゴリを集める
+    const pool = [];
+    for (const [key, meta] of Object.entries(POOL_META)) {
+      if (Array.isArray(meta.random) && meta.random.includes(difficulty)) {
+        pool.push(...POOLS[key].map(t => ({ text: t })));
+      }
+    }
+    // 季節: 難易度1は少なめ (6個)、それ以外はフル
+    const seasonPool = POOLS[season].map(t => ({ text: t }));
     if (difficulty === 1) {
-      pool = [
-        ...POOLS.everyday.map(t => ({ text: t })),
-        ...POOLS.feelings.map(t => ({ text: t })),
-        ...POOLS[season].slice(0, 6).map(t => ({ text: t }))
-      ];
-    } else if (difficulty === 2) {
-      pool = [
-        ...POOLS.everyday.map(t => ({ text: t })),
-        ...POOLS.feelings.map(t => ({ text: t })),
-        ...POOLS.city.map(t => ({ text: t })),
-        ...POOLS[season].map(t => ({ text: t }))
-      ];
+      pool.push(...seasonPool.slice(0, 6));
     } else {
-      pool = [
-        ...POOLS.city.map(t => ({ text: t })),
-        ...POOLS.couple.map(t => ({ text: t })),
-        ...POOLS[season].map(t => ({ text: t })),
-        ...POOLS.everyday.slice(0, 8).map(t => ({ text: t }))
-      ];
+      pool.push(...seasonPool);
     }
 
-    const picked = pickN(pool, n - 1, rand);
-    const luckyText = POOLS.lucky[Math.floor(rand() * POOLS.lucky.length)];
-    const luckyPos = Math.floor(rand() * n);
-    picked.splice(luckyPos, 0, { text: luckyText, is_lucky: true });
-    return picked.slice(0, n).map(i => ({ text: i.text, is_lucky: !!i.is_lucky }));
+    return addLuckyAndFinalize(pool, n, rand);
   }
 
   // ─────────────────────────────────────────
@@ -3656,17 +3678,19 @@
     renderGrid();
     saveCard();
 
-    // ポイント付与（新規チェックのみ）
+    // ポイント付与（新規チェックのみ・サイズ別の傾斜あり）
     if (isNewCheck && state.userId) {
-      _sb.from('points').insert({ user_id: state.userId, amount: 1, reason: 'bingo_check' }).then(() => {});
+      const size = Math.round(Math.sqrt(totalCells));
+      const pts = pointsForSize(size);
+      _sb.from('points').insert({ user_id: state.userId, amount: pts.check, reason: 'bingo_check' }).then(() => {});
       // 新規ビンゴライン
       const newLines = state.bingoLines.length - prevBingoCount;
       if (newLines > 0) {
-        _sb.from('points').insert({ user_id: state.userId, amount: 5 * newLines, reason: 'bingo_line' }).then(() => {});
+        _sb.from('points').insert({ user_id: state.userId, amount: pts.linePer * newLines, reason: 'bingo_line' }).then(() => {});
       }
       // 全マスコンプ
       if (!wasComplete && state.card.checks.length >= totalCells) {
-        _sb.from('points').insert({ user_id: state.userId, amount: 20, reason: 'bingo_complete' }).then(() => {});
+        _sb.from('points').insert({ user_id: state.userId, amount: pts.complete, reason: 'bingo_complete' }).then(() => {});
       }
 
       // 相手に push (line完成 or コンプ時のみ、通常チェックは静かに)
