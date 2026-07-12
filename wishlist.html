@@ -2,11 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>やりたいこと | Notre Endroit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💫</text></svg>">
+  <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
-  <title>やりたいことリスト | Notre Endroit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -21,331 +22,418 @@
     })
   </script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
-      background-attachment: fixed;
-      color: #e8f0fc;
-      min-height: 100vh;
+    /* カテゴリピル */
+    .cat-tabs {
+      display: flex; gap: 8px;
+      padding: 12px 16px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      max-width: 720px;
+      margin: 0 auto;
     }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      gap: 8px;
-      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
-      backdrop-filter: blur(4px);
-    }
-
-    .top-bar a {
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 15px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 999px;
       color: #98bedd;
-      text-decoration: none;
-      font-size: 0.9rem;
+      font-family: inherit; font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.14s;
+      backdrop-filter: blur(6px);
     }
-
-    .top-bar h1 {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.1rem;
-      color: #e8f4fd;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
+    .cat-tab:active { transform: scale(0.95); }
+    .cat-tab.active {
+      background: rgba(140,240,180,0.22);
+      border-color: rgba(140,240,180,0.55);
+      color: #d6ffe4;
+    }
+    .cat-tab .cat-icon { font-size: 1rem; }
+    .cat-tab .cat-count {
+      font-size: 0.7rem;
+      color: #7aadcc;
+      padding: 1px 6px;
+      background: rgba(0,0,0,0.24);
+      border-radius: 999px;
+      min-width: 18px;
       text-align: center;
     }
+    .cat-tab.active .cat-count { color: #d6ffe4; background: rgba(140,240,180,0.18); }
 
-    .logout-btn {
-      background: #fff;
-      border: 2px solid #e8ddd5;
-      color: #8d6e63;
-      padding: 6px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .top-right { display: flex; align-items: center; gap: 8px; }
-
-    .user-badge {
-      display: none;
-      align-items: center;
-      gap: 4px;
-      background: #fff;
-      border: 2px solid #e8ddd5;
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 0.85rem;
-      color: #5d4037;
-    }
-
-    @media (max-width: 480px) {
-      .user-badge .user-name { display: none; }
-      .add-form input { font-size: 16px; }
-    }
-
-    /* タブ */
-    .tabs {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      padding: 16px 20px;
-      scrollbar-width: none;
-    }
-
-    .tabs::-webkit-scrollbar { display: none; }
-
-    .tab {
-      white-space: nowrap;
-      padding: 8px 18px;
-      border-radius: 24px;
-      border: 2px solid #e8ddd5;
-      background: #fff;
-      color: #8d6e63;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-family: inherit;
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
-
-    .tab.active {
-      background: #81c784;
-      border-color: #81c784;
-      color: #fff;
-    }
-
-    /* メインコンテンツ */
     .content {
-      max-width: 640px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 8px 20px 40px;
+      padding: 16px 16px 40px;
     }
 
     /* 追加フォーム */
-    .add-form {
-      background: #fff;
+    .add-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.2);
       border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.07);
-      margin-bottom: 24px;
-      display: flex;
-      gap: 10px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex; gap: 8px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 0.18s;
     }
-
-    .add-form input {
+    .add-card:focus-within { border-color: rgba(140,240,180,0.5); }
+    .add-input {
       flex: 1;
-      padding: 10px 14px;
-      border: 2px solid #e8ddd5;
-      border-radius: 10px;
-      font-size: 0.95rem;
+      padding: 11px 14px;
+      background: rgba(0,0,0,0.24);
+      border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 12px;
+      color: #e8f4fd;
+      font-size: 16px;
       font-family: inherit;
-      color: #4a3f35;
       outline: none;
     }
-
-    .add-form input:focus { border-color: #a5d6a7; }
-
-    .add-form button {
-      padding: 10px 20px;
-      background: #81c784;
-      color: #fff;
+    .add-input::placeholder { color: rgba(200,220,255,0.35); }
+    .add-input:focus { border-color: rgba(140,240,180,0.55); }
+    .add-btn {
+      padding: 11px 20px;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
       border: none;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-family: inherit;
+      border-radius: 12px;
+      font-family: inherit; font-size: 0.95rem;
+      font-weight: bold;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.2s;
+      transition: transform 0.14s, box-shadow 0.18s;
+      box-shadow: 0 4px 16px rgba(80,200,140,0.32);
     }
+    .add-btn:hover  { box-shadow: 0 6px 22px rgba(80,200,140,0.45); }
+    .add-btn:active { transform: scale(0.96); }
+    .add-card.hidden { display: none; }
 
-    .add-form button:hover { background: #66bb6a; }
+    /* カテゴリヘッダ */
+    .cat-header {
+      display: flex; align-items: center; gap: 10px;
+      margin: 10px 4px 12px;
+    }
+    .cat-header .cat-emoji { font-size: 1.6rem; }
+    .cat-header h2 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.2rem;
+      color: #f0f6ff;
+      letter-spacing: 0.04em;
+    }
+    .cat-header .sub {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #7aadcc;
+    }
 
     /* リスト */
     .wish-list {
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       gap: 10px;
     }
-
     .wish-item {
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       gap: 12px;
-      transition: opacity 0.2s;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background 0.18s, border-color 0.18s, transform 0.14s, opacity 0.22s;
     }
-
+    .wish-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(150,200,255,0.28); }
     .wish-item.done {
-      opacity: 0.5;
+      background: rgba(140,240,180,0.06);
+      border-color: rgba(140,240,180,0.24);
+      opacity: 0.66;
     }
-
-    .wish-item.done .wish-title {
-      text-decoration: line-through;
+    .wish-item.done .wish-title { text-decoration: line-through; color: #98bedd; }
+    .wish-item.enter { animation: wishEnter 0.35s cubic-bezier(0.32,0.72,0,1) both; }
+    .wish-item.leaving { opacity: 0; transform: translateX(20px) scale(0.96); }
+    @keyframes wishEnter {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .check-btn {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      min-height: 44px;
+      width: 32px; height: 32px;
+      min-width: 32px; min-height: 32px;
       border-radius: 50%;
-      border: 2px solid #a5d6a7;
-      background: none;
+      border: 2px solid rgba(140,240,180,0.4);
+      background: rgba(140,240,180,0.06);
       cursor: pointer;
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; color: #baffcc;
+      transition: background 0.18s, border-color 0.18s, transform 0.14s;
     }
-
+    .check-btn:hover  { background: rgba(140,240,180,0.16); }
+    .check-btn:active { transform: scale(0.9); }
     .check-btn.checked {
-      background: #a5d6a7;
-      border-color: #a5d6a7;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      border-color: #6fd8a0;
+      color: #04150c;
+      box-shadow: 0 0 12px rgba(140,240,180,0.4);
     }
 
     .wish-title {
       flex: 1;
       font-size: 0.95rem;
-      color: #4a3f35;
+      color: #e8f4fd;
+      line-height: 1.4;
+      word-break: break-word;
+      cursor: text;
+    }
+    .wish-title[contenteditable="true"] {
+      outline: none;
+      background: rgba(255,255,255,0.06);
+      padding: 4px 8px;
+      border-radius: 8px;
+      margin: -4px -8px;
     }
 
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #d7ccc8;
+    .del-btn {
+      background: none; border: none;
+      color: #5a7fa8;
       cursor: pointer;
-      font-size: 1.1rem;
-      padding: 4px;
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.2s;
+      padding: 8px;
+      font-size: 1rem;
+      transition: color 0.18s;
+      flex-shrink: 0;
     }
+    .del-btn:hover { color: #ff9d9d; }
 
-    .delete-btn:hover { color: #ef9a9a; }
-
+    /* 空状態 */
     .empty {
       text-align: center;
-      color: #bcaaa4;
-      padding: 40px 0;
-      font-size: 0.95rem;
+      padding: 60px 20px;
+      color: #7aadcc;
     }
+    .empty-emoji { font-size: 3.2rem; margin-bottom: 12px; }
+    .empty-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: #f0f6ff;
+      margin-bottom: 6px;
+    }
+    .empty-sub { font-size: 0.85rem; }
+
+    /* トースト */
+    .toast {
+      position: fixed;
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,40,80,0.95);
+      border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 500;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
-  <style>.clouds{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}</style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
-
   <script src="assets/js/header.js"></script>
   <script src="assets/js/nav.js"></script>
+
   <div class="top-bar">
-    <a href="/">← もどる</a>
-    <h1>やりたいことリスト</h1>
+    <a href="/">← ホーム</a>
+    <h1>💫 やりたいこと</h1>
   </div>
 
-  <div class="tabs" id="tabs"></div>
+  <div class="cat-tabs" id="cat-tabs"></div>
 
   <div class="content">
-    <div class="add-form">
-      <input type="text" id="new-title" placeholder="追加する..." maxlength="100">
-      <button onclick="addWish()">追加</button>
+    <div class="add-card" id="add-card">
+      <input type="text" id="new-title" class="add-input" placeholder="追加したいこと" maxlength="120">
+      <button class="add-btn" onclick="addWish()">＋ 追加</button>
     </div>
+
+    <div class="cat-header" id="cat-header">
+      <span class="cat-emoji" id="cat-header-emoji">📍</span>
+      <h2 id="cat-header-title">行きたい場所</h2>
+      <span class="sub" id="cat-header-sub"></span>
+    </div>
+
     <div class="wish-list" id="wish-list"></div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
-    const categories = [
-      { id: '行きたい場所', icon: '📍' },
-      { id: '食べたいもの', icon: '🍽️' },
-      { id: '見たいもの',   icon: '🎬' },
-      { id: 'ほしいもの',   icon: '🎁' },
-      { id: '達成済み',     icon: '✅' },
+    const CATEGORIES = [
+      { id: '行きたい場所', icon: '📍', hint: '次のデートの候補地に' },
+      { id: '食べたいもの', icon: '🍽️', hint: '外食・お取り寄せ・作りたいの' },
+      { id: '見たいもの',   icon: '🎬', hint: '映画・展示・イベント' },
+      { id: 'ほしいもの',   icon: '🎁', hint: 'お互いへのプレゼント案' },
+      { id: '達成済み',     icon: '✅', hint: 'これまで叶ったこと' },
     ]
 
-    let currentCategory = categories[0].id
-    let wishes = []
+    let currentCategory = CATEGORIES[0].id
+    let allWishes = []  // 全カテゴリ・全 done 状態を保持
 
-    // タブ描画
-    const tabsEl = document.getElementById('tabs')
-    categories.forEach(cat => {
-      const btn = document.createElement('button')
-      btn.className = 'tab' + (cat.id === currentCategory ? ' active' : '')
-      btn.textContent = cat.icon + ' ' + cat.id
-      btn.onclick = () => switchCategory(cat.id)
-      tabsEl.appendChild(btn)
-    })
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      setTimeout(() => t.classList.remove('show'), 1800)
+    }
+
+    function renderTabs() {
+      const tabs = document.getElementById('cat-tabs')
+      const counts = countPerCategory()
+      tabs.innerHTML = ''
+      CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button')
+        btn.className = 'cat-tab' + (cat.id === currentCategory ? ' active' : '')
+        btn.innerHTML = `<span class="cat-icon">${cat.icon}</span><span>${cat.id}</span><span class="cat-count">${counts[cat.id] ?? 0}</span>`
+        btn.onclick = () => switchCategory(cat.id)
+        tabs.appendChild(btn)
+      })
+    }
+
+    function countPerCategory() {
+      const c = {}
+      allWishes.forEach(w => {
+        if (w.done) c['達成済み'] = (c['達成済み'] ?? 0) + 1
+        else        c[w.category] = (c[w.category] ?? 0) + 1
+      })
+      return c
+    }
 
     function switchCategory(id) {
       currentCategory = id
-      document.querySelectorAll('.tab').forEach((btn, i) => {
-        btn.classList.toggle('active', categories[i].id === id)
-      })
-      document.querySelector('.add-form').style.display = id === '達成済み' ? 'none' : 'flex'
-      loadWishes()
+      const cat = CATEGORIES.find(c => c.id === id)
+      document.getElementById('cat-header-emoji').textContent = cat.icon
+      document.getElementById('cat-header-title').textContent = cat.id
+      document.getElementById('cat-header-sub').textContent = cat.hint
+      document.getElementById('add-card').classList.toggle('hidden', id === '達成済み')
+      renderTabs()
+      renderList()
     }
 
-    async function loadWishes() {
-      let query = _sb.from('wishes').select('*').order('created_at', { ascending: true })
-      if (currentCategory === '達成済み') {
-        query = query.eq('done', true)
-      } else {
-        query = query.eq('category', currentCategory).eq('done', false)
-      }
-      const { data } = await query
-      wishes = data || []
-      renderList()
+    async function loadAll() {
+      const { data } = await _sb.from('wishes').select('*').order('created_at', { ascending: true })
+      allWishes = data || []
+      renderTabs()
+      switchCategory(currentCategory)
+    }
+
+    function filteredWishes() {
+      if (currentCategory === '達成済み') return allWishes.filter(w => w.done)
+      return allWishes.filter(w => w.category === currentCategory && !w.done)
     }
 
     function renderList() {
       const list = document.getElementById('wish-list')
-      if (wishes.length === 0) {
+      const items = filteredWishes()
+      if (items.length === 0) {
+        const cat = CATEGORIES.find(c => c.id === currentCategory)
         const msg = currentCategory === '達成済み'
-          ? 'まだ達成したことがありません 🌱'
-          : 'まだ何も追加されていません 🌱'
-        list.innerHTML = `<div class="empty">${msg}</div>`
+          ? { emoji: '🌱', title: 'まだ達成したことがありません', sub: 'チェックで達成済みに' }
+          : { emoji: cat.icon, title: 'まだ何もありません', sub: '追加してみよう' }
+        list.innerHTML = `<div class="empty"><div class="empty-emoji">${msg.emoji}</div><div class="empty-title">${msg.title}</div><div class="empty-sub">${msg.sub}</div></div>`
         return
       }
-      list.innerHTML = wishes.map(w => `
-        <div class="wish-item ${w.done ? 'done' : ''}" data-id="${w.id}" data-done="${w.done}">
-          <button class="check-btn ${w.done ? 'checked' : ''}" data-action="check" data-id="${w.id}" data-done="${w.done}">
+      list.innerHTML = ''
+      items.forEach(w => {
+        const el = document.createElement('div')
+        el.className = 'wish-item' + (w.done ? ' done' : '')
+        el.dataset.id = w.id
+        el.innerHTML = `
+          <button class="check-btn ${w.done ? 'checked' : ''}" data-action="check" data-id="${w.id}" data-done="${w.done}" aria-label="チェック">
             ${w.done ? '✓' : ''}
           </button>
-          <span class="wish-title">${escHtml(w.title)}</span>
-          <button class="delete-btn" data-action="delete" data-id="${w.id}">✕</button>
-        </div>
-      `).join('')
+          <span class="wish-title" data-id="${w.id}" tabindex="0">${escHtml(w.title)}</span>
+          <button class="del-btn" data-action="delete" data-id="${w.id}" aria-label="削除">✕</button>
+        `
+        list.appendChild(el)
+      })
     }
 
-    document.getElementById('wish-list').addEventListener('click', async e => {
+    async function toggleDone(id, currentDone) {
+      const newDone = !currentDone
+      // 楽観更新
+      allWishes = allWishes.map(w => w.id.toString() === id.toString() ? { ...w, done: newDone } : w)
+      // アニメで「消える」表現
+      const el = document.querySelector(`.wish-item[data-id="${id}"]`)
+      if (el && currentCategory !== '達成済み' && newDone) {
+        el.classList.add('leaving')
+        setTimeout(() => { renderTabs(); renderList() }, 260)
+      } else if (el && currentCategory === '達成済み' && !newDone) {
+        el.classList.add('leaving')
+        setTimeout(() => { renderTabs(); renderList() }, 260)
+      } else {
+        renderTabs(); renderList()
+      }
+      const { error } = await _sb.from('wishes').update({ done: newDone }).eq('id', id)
+      if (error) { showToast('更新失敗'); await loadAll() }
+      else if (newDone) showToast('達成 🎉')
+    }
+
+    async function deleteWish(id) {
+      if (!confirm('削除しますか？')) return
+      const el = document.querySelector(`.wish-item[data-id="${id}"]`)
+      if (el) el.classList.add('leaving')
+      allWishes = allWishes.filter(w => w.id.toString() !== id.toString())
+      setTimeout(() => { renderTabs(); renderList() }, 220)
+      const { error } = await _sb.from('wishes').delete().eq('id', id)
+      if (error) { showToast('削除失敗'); await loadAll() }
+    }
+
+    async function editWishTitle(id, newTitle) {
+      const w = allWishes.find(x => x.id.toString() === id.toString())
+      if (!w) return
+      if (newTitle === w.title || !newTitle.trim()) return
+      w.title = newTitle
+      const { error } = await _sb.from('wishes').update({ title: newTitle }).eq('id', id)
+      if (error) { showToast('編集失敗'); await loadAll() }
+    }
+
+    // クリック委譲
+    document.getElementById('wish-list').addEventListener('click', e => {
       const btn = e.target.closest('[data-action]')
       if (!btn) return
       const id = btn.dataset.id
-      if (btn.dataset.action === 'check') {
-        const done = btn.dataset.done === 'true'
-        wishes = wishes.map(w => String(w.id) === id ? { ...w, done: !done } : w)
-        renderList()
-        const { error } = await _sb.from('wishes').update({ done: !done }).eq('id', id)
-        if (error) console.error('update error:', JSON.stringify(error))
-        if (currentCategory === '達成済み' || !done) await loadWishes()
-      }
-      if (btn.dataset.action === 'delete') {
-        wishes = wishes.filter(w => String(w.id) !== id)
-        renderList()
-        const { error } = await _sb.from('wishes').delete().eq('id', id)
-        if (error) console.error('delete error:', JSON.stringify(error))
+      if (btn.dataset.action === 'check') toggleDone(id, btn.dataset.done === 'true')
+      if (btn.dataset.action === 'delete') deleteWish(id)
+    })
+
+    // タイトルクリックでインライン編集
+    document.getElementById('wish-list').addEventListener('dblclick', e => {
+      const title = e.target.closest('.wish-title')
+      if (!title) return
+      title.contentEditable = 'true'
+      title.focus()
+    })
+    document.getElementById('wish-list').addEventListener('blur', e => {
+      const title = e.target.closest?.('.wish-title')
+      if (!title || title.contentEditable !== 'true') return
+      title.contentEditable = 'false'
+      const id = title.dataset.id
+      editWishTitle(id, title.textContent.trim())
+    }, true)
+    document.getElementById('wish-list').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const title = e.target.closest?.('.wish-title')
+        if (title && title.contentEditable === 'true') { e.preventDefault(); title.blur() }
       }
     })
 
@@ -353,27 +441,29 @@
       const input = document.getElementById('new-title')
       const title = input.value.trim()
       if (!title) return
-      const { data } = await _sb.from('wishes').insert({
+      if (currentCategory === '達成済み') return
+      const { data, error } = await _sb.from('wishes').insert({
         title,
         category: currentCategory,
         done: false
       }).select().single()
-      if (data) {
-        wishes.push(data)
-        renderList()
-        input.value = ''
-      }
-    }
-
-    function escHtml(str) {
-      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      if (error) { showToast('追加失敗: ' + error.message); return }
+      allWishes.push(data)
+      input.value = ''
+      renderTabs()
+      renderList()
+      // 新規追加項目にアニメ (次のフレームで class 追加)
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`.wish-item[data-id="${data.id}"]`)
+        if (el) el.classList.add('enter')
+      })
     }
 
     document.getElementById('new-title').addEventListener('keydown', e => {
       if (e.key === 'Enter') addWish()
     })
 
-    loadWishes()
+    loadAll()
   </script>
 </body>
 </html>
