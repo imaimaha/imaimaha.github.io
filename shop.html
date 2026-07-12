@@ -61,6 +61,44 @@
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
 
+    /* 券インベントリ内タブ */
+    .ticket-filter-row {
+      display:flex; gap:6px;
+      margin-bottom:12px; overflow-x:auto;
+      scrollbar-width:none;
+    }
+    .ticket-filter-row::-webkit-scrollbar { display:none; }
+    .ticket-filter-chip {
+      flex-shrink:0;
+      padding:8px 14px;
+      background:rgba(255,255,255,0.05);
+      border:1.5px solid rgba(150,200,255,0.18);
+      border-radius:999px;
+      color:#98bedd;
+      font-size:0.82rem;
+      font-family:inherit;
+      cursor:pointer;
+      transition:background 0.18s, border-color 0.18s, color 0.18s;
+    }
+    .ticket-filter-chip:active { transform:scale(0.96); }
+    .ticket-filter-chip.active {
+      background:rgba(100,180,255,0.24);
+      border-color:rgba(100,180,255,0.55);
+      color:#e8f4fd;
+    }
+
+    /* 券のソースバッジ (ガチャ / 販売所) */
+    .source-badge {
+      display:inline-block;
+      font-size:0.65rem;
+      padding:1px 7px;
+      border-radius:8px;
+      margin-left:6px;
+      vertical-align:middle;
+    }
+    .source-badge.gacha { background:rgba(255,215,100,0.16); color:#ffd764; border:1px solid rgba(255,215,100,0.35); }
+    .source-badge.shop  { background:rgba(100,180,255,0.16); color:#98bedd; border:1px solid rgba(100,180,255,0.35); }
+
     .item-card {
       display: flex; align-items:center; gap:14px;
       background: rgba(255,255,255,0.07);
@@ -166,7 +204,7 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('buy')" id="tab-btn-buy">🛍 買う</button>
       <button class="tab-btn" onclick="switchTab('sell')" id="tab-btn-sell">💼 売る</button>
-      <button class="tab-btn" onclick="switchTab('purchases')" id="tab-btn-purchases">📦 履歴</button>
+      <button class="tab-btn" onclick="switchTab('purchases')" id="tab-btn-purchases">🎫 券</button>
       <button class="tab-btn" onclick="switchTab('requests')" id="tab-btn-requests">📝 リクエスト</button>
     </div>
 
@@ -211,13 +249,15 @@
       <div id="sell-list"><div class="empty">読み込み中…</div></div>
     </div>
 
-    <!-- 履歴: 購入・販売 -->
+    <!-- 券インベントリ: ガチャ券 + 販売所購入券 -->
     <div class="tab-panel" id="panel-purchases">
-      <div style="font-size:0.85rem;color:#98bedd;margin-bottom:10px">🛍 買ったもの</div>
-      <div id="my-purchases-list"><div class="empty">読み込み中…</div></div>
-      <div style="height:20px"></div>
-      <div style="font-size:0.85rem;color:#98bedd;margin-bottom:10px">💰 売れたもの</div>
-      <div id="my-sales-list"><div class="empty">読み込み中…</div></div>
+      <div style="font-size:0.8rem;color:#7aa;margin-bottom:10px">🎰 ガチャの券と 🛍 販売所の券をまとめて管理</div>
+      <div class="ticket-filter-row" id="ticket-filter-row">
+        <button class="ticket-filter-chip active" data-t-tab="usable"  onclick="setTicketsTab('usable')">🎫 使える (<span id="t-count-usable">0</span>)</button>
+        <button class="ticket-filter-chip"        data-t-tab="partner" onclick="setTicketsTab('partner')">🎁 相手が持ってる (<span id="t-count-partner">0</span>)</button>
+        <button class="ticket-filter-chip"        data-t-tab="used"    onclick="setTicketsTab('used')">✅ 使用済み (<span id="t-count-used">0</span>)</button>
+      </div>
+      <div id="tickets-list"><div class="empty">読み込み中…</div></div>
     </div>
 
     <!-- リクエスト -->
@@ -427,68 +467,185 @@
       btns.forEach(b => { b.textContent = '出品する'; b.onclick = addItem })
     }
 
-    async function loadPurchases() {
-      const { data: mine } = await _sb.from('shop_purchases')
-        .select('*').eq('buyer_id', currentUser.id)
-        .order('purchased_at', { ascending: false }).limit(50)
-      renderPurchases('my-purchases-list', mine || [], true)
+    // ===== 統合券インベントリ =====
+    // gacha_results と shop_purchases を統合表示。source フィールドで区別
+    let _tickets = []          // 正規化されたチケット配列
+    let ticketsTab = 'usable'  // 'usable' | 'partner' | 'used'
 
-      const { data: sold } = await _sb.from('shop_purchases')
-        .select('*').eq('seller_id', currentUser.id)
-        .order('purchased_at', { ascending: false }).limit(50)
-      renderPurchases('my-sales-list', sold || [], false)
-
-      ;(mine || []).concat(sold || []).forEach(p => _purchases.set(p.id, p))
+    function setTicketsTab(tab) {
+      ticketsTab = tab
+      document.querySelectorAll('.ticket-filter-chip').forEach(el =>
+        el.classList.toggle('active', el.dataset.tTab === tab)
+      )
+      renderTickets()
     }
 
-    function renderPurchases(elId, list, canUse) {
-      const el = document.getElementById(elId)
-      if (list.length === 0) {
-        el.innerHTML = '<div class="empty">まだありません</div>'
+    // 正規化: 両テーブルの1レコードを共通形式に変換
+    function normalizeGachaTicket(g) {
+      return {
+        source: 'gacha',
+        id: g.id,
+        ownerUserId: g.user_id,       // 券を持ってる（使える）人
+        counterUserId: null,          // ガチャは相手が固定 (partnerId で解決)
+        name: g.reward_name,
+        emoji: g.reward_emoji,
+        description: g.reward_desc,
+        rarity: g.rarity,
+        used: g.used,
+        cancelRequested: g.cancel_requested,
+        bonusPoints: g.bonus_points,
+        createdAt: g.created_at,
+        raw: g,
+      }
+    }
+    function normalizeShopTicket(p) {
+      return {
+        source: 'shop',
+        id: p.id,
+        ownerUserId: p.buyer_id,      // 券を持ってる (使える) 人 = 買った人
+        counterUserId: p.seller_id,   // 券を作った (売った) 相手
+        name: p.name,
+        emoji: p.emoji,
+        description: p.description,
+        rarity: p.rarity,
+        used: p.used,
+        cancelRequested: p.cancel_requested,
+        bonusPoints: p.bonus_points,
+        createdAt: p.purchased_at,
+        raw: p,
+      }
+    }
+
+    async function loadTickets() {
+      // ガチャ券 (自分・相手両方)
+      const { data: gacha } = await _sb.from('gacha_results')
+        .select('*').order('created_at', { ascending: false }).limit(200)
+      // 販売所券 (自分が buyer or 自分が seller)
+      const { data: shopMine } = await _sb.from('shop_purchases')
+        .select('*').eq('buyer_id', currentUser.id)
+        .order('purchased_at', { ascending: false }).limit(100)
+      const { data: shopSold } = await _sb.from('shop_purchases')
+        .select('*').eq('seller_id', currentUser.id)
+        .order('purchased_at', { ascending: false }).limit(100)
+
+      // dedup on id (mine と sold は普通別だが念のため)
+      const shopMap = new Map()
+      ;(shopMine || []).forEach(p => shopMap.set(p.id, p))
+      ;(shopSold || []).forEach(p => shopMap.set(p.id, p))
+
+      _tickets = []
+        .concat((gacha || []).map(normalizeGachaTicket))
+        .concat(Array.from(shopMap.values()).map(normalizeShopTicket))
+        // createdAt 降順
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+      renderTickets()
+    }
+    // 旧APIの後方互換 (他所からの呼び出しを壊さない)
+    const loadPurchases = loadTickets
+
+    function ticketMatchesTicketsTab(t, tab) {
+      const isMine = t.ownerUserId === currentUser.id
+      if (tab === 'usable')  return isMine && !t.used
+      if (tab === 'partner') return !isMine && !t.used
+      if (tab === 'used')    return t.used
+      return true
+    }
+
+    function renderTickets() {
+      const el = document.getElementById('tickets-list')
+      // 件数更新
+      const counts = { usable: 0, partner: 0, used: 0 }
+      _tickets.forEach(t => {
+        if (ticketMatchesTicketsTab(t, 'usable'))  counts.usable++
+        if (ticketMatchesTicketsTab(t, 'partner')) counts.partner++
+        if (ticketMatchesTicketsTab(t, 'used'))    counts.used++
+      })
+      const u = document.getElementById('t-count-usable')
+      const p = document.getElementById('t-count-partner')
+      const s = document.getElementById('t-count-used')
+      if (u) u.textContent = counts.usable
+      if (p) p.textContent = counts.partner
+      if (s) s.textContent = counts.used
+
+      if (_tickets.length === 0) {
+        el.innerHTML = '<div class="empty">まだ券がありません。ガチャを回すか販売所で買おう 🎫</div>'
         return
       }
+      const filtered = _tickets.filter(t => ticketMatchesTicketsTab(t, ticketsTab))
+      if (filtered.length === 0) {
+        const msg = ticketsTab === 'usable'
+          ? '使える券はありません'
+          : ticketsTab === 'partner'
+          ? '相手が持ってる券はありません'
+          : 'まだ使用済みの券はありません'
+        el.innerHTML = `<div class="empty">${msg}</div>`
+        return
+      }
+
       el.innerHTML = ''
-      list.forEach(p => {
-        const otherUid = canUse ? p.seller_id : p.buyer_id
-        const other = profiles[otherUid]
-        const dt = new Date(p.purchased_at).toLocaleDateString('ja-JP')
+      filtered.forEach(t => {
+        const isMine = t.ownerUserId === currentUser.id
+        const hasCancelAlert = t.cancelRequested && (
+          (t.source === 'shop' && t.counterUserId === currentUser.id) ||
+          (t.source === 'gacha' && !isMine)  // 相手が引いたガチャ券に取り消し申請 → 自分が承認する側
+        )
+        const dt = new Date(t.createdAt).toLocaleDateString('ja-JP')
+        const rarityCls = t.rarity ? ' ' + t.rarity : ''
+        const inactiveCls = (t.used && !hasCancelAlert) ? ' inactive' : ''
         const card = document.createElement('div')
-        const hasCancelAlert = canUse && p.cancel_requested
-        card.className = 'item-card' + (p.used && !hasCancelAlert ? ' inactive' : '') + (p.rarity ? ' ' + p.rarity : '') + (hasCancelAlert ? '' : '')
+        card.className = 'item-card' + inactiveCls + rarityCls
         if (hasCancelAlert) card.style.borderColor = 'rgba(255,200,80,0.55)'
 
+        // Owner label (誰の券か)
+        const owner = profiles[t.ownerUserId]
+        const ownerLabel = owner ? `${owner.emoji} ${escHtml(owner.name)}` : ''
+        const sourceBadge = t.source === 'gacha'
+          ? '<span class="source-badge gacha">🎰 ガチャ</span>'
+          : '<span class="source-badge shop">🛍 販売所</span>'
+
+        // Actions
         let actionHtml = ''
-        if (canUse) {
-          // 買った側: 未使用なら使用、使用済かつボーナスなしなら取り消し申請可
-          if (!p.used) {
-            actionHtml = `<button class="buy-btn" onclick="markUsed('${p.id}')">使用済にする</button>`
-          } else if (p.cancel_requested) {
+        if (isMine) {
+          if (!t.used) {
+            const fn = t.source === 'gacha' ? `markUsedTicket('gacha','${t.id}')` : `markUsedTicket('shop','${t.id}')`
+            actionHtml = `<button class="buy-btn" onclick="${fn}">使用済にする</button>`
+          } else if (t.cancelRequested) {
             actionHtml = `<span class="cancel-pending">申請中...</span>`
-          } else if (!p.bonus_points) {
-            actionHtml = `<button class="cancel-btn" onclick="requestCancel('${p.id}')">取り消し申請</button>`
+          } else if (!t.bonusPoints) {
+            const fn = t.source === 'gacha' ? `requestCancelTicket('gacha','${t.id}')` : `requestCancelTicket('shop','${t.id}')`
+            actionHtml = `<button class="cancel-btn" onclick="${fn}">取り消し申請</button>`
           }
         } else {
-          // 売った側: 取り消し申請が来たら承認/否認
-          if (p.cancel_requested) {
+          // 相手が持ってる券。相手が使用済＆取消申請してきた場合、こちら側が承認/却下
+          if (hasCancelAlert) {
             actionHtml = `
               <div class="cancel-alert" style="width:100%;flex-direction:column;align-items:flex-start;gap:6px">
                 <div>↩️ 取り消し申請あり</div>
                 <div style="display:flex;gap:6px">
-                  <button class="approve-btn" onclick="approveCancel('${p.id}')">承認</button>
-                  <button class="deny-btn" onclick="denyCancel('${p.id}')">却下</button>
+                  <button class="approve-btn" onclick="approveCancelTicket('${t.source}','${t.id}')">承認</button>
+                  <button class="deny-btn"    onclick="denyCancelTicket('${t.source}','${t.id}')">却下</button>
                 </div>
               </div>`
           }
         }
 
+        // メタ
+        const metaBits = []
+        if (t.source === 'shop' && t.raw.price != null) metaBits.push(`${t.raw.price}pt`)
+        if (t.bonusPoints) metaBits.push(`使うと +${t.bonusPoints}pt`)
+        metaBits.push(dt)
+        const meta = metaBits.join(' · ')
+
         card.innerHTML = `
-          <div class="item-emoji">${escHtml(p.emoji)}</div>
+          <div class="item-emoji">${escHtml(t.emoji)}</div>
           <div class="item-info" style="flex:1">
-            <div class="item-name">${escHtml(p.name)}${p.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}</div>
-            ${p.description ? `<div class="item-desc">${escHtml(p.description)}</div>` : ''}
+            <div class="item-name">
+              ${escHtml(t.name)}${sourceBadge}${t.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}
+            </div>
+            ${t.description ? `<div class="item-desc">${escHtml(t.description)}</div>` : ''}
             <div class="item-meta">
-              ${canUse ? '購入' : '販売'}: ${dt} · ${p.price}pt
-              · ${canUse ? '出品' : '購入者'}: ${other?.emoji ?? '?'} ${escHtml(other?.name ?? '?')}
+              ${meta}${ownerLabel ? ` · ${isMine ? '自分の券' : ownerLabel + ' の券'}` : ''}
             </div>
             ${hasCancelAlert ? actionHtml : ''}
           </div>
@@ -496,6 +653,107 @@
         `
         el.appendChild(card)
       })
+    }
+
+    // 統合 markUsed: source に応じて gacha_results / shop_purchases を更新
+    async function markUsedTicket(source, id) {
+      if (!confirm('この券を使用済にしますか？')) return
+      const t = _tickets.find(x => x.source === source && x.id === id)
+      if (!t) return
+      const table = source === 'gacha' ? 'gacha_results' : 'shop_purchases'
+      const usedCol = source === 'gacha' ? { used: true } : { used: true, used_at: new Date().toISOString() }
+      const { error } = await _sb.from(table).update(usedCol).eq('id', id)
+      if (error) { showToast('更新失敗: ' + error.message, true); return }
+
+      // ボーナスpt付与
+      const bonus = t.bonusPoints || 0
+      if (bonus > 0) {
+        const reason = source === 'gacha' ? 'gacha_bonus' : 'shop_bonus'
+        await _sb.from('points').insert({ user_id: currentUser.id, amount: bonus, reason })
+        showToast(`使用済 ✅ +${bonus}pt`)
+      } else {
+        showToast('使用済にしました ✅')
+      }
+
+      // 相手に通知
+      const counterId = source === 'gacha' ? partnerId : t.counterUserId
+      if (counterId) {
+        const bodyMsg = `${t.emoji || '🎁'} ${t.name}${t.description ? ' — ' + t.description : ''}`
+        _sb.functions.invoke('send-push', { body: {
+          title: source === 'gacha' ? '🎰 ガチャ券が使われました' : '🎁 券が使われました',
+          body: bodyMsg,
+          url: '/shop.html',
+          recipient_user_id: counterId,
+          kind: source === 'gacha' ? 'gacha' : 'shop',
+        }}).catch(() => {})
+      }
+
+      await loadPoints()
+      await loadTickets()
+    }
+
+    async function requestCancelTicket(source, id) {
+      const t = _tickets.find(x => x.source === source && x.id === id)
+      if (!t) return
+      const table = source === 'gacha' ? 'gacha_results' : 'shop_purchases'
+      const { error } = await _sb.from(table).update({ cancel_requested: true }).eq('id', id)
+      if (error) { showToast('申請失敗', true); return }
+
+      const counterId = source === 'gacha' ? partnerId : t.counterUserId
+      if (counterId) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '↩️ 取り消し申請',
+          body: `${t.emoji || '🎁'} ${t.name} の取り消しを申請されました`,
+          url: '/shop.html',
+          recipient_user_id: counterId,
+          kind: source === 'gacha' ? 'gacha' : 'shop',
+        }}).catch(() => {})
+      }
+      showToast('取り消しを申請しました')
+      await loadTickets()
+    }
+
+    async function approveCancelTicket(source, id) {
+      const t = _tickets.find(x => x.source === source && x.id === id)
+      if (!t) return
+      const table = source === 'gacha' ? 'gacha_results' : 'shop_purchases'
+      const patch = source === 'gacha'
+        ? { used: false, cancel_requested: false }
+        : { used: false, used_at: null, cancel_requested: false }
+      const { error } = await _sb.from(table).update(patch).eq('id', id)
+      if (error) { showToast('承認失敗', true); return }
+
+      if (t.ownerUserId) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '✅ 取り消し承認',
+          body: `${t.emoji || '🎁'} ${t.name} の取り消しが承認されました`,
+          url: '/shop.html',
+          recipient_user_id: t.ownerUserId,
+          kind: source === 'gacha' ? 'gacha' : 'shop',
+        }}).catch(() => {})
+      }
+      showToast('取り消しを承認しました')
+      await loadTickets()
+    }
+
+    async function denyCancelTicket(source, id) {
+      const t = _tickets.find(x => x.source === source && x.id === id)
+      if (!t) return
+      const table = source === 'gacha' ? 'gacha_results' : 'shop_purchases'
+      const { error } = await _sb.from(table).update({ cancel_requested: false }).eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+
+      if (t.ownerUserId) {
+        _sb.functions.invoke('send-push', { body: {
+          title: '❌ 取り消し却下',
+          body: `${t.emoji || '🎁'} ${t.name} の申請が却下されました`,
+          url: '/shop.html',
+          recipient_user_id: t.ownerUserId,
+          kind: source === 'gacha' ? 'gacha' : 'shop',
+        }}).catch(() => {})
+      }
+      showToast('申請を却下しました')
+      await loadTickets()
     }
 
     async function buy(itemId) {
@@ -512,91 +770,6 @@
       showToast('✅ 購入しました！')
       await loadPoints()
       await loadBuyList()
-      await loadPurchases()
-    }
-
-    async function markUsed(purchaseId) {
-      const p = _purchases.get(purchaseId)
-      if (!confirm('この券を使用済にしますか？')) return
-      const { error } = await _sb.from('shop_purchases')
-        .update({ used: true, used_at: new Date().toISOString() })
-        .eq('id', purchaseId)
-      if (error) { showToast('更新失敗', true); return }
-      const bonusPoints = p?.bonus_points || 0
-      if (bonusPoints > 0) {
-        await _sb.from('points').insert({ user_id: currentUser.id, amount: bonusPoints, reason: 'shop_bonus' })
-        showToast(`使用済 ✅ +${bonusPoints}pt`)
-      } else {
-        showToast('使用済にしました ✅')
-      }
-      if (p?.seller_id) {
-        const bodyMsg = `${p.emoji || '🎁'} ${p.name}${p.description ? ' — ' + p.description : ''}`
-        _sb.functions.invoke('send-push', { body: {
-          title: '🎁 券が使われました',
-          body: bodyMsg,
-          url: '/shop.html',
-          recipient_user_id: p.seller_id,
-          kind: 'shop',
-        }}).catch(() => {})
-      }
-      await loadPoints()
-      await loadPurchases()
-    }
-
-    async function requestCancel(purchaseId) {
-      // 買った側が申請 → 売った側（seller）に通知
-      const p = _purchases.get(purchaseId)
-      const { error } = await _sb.from('shop_purchases')
-        .update({ cancel_requested: true })
-        .eq('id', purchaseId)
-      if (error) { showToast('申請失敗', true); return }
-      if (p?.seller_id) {
-        _sb.functions.invoke('send-push', { body: {
-          title: '↩️ 取り消し申請',
-          body: `「${p?.name ?? '券'}」の使用済取り消しを申請されました`,
-          url: '/shop.html',
-          recipient_user_id: p.seller_id,
-        }}).catch(() => {})
-      }
-      showToast('取り消しを申請しました')
-      await loadPurchases()
-    }
-
-    async function approveCancel(purchaseId) {
-      // 売った側が承認 → 買った側（buyer）に通知
-      const p = _purchases.get(purchaseId)
-      const { error } = await _sb.from('shop_purchases')
-        .update({ used: false, used_at: null, cancel_requested: false })
-        .eq('id', purchaseId)
-      if (error) { showToast('承認失敗', true); return }
-      if (p?.buyer_id) {
-        _sb.functions.invoke('send-push', { body: {
-          title: '✅ 取り消し承認',
-          body: `「${p?.name ?? '券'}」の取り消しが承認されました`,
-          url: '/shop.html',
-          recipient_user_id: p.buyer_id,
-        }}).catch(() => {})
-      }
-      showToast('取り消しを承認しました')
-      await loadPurchases()
-    }
-
-    async function denyCancel(purchaseId) {
-      // 売った側が却下 → 買った側（buyer）に通知
-      const p = _purchases.get(purchaseId)
-      const { error } = await _sb.from('shop_purchases')
-        .update({ cancel_requested: false })
-        .eq('id', purchaseId)
-      if (error) { showToast('更新失敗', true); return }
-      if (p?.buyer_id) {
-        _sb.functions.invoke('send-push', { body: {
-          title: '❌ 取り消し却下',
-          body: `「${p?.name ?? '券'}」の申請が却下されました`,
-          url: '/shop.html',
-          recipient_user_id: p.buyer_id,
-        }}).catch(() => {})
-      }
-      showToast('申請を却下しました')
       await loadPurchases()
     }
 

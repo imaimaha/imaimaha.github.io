@@ -892,19 +892,19 @@
 
     <div class="divider"></div>
 
-    <!-- WALLET / TICKET LIST -->
-    <h2 class="section-title">🎒 券インベントリ</h2>
-    <div style="font-size:0.72rem;color:#7aa;margin-bottom:10px">
-      💡 販売所で買った券もこの下で見られます → <a href="/shop.html" style="color:#98bedd">販売所へ</a>
-    </div>
-    <div class="ticket-tabs">
-      <button class="ticket-tab active" data-tab="usable" onclick="setTicketTab('usable')">🎫 使える (<span id="tab-count-usable">0</span>)</button>
-      <button class="ticket-tab" data-tab="partner" onclick="setTicketTab('partner')">🎁 相手にあげた (<span id="tab-count-partner">0</span>)</button>
-      <button class="ticket-tab" data-tab="used" onclick="setTicketTab('used')">✅ 使用済み (<span id="tab-count-used">0</span>)</button>
-    </div>
-    <div class="ticket-list" id="ticket-list">
-      <div class="empty-tickets">読み込み中…</div>
-    </div>
+    <!-- 券インベントリは shop.html に統合 -->
+    <a href="/shop.html" style="display:flex;align-items:center;gap:14px;padding:16px 18px;background:rgba(100,180,255,0.12);border:1.5px solid rgba(100,180,255,0.35);border-radius:16px;text-decoration:none;color:#e8f4fd;transition:background 0.18s;margin-bottom:8px" onmouseover="this.style.background='rgba(100,180,255,0.2)'" onmouseout="this.style.background='rgba(100,180,255,0.12)'">
+      <span style="font-size:2rem;flex-shrink:0">🎫</span>
+      <div style="flex:1">
+        <div style="font-family:'Zen Kurenaido',sans-serif;font-size:1.05rem;color:#f0f6ff;margin-bottom:2px">
+          持ってる券を管理する
+        </div>
+        <div style="font-size:0.78rem;color:#98bedd">
+          ガチャ券・販売所の券をまとめて販売所で管理できます
+        </div>
+      </div>
+      <span style="color:#98bedd;font-size:1.1rem">→</span>
+    </a>
 
   </div>
 
@@ -1659,6 +1659,8 @@
 
     async function loadTickets() {
       const list = document.getElementById('ticket-list')
+      // インベントリは shop.html に移動済み。ticket-list 要素がないページでは no-op
+      if (!list) { allTickets = []; return }
 
       const { data, error } = await _sb
         .from('gacha_results')
@@ -1686,6 +1688,7 @@
 
     function renderTickets() {
       const list = document.getElementById('ticket-list')
+      if (!list) return  // shop.html に移動済み
 
       // タブ別カウント更新
       const counts = { usable: 0, partner: 0, used: 0 }
