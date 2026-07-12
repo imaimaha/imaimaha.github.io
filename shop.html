@@ -781,18 +781,51 @@
     }
 
     async function respondRequest(id, status) {
+      // まずリクエスト本体を取得（承諾時にshop_itemsへコピーするため）
+      const { data: req, error: fetchErr } = await _sb.from('shop_requests')
+        .select('*').eq('id', id).single()
+      if (fetchErr || !req) { showToast('リクエストが見つかりません', true); return }
+
       const { error } = await _sb.from('shop_requests').update({ status }).eq('id', id)
       if (error) { showToast('更新失敗', true); return }
 
-      const msg = status === 'accepted' ? '承諾しました' : '断りました'
+      let listed = false
+      // 承諾時: shop_items に自動出品（承諾者=売り手 / リクエスト主=買い手）
+      if (status === 'accepted') {
+        const { error: itemErr } = await _sb.from('shop_items').insert({
+          seller_id: currentUser.id,
+          buyer_id: req.requester_id,
+          name: req.title,
+          emoji: '📝',
+          description: req.description || `リクエストから出品: ${req.title}`,
+          price: req.price,
+          stock: 1,
+          rarity: 'N',
+          bonus_points: null,
+        })
+        if (itemErr) {
+          console.error('[shop] auto-list from request failed:', itemErr)
+          showToast('自動出品に失敗しました', true)
+        } else {
+          listed = true
+          // 出品追加 +1pt
+          _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'shop_item_add' }).then(() => {})
+        }
+      }
+
+      const msg = status === 'accepted'
+        ? (listed ? '承諾＆出品しました' : '承諾しました')
+        : '断りました'
       showToast(msg)
 
       // リクエスト主（パートナー）に通知
       if (partnerId) {
-        const label = status === 'accepted' ? '承諾しました ✅' : '断りました ❌'
+        const label = status === 'accepted'
+          ? (listed ? '承諾されました✅ 買うタブから購入できます' : '承諾されました ✅')
+          : '断られました ❌'
         _sb.functions.invoke('send-push', {
           body: {
-            title: `📝 リクエストへの返答`,
+            title: `📝 リクエストへの返答: ${req.title}`,
             body: label,
             url: '/shop.html',
             recipient_user_id: partnerId
@@ -801,6 +834,8 @@
       }
 
       await loadRequests()
+      await loadBuyList()
+      await loadSellList()
     }
 
     async function deleteRequest(id) {
