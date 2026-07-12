@@ -329,27 +329,44 @@
     }
 
     .grid-actions {
-      display: flex;
-      gap: 10px;
-      padding: 4px 12px;
-      max-width: 440px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px 14px 16px;
+      max-width: 480px;
       margin: 0 auto;
     }
+    .grid-actions.two-col { grid-template-columns: repeat(2, 1fr); }
 
     .btn-new-card {
-      flex: 1;
-      background: rgba(255,255,255,0.08);
-      border: 1.5px solid rgba(150,200,255,0.2);
-      color: #98bedd;
-      padding: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      color: #cfe0f5;
+      padding: 12px 8px;
       border-radius: 14px;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-family: 'Noto Sans JP', sans-serif;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.14s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .btn-new-card:hover  { background: rgba(255,255,255,0.12); }
+    .btn-new-card:active { background: rgba(255,255,255,0.14); transform: scale(0.96); }
+
+    /* シェアは強調カラー */
+    #btn-share {
+      background: linear-gradient(135deg, rgba(255,215,100,0.18), rgba(255,180,50,0.25));
+      border-color: rgba(255,215,100,0.5);
+      color: #ffe28c;
     }
 
-    .btn-new-card:active { background: rgba(255,255,255,0.14); }
+    @media (max-width: 380px) {
+      .btn-new-card { font-size: 0.76rem; padding: 11px 6px; }
+    }
 
     .bingo-count-badge {
       display: inline-block;
@@ -771,19 +788,11 @@
 
     <div class="bingo-grid" id="bingo-grid"></div>
 
-    <div class="grid-actions">
-      <button class="btn-new-card" onclick="handleBack()">
-        ← 戻る
-      </button>
-      <button class="btn-new-card" id="btn-regenerate" onclick="regenerateCard()" style="flex:0 0 auto;padding:12px 16px">
-        🎲 再生成
-      </button>
-      <button class="btn-new-card" id="btn-restore" onclick="openRestoreModal()" style="flex:0 0 auto;padding:12px 16px">
-        🔄 過去から復元
-      </button>
-      <button class="btn-new-card" id="btn-share" onclick="shareCard()" style="flex:0 0 auto;padding:12px 16px">
-        📤 シェア
-      </button>
+    <div class="grid-actions" id="grid-actions">
+      <button class="btn-new-card" onclick="handleBack()">← 戻る</button>
+      <button class="btn-new-card" id="btn-regenerate" onclick="regenerateCard()">🎲 生成</button>
+      <button class="btn-new-card" id="btn-restore" onclick="openRestoreModal()">🔄 復元</button>
+      <button class="btn-new-card" id="btn-share" onclick="shareCard()">📤 シェア</button>
     </div>
   </div>
 
@@ -4178,6 +4187,12 @@
     document.getElementById('btn-regenerate').style.display = hideEdit ? 'none' : '';
     document.getElementById('btn-restore').style.display    = hideEdit ? 'none' : '';
     document.getElementById('btn-share').style.display      = state.readonly ? 'none' : '';
+    // 表示中のボタン数に応じてグリッド列を切り替え
+    const gridActions = document.getElementById('grid-actions');
+    if (gridActions) {
+      const visible = Array.from(gridActions.children).filter(el => el.style.display !== 'none').length;
+      gridActions.classList.toggle('two-col', visible <= 2);
+    }
     renderGrid();
     showScreen('grid');
   }
