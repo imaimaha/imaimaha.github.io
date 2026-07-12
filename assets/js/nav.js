@@ -30,6 +30,7 @@
     { icon:'🎰', label:'ガチャ',             href:'/gacha.html' },
     { icon:'🛍', label:'ポイント販売所',     href:'/shop.html' },
     { icon:'💰', label:'割り勘',             href:'/expenses.html' },
+    { icon:'⚔️', label:'賭け事',             href:'/bets.html' },
     { icon:'✨', label:'ポイント履歴',       href:'/points.html' },
     { icon:'📅', label:'共有カレンダー',     href:'/calendar.html' },
     { icon:'💫', label:'やりたいこと',       href:'/wishlist.html' },

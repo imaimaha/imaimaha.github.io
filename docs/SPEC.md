@@ -267,7 +267,24 @@
 - **バランス計算**: `net = Σ(未精算 e).amount × split_ratio × (paid_by === me ? +1 : -1)` → 正なら相手が私に返す、負なら私が相手に返す
 - 記録追加時 +1pt、精算実行時 +3pt。相手に Push (kind: `expense`)
 
-### 4.16 お知らせセンター (`notifications.html`)
+### 4.16 賭け事 (`bets.html`)
+
+2人でポイントを賭けてバトル。状態遷移で pt を制御:
+
+**フロー**:
+1. **起票** (`pending`): 起票者から -stake、相手にPush
+2. **相手が承諾** (`active`): 相手からも -stake、両者に3ボタン表示
+3. **相手が拒否** (`rejected`): 起票者に +stake 返却
+4. **起票者が取下** (`cancelled`): 起票者に +stake 返却
+5. **結果宣言** (`finished`): どちらかが「自分勝ち / 相手勝ち / 引き分け」をタップ
+   - win: 勝者に +stake × 2
+   - draw: 両者に +stake
+
+**取り消し申請フロー**: `active` or `finished` 状態で結果宣言者/どちらかが取り消し申請 → 相手が承認/却下。承認で状態を巻き戻し (`finished` → `active` に戻る、`active` → `cancelled`)。
+
+**通知**: 各遷移で相手に Push (kind: `bet`)。お知らせセンターの「⚔️ 賭け事」フィルタで絞れる。
+
+### 4.17 お知らせセンター (`notifications.html`)
 
 - send-push で受信した全通知の一覧・既読管理
 - Edge Function `send-push` は subscription への push 送信と並列に `notifications_log` テーブルに insert する。recipient_user_id 指定時はその1人、未指定時は sender 以外の全プロフィールに記録
@@ -311,6 +328,9 @@
 | ありがとうポスト送信 | +1 | `thanks_send` |
 | 割り勘 支出記録 | +1 | `expense_add` |
 | 割り勘 精算実行 | +3 | `expense_settle` |
+| 賭け事 勝利 (Pot 総取り) | +stake×2 | `bet_win` |
+| 賭け事 引き分け 返却 | +stake | `bet_draw` |
+| 賭け事 拒否/取下 返却 | +stake | `bet_return` |
 
 ### 消費手段
 
@@ -319,6 +339,7 @@
 | ガチャ回転（1回） | -100 | `gacha` |
 | **10連ガチャ** | -1000 | `gacha10` |
 | 販売所で購入 | -price | `shop_buy` |
+| 賭け事 掛け金 (エスクロー) | -stake | `bet_stake` |
 
 ### 相手↔自分の移動
 
@@ -446,6 +467,7 @@
 | `expenses` | paid_by, amount, category, description, split_ratio, spent_at, settled_at, settlement_id | 割り勘の支出記録 |
 | `settlements` | settled_by, net_amount, payer_id, receiver_id, period_from, period_to | 割り勘の精算履歴 |
 | `notifications_log` | user_id, sender_id, title, body, url, kind, read_at | send-push で送信された通知の受信者記録（お知らせセンター用） |
+| `bets` | created_by, opponent_id, title, description, stake, status, result, result_by, cancel_requested, cancel_by, proposed_at, accepted_at, finished_at, ended_at | 賭け事 |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
 ### 7.2 RLS ポリシーの原則

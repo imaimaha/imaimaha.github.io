@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>賭け事 | Notre Endroit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    .content {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 12px 16px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ポイントバー */
+    .pt-bar {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255,215,100,0.08);
+      border-bottom: 1px solid rgba(255,215,100,0.15);
+      font-size: 0.95rem; color: #ffe066;
+      position: relative; z-index: 1;
+    }
+    .pt-bar .val {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.25rem; font-weight: bold; color: #ffd700;
+    }
+
+    /* タブ */
+    .bet-tabs {
+      display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .bet-tabs::-webkit-scrollbar { display: none; }
+    .bet-tab {
+      flex-shrink: 0;
+      padding: 9px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 999px;
+      color: #98bedd;
+      font-family: inherit; font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.14s;
+    }
+    .bet-tab:active { transform: scale(0.95); }
+    .bet-tab.active {
+      background: linear-gradient(135deg, rgba(255,80,80,0.24), rgba(255,150,80,0.28));
+      border-color: rgba(255,150,80,0.6);
+      color: #ffd7a3;
+    }
+    .bet-tab .cnt {
+      display: inline-block; margin-left: 4px;
+      font-size: 0.7rem;
+      padding: 0 6px;
+      background: rgba(0,0,0,0.24);
+      border-radius: 999px;
+      color: inherit;
+    }
+
+    /* 起票ボタン */
+    .new-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #d94f4f, #ff7f50);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit; font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(217,79,79,0.34);
+      transition: transform 0.14s, box-shadow 0.18s;
+    }
+    .new-btn:hover  { box-shadow: 0 6px 26px rgba(217,79,79,0.45); }
+    .new-btn:active { transform: scale(0.97); }
+
+    /* 起票フォーム */
+    .new-form {
+      display: none;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,150,80,0.4);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .new-form.open { display: block; }
+    .new-form h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem; color: #ffd7a3;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 0.82rem; color: #98bedd; margin-bottom: 6px;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.24);
+      border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 10px;
+      color: #e8f4fd;
+      font-family: inherit; font-size: 15px;
+      outline: none;
+    }
+    .field input::placeholder, .field textarea::placeholder { color: rgba(200,220,255,0.35); }
+    .field input:focus, .field textarea:focus { border-color: rgba(255,150,80,0.5); }
+    .field textarea { min-height: 60px; resize: vertical; }
+    .stake-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .stake-row input {
+      width: 120px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem;
+      text-align: right;
+    }
+    .stake-row .unit { color: #98bedd; font-size: 0.95rem; }
+
+    .form-actions { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-cancel {
+      flex: 1;
+      padding: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      color: #98bedd;
+      border-radius: 12px;
+      font-family: inherit; font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-save {
+      flex: 1.4;
+      padding: 11px;
+      background: linear-gradient(135deg, #d94f4f, #ff7f50);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit; font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(217,79,79,0.32);
+    }
+    .btn-save:active, .btn-cancel:active { transform: scale(0.97); }
+
+    /* ベットカード */
+    .bet-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .bet-card.active {
+      background: linear-gradient(160deg, rgba(255,215,100,0.10), rgba(255,80,80,0.08));
+      border-color: rgba(255,150,80,0.45);
+      box-shadow: 0 4px 24px rgba(255,120,60,0.15), inset 0 0 30px rgba(255,180,80,0.06);
+    }
+    .bet-card.finished { opacity: 0.72; }
+
+    .bet-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem;
+      color: #f0f6ff;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+    .bet-desc {
+      font-size: 0.85rem;
+      color: #98bedd;
+      margin-bottom: 12px;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    /* VS レイアウト */
+    .vs-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+      background: rgba(0,0,0,0.24);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .vs-side {
+      flex: 1;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .vs-emoji { font-size: 2rem; line-height: 1; filter: drop-shadow(0 0 10px rgba(200,230,255,0.35)); }
+    .vs-name { font-size: 0.75rem; color: #98bedd; }
+    .vs-label {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 0.65rem;
+      padding: 1px 8px;
+      border-radius: 999px;
+      color: #ffd764;
+      background: rgba(255,215,100,0.14);
+      border: 1px solid rgba(255,215,100,0.32);
+    }
+    .vs-mid {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.8rem;
+      color: #ff7f50;
+      text-shadow: 0 0 12px rgba(255,120,60,0.5);
+      letter-spacing: 0.05em;
+    }
+
+    /* Pot 表示 */
+    .pot-display {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .pot-label { font-size: 0.72rem; color: #98bedd; letter-spacing: 0.08em; }
+    .pot-value {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.8rem; color: #ffd764;
+      text-shadow: 0 0 16px rgba(255,215,100,0.4);
+    }
+    .pot-value.small { font-size: 1.15rem; }
+
+    /* アクションボタン群 */
+    .bet-actions {
+      display: grid; gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    }
+    .bet-btn {
+      padding: 12px 8px;
+      border-radius: 12px;
+      font-family: inherit; font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.14s, background 0.18s, box-shadow 0.18s;
+      border: 1.5px solid;
+      white-space: nowrap;
+    }
+    .bet-btn:active { transform: scale(0.96); }
+
+    /* 3ボタン: 自分勝ち / 相手勝ち / 引き分け */
+    .win-me    { background: linear-gradient(135deg, rgba(140,240,180,0.24), rgba(140,240,180,0.4)); border-color: rgba(140,240,180,0.6); color: #d6ffe4; box-shadow: 0 4px 14px rgba(80,200,140,0.28); }
+    .win-you   { background: linear-gradient(135deg, rgba(255,80,80,0.22), rgba(255,120,80,0.34)); border-color: rgba(255,120,80,0.55); color: #ffd0d0; box-shadow: 0 4px 14px rgba(220,80,80,0.25); }
+    .draw      { background: rgba(255,255,255,0.08); border-color: rgba(150,200,255,0.35); color: #cfe0f5; }
+    .accept    { background: linear-gradient(135deg, rgba(140,240,180,0.24), rgba(140,240,180,0.4)); border-color: rgba(140,240,180,0.6); color: #d6ffe4; font-weight: bold; box-shadow: 0 4px 14px rgba(80,200,140,0.28); }
+    .reject    { background: rgba(255,80,80,0.15); border-color: rgba(255,120,120,0.45); color: #ff9d9d; }
+    .cancel    { background: rgba(255,255,255,0.06); border-color: rgba(150,200,255,0.22); color: #98bedd; }
+    .cancel-req { background: rgba(255,180,50,0.14); border-color: rgba(255,200,80,0.4); color: #ffd080; }
+
+    /* 結果バッジ (finished) */
+    .result-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    .result-badge.win { background: linear-gradient(135deg, rgba(255,215,100,0.24), rgba(255,180,50,0.34)); border: 1px solid rgba(255,215,100,0.55); color: #ffd764; }
+    .result-badge.lose { background: rgba(150,150,150,0.15); border: 1px solid rgba(200,200,200,0.28); color: #98bedd; }
+    .result-badge.draw { background: rgba(150,200,255,0.15); border: 1px solid rgba(150,200,255,0.35); color: #c5ddf5; }
+
+    /* 取り消し申請 */
+    .cancel-alert {
+      background: rgba(255,180,50,0.10);
+      border: 1px solid rgba(255,200,80,0.35);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: #ffd080;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .cancel-alert .row { display: flex; gap: 8px; }
+
+    /* メタ */
+    .bet-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.72rem; color: #7aadcc;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(150,200,255,0.1);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #7aadcc;
+      font-size: 0.9rem;
+    }
+    .empty-emoji { font-size: 3rem; margin-bottom: 10px; }
+    .empty-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem;
+      color: #e8f4fd;
+      margin-bottom: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,40,80,0.95);
+      border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 500;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { background: rgba(80,20,20,0.95); border-color: rgba(255,120,120,0.4); color: #ffd0d0; }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js?v=3"></script>
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← ホーム</a>
+    <h1>⚔️ 賭け事</h1>
+  </div>
+
+  <div class="pt-bar">
+    残高: ✨&nbsp;<span class="val" id="pt-value">…</span>
+  </div>
+
+  <div class="content">
+    <div class="bet-tabs" id="bet-tabs">
+      <button class="bet-tab active" data-btab="active"    onclick="setBetTab('active')">⚔️ 進行中 <span class="cnt" id="c-active">0</span></button>
+      <button class="bet-tab"        data-btab="pending"   onclick="setBetTab('pending')">⏳ 承諾待ち <span class="cnt" id="c-pending">0</span></button>
+      <button class="bet-tab"        data-btab="history"   onclick="setBetTab('history')">📜 履歴 <span class="cnt" id="c-history">0</span></button>
+    </div>
+
+    <button class="new-btn" onclick="toggleForm()">⚔️ 新しい賭け事を作る</button>
+
+    <div class="new-form" id="new-form">
+      <h3>⚔️ 賭け事を提案</h3>
+      <div class="field">
+        <label>お題</label>
+        <input id="in-title" placeholder="例: どっちが早く帰宅するか" maxlength="80">
+      </div>
+      <div class="field">
+        <label>詳細 (任意)</label>
+        <textarea id="in-desc" placeholder="ルール・条件・勝敗の決め方..." maxlength="400"></textarea>
+      </div>
+      <div class="field">
+        <label>掛け金 (自分から一時的に差し引かれます)</label>
+        <div class="stake-row">
+          <input id="in-stake" type="number" min="1" step="1" value="10">
+          <span class="unit">pt</span>
+          <span style="margin-left:auto;font-size:0.75rem;color:#98bedd">Pot 予定: <span id="pot-preview" style="color:#ffd764;font-weight:bold">20pt</span></span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="toggleForm()">キャンセル</button>
+        <button class="btn-save" onclick="submitBet()">⚔️ 相手に送る</button>
+      </div>
+    </div>
+
+    <div id="bet-list"><div class="empty">読み込み中…</div></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentUser = null
+    let myProfile = null
+    let partnerProfile = null
+    let currentPt = 0
+    let allBets = []
+    let currentTab = 'active'
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+    function showToast(msg, err) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.className = 'toast show' + (err ? ' error' : '')
+      setTimeout(() => t.classList.remove('show'), 2200)
+    }
+    function fmtDate(iso) {
+      if (!iso) return ''
+      return new Date(iso).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      currentUser = session.user
+
+      const { data: profs } = await _sb.from('profiles').select('*')
+      if (profs) {
+        myProfile = profs.find(p => p.id === currentUser.id)
+        partnerProfile = profs.find(p => p.id !== currentUser.id)
+      }
+
+      await loadPoints()
+      await loadBets()
+
+      // stake input のライブpot計算
+      document.getElementById('in-stake').addEventListener('input', updatePotPreview)
+    }
+
+    async function loadPoints() {
+      const { data } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
+      currentPt = (data || []).reduce((s, r) => s + (r.amount || 0), 0)
+      document.getElementById('pt-value').textContent = currentPt + 'pt'
+    }
+
+    function updatePotPreview() {
+      const stake = parseInt(document.getElementById('in-stake').value, 10) || 0
+      document.getElementById('pot-preview').textContent = (stake * 2) + 'pt'
+    }
+
+    async function loadBets() {
+      const { data, error } = await _sb.from('bets')
+        .select('*')
+        .order('proposed_at', { ascending: false })
+        .limit(200)
+      if (error) { showToast('読み込み失敗: ' + error.message, true); return }
+      allBets = data || []
+      render()
+    }
+
+    function betMatchesTab(b, tab) {
+      if (tab === 'active') return b.status === 'active'
+      if (tab === 'pending') return b.status === 'pending'
+      if (tab === 'history') return ['finished','cancelled','rejected'].includes(b.status)
+      return true
+    }
+
+    function render() {
+      // 件数更新
+      const counts = { active: 0, pending: 0, history: 0 }
+      allBets.forEach(b => {
+        if (betMatchesTab(b, 'active'))  counts.active++
+        if (betMatchesTab(b, 'pending')) counts.pending++
+        if (betMatchesTab(b, 'history')) counts.history++
+      })
+      document.getElementById('c-active').textContent   = counts.active
+      document.getElementById('c-pending').textContent  = counts.pending
+      document.getElementById('c-history').textContent  = counts.history
+
+      const list = document.getElementById('bet-list')
+      const items = allBets.filter(b => betMatchesTab(b, currentTab))
+      if (items.length === 0) {
+        const msg = currentTab === 'active'
+          ? { emoji: '⚔️', title: '進行中の勝負はまだありません', sub: '新しい賭け事を作ろう' }
+          : currentTab === 'pending'
+          ? { emoji: '⏳', title: '承諾待ちの勝負はありません', sub: '相手からの提案 or 自分の提案がここに' }
+          : { emoji: '📜', title: 'まだ履歴はありません', sub: '過去の勝負がここに残る' }
+        list.innerHTML = `<div class="empty"><div class="empty-emoji">${msg.emoji}</div><div class="empty-title">${msg.title}</div><div>${msg.sub}</div></div>`
+        return
+      }
+      list.innerHTML = ''
+      items.forEach(b => list.appendChild(renderBet(b)))
+    }
+
+    function renderBet(b) {
+      const iAmCreator = b.created_by === currentUser.id
+      const iAmOpponent = b.opponent_id === currentUser.id
+      const creatorProfile = iAmCreator ? myProfile : partnerProfile
+      const opponentProfile = iAmOpponent ? myProfile : partnerProfile
+
+      const card = document.createElement('div')
+      card.className = 'bet-card ' + b.status
+
+      let inner = ''
+      inner += `<div class="bet-title">${escHtml(b.title)}</div>`
+      if (b.description) inner += `<div class="bet-desc">${escHtml(b.description)}</div>`
+
+      // Pot & VS
+      if (b.status === 'active') {
+        inner += `
+          <div class="pot-display">
+            <div class="pot-label">💰 POT (勝者が総取り)</div>
+            <div class="pot-value">${b.stake * 2}pt</div>
+          </div>
+          <div class="vs-row">
+            <div class="vs-side">
+              <div class="vs-emoji">${creatorProfile?.emoji || '🦊'}</div>
+              <div class="vs-name">${escHtml(creatorProfile?.name || '起票')}</div>
+              <div class="vs-label">${b.stake}pt</div>
+            </div>
+            <div class="vs-mid">VS</div>
+            <div class="vs-side">
+              <div class="vs-emoji">${opponentProfile?.emoji || '🦔'}</div>
+              <div class="vs-name">${escHtml(opponentProfile?.name || '相手')}</div>
+              <div class="vs-label">${b.stake}pt</div>
+            </div>
+          </div>
+        `
+      } else if (b.status === 'pending') {
+        inner += `
+          <div class="pot-display">
+            <div class="pot-label">💰 掛け金 (承諾でPot 2倍)</div>
+            <div class="pot-value small">${b.stake}pt → ${b.stake * 2}pt</div>
+          </div>
+        `
+      } else if (b.status === 'finished') {
+        // 結果バッジ
+        let badgeClass = 'draw', badgeText = '🤝 引き分け'
+        if (b.result === 'win_creator') {
+          const won = iAmCreator
+          badgeClass = won ? 'win' : 'lose'
+          badgeText = won ? `🏆 勝ち +${b.stake * 2}pt` : `😔 負け -${b.stake}pt`
+        } else if (b.result === 'win_opponent') {
+          const won = iAmOpponent
+          badgeClass = won ? 'win' : 'lose'
+          badgeText = won ? `🏆 勝ち +${b.stake * 2}pt` : `😔 負け -${b.stake}pt`
+        }
+        inner += `<div class="result-badge ${badgeClass}">${badgeText}</div>`
+        inner += `<div style="font-size:0.78rem;color:#98bedd">掛け金 ${b.stake}pt × 2 = Pot ${b.stake * 2}pt</div>`
+      } else if (b.status === 'cancelled' || b.status === 'rejected') {
+        inner += `<div class="result-badge draw">${b.status === 'cancelled' ? '🚫 取り下げ' : '❌ 拒否'} · 返却 ${b.stake}pt</div>`
+      }
+
+      // アクションボタン
+      let actions = ''
+      if (b.status === 'pending') {
+        if (iAmCreator) {
+          actions = `<button class="bet-btn cancel" onclick="cancelBet(${b.id})">✕ 取り下げる</button>`
+        } else {
+          actions = `
+            <button class="bet-btn accept" onclick="acceptBet(${b.id})">✅ 受けて立つ (-${b.stake}pt)</button>
+            <button class="bet-btn reject" onclick="rejectBet(${b.id})">❌ 断る</button>
+          `
+        }
+      } else if (b.status === 'active') {
+        if (b.cancel_requested) {
+          // 誰が申請したか、こちらが反対側なら承認/却下
+          const iAmCanceller = b.cancel_by === currentUser.id
+          if (iAmCanceller) {
+            actions = `<div class="cancel-alert">↩️ 結果の取り消しを申請中...</div>`
+          } else {
+            actions = `
+              <div class="cancel-alert">
+                <div>↩️ 相手が結果の取り消しを申請しています</div>
+                <div class="row">
+                  <button class="bet-btn accept" onclick="approveCancel(${b.id})">承認 (振り出しに戻す)</button>
+                  <button class="bet-btn reject" onclick="denyCancel(${b.id})">却下</button>
+                </div>
+              </div>
+            `
+          }
+        } else {
+          actions = `
+            <button class="bet-btn win-me"  onclick="declareResult(${b.id}, 'me')">🏆 自分の勝ち</button>
+            <button class="bet-btn win-you" onclick="declareResult(${b.id}, 'you')">🎌 相手の勝ち</button>
+            <button class="bet-btn draw"    onclick="declareResult(${b.id}, 'draw')">🤝 引き分け</button>
+          `
+        }
+      } else if (b.status === 'finished') {
+        // 結果宣言者だけが取り消し申請可能
+        const iAmResultBy = b.result_by === currentUser.id
+        if (iAmResultBy && !b.cancel_requested) {
+          actions = `<button class="bet-btn cancel-req" onclick="requestResultCancel(${b.id})">↩️ 結果の取り消し申請</button>`
+        } else if (b.cancel_requested) {
+          const iAmCanceller = b.cancel_by === currentUser.id
+          if (iAmCanceller) {
+            actions = `<div class="cancel-alert">↩️ 取り消し申請中...</div>`
+          } else {
+            actions = `
+              <div class="cancel-alert">
+                <div>↩️ 結果の取り消しを申請されています</div>
+                <div class="row">
+                  <button class="bet-btn accept" onclick="approveCancel(${b.id})">承認 (振り出しに戻す)</button>
+                  <button class="bet-btn reject" onclick="denyCancel(${b.id})">却下</button>
+                </div>
+              </div>
+            `
+          }
+        }
+      }
+      if (actions) inner += `<div class="bet-actions" style="margin-top:8px">${actions}</div>`
+
+      // メタ
+      const stateEmoji = { pending: '⏳', active: '⚔️', finished: '📜', cancelled: '🚫', rejected: '❌' }
+      inner += `<div class="bet-meta">
+        <span>${stateEmoji[b.status] || ''} ${b.status === 'active' ? '進行中' : b.status === 'pending' ? '承諾待ち' : b.status === 'finished' ? '完了' : b.status === 'cancelled' ? '取り下げ' : '拒否'}</span>
+        <span>${escHtml(creatorProfile?.emoji || '')} → ${escHtml(opponentProfile?.emoji || '')} · ${fmtDate(b.proposed_at)}</span>
+      </div>`
+
+      card.innerHTML = inner
+      return card
+    }
+
+    // ==== アクション ====
+
+    function setBetTab(tab) {
+      currentTab = tab
+      document.querySelectorAll('.bet-tab').forEach(el =>
+        el.classList.toggle('active', el.dataset.btab === tab)
+      )
+      render()
+    }
+
+    function toggleForm() {
+      const f = document.getElementById('new-form')
+      f.classList.toggle('open')
+      if (f.classList.contains('open')) updatePotPreview()
+    }
+
+    async function submitBet() {
+      const title = document.getElementById('in-title').value.trim()
+      const description = document.getElementById('in-desc').value.trim() || null
+      const stake = parseInt(document.getElementById('in-stake').value, 10)
+      if (!title) { showToast('お題を入力してください', true); return }
+      if (!stake || stake < 1) { showToast('掛け金を入力してください', true); return }
+      if (stake > currentPt) { showToast(`ポイントが足りません (残高 ${currentPt}pt)`, true); return }
+      if (!partnerProfile) { showToast('相手が見つかりません', true); return }
+
+      // 1. bets に insert
+      const { data: bet, error } = await _sb.from('bets').insert({
+        created_by: currentUser.id,
+        opponent_id: partnerProfile.id,
+        title, description, stake,
+        status: 'pending',
+      }).select().single()
+      if (error) { showToast('作成失敗: ' + error.message, true); return }
+
+      // 2. 起票者から stake を pt に -stake で記録 (エスクロー)
+      await _sb.from('points').insert({
+        user_id: currentUser.id, amount: -stake, reason: 'bet_stake',
+      })
+
+      // 3. 相手に通知
+      _sb.functions.invoke('send-push', { body: {
+        title: '⚔️ 賭け事の申し込み',
+        body: `${myProfile?.emoji} ${myProfile?.name} から「${title}」(${stake}pt)`,
+        url: '/bets.html',
+        recipient_user_id: partnerProfile.id,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      document.getElementById('in-title').value = ''
+      document.getElementById('in-desc').value = ''
+      showToast('⚔️ 送りました！相手の承諾待ち')
+      toggleForm()
+      await loadPoints()
+      await loadBets()
+    }
+
+    async function acceptBet(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (bet.stake > currentPt) { showToast(`ポイントが足りません (残高 ${currentPt}pt)`, true); return }
+      if (!confirm(`${bet.stake}pt を掛けて受けて立ちますか？`)) return
+
+      // 1. bets を active に
+      const { error } = await _sb.from('bets')
+        .update({ status: 'active', accepted_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) { showToast('承諾失敗', true); return }
+
+      // 2. 受けた側から stake を差し引く (エスクロー)
+      await _sb.from('points').insert({
+        user_id: currentUser.id, amount: -bet.stake, reason: 'bet_stake',
+      })
+
+      // 3. 起票者に通知
+      _sb.functions.invoke('send-push', { body: {
+        title: '⚔️ 賭け事が始まった！',
+        body: `${partnerProfile?.emoji} ${partnerProfile?.name} が「${bet.title}」を承諾。Pot ${bet.stake * 2}pt`,
+        url: '/bets.html',
+        recipient_user_id: bet.created_by,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('⚔️ 勝負スタート！')
+      currentTab = 'active'
+      await loadPoints()
+      await loadBets()
+    }
+
+    async function rejectBet(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (!confirm('この賭け事を断りますか？')) return
+
+      const { error } = await _sb.from('bets')
+        .update({ status: 'rejected', ended_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+
+      // 起票者に stake 返却
+      await _sb.from('points').insert({
+        user_id: bet.created_by, amount: bet.stake, reason: 'bet_return',
+      })
+
+      // 起票者に通知
+      _sb.functions.invoke('send-push', { body: {
+        title: '❌ 賭け事 拒否',
+        body: `${partnerProfile?.emoji} ${partnerProfile?.name} が「${bet.title}」を断りました (${bet.stake}pt 返却)`,
+        url: '/bets.html',
+        recipient_user_id: bet.created_by,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('拒否しました')
+      await loadBets()
+    }
+
+    async function cancelBet(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (!confirm('この賭け事を取り下げますか？ (掛け金は返却されます)')) return
+
+      const { error } = await _sb.from('bets')
+        .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+
+      // 起票者に stake 返却
+      await _sb.from('points').insert({
+        user_id: bet.created_by, amount: bet.stake, reason: 'bet_return',
+      })
+
+      // 相手に通知
+      _sb.functions.invoke('send-push', { body: {
+        title: '🚫 賭け事 取り下げ',
+        body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を取り下げました`,
+        url: '/bets.html',
+        recipient_user_id: bet.opponent_id,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('取り下げました')
+      await loadPoints()
+      await loadBets()
+    }
+
+    async function declareResult(id, choice) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      const iAmCreator = bet.created_by === currentUser.id
+      const iAmOpponent = bet.opponent_id === currentUser.id
+      let result, winnerId
+      if (choice === 'draw') {
+        result = 'draw'
+        winnerId = null
+      } else if (choice === 'me') {
+        result = iAmCreator ? 'win_creator' : 'win_opponent'
+        winnerId = currentUser.id
+      } else { // 'you'
+        result = iAmCreator ? 'win_opponent' : 'win_creator'
+        winnerId = iAmCreator ? bet.opponent_id : bet.created_by
+      }
+      const confirmMsg = choice === 'draw'
+        ? '引き分けで確定しますか？ (両者に掛け金を返却)'
+        : choice === 'me'
+        ? `自分の勝ちで確定しますか？ (Pot ${bet.stake * 2}pt を受取)`
+        : `相手の勝ちで確定しますか？ (Pot ${bet.stake * 2}pt を相手が受取)`
+      if (!confirm(confirmMsg)) return
+
+      const { error } = await _sb.from('bets').update({
+        status: 'finished',
+        result,
+        result_by: currentUser.id,
+        finished_at: new Date().toISOString(),
+      }).eq('id', id)
+      if (error) { showToast('確定失敗: ' + error.message, true); return }
+
+      // pt 配当
+      if (result === 'draw') {
+        // 両者 +stake
+        await _sb.from('points').insert([
+          { user_id: bet.created_by, amount: bet.stake, reason: 'bet_draw' },
+          { user_id: bet.opponent_id, amount: bet.stake, reason: 'bet_draw' },
+        ])
+      } else {
+        // 勝者 +stake*2
+        await _sb.from('points').insert({
+          user_id: winnerId, amount: bet.stake * 2, reason: 'bet_win',
+        })
+      }
+
+      // 相手に通知
+      const partnerId = iAmCreator ? bet.opponent_id : bet.created_by
+      const outcome = result === 'draw'
+        ? `🤝 引き分け · ${bet.stake}pt 返却`
+        : (winnerId === partnerId ? `🏆 相手勝利 +${bet.stake * 2}pt` : `😔 相手敗北 -${bet.stake}pt`)
+      _sb.functions.invoke('send-push', { body: {
+        title: '📜 勝負結果',
+        body: `「${bet.title}」の結果: ${outcome}`,
+        url: '/bets.html',
+        recipient_user_id: partnerId,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('結果を確定しました')
+      await loadPoints()
+      await loadBets()
+    }
+
+    async function requestResultCancel(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (!confirm('結果の取り消しを申請しますか？ (相手の承認が必要)')) return
+
+      const { error } = await _sb.from('bets')
+        .update({ cancel_requested: true, cancel_by: currentUser.id })
+        .eq('id', id)
+      if (error) { showToast('申請失敗', true); return }
+
+      const partnerId = bet.created_by === currentUser.id ? bet.opponent_id : bet.created_by
+      _sb.functions.invoke('send-push', { body: {
+        title: '↩️ 結果の取り消し申請',
+        body: `「${bet.title}」の結果取り消しを申請されました`,
+        url: '/bets.html',
+        recipient_user_id: partnerId,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('申請しました')
+      await loadBets()
+    }
+
+    async function approveCancel(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (!confirm('取り消しを承認しますか？ (賭け事を active に戻し、支払われた pt を巻き戻します)')) return
+
+      // 支払い巻き戻し: どのstate から取り消しているかで違う
+      // 1. finished からの取り消し: 配当を巻き戻して active に戻す
+      if (bet.status === 'finished') {
+        if (bet.result === 'draw') {
+          await _sb.from('points').insert([
+            { user_id: bet.created_by, amount: -bet.stake, reason: 'bet_undo' },
+            { user_id: bet.opponent_id, amount: -bet.stake, reason: 'bet_undo' },
+          ])
+        } else {
+          const winnerId = bet.result === 'win_creator' ? bet.created_by : bet.opponent_id
+          await _sb.from('points').insert({
+            user_id: winnerId, amount: -bet.stake * 2, reason: 'bet_undo',
+          })
+        }
+        await _sb.from('bets').update({
+          status: 'active', result: null, result_by: null,
+          finished_at: null, cancel_requested: false, cancel_by: null,
+        }).eq('id', id)
+      } else if (bet.status === 'active') {
+        // active からの取り消し: 掛け金を両者に返して cancelled 状態に
+        await _sb.from('points').insert([
+          { user_id: bet.created_by, amount: bet.stake, reason: 'bet_return' },
+          { user_id: bet.opponent_id, amount: bet.stake, reason: 'bet_return' },
+        ])
+        await _sb.from('bets').update({
+          status: 'cancelled', ended_at: new Date().toISOString(),
+          cancel_requested: false, cancel_by: null,
+        }).eq('id', id)
+      }
+
+      const partnerId = bet.cancel_by
+      _sb.functions.invoke('send-push', { body: {
+        title: '✅ 取り消し承認',
+        body: `「${bet.title}」の取り消しが承認されました`,
+        url: '/bets.html',
+        recipient_user_id: partnerId,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('取り消しました')
+      await loadPoints()
+      await loadBets()
+    }
+
+    async function denyCancel(id) {
+      const bet = allBets.find(b => b.id === id)
+      if (!bet) return
+      if (!confirm('取り消しを却下しますか？')) return
+
+      const { error } = await _sb.from('bets')
+        .update({ cancel_requested: false, cancel_by: null })
+        .eq('id', id)
+      if (error) { showToast('更新失敗', true); return }
+
+      _sb.functions.invoke('send-push', { body: {
+        title: '❌ 取り消し却下',
+        body: `「${bet.title}」の取り消しが却下されました`,
+        url: '/bets.html',
+        recipient_user_id: bet.cancel_by,
+        kind: 'bet',
+      }}).catch(() => {})
+
+      showToast('却下しました')
+      await loadBets()
+    }
+
+    init()
+  </script>
+</body>
+</html>
