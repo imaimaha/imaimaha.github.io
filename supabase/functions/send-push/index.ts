@@ -52,7 +52,7 @@ async function handle(req: Request) {
     }
   }
 
-  const { title, body: msgBody, url, sender_user_id, recipient_user_id, replier_id, ask_ok } = body
+  const { title, body: msgBody, url, sender_user_id, recipient_user_id, replier_id, ask_ok, kind } = body
   const effectiveSender = isService ? sender_user_id : authenticatedUid
 
   const sb = createClient(SB_URL, SB_KEY)
@@ -62,6 +62,19 @@ async function handle(req: Request) {
 
   const { data: subs, error: qErr } = await query
   if (qErr) return json({ error: 'query failed: ' + qErr.message }, 500)
+
+  // 通知履歴に記録（お知らせセンター用）—— サブスクの有無に関わらず、
+  // recipient が確定できる場合は必ずログを残す
+  await logNotifications(sb, {
+    title: title ?? 'Notre Endroit',
+    body: msgBody ?? '',
+    url: url ?? '/',
+    sender_id: effectiveSender ?? null,
+    recipient_user_id: recipient_user_id ?? null,
+    exclude_user_id: recipient_user_id ? null : (effectiveSender ?? null),
+    kind: kind ?? null,
+  })
+
   if (!subs?.length) return json({ ok: true, sent: 0 })
 
   const sent = await pushToSubs(sb, subs, {
@@ -74,6 +87,44 @@ async function handle(req: Request) {
   if (typeof sent === 'string') return json({ error: sent }, 500)
 
   return json({ ok: true, sent })
+}
+
+// お知らせログに insert。recipient_user_id が指定されていればその人に、
+// されてなければ exclude_user_id 以外の全ユーザー (通常は相手) に記録
+async function logNotifications(
+  sb: ReturnType<typeof import('https://esm.sh/@supabase/supabase-js@2').createClient>,
+  msg: {
+    title: string; body: string; url: string;
+    sender_id: string | null;
+    recipient_user_id: string | null;
+    exclude_user_id: string | null;
+    kind: string | null;
+  }
+) {
+  try {
+    let recipients: string[] = []
+    if (msg.recipient_user_id) {
+      recipients = [msg.recipient_user_id]
+    } else {
+      let q = sb.from('profiles').select('id')
+      if (msg.exclude_user_id) q = q.neq('id', msg.exclude_user_id)
+      const { data: profs } = await q
+      recipients = (profs ?? []).map((p: any) => p.id).filter(Boolean)
+    }
+    if (!recipients.length) return
+    const rows = recipients.map(uid => ({
+      user_id: uid,
+      sender_id: msg.sender_id,
+      title: msg.title,
+      body: msg.body,
+      url: msg.url,
+      kind: msg.kind,
+    }))
+    await sb.from('notifications_log').insert(rows)
+  } catch (e) {
+    console.error('[send-push] notifications_log insert failed:', e)
+    // ログ失敗はプッシュ本体には影響させない
+  }
 }
 
 function json(data: unknown, status = 200) {

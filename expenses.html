@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>割り勘 | Notre Endroit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    .content {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* サマリーカード */
+    .balance-card {
+      background: linear-gradient(160deg, rgba(255,215,100,0.14), rgba(255,180,50,0.08));
+      border: 1.5px solid rgba(255,215,100,0.4);
+      border-radius: 20px;
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 0 30px rgba(255,215,100,0.06);
+    }
+    .balance-label {
+      font-size: 0.8rem;
+      color: #ffd764;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+    }
+    .balance-value {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 2rem;
+      color: #f0f6ff;
+      text-align: center;
+      margin-bottom: 6px;
+      text-shadow: 0 0 16px rgba(255,215,100,0.35);
+    }
+    .balance-detail {
+      font-size: 0.85rem;
+      color: #c5ddf5;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .balance-detail .emoji { font-size: 1.1rem; }
+    .balance-arrow { color: #ffd764; margin: 0 6px; font-weight: bold; }
+
+    .balance-meta {
+      display: flex; justify-content: space-around;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,215,100,0.2);
+    }
+    .balance-meta-cell { text-align: center; }
+    .balance-meta-label { font-size: 0.72rem; color: #98bedd; margin-bottom: 4px; }
+    .balance-meta-val { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.05rem; color: #f0f6ff; }
+
+    .settle-btn {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.14s, box-shadow 0.18s;
+      box-shadow: 0 4px 20px rgba(80,200,140,0.35);
+    }
+    .settle-btn:hover  { box-shadow: 0 6px 26px rgba(80,200,140,0.5); }
+    .settle-btn:active { transform: scale(0.97); }
+    .settle-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    /* 入力フォーム */
+    .add-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: rgba(140,240,180,0.14);
+      border: 1.5px solid rgba(140,240,180,0.4);
+      color: #baffcc;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-bottom: 18px;
+      transition: background 0.18s, transform 0.14s;
+    }
+    .add-btn:hover  { background: rgba(140,240,180,0.22); }
+    .add-btn:active { transform: scale(0.98); }
+
+    .form-card {
+      display: none;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .form-card.open { display: block; }
+    .form-card h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.1rem; color: #f0f6ff;
+      margin-bottom: 14px;
+    }
+    .form-row {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .form-row label {
+      min-width: 60px;
+      font-size: 0.82rem;
+      color: #98bedd;
+    }
+    .form-row input, .form-row textarea, .form-row select {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 12px;
+      background: rgba(0,0,0,0.24);
+      border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 10px;
+      color: #e8f4fd;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+    .form-row select { cursor: pointer; }
+    .form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+      border-color: rgba(140,240,180,0.55);
+    }
+    .form-row textarea { min-height: 56px; resize: vertical; }
+    .form-row input::placeholder, .form-row textarea::placeholder { color: rgba(200,220,255,0.35); }
+
+    .amount-input {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem !important;
+      text-align: right;
+    }
+
+    .payer-row, .split-row {
+      display: flex; gap: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      flex: 1;
+      padding: 9px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 10px;
+      color: #98bedd;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+      text-align: center;
+    }
+    .chip.active {
+      background: rgba(140,240,180,0.2);
+      border-color: rgba(140,240,180,0.55);
+      color: #e8f4fd;
+    }
+    .chip:active { transform: scale(0.96); }
+
+    .form-actions {
+      display: flex; gap: 10px;
+      margin-top: 6px;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      color: #98bedd;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-save {
+      flex: 1.4;
+      padding: 11px;
+      background: linear-gradient(135deg, #58c58f, #6fd8a0);
+      color: #04150c;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(80,200,140,0.32);
+    }
+    .btn-save:active, .btn-cancel:active { transform: scale(0.97); }
+
+    /* リスト */
+    .section-title {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 16px 0 10px;
+      padding: 0 4px;
+    }
+    .section-title h2 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.15rem;
+      color: #f0f6ff;
+    }
+    .filter-select {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 10px;
+      color: #e8f4fd;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .expense-list {
+      display: flex; flex-direction: column;
+      gap: 8px;
+    }
+
+    .expense-item {
+      display: flex; align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 12px;
+      transition: background 0.18s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .expense-item.settled { opacity: 0.5; }
+    .expense-item:hover { background: rgba(255,255,255,0.08); }
+
+    .expense-cat {
+      flex-shrink: 0;
+      font-size: 1.6rem;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,215,100,0.14);
+      border: 1px solid rgba(255,215,100,0.3);
+      border-radius: 12px;
+    }
+
+    .expense-info { flex: 1; min-width: 0; }
+    .expense-title {
+      font-size: 0.92rem;
+      color: #f0f6ff;
+      margin-bottom: 3px;
+      word-break: break-word;
+    }
+    .expense-meta {
+      font-size: 0.72rem;
+      color: #7aadcc;
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .expense-meta .paid-by { color: #ffd764; }
+    .expense-meta .settled-tag {
+      background: rgba(140,240,180,0.14);
+      color: #baffcc;
+      padding: 0 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(140,240,180,0.3);
+    }
+
+    .expense-amt {
+      flex-shrink: 0;
+      text-align: right;
+      font-family: 'Zen Kurenaido', sans-serif;
+      color: #f0f6ff;
+      font-size: 1.05rem;
+    }
+    .expense-amt .ratio {
+      display: block;
+      font-family: inherit;
+      font-size: 0.7rem;
+      color: #98bedd;
+      margin-top: 2px;
+    }
+
+    .expense-del {
+      background: none; border: none;
+      color: #5a7fa8; cursor: pointer;
+      padding: 4px 6px; font-size: 0.9rem;
+      transition: color 0.18s;
+    }
+    .expense-del:hover { color: #ff9d9d; }
+
+    .empty {
+      text-align: center;
+      padding: 32px 20px;
+      color: #7aadcc;
+      font-size: 0.9rem;
+    }
+
+    /* 精算モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 300;
+      background: rgba(5,15,40,0.72);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: linear-gradient(180deg, #0f1f48 0%, #060e24 100%);
+      border: 1.5px solid rgba(255,215,100,0.4);
+      border-radius: 22px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .modal h3 {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.3rem; color: #ffd764;
+      text-align: center; margin-bottom: 12px;
+    }
+    .modal-detail {
+      background: rgba(255,215,100,0.08);
+      border: 1px solid rgba(255,215,100,0.28);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+      text-align: center;
+      color: #f0f6ff;
+      line-height: 1.6;
+    }
+    .modal-detail .big {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 1.8rem;
+      color: #ffd764;
+      display: block;
+      margin: 4px 0;
+    }
+    .modal-btns { display: flex; gap: 10px; }
+
+    /* トースト */
+    .toast {
+      position: fixed;
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: rgba(20,40,80,0.95);
+      border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 500;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error {
+      background: rgba(80,20,20,0.95);
+      border-color: rgba(255,120,120,0.4);
+      color: #ffd0d0;
+    }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js?v=3"></script>
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← ホーム</a>
+    <h1>💰 割り勘</h1>
+  </div>
+
+  <div class="content">
+    <!-- サマリーカード -->
+    <div class="balance-card">
+      <div class="balance-label">今の未精算バランス</div>
+      <div class="balance-value" id="balance-value">¥0</div>
+      <div class="balance-detail" id="balance-detail">計算中…</div>
+
+      <div class="balance-meta">
+        <div class="balance-meta-cell">
+          <div class="balance-meta-label">今月の総支出</div>
+          <div class="balance-meta-val" id="month-total">¥0</div>
+        </div>
+        <div class="balance-meta-cell">
+          <div class="balance-meta-label">未精算件数</div>
+          <div class="balance-meta-val" id="unsettled-count">0件</div>
+        </div>
+      </div>
+
+      <button class="settle-btn" id="settle-btn" onclick="openSettleModal()" disabled>
+        ✨ 精算する
+      </button>
+    </div>
+
+    <!-- 追加ボタン -->
+    <button class="add-btn" onclick="toggleForm()" id="add-btn">➕ 支出を記録する</button>
+
+    <!-- 入力フォーム -->
+    <div class="form-card" id="form-card">
+      <h3>支出を記録</h3>
+      <div class="form-row">
+        <label>金額</label>
+        <input id="in-amount" type="number" inputmode="numeric" min="1" step="1" class="amount-input" placeholder="0">
+        <span style="color:#98bedd;font-size:0.9rem;flex-shrink:0">円</span>
+      </div>
+      <div class="form-row">
+        <label>カテゴリ</label>
+        <select id="in-category">
+          <option value="食費">🍚 食費</option>
+          <option value="光熱費">💡 光熱費</option>
+          <option value="家賃">🏠 家賃</option>
+          <option value="デート">💕 デート</option>
+          <option value="交通">🚃 交通</option>
+          <option value="日用品">🧴 日用品</option>
+          <option value="旅行">✈️ 旅行</option>
+          <option value="その他">📝 その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>メモ</label>
+        <textarea id="in-desc" placeholder="何を買った・何に使った (任意)"></textarea>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:#98bedd;display:block;margin-bottom:6px">支払った人</label>
+        <div class="payer-row">
+          <button class="chip active" data-payer="me" onclick="setPayer(this, 'me')">🦊 自分</button>
+          <button class="chip" data-payer="partner" onclick="setPayer(this, 'partner')">🦔 相手</button>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label style="font-size:0.82rem;color:#98bedd;display:block;margin-bottom:6px">割合（相手負担）</label>
+        <div class="split-row">
+          <button class="chip active" data-split="0.5" onclick="setSplit(this, 0.5)">折半</button>
+          <button class="chip" data-split="1.0" onclick="setSplit(this, 1.0)">相手全額</button>
+          <button class="chip" data-split="0"   onclick="setSplit(this, 0)">自分全額</button>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <label>日付</label>
+        <input id="in-date" type="date">
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="toggleForm()">キャンセル</button>
+        <button class="btn-save" onclick="submitExpense()">💾 記録する</button>
+      </div>
+    </div>
+
+    <!-- 履歴 -->
+    <div class="section-title">
+      <h2>📋 履歴</h2>
+      <select class="filter-select" id="filter-select" onchange="renderList()">
+        <option value="all">全部</option>
+        <option value="unsettled">未精算のみ</option>
+        <option value="settled">精算済のみ</option>
+      </select>
+    </div>
+    <div class="expense-list" id="expense-list">
+      <div class="empty">読み込み中…</div>
+    </div>
+  </div>
+
+  <!-- 精算モーダル -->
+  <div class="modal-overlay" id="settle-modal">
+    <div class="modal">
+      <h3>✨ 精算</h3>
+      <div class="modal-detail" id="settle-detail">
+        —
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeSettleModal()">キャンセル</button>
+        <button class="btn-save" onclick="doSettle()">確定する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentUser = null
+    let partnerProf = null
+    let myProf = null
+    let allExpenses = []
+    let formPayer = 'me'
+    let formSplit = 0.5
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+    function showToast(msg, isErr) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.className = 'toast show' + (isErr ? ' error' : '')
+      setTimeout(() => t.classList.remove('show'), 2200)
+    }
+    function fmtYen(n) {
+      return '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP')
+    }
+    const CAT_ICON = {
+      '食費': '🍚', '光熱費': '💡', '家賃': '🏠', 'デート': '💕',
+      '交通': '🚃', '日用品': '🧴', '旅行': '✈️', 'その他': '📝'
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      currentUser = session.user
+      const { data: profs } = await _sb.from('profiles').select('*')
+      if (profs) {
+        myProf = profs.find(p => p.id === currentUser.id)
+        partnerProf = profs.find(p => p.id !== currentUser.id)
+      }
+      // Default date to today
+      document.getElementById('in-date').value = new Date().toLocaleDateString('sv-SE')
+
+      // Update payer chip labels to actual emoji
+      if (myProf)      document.querySelector('[data-payer="me"]').textContent      = `${myProf.emoji} 自分`
+      if (partnerProf) document.querySelector('[data-payer="partner"]').textContent = `${partnerProf.emoji} 相手`
+
+      await loadExpenses()
+    }
+
+    async function loadExpenses() {
+      const { data, error } = await _sb.from('expenses').select('*').order('spent_at', { ascending: false }).order('id', { ascending: false })
+      if (error) { showToast('読み込み失敗: ' + error.message, true); return }
+      allExpenses = data || []
+      renderSummary()
+      renderList()
+    }
+
+    function calcBalance() {
+      let net = 0
+      allExpenses.filter(e => !e.settled_at).forEach(e => {
+        const partnerShare = Number(e.amount) * Number(e.split_ratio ?? 0.5)
+        if (e.paid_by === currentUser.id) net += partnerShare
+        else net -= partnerShare
+      })
+      return Math.round(net)
+    }
+
+    function calcMonthTotal() {
+      const now = new Date()
+      const y = now.getFullYear(), m = now.getMonth()
+      const monthStart = new Date(y, m, 1)
+      return allExpenses
+        .filter(e => new Date(e.spent_at) >= monthStart)
+        .reduce((s, e) => s + Number(e.amount), 0)
+    }
+
+    function renderSummary() {
+      const bal = calcBalance()
+      const monthTot = calcMonthTotal()
+      const unsettled = allExpenses.filter(e => !e.settled_at).length
+
+      document.getElementById('balance-value').textContent = fmtYen(Math.abs(bal))
+      document.getElementById('month-total').textContent = fmtYen(monthTot)
+      document.getElementById('unsettled-count').textContent = unsettled + '件'
+
+      const detail = document.getElementById('balance-detail')
+      const settleBtn = document.getElementById('settle-btn')
+      if (bal === 0) {
+        detail.innerHTML = 'バランスは 0 です 🎉'
+        settleBtn.disabled = true
+      } else if (bal > 0) {
+        detail.innerHTML = `<span class="emoji">${partnerProf?.emoji || '🦔'}</span> が <span class="balance-arrow">→</span> <span class="emoji">${myProf?.emoji || '🦊'}</span> に返す`
+        settleBtn.disabled = false
+      } else {
+        detail.innerHTML = `<span class="emoji">${myProf?.emoji || '🦊'}</span> が <span class="balance-arrow">→</span> <span class="emoji">${partnerProf?.emoji || '🦔'}</span> に返す`
+        settleBtn.disabled = false
+      }
+    }
+
+    function renderList() {
+      const filter = document.getElementById('filter-select').value
+      let list = allExpenses
+      if (filter === 'unsettled') list = list.filter(e => !e.settled_at)
+      else if (filter === 'settled') list = list.filter(e => e.settled_at)
+
+      const el = document.getElementById('expense-list')
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty">記録がまだありません</div>'
+        return
+      }
+
+      el.innerHTML = ''
+      list.forEach(e => {
+        const paidByMe = e.paid_by === currentUser.id
+        const emoji = paidByMe ? (myProf?.emoji || '🦊') : (partnerProf?.emoji || '🦔')
+        const canDelete = paidByMe && !e.settled_at
+        const ratio = Number(e.split_ratio ?? 0.5)
+        const ratioLabel = ratio === 0.5 ? '折半' : ratio === 1 ? '相手全額' : ratio === 0 ? '自分全額' : `相手${Math.round(ratio*100)}%`
+        const dateStr = new Date(e.spent_at + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+        const item = document.createElement('div')
+        item.className = 'expense-item' + (e.settled_at ? ' settled' : '')
+        item.innerHTML = `
+          <div class="expense-cat">${CAT_ICON[e.category] || '📝'}</div>
+          <div class="expense-info">
+            <div class="expense-title">${escHtml(e.description || e.category)}</div>
+            <div class="expense-meta">
+              <span>${dateStr}</span>
+              <span class="paid-by">${emoji} が支払い</span>
+              <span>${escHtml(e.category)}</span>
+              ${e.settled_at ? '<span class="settled-tag">精算済</span>' : ''}
+            </div>
+          </div>
+          <div class="expense-amt">
+            ${fmtYen(e.amount)}
+            <span class="ratio">${ratioLabel}</span>
+          </div>
+          ${canDelete ? `<button class="expense-del" onclick="deleteExpense(${e.id})" aria-label="削除">✕</button>` : ''}
+        `
+        el.appendChild(item)
+      })
+    }
+
+    function setPayer(btn, val) {
+      formPayer = val
+      document.querySelectorAll('[data-payer]').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+    }
+    function setSplit(btn, val) {
+      formSplit = val
+      document.querySelectorAll('[data-split]').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+    }
+
+    function toggleForm() {
+      const f = document.getElementById('form-card')
+      const isOpen = f.classList.toggle('open')
+      if (!isOpen) {
+        document.getElementById('in-amount').value = ''
+        document.getElementById('in-desc').value = ''
+      }
+    }
+
+    async function submitExpense() {
+      const amount = parseInt(document.getElementById('in-amount').value, 10)
+      if (!amount || amount < 1) { showToast('金額を入力してください', true); return }
+      const category = document.getElementById('in-category').value
+      const description = document.getElementById('in-desc').value.trim() || null
+      const spent_at = document.getElementById('in-date').value
+      const paid_by = formPayer === 'me' ? currentUser.id : partnerProf?.id
+      if (!paid_by) { showToast('相手プロフィールが見つかりません', true); return }
+
+      const { data: inserted, error } = await _sb.from('expenses').insert({
+        paid_by, amount, category, description,
+        split_ratio: formSplit,
+        spent_at,
+      }).select().single()
+      if (error) { showToast('記録失敗: ' + error.message, true); return }
+
+      // 自分が payer なら pt
+      if (paid_by === currentUser.id) {
+        _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'expense_add' }).then(() => {})
+      }
+
+      // 相手に通知
+      if (partnerProf) {
+        const payerLabel = paid_by === currentUser.id ? (myProf?.emoji + ' ' + (myProf?.name || '自分')) : (partnerProf.emoji + ' ' + (partnerProf.name || '相手'))
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: '💰 割り勘に記録が追加されました',
+            body: `${payerLabel} が ${category} に ${fmtYen(amount)} を記録`,
+            url: '/expenses.html',
+            recipient_user_id: partnerProf.id,
+            kind: 'expense',
+          }
+        }).catch(() => {})
+      }
+
+      showToast('✅ 記録しました')
+      toggleForm()
+      await loadExpenses()
+    }
+
+    async function deleteExpense(id) {
+      if (!confirm('この記録を削除しますか？')) return
+      const { error } = await _sb.from('expenses').delete().eq('id', id)
+      if (error) { showToast('削除失敗', true); return }
+      showToast('削除しました')
+      await loadExpenses()
+    }
+
+    function openSettleModal() {
+      const bal = calcBalance()
+      if (bal === 0) return
+      const abs = Math.abs(bal)
+      const payer = bal < 0 ? myProf : partnerProf
+      const receiver = bal < 0 ? partnerProf : myProf
+      document.getElementById('settle-detail').innerHTML = `
+        <div>
+          <span style="font-size:1.4rem">${payer?.emoji || '🦊'}</span>
+          <span class="balance-arrow" style="font-size:1.4rem">→</span>
+          <span style="font-size:1.4rem">${receiver?.emoji || '🦔'}</span>
+        </div>
+        <span class="big">${fmtYen(abs)}</span>
+        <div style="font-size:0.82rem;color:#98bedd">${escHtml(payer?.name || '')} → ${escHtml(receiver?.name || '')}</div>
+        <div style="font-size:0.75rem;color:#7aadcc;margin-top:8px">この金額を渡すと未精算バランスが 0 になります</div>
+      `
+      document.getElementById('settle-modal').classList.add('open')
+    }
+    function closeSettleModal() {
+      document.getElementById('settle-modal').classList.remove('open')
+    }
+
+    async function doSettle() {
+      const bal = calcBalance()
+      if (bal === 0) { closeSettleModal(); return }
+      const abs = Math.abs(bal)
+      const payerId = bal < 0 ? currentUser.id : partnerProf.id
+      const receiverId = bal < 0 ? partnerProf.id : currentUser.id
+      const unsettled = allExpenses.filter(e => !e.settled_at)
+      if (unsettled.length === 0) { closeSettleModal(); return }
+      const dates = unsettled.map(e => e.spent_at).sort()
+      const period_from = dates[0]
+      const period_to   = dates[dates.length - 1]
+
+      // 1) settlements に記録
+      const { data: settleRow, error: sErr } = await _sb.from('settlements').insert({
+        settled_by: currentUser.id,
+        net_amount: abs,
+        payer_id: payerId,
+        receiver_id: receiverId,
+        period_from, period_to,
+      }).select().single()
+      if (sErr) { showToast('精算失敗: ' + sErr.message, true); return }
+
+      // 2) 未精算を全部 settled_at と settlement_id で更新
+      const nowIso = new Date().toISOString()
+      const ids = unsettled.map(e => e.id)
+      const { error: uErr } = await _sb.from('expenses')
+        .update({ settled_at: nowIso, settlement_id: settleRow.id })
+        .in('id', ids)
+      if (uErr) { showToast('更新失敗: ' + uErr.message, true); return }
+
+      // 3) 精算 pt (+3)
+      _sb.from('points').insert({ user_id: currentUser.id, amount: 3, reason: 'expense_settle' }).then(() => {})
+
+      // 4) 相手に通知
+      if (partnerProf) {
+        _sb.functions.invoke('send-push', {
+          body: {
+            title: '✨ 割り勘を精算しました',
+            body: `未精算 ${fmtYen(abs)} をリセット。バランスは 0 になりました`,
+            url: '/expenses.html',
+            recipient_user_id: partnerProf.id,
+            kind: 'expense',
+          }
+        }).catch(() => {})
+      }
+
+      closeSettleModal()
+      showToast(`✨ 精算しました (${fmtYen(abs)})`)
+      await loadExpenses()
+    }
+
+    init()
+  </script>
+</body>
+</html>
