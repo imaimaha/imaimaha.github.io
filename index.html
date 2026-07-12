@@ -2,46 +2,144 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
   <title>Notre Endroit</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* 未回答クイズ強調 */
-    #quiz.unanswered #quiz-card {
-      background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
-      border: 2px solid #ff9800;
-      box-shadow: 0 4px 20px rgba(255,152,0,0.35);
-      animation: quiz-pulse 2s ease-in-out infinite;
+    /* Page-scoped tweaks */
+    .home-hero { padding: 44px 20px 22px; }
+    .home-hero .subtitle { margin: 4px 0 16px; }
+
+    .hero-checkin-btn {
+      margin-top: 18px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px;
+      background: var(--glass-2);
+      border: 1.5px solid var(--edge-2);
+      border-radius: var(--r-pill);
+      color: var(--ink-200);
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--sh-1);
+      transition: background 0.18s, transform 0.14s, border-color 0.18s;
     }
-    #quiz.unanswered #quiz-preview {
-      color: #d84315;
+    .hero-checkin-btn:active { transform: scale(0.96); }
+    .hero-checkin-btn:hover:not(:disabled) { background: var(--glass-3); border-color: var(--edge-hi); }
+    .hero-checkin-btn:disabled { opacity: 0.5; }
+    #loc-top-status { min-height: 18px; margin-top: 6px; font-size: 0.75rem; color: var(--ink-400); }
+
+    /* --- Bento variants for home --- */
+    .home-bento .tile.big-hero {
+      grid-column: 1 / -1;
+      min-height: 132px;
+    }
+    .home-bento .tile.big-hero .tile-title { font-size: 1.3rem; }
+    .home-bento .tile.big-hero .tile-icon { font-size: 2.4rem; }
+
+    .home-bento .status-line {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--ink-300);
+      margin-top: 4px;
+    }
+    .home-bento .status-line .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--sage);
+      box-shadow: 0 0 6px var(--sage);
+    }
+    .home-bento .status-line .dot.off {
+      background: var(--ink-600); box-shadow: none;
+    }
+
+    /* Gauge preview: mini bars */
+    .gauge-mini {
+      display: flex; gap: 4px; margin-top: 8px;
+    }
+    .gauge-mini .gauge-cell {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .gauge-mini .gauge-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--aurora-blue), var(--aurora-purple));
+      box-shadow: 0 0 6px var(--aurora-blue);
+      transition: width 0.5s var(--ease-out);
+    }
+    .gauge-mini .gauge-label {
+      font-size: 0.72rem; color: var(--ink-400);
+      width: 24px; text-align: right;
+    }
+    .gauge-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 6px;
+    }
+
+    /* Points chip */
+    .points-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 10px;
+      background: rgba(255,215,100,0.12);
+      border: 1px solid rgba(255,215,100,0.28);
+      border-radius: var(--r-pill);
+      font-size: 0.75rem;
+      color: var(--gold);
+      margin-top: 6px;
+    }
+
+    /* Capsule notify modal */
+    #capsule-notify {
+      display: none;
+      position: fixed; inset: 0; z-index: 250;
+      background: rgba(5,15,40,0.88);
+      backdrop-filter: blur(8px);
+      justify-content: center; align-items: center;
+      padding: 20px;
+    }
+    #capsule-notify.open { display: flex; }
+    #capsule-notify .modal {
+      background: linear-gradient(160deg, rgba(20,40,90,0.97), rgba(10,20,60,0.97));
+      border: 1.5px solid rgba(255,215,100,0.45);
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 340px; width: 100%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,215,100,0.18);
+      animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Login bonus toast — dark theme */
+    .login-toast {
+      position: fixed;
+      top: 76px; left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(255,215,100,0.95), rgba(240,180,60,0.95));
+      color: #1a1200;
+      padding: 10px 22px;
+      border-radius: var(--r-pill);
+      font-size: 0.85rem;
       font-weight: bold;
+      z-index: 500;
+      box-shadow: 0 4px 16px rgba(255,180,50,0.35);
+      animation: toast-in 0.4s var(--ease-spring);
     }
-    .unanswered-badge {
-      display: inline-block;
-      margin-left: 10px;
-      font-size: 0.72rem;
-      color: #fff;
-      background: #ff5722;
-      padding: 3px 10px;
-      border-radius: 12px;
-      vertical-align: middle;
-      animation: badge-pulse 1.5s ease-in-out infinite;
-      font-weight: bold;
-    }
-    @keyframes quiz-pulse {
-      0%, 100% { box-shadow: 0 4px 20px rgba(255,152,0,0.35); }
-      50%      { box-shadow: 0 4px 30px rgba(255,152,0,0.6); }
-    }
-    @keyframes badge-pulse {
-      0%, 100% { transform: scale(1); }
-      50%      { transform: scale(1.08); }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translate(-50%, -12px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -61,8 +159,9 @@
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
   <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
 
-  <header class="hero">
+  <header class="hero home-hero">
     <div class="hero-inner">
       <h1 class="title">Notre Endroit</h1>
       <p class="subtitle">思い出と、これからの話</p>
@@ -72,160 +171,157 @@
         <span id="hero-emoji-right">🦔</span>
       </div>
       <div class="anniversary-badge" id="anniversary-badge"></div>
-
-      <!-- 今ここにいるよ: 記念日直下、hero内に統合 -->
-      <div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:6px">
-        <button id="loc-top-btn" onclick="doCheckinTop()" style="min-width:220px;padding:12px 24px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(150,200,255,0.4);border-radius:24px;color:#e8f4fd;font-size:0.95rem;font-family:inherit;cursor:pointer;font-weight:bold;backdrop-filter:blur(6px);box-shadow:0 2px 12px rgba(0,0,0,0.15);transition:all 0.2s">
-          📍 今ここにいるよ
+      <div>
+        <button id="loc-top-btn" class="hero-checkin-btn" onclick="doCheckinTop()">
+          📍 <span>今ここにいるよ</span>
         </button>
-        <div id="loc-top-status" style="font-size:0.78rem;color:#98bedd;min-height:16px;text-align:center"></div>
+        <div id="loc-top-status"></div>
       </div>
     </div>
   </header>
 
-  <nav class="menu">
-    <a href="/status.html"        class="menu-item">🕐 今日の帰宅</a>
-    <a href="/closer.html"        class="menu-item">✨ ゲージ</a>
-    <a href="/quiz.html"          class="menu-item" id="menu-quiz">💬 クイズ</a>
-    <a href="/thanks.html"        class="menu-item">🌸 ありがとう</a>
-    <a href="/time_capsule.html"  class="menu-item">🎁 タイムカプセル</a>
-    <a href="/bingo.html"         class="menu-item">🎯 ビンゴ</a>
-    <a href="/color_hunting.html" class="menu-item">🎨 カラーハント</a>
-    <a href="/gacha.html"         class="menu-item">🎰 ガチャ</a>
-    <a href="/shop.html"          class="menu-item">🛒 販売所</a>
-    <a href="/calendar.html"      class="menu-item">📅 予定</a>
-    <a href="/wishlist.html"      class="menu-item">✨ やりたいこと</a>
-    <a href="/one_on_one.html"   class="menu-item">🤝 1on1</a>
-    <a href="/location.html"     class="menu-item">📍 今ここにいるよ</a>
-  </nav>
-
   <main>
-    <section id="status" class="section">
-      <h2 class="section-title">今日の帰宅</h2>
-      <a href="/status.html" style="display:block;background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div id="status-preview" style="font-size:0.95rem;color:#8d6e63">読み込み中...</div>
-      </a>
-    </section>
+    <div class="bento home-bento">
 
-    <section id="miss" class="section">
-      <h2 class="section-title">✨ ゲージ</h2>
-      <a href="/closer.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">✨ ✨ ✨ ✨ ✨</div>
-        <div id="miss-preview" style="font-size:0.95rem;color:#8d6e63">気持ちをためよう →</div>
+      <!-- Big hero tile: 帰宅 -->
+      <a href="/status.html" class="tile tile-big big-hero accent-sage">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🕐</span>
+        <span class="tile-title">今日の帰宅</span>
+        <span class="tile-desc" id="status-preview">読み込み中...</span>
       </a>
-    </section>
 
-    <section id="quiz" class="section">
-      <h2 class="section-title">今日のクイズ<span id="quiz-unanswered-badge" class="unanswered-badge" style="display:none">未回答</span></h2>
-      <a href="/quiz.html" id="quiz-card" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">💬 🤔 💡 ✨</div>
-        <div id="quiz-preview" style="font-size:0.95rem;color:#8d6e63">今日の質問に答えてポイントをためよう →</div>
+      <!-- Gauge -->
+      <a href="/closer.html" class="tile accent-pink">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">💗</span>
+        <span class="tile-title">ゲージ</span>
+        <span class="tile-desc" id="miss-preview">気持ちをためよう</span>
+        <div id="gauge-mini-wrap"></div>
       </a>
-    </section>
 
-    <section id="thanks" class="section">
-      <h2 class="section-title">ありがとう</h2>
-      <a href="/thanks.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🌸 💝 🙏 ✨</div>
-        <div style="font-size:0.95rem;color:#8d6e63">相手に「ありがとう」を送ろう →</div>
+      <!-- Quiz -->
+      <a href="/quiz.html" id="quiz-tile" class="tile accent-purple">
+        <span class="tile-orb"></span>
+        <span id="quiz-badge" class="tile-badge" style="display:none">未回答</span>
+        <span class="tile-icon">💬</span>
+        <span class="tile-title">今日のクイズ</span>
+        <span class="tile-desc" id="quiz-preview">今日の質問に答えよう</span>
       </a>
-    </section>
 
-    <section id="capsule" class="section">
-      <h2 class="section-title">タイムカプセル</h2>
-      <a href="/time_capsule.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🎁 ✉️ 🌟 💌</div>
-        <div id="capsule-preview" style="font-size:0.95rem;color:#8d6e63">未来の自分たちへメッセージを残そう →</div>
+      <!-- Thanks -->
+      <a href="/thanks.html" class="tile accent-sakura">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🌸</span>
+        <span class="tile-title">ありがとう</span>
+        <span class="tile-desc">気持ちを言葉にして送ろう</span>
       </a>
-    </section>
 
-    <section id="bingo" class="section">
-      <h2 class="section-title">お散歩ビンゴ</h2>
-      <a href="/bingo.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🎯 🌿 🏙 ❤️</div>
-        <div style="font-size:0.95rem;color:#8d6e63">今週の小さな発見を25マスに集めよう →</div>
+      <!-- Time capsule -->
+      <a href="/time_capsule.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span id="capsule-badge" class="tile-badge gold" style="display:none">届いた</span>
+        <span class="tile-icon">🎁</span>
+        <span class="tile-title">タイムカプセル</span>
+        <span class="tile-desc" id="capsule-preview">未来へメッセージを残そう</span>
       </a>
-    </section>
 
-    <section id="color-hunting" class="section">
-      <h2 class="section-title">カラーハンティング</h2>
-      <a href="/color_hunting.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🎨 🟥 🟨 🟩</div>
-        <div style="font-size:0.95rem;color:#8d6e63">今週のテーマ色を8枚の写真で集めよう →</div>
+      <!-- Gacha (wide, gold) -->
+      <a href="/gacha.html" class="tile bento-wide accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎰</span>
+        <span class="tile-title">ガチャ</span>
+        <span class="tile-desc" id="gacha-preview">ポイントを使って回そう</span>
       </a>
-    </section>
 
-    <section id="gacha-section" class="section">
-      <h2 class="section-title">ガチャ</h2>
-      <a href="/gacha.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🎰 🎁 💖 🌟</div>
-        <div id="gacha-preview" style="font-size:0.95rem;color:#8d6e63">ポイントを使ってガチャを回そう →</div>
+      <!-- Bingo -->
+      <a href="/bingo.html" class="tile accent-blue">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎯</span>
+        <span class="tile-title">お散歩ビンゴ</span>
+        <span class="tile-desc">小さな発見をあつめよう</span>
       </a>
-    </section>
 
-    <section id="shop-section" class="section">
-      <h2 class="section-title">ポイント販売所</h2>
-      <a href="/shop.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🛒 💰 🎁 ✨</div>
-        <div style="font-size:0.95rem;color:#8d6e63">相手に景品を出品したり、相手の景品を買ったり →</div>
+      <!-- Color hunting -->
+      <a href="/color_hunting.html" class="tile accent-pink">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎨</span>
+        <span class="tile-title">カラーハント</span>
+        <span class="tile-desc">今週の色を写真で集めよう</span>
       </a>
-    </section>
 
-    <section id="schedule" class="section">
-      <h2 class="section-title">つぎの予定</h2>
-      <a href="/calendar.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">📅 🗓️ 🌙 ☀️</div>
-        <div id="next-event-preview" style="font-size:0.95rem;color:#8d6e63">2人の予定を管理しよう →</div>
+      <!-- Shop -->
+      <a href="/shop.html" class="tile accent-purple">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🛍</span>
+        <span class="tile-title">ポイント販売所</span>
+        <span class="tile-desc">出品・購入・リクエスト</span>
       </a>
-    </section>
 
-    <section id="wishlist" class="section">
-      <h2 class="section-title">やりたいことリスト</h2>
-      <a href="/wishlist.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">📍 🍽️ 🎬 🎁</div>
-        <div style="font-size:0.95rem;color:#8d6e63">4つのジャンルで2人のやりたいことを管理 →</div>
+      <!-- Calendar -->
+      <a href="/calendar.html" class="tile accent-blue">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">📅</span>
+        <span class="tile-title">つぎの予定</span>
+        <span class="tile-desc" id="next-event-preview">2人の予定を共有</span>
       </a>
-    </section>
 
-    <section id="one-on-one" class="section">
-      <h2 class="section-title">1on1</h2>
-      <a href="/one_on_one.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">🤝 🙏 🌱 🔮</div>
-        <div style="font-size:0.95rem;color:#8d6e63">毎月の感謝・KPT・将来の話を記録 →</div>
+      <!-- Wishlist -->
+      <a href="/wishlist.html" class="tile accent-sakura">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">💫</span>
+        <span class="tile-title">やりたいこと</span>
+        <span class="tile-desc">4ジャンルで管理</span>
       </a>
-    </section>
 
-    <section id="location" class="section">
-      <h2 class="section-title">今ここにいるよ</h2>
-      <a href="/location.html" style="display:block;background:#fff;border-radius:16px;padding:24px;box-shadow:0 3px 12px rgba(0,0,0,0.08);text-decoration:none;color:#5d4037;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:1.5rem;margin-bottom:8px">📍 🗺️ 🏠 🚶</div>
-        <div style="font-size:0.95rem;color:#8d6e63">今いる場所を共有・1日の足跡を振り返る →</div>
+      <!-- 1on1 -->
+      <a href="/one_on_one.html" class="tile accent-sage">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🤝</span>
+        <span class="tile-title">1on1</span>
+        <span class="tile-desc">感謝・KPT・未来を記録</span>
       </a>
-    </section>
 
+      <!-- Location -->
+      <a href="/location.html" class="tile accent-blue">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">📍</span>
+        <span class="tile-title">今ここ</span>
+        <span class="tile-desc">今日の足跡を振り返る</span>
+      </a>
+
+      <!-- Points -->
+      <a href="/points.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">✨</span>
+        <span class="tile-title">ポイント履歴</span>
+        <span class="tile-desc" id="points-preview">獲得と消費を確認</span>
+      </a>
+
+    </div>
   </main>
 
   <footer>
     <p>✨ Unsere kleine Welt für zwei ✨</p>
   </footer>
 
-  <!-- タイムカプセル届いた通知 -->
-  <div id="capsule-notify" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(5,15,40,0.88);backdrop-filter:blur(8px);justify-content:center;align-items:center;">
-    <div style="background:linear-gradient(160deg,rgba(20,40,90,0.97),rgba(10,20,60,0.97));border:1.5px solid rgba(255,215,100,0.45);border-radius:24px;padding:36px 28px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 60px rgba(255,215,100,0.18);animation:fadeUp 0.4s ease">
+  <!-- Capsule notify modal -->
+  <div id="capsule-notify">
+    <div class="modal">
       <div style="font-size:3.5rem;margin-bottom:12px">🎁</div>
-      <div style="font-family:'Zen Kurenaido',sans-serif;font-size:1.3rem;color:#ffd764;margin-bottom:8px">タイムカプセルが届きました！</div>
+      <div style="font-family:'Zen Kurenaido',sans-serif;font-size:1.3rem;color:#ffd764;margin-bottom:8px">
+        タイムカプセルが届きました！
+      </div>
       <div id="capsule-notify-desc" style="font-size:0.88rem;color:#98bedd;margin-bottom:24px"></div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="/time_capsule.html#received" style="display:block;padding:13px;background:linear-gradient(135deg,#b8860b,#daa520);border-radius:12px;color:#fff;font-size:0.95rem;text-decoration:none;font-weight:bold">開けてみる ✨</a>
-        <button onclick="document.getElementById('capsule-notify').style.display='none'" style="padding:12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.2);border-radius:12px;color:#98bedd;font-size:0.9rem;cursor:pointer;font-family:inherit">あとで</button>
+        <a href="/time_capsule.html#received" class="btn btn-gold">開けてみる ✨</a>
+        <button onclick="document.getElementById('capsule-notify').classList.remove('open')" class="btn btn-ghost">あとで</button>
       </div>
     </div>
   </div>
-  <style>@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>
-
 
   <script>
-    // 記念日カウンター（JST 朝2時をロールオーバー境界に）
+    // ========== ANNIVERSARY ==========
     const START = new Date('2025-11-22T02:00:00+09:00')
     function updateAnniversary() {
       const now = new Date()
@@ -243,7 +339,7 @@
     }
     updateAnniversary()
 
-    // トップページ：次の予定をプレビュー表示
+    // ========== NEXT EVENT ==========
     async function loadNextEvent() {
       const today = new Date().toISOString().split('T')[0]
       const { data } = await _sb
@@ -256,29 +352,30 @@
       if (el && data && data.length > 0) {
         const d = new Date(data[0].date + 'T00:00:00')
         const label = d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
-        el.textContent = `📅 ${label} ${data[0].title} →`
+        el.textContent = `📅 ${label} ${data[0].title}`
       }
     }
     loadNextEvent()
 
-    // ステータスプレビュー
+    // ========== STATUS PREVIEW ==========
     async function loadStatusPreview() {
       const el = document.getElementById('status-preview')
       try {
         const { data: profiles } = await _sb.from('profiles').select('*')
         const { data: statuses } = await _sb.from('status').select('*')
-        if (!profiles || profiles.length === 0) { el.textContent = '今日の帰宅時間を共有しよう →'; return }
-        const lines = profiles.map(p => {
+        if (!profiles || profiles.length === 0) { el.textContent = '今日の帰宅時間を共有しよう'; return }
+        const html = profiles.map(p => {
           const s = statuses?.find(s => s.user_id === p.id)
           const time = s?.finish_time ? `${s.finish_time}退社` : '未設定'
-          return `${p.emoji} ${p.name}：${time}`
-        })
-        el.textContent = lines.join('　　') + ' →'
-      } catch { el.textContent = '今日の帰宅時間を共有しよう →' }
+          const on = s?.finish_time
+          return `<span class="status-line"><span class="dot ${on ? '' : 'off'}"></span>${p.emoji} ${p.name}：${time}</span>`
+        }).join('')
+        el.innerHTML = html
+      } catch { el.textContent = '今日の帰宅時間を共有しよう' }
     }
     loadStatusPreview()
 
-    // ガチャプレビュー: ポイント残高
+    // ========== POINTS & GACHA PREVIEW ==========
     async function loadPoints() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
@@ -287,12 +384,14 @@
         if (!data) return
         const total = data.reduce((s, r) => s + r.amount, 0)
         const gp = document.getElementById('gacha-preview')
-        if (gp) gp.textContent = `✨ ${total}pt 所持 — 100ptでガチャ1回 →`
+        if (gp) gp.textContent = `✨ ${total}pt 所持 ・ 100ptで1回 / 1000ptで10+1連`
+        const pp = document.getElementById('points-preview')
+        if (pp) pp.textContent = `所持: ${total}pt`
       } catch {}
     }
     loadPoints()
 
-    // 毎日1回、初回ログインで +5pt ボーナス
+    // ========== LOGIN BONUS ==========
     async function grantLoginBonus() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
@@ -304,53 +403,46 @@
           .select('id').eq('user_id', myId).eq('kind', 'login_bonus').eq('date_str', dateStr).maybeSingle()
         if (existing) return
 
-        // 先に notifications_sent に記録 (二重付与防止)
         const { error: nErr } = await _sb.from('notifications_sent')
           .insert({ user_id: myId, kind: 'login_bonus', date_str: dateStr })
-        if (nErr) { console.debug('login bonus already granted or error:', nErr); return }
+        if (nErr) return
 
         await _sb.from('points').insert({ user_id: myId, amount: 5, reason: 'login_bonus' })
 
-        // 軽くトースト表示
         const el = document.createElement('div')
+        el.className = 'login-toast'
         el.textContent = '✨ ログインボーナス +5pt'
-        el.style.cssText = 'position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(255,215,100,0.92);color:#5d4037;padding:8px 18px;border-radius:20px;font-size:0.85rem;z-index:500;box-shadow:0 3px 12px rgba(0,0,0,0.2)'
         document.body.appendChild(el)
         setTimeout(() => el.remove(), 3000)
       } catch (e) { console.error('grantLoginBonus:', e) }
     }
     grantLoginBonus()
 
-    // 今日のクイズ未回答チェック
+    // ========== QUIZ UNANSWERED ==========
     async function checkQuizUnanswered() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
-        // quiz.html と同じロールオーバー（JST 0時 / toLocaleDateString('sv-SE')）
         const dateStr = new Date().toLocaleDateString('sv-SE')
-
         const { data } = await _sb.from('quiz_answers')
           .select('id')
           .eq('user_id', session.user.id)
           .eq('date_str', dateStr)
           .limit(1)
         const answered = data && data.length > 0
-        const section = document.getElementById('quiz')
-        const badge = document.getElementById('quiz-unanswered-badge')
+        const badge = document.getElementById('quiz-badge')
         const preview = document.getElementById('quiz-preview')
         if (!answered) {
-          section.classList.add('unanswered')
-          badge.style.display = 'inline-block'
-          if (preview) preview.textContent = '👉 今日の質問に答えて +10pt もらおう'
+          if (badge) badge.style.display = 'inline-block'
+          if (preview) preview.textContent = '👉 答えて +10pt もらおう'
         } else {
-          section.classList.remove('unanswered')
-          badge.style.display = 'none'
+          if (badge) badge.style.display = 'none'
         }
       } catch (e) { console.error('checkQuizUnanswered:', e) }
     }
     checkQuizUnanswered()
 
-    // タイムカプセル通知チェック
+    // ========== CAPSULE CHECK ==========
     async function checkCapsules() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
@@ -358,7 +450,6 @@
         const myId = session.user.id
         const now = new Date().toISOString()
 
-        // 自分宛の未開封カプセルがあればポップアップ表示
         const { data: incoming } = await _sb
           .from('time_capsules')
           .select('id')
@@ -369,11 +460,12 @@
           const desc = document.getElementById('capsule-notify-desc')
           if (desc) desc.textContent = `${incoming.length}件のカプセルが届いています`
           const preview = document.getElementById('capsule-preview')
-          if (preview) preview.textContent = `🎁 ${incoming.length}件 届いています！ →`
-          document.getElementById('capsule-notify').style.display = 'flex'
+          if (preview) preview.textContent = `🎁 ${incoming.length}件 届いています！`
+          const badge = document.getElementById('capsule-badge')
+          if (badge) { badge.style.display = 'inline-block'; badge.textContent = `${incoming.length}件` }
+          document.getElementById('capsule-notify').classList.add('open')
         }
 
-        // 自分が送ったカプセルで開封日時を過ぎたのにまだ通知していないものを通知
         const { data: toNotify } = await _sb
           .from('time_capsules')
           .select('id')
@@ -382,7 +474,6 @@
           .lte('open_at', now)
         if (toNotify && toNotify.length > 0) {
           const ids = toNotify.map(c => c.id)
-          // Push通知だけ（LINEは廃止、Pushで十分）
           const { data: partnerProf } = await _sb.from('profiles').select('id').neq('id', myId).single()
           if (partnerProf) {
             _sb.functions.invoke('send-push', {
@@ -400,25 +491,38 @@
     }
     checkCapsules()
 
-    // 会いたいゲージプレビュー
+    // ========== GAUGE PREVIEW ==========
     async function loadMissPreview() {
       const el = document.getElementById('miss-preview')
+      const wrap = document.getElementById('gauge-mini-wrap')
       try {
         const { data: profiles } = await _sb.from('profiles').select('*')
         const { data: gauges }   = await _sb.from('closer_gauge').select('*')
         if (!profiles || profiles.length === 0) return
-        const lines = profiles.map(p => {
+        el.textContent = 'タップで気持ちを伝えよう'
+        // Render mini bars
+        wrap.innerHTML = profiles.map(p => {
           const g = gauges?.find(g => g.user_id === p.id)
-          const filled = Math.round((g?.gauge || 0) / 100 * 5)
-          const stars = '✨'.repeat(filled) + '·'.repeat(5 - filled)
-          return `${p.emoji} ${stars}`
-        })
-        el.textContent = lines.join('　　') + ' →'
+          const raw = g?.gauge || 0
+          // Apply 24h decay for display
+          let effective = raw
+          if (g?.updated_at) {
+            const elapsed = (Date.now() - new Date(g.updated_at).getTime()) / 3600000
+            effective = Math.round(raw * Math.max(0, 1 - elapsed / 24))
+          }
+          const pct = Math.max(0, Math.min(100, effective))
+          return `
+            <div class="gauge-row">
+              <span style="font-size:0.9rem">${p.emoji}</span>
+              <div class="gauge-mini" style="flex:1"><div class="gauge-cell"><div class="gauge-fill" style="width:${pct}%"></div></div></div>
+              <span class="gauge-label">${pct}%</span>
+            </div>`
+        }).join('')
       } catch {}
     }
     loadMissPreview()
 
-    // プロフィール絵文字をヒーローに反映
+    // ========== HERO EMOJI ==========
     async function loadHeroEmoji() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
@@ -432,7 +536,7 @@
     }
     loadHeroEmoji()
 
-    // 今ここにいるよ（トップから直接チェックイン）
+    // ========== TOP CHECK-IN ==========
     let _locMyId = null, _locPartnerId = null, _locMyProfile = null
     async function _locEnsureProfile() {
       if (_locMyId) return
@@ -494,6 +598,7 @@
             }).catch(() => {})
           }
 
+          if (navigator.vibrate) navigator.vibrate(20)
           statusEl.textContent = '✅ 送りました！' + (place_name ? '（' + place_name + '）' : '')
           setTimeout(() => { statusEl.textContent = ''; btn.disabled = false }, 4000)
         },
