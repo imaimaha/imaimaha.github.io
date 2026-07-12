@@ -3673,23 +3673,47 @@
           updated_at: new Date().toISOString()
         }).eq('id', state.card.id);
       } else {
-        const { data, error } = await _sb.from('bingo_sessions').insert({
-          user_id: state.userId,
-          mode: state.card.mode,
-          label: state.card.label,
-          date_str: state.card.date_str || null,
-          items: state.card.items,
-          checks: state.card.checks
-        }).select().single();
-        if (!error && data) {
-          state.card.id = data.id;
-          // Supabase ID を localStorage にも反映
-          if (state.card.mode === 'weekly' && state.card.date_str) {
-            const szInner = Math.round(Math.sqrt(state.card.items.length));
-            lsSave(lsKey(`weekly_${state.card.date_str}_${szInner}`), state.card);
-          }
-          lsSave(lsKey('current'), state.card);
+        // 重複防止: weekly は同一 (user, date_str) の既存行を先に検索。あれば UPDATE
+        // これで gridSize 変更や localStorage 消失で state.card.id が失われても
+        // 新規行を作らず既存行に上書きする
+        let existingId = null;
+        if (state.card.mode === 'weekly' && state.card.date_str) {
+          const { data: rows } = await _sb.from('bingo_sessions')
+            .select('id, items')
+            .eq('user_id', state.userId)
+            .eq('mode', 'weekly')
+            .eq('date_str', state.card.date_str)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (rows && rows[0]) existingId = rows[0].id;
         }
+
+        if (existingId) {
+          await _sb.from('bingo_sessions').update({
+            items: state.card.items,
+            checks: state.card.checks,
+            updated_at: new Date().toISOString()
+          }).eq('id', existingId);
+          state.card.id = existingId;
+        } else {
+          const { data, error } = await _sb.from('bingo_sessions').insert({
+            user_id: state.userId,
+            mode: state.card.mode,
+            label: state.card.label,
+            date_str: state.card.date_str || null,
+            items: state.card.items,
+            checks: state.card.checks
+          }).select().single();
+          if (!error && data) {
+            state.card.id = data.id;
+          }
+        }
+        // Supabase ID を localStorage にも反映
+        if (state.card.mode === 'weekly' && state.card.date_str) {
+          const szInner = Math.round(Math.sqrt(state.card.items.length));
+          lsSave(lsKey(`weekly_${state.card.date_str}_${szInner}`), state.card);
+        }
+        lsSave(lsKey('current'), state.card);
       }
     } catch {}
   }
@@ -3698,7 +3722,7 @@
     if (!state.userId) return null;
     const weekKey = getWeekStr();
 
-    // Supabase から取得を試みる
+    // Supabase から取得を試みる。サイズが違ってもロード（selectMode 側で gridSize を合わせる）
     try {
       const { data, error } = await _sb.from('bingo_sessions')
         .select('*')
@@ -3708,9 +3732,7 @@
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-      if (!error && data) {
-        if (Math.round(Math.sqrt((data.items || []).length)) === state.gridSize) return data;
-      }
+      if (!error && data && Array.isArray(data.items) && data.items.length > 0) return data;
     } catch {}
 
     return lsLoad(lsKey(`weekly_${weekKey}_${state.gridSize}`));
@@ -4083,9 +4105,13 @@
       feelings: '😊 気持ち',
       city: '🏙 都会',
       couple: '❤️ 二人限定',
-      okinawa: '🌺 沖縄'
+      okinawa: '🌺 沖縄',
+      work:    '💼 お仕事',
+      reading: '📖 読書',
+      food:    '🍚 ごはん'
     };
     const label = labels[cat];
+    if (!label) { console.error('[bingo] unknown category:', cat); return; }
 
     const existing = await loadModeCard('category', label);
     if (existing) {
