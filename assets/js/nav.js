@@ -29,11 +29,13 @@
     { icon:'🎨', label:'カラーハント',       href:'/color_hunting.html' },
     { icon:'🎰', label:'ガチャ',             href:'/gacha.html' },
     { icon:'🛍', label:'ポイント販売所',     href:'/shop.html' },
+    { icon:'💰', label:'割り勘',             href:'/expenses.html' },
     { icon:'✨', label:'ポイント履歴',       href:'/points.html' },
     { icon:'📅', label:'共有カレンダー',     href:'/calendar.html' },
     { icon:'💫', label:'やりたいこと',       href:'/wishlist.html' },
     { icon:'🤝', label:'1on1',               href:'/one_on_one.html' },
     { icon:'📍', label:'今ここにいるよ',     href:'/location.html' },
+    { icon:'🔔', label:'お知らせ',           href:'/notifications.html' },
   ]
 
   const path = location.pathname

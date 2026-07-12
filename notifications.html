@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>お知らせ | Notre Endroit</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔔</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; }
+
+    .filter-row {
+      display: flex; gap: 8px;
+      max-width: 640px; margin: 8px auto 12px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 999px;
+      color: #98bedd;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+    }
+    .filter-chip.active {
+      background: rgba(100,180,255,0.22);
+      border-color: rgba(100,180,255,0.55);
+      color: #e8f4fd;
+    }
+    .filter-chip:active { transform: scale(0.95); }
+
+    .actions-row {
+      display: flex; justify-content: flex-end;
+      max-width: 640px; margin: 0 auto 12px;
+      padding: 0 16px;
+    }
+    .mark-all-read {
+      background: rgba(140,240,180,0.14);
+      border: 1.5px solid rgba(140,240,180,0.4);
+      color: #baffcc;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .mark-all-read:hover  { background: rgba(140,240,180,0.24); }
+    .mark-all-read:active { transform: scale(0.96); }
+
+    .noti-list {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 16px 20px;
+      display: flex; flex-direction: column;
+      gap: 10px;
+    }
+
+    .noti {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.15);
+      border-radius: 14px;
+      color: #e8f4fd;
+      text-decoration: none;
+      transition: background 0.18s, transform 0.14s, border-color 0.18s;
+      position: relative;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .noti:active { transform: scale(0.98); }
+    .noti:hover  { background: rgba(255,255,255,0.10); border-color: rgba(150,200,255,0.28); }
+
+    .noti.unread {
+      background: rgba(100,180,255,0.10);
+      border-color: rgba(100,180,255,0.35);
+    }
+    .noti.unread::before {
+      content: '';
+      position: absolute;
+      left: 8px; top: 22px;
+      width: 6px; height: 6px;
+      background: #60a5fa;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #60a5fa;
+    }
+
+    .noti-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .noti.unread .noti-icon { margin-left: 20px; }
+    .noti-body { flex: 1; min-width: 0; }
+    .noti-title {
+      font-family: 'Zen Kurenaido', sans-serif;
+      font-size: 0.95rem;
+      color: #f0f6ff;
+      margin-bottom: 2px;
+    }
+    .noti-msg {
+      font-size: 0.82rem;
+      color: #98bedd;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .noti-time {
+      font-size: 0.7rem;
+      color: #5a7fa8;
+      margin-top: 4px;
+    }
+    .noti-delete {
+      align-self: center;
+      background: none; border: none;
+      color: #5a7fa8;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.18s;
+    }
+    .noti-delete:hover { color: #ff9d9d; }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #7aadcc;
+    }
+    .empty-emoji { font-size: 3rem; margin-bottom: 12px; }
+    .empty-title { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.15rem; color: #e8f4fd; margin-bottom: 6px; }
+    .empty-sub { font-size: 0.85rem; }
+
+    .toast {
+      position: fixed;
+      bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: rgba(20,40,80,0.95);
+      border: 1px solid rgba(100,160,255,0.4);
+      color: #e8f4fd;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 500;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <div class="clouds"></div>
+  <script src="assets/js/stars.js?v=3"></script>
+  <script src="assets/js/push.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/">← ホーム</a>
+    <h1>🔔 お知らせ</h1>
+  </div>
+
+  <div class="filter-row" id="filter-row">
+    <div class="filter-chip active" data-filter="all">すべて</div>
+    <div class="filter-chip" data-filter="unread">未読</div>
+    <div class="filter-chip" data-filter="thanks">🌸 ありがとう</div>
+    <div class="filter-chip" data-filter="gacha">🎰 ガチャ</div>
+    <div class="filter-chip" data-filter="shop">🛍 販売所</div>
+    <div class="filter-chip" data-filter="capsule">🎁 カプセル</div>
+    <div class="filter-chip" data-filter="bingo">🎯 ビンゴ</div>
+    <div class="filter-chip" data-filter="color">🎨 カラーハント</div>
+    <div class="filter-chip" data-filter="location">📍 場所</div>
+    <div class="filter-chip" data-filter="status">🕐 帰宅</div>
+    <div class="filter-chip" data-filter="expense">💰 割り勘</div>
+  </div>
+
+  <div class="actions-row">
+    <button class="mark-all-read" onclick="markAllRead()">すべて既読にする</button>
+  </div>
+
+  <div class="noti-list" id="noti-list">
+    <div class="empty">
+      <div class="empty-emoji">⏳</div>
+      <div class="empty-sub">読み込み中…</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let allNotis = []
+    let currentFilter = 'all'
+    let currentUser = null
+
+    function iconFor(kind) {
+      const map = {
+        thanks: '🌸', gacha: '🎰', shop: '🛍', capsule: '🎁',
+        bingo: '🎯', color: '🎨', location: '📍', status: '🕐',
+        quiz: '💬', closer: '💗', calendar: '📅', expense: '💰',
+      }
+      return map[kind] || '🔔'
+    }
+
+    function relTime(iso) {
+      const d = new Date(iso)
+      const diff = Date.now() - d.getTime()
+      const min = Math.floor(diff / 60000)
+      if (min < 1) return 'たった今'
+      if (min < 60) return `${min}分前`
+      const hour = Math.floor(min / 60)
+      if (hour < 24) return `${hour}時間前`
+      const day = Math.floor(hour / 24)
+      if (day < 7) return `${day}日前`
+      return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+    }
+
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      setTimeout(() => t.classList.remove('show'), 2000)
+    }
+
+    async function loadNotifications() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      currentUser = session.user
+
+      const { data, error } = await _sb
+        .from('notifications_log')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      if (error) {
+        console.error('load notifications error:', error)
+        document.getElementById('noti-list').innerHTML =
+          '<div class="empty"><div class="empty-emoji">⚠️</div><div class="empty-sub">読み込みに失敗しました</div></div>'
+        return
+      }
+
+      allNotis = data ?? []
+      render()
+    }
+
+    function render() {
+      const list = document.getElementById('noti-list')
+      let items = allNotis
+      if (currentFilter === 'unread') items = items.filter(n => !n.read_at)
+      else if (currentFilter !== 'all') items = items.filter(n => n.kind === currentFilter)
+
+      if (items.length === 0) {
+        const msg = currentFilter === 'unread'
+          ? { emoji: '🎉', title: '未読はありません', sub: 'すべて確認済み' }
+          : allNotis.length === 0
+            ? { emoji: '💌', title: 'まだお知らせはありません', sub: '相手からのアクションを待とう' }
+            : { emoji: '🔍', title: 'このカテゴリのお知らせはありません', sub: '別のフィルタを試してみて' }
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-emoji">${msg.emoji}</div>
+            <div class="empty-title">${msg.title}</div>
+            <div class="empty-sub">${msg.sub}</div>
+          </div>`
+        return
+      }
+
+      list.innerHTML = ''
+      items.forEach(n => {
+        const el = document.createElement('a')
+        el.className = 'noti' + (n.read_at ? '' : ' unread')
+        el.href = n.url || '/'
+        el.dataset.id = n.id
+        el.innerHTML = `
+          <span class="noti-icon">${iconFor(n.kind)}</span>
+          <div class="noti-body">
+            <div class="noti-title">${escHtml(n.title)}</div>
+            <div class="noti-msg">${escHtml(n.body)}</div>
+            <div class="noti-time">${relTime(n.created_at)}</div>
+          </div>
+          <button class="noti-delete" onclick="deleteNoti(event, ${n.id})" aria-label="削除">✕</button>
+        `
+        el.addEventListener('click', async (e) => {
+          if (e.target.closest('.noti-delete')) return
+          if (!n.read_at) {
+            n.read_at = new Date().toISOString()
+            await _sb.from('notifications_log').update({ read_at: n.read_at }).eq('id', n.id)
+          }
+        })
+        list.appendChild(el)
+      })
+    }
+
+    async function deleteNoti(e, id) {
+      e.preventDefault()
+      e.stopPropagation()
+      const { error } = await _sb.from('notifications_log').delete().eq('id', id)
+      if (error) { showToast('削除失敗'); return }
+      allNotis = allNotis.filter(n => n.id !== id)
+      render()
+    }
+
+    async function markAllRead() {
+      const unread = allNotis.filter(n => !n.read_at)
+      if (unread.length === 0) { showToast('未読はありません'); return }
+      const ids = unread.map(n => n.id)
+      const nowIso = new Date().toISOString()
+      const { error } = await _sb.from('notifications_log')
+        .update({ read_at: nowIso })
+        .in('id', ids)
+      if (error) { showToast('更新失敗'); return }
+      unread.forEach(n => n.read_at = nowIso)
+      render()
+      showToast(`${unread.length}件を既読にしました`)
+    }
+
+    document.getElementById('filter-row').addEventListener('click', (e) => {
+      const chip = e.target.closest('.filter-chip')
+      if (!chip) return
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'))
+      chip.classList.add('active')
+      currentFilter = chip.dataset.filter
+      render()
+    })
+
+    loadNotifications()
+  </script>
+</body>
+</html>

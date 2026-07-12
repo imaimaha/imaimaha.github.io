@@ -3,8 +3,8 @@
   const safety = document.createElement('style')
   safety.id = 'user-menu-safety'
   safety.textContent = `
-    .top-bar { padding-right: 66px !important; }
-    .top-bar h1 { max-width: calc(100% - 60px); }
+    .top-bar { padding-right: 118px !important; }
+    .top-bar h1 { max-width: calc(100% - 112px); }
   `
   document.head.appendChild(safety)
 
@@ -222,6 +222,34 @@
     btn.onclick = openSettings
     document.body.appendChild(btn)
 
+    // お知らせベル（絵文字ボタンの左側）
+    const bellBtn = document.createElement('a')
+    bellBtn.id = 'notify-bell-btn'
+    bellBtn.href = '/notifications.html'
+    bellBtn.setAttribute('aria-label', 'お知らせ')
+    bellBtn.style.cssText = [
+      'position:fixed', 'top:14px', 'right:66px', 'z-index:1000',
+      'width:44px', 'height:44px', 'border-radius:50%',
+      'background:rgba(255,255,255,0.92)',
+      'border:2px solid rgba(150,200,255,0.4)',
+      'font-size:1.35rem', 'line-height:1',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'box-shadow:0 2px 10px rgba(0,0,0,0.18)',
+      'text-decoration:none', 'color:inherit',
+      'cursor:pointer', 'transition:transform 0.12s',
+    ].join(';')
+    bellBtn.innerHTML = '🔔<span id="notify-bell-badge" style="display:none;position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 5px;background:linear-gradient(135deg,#ff5252,#ff2d55);color:#fff;font-size:0.7rem;font-weight:bold;border-radius:9px;line-height:18px;text-align:center;box-shadow:0 2px 6px rgba(255,80,80,0.5)"></span>'
+    bellBtn.addEventListener('touchstart', () => { bellBtn.style.transform = 'scale(0.92)' }, { passive: true })
+    bellBtn.addEventListener('touchend',   () => { bellBtn.style.transform = '' })
+    document.body.appendChild(bellBtn)
+
+    // 未読件数を反映
+    updateNotifyBadge()
+    // ページに戻ってきた時に更新
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') updateNotifyBadge()
+    })
+
     window.__settingsLogout = async () => {
       closeSettings()
       if (!confirm('ログアウトしますか？')) return
@@ -292,6 +320,31 @@
       textEl.textContent = 'エラー'
     }
   }
+
+  async function updateNotifyBadge() {
+    try {
+      if (typeof _sb === 'undefined') return
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      const { count } = await _sb
+        .from('notifications_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .is('read_at', null)
+      const badge = document.getElementById('notify-bell-badge')
+      if (!badge) return
+      if (count && count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count)
+        badge.style.display = 'inline-block'
+      } else {
+        badge.style.display = 'none'
+      }
+    } catch (e) {
+      console.debug('[header] notify badge update failed:', e)
+    }
+  }
+  // グローバル参照（他ページから呼びたい場合用）
+  window.__updateNotifyBadge = updateNotifyBadge
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
