@@ -450,6 +450,33 @@
       border-left: 4px solid #5ba3d0;
     }
 
+    /* ====== TICKET TABS ====== */
+    .ticket-tabs {
+      display: flex; gap: 6px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .ticket-tabs::-webkit-scrollbar { display: none; }
+    .ticket-tab {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 999px;
+      color: #98bedd;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+    }
+    .ticket-tab:active { transform: scale(0.96); }
+    .ticket-tab.active {
+      background: rgba(100,180,255,0.24);
+      border-color: rgba(100,180,255,0.55);
+      color: #e8f4fd;
+    }
+
     /* ====== TICKET CARDS ====== */
     .ticket-list {
       display: flex;
@@ -866,7 +893,15 @@
     <div class="divider"></div>
 
     <!-- WALLET / TICKET LIST -->
-    <h2 class="section-title">🎒 獲得した券</h2>
+    <h2 class="section-title">🎒 券インベントリ</h2>
+    <div style="font-size:0.72rem;color:#7aa;margin-bottom:10px">
+      💡 販売所で買った券もこの下で見られます → <a href="/shop.html" style="color:#98bedd">販売所へ</a>
+    </div>
+    <div class="ticket-tabs">
+      <button class="ticket-tab active" data-tab="usable" onclick="setTicketTab('usable')">🎫 使える (<span id="tab-count-usable">0</span>)</button>
+      <button class="ticket-tab" data-tab="partner" onclick="setTicketTab('partner')">🎁 相手にあげた (<span id="tab-count-partner">0</span>)</button>
+      <button class="ticket-tab" data-tab="used" onclick="setTicketTab('used')">✅ 使用済み (<span id="tab-count-used">0</span>)</button>
+    </div>
     <div class="ticket-list" id="ticket-list">
       <div class="empty-tickets">読み込み中…</div>
     </div>
@@ -1611,6 +1646,17 @@
     }
 
     // ===================== TICKETS =====================
+    let allTickets = []
+    let ticketTab = 'usable'  // 'usable' | 'partner' | 'used'
+
+    function setTicketTab(tab) {
+      ticketTab = tab
+      document.querySelectorAll('.ticket-tab').forEach(el =>
+        el.classList.toggle('active', el.dataset.tab === tab)
+      )
+      renderTickets()
+    }
+
     async function loadTickets() {
       const list = document.getElementById('ticket-list')
 
@@ -1625,8 +1671,49 @@
         return
       }
 
-      if (!data || data.length === 0) {
+      allTickets = data || []
+      renderTickets()
+    }
+
+    function ticketMatchesTab(ticket, tab) {
+      const isMine = ticket.user_id === currentUser.id
+      const isUsed = ticket.used
+      if (tab === 'usable')  return isMine && !isUsed
+      if (tab === 'partner') return !isMine && !isUsed
+      if (tab === 'used')    return isUsed
+      return true
+    }
+
+    function renderTickets() {
+      const list = document.getElementById('ticket-list')
+
+      // タブ別カウント更新
+      const counts = { usable: 0, partner: 0, used: 0 }
+      allTickets.forEach(t => {
+        if (ticketMatchesTab(t, 'usable'))  counts.usable++
+        if (ticketMatchesTab(t, 'partner')) counts.partner++
+        if (ticketMatchesTab(t, 'used'))    counts.used++
+      })
+      const usableEl  = document.getElementById('tab-count-usable')
+      const partnerEl = document.getElementById('tab-count-partner')
+      const usedEl    = document.getElementById('tab-count-used')
+      if (usableEl)  usableEl.textContent  = counts.usable
+      if (partnerEl) partnerEl.textContent = counts.partner
+      if (usedEl)    usedEl.textContent    = counts.used
+
+      if (allTickets.length === 0) {
         list.innerHTML = '<div class="empty-tickets">まだ券がありません 🎰</div>'
+        return
+      }
+
+      const data = allTickets.filter(t => ticketMatchesTab(t, ticketTab))
+      if (data.length === 0) {
+        const msg = ticketTab === 'usable'
+          ? '使える券はありません。ガチャを回そう 🎰'
+          : ticketTab === 'partner'
+          ? '相手が持ってる券はまだありません'
+          : 'まだ使用済みの券はありません'
+        list.innerHTML = `<div class="empty-tickets">${msg}</div>`
         return
       }
 
