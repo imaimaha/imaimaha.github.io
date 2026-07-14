@@ -513,21 +513,32 @@
       }
 
       // MAX到達（自分が初めて100に達した瞬間だけ +5pt）
+      // 相手の％に関わらず Push + LINE個人通知を送る
       if (!rawWasMax && newGauge >= 100) {
         _sb.from('points').insert({ user_id: myId, amount: 5, reason: 'gauge_max' }).then(() => {})
         const myEmoji = myType === 'fox' ? '🦊' : '🦔'
-        // Push通知だけに変更（LINE群通知は廃止、うるさい）
+        const meProf = await _sb.from('profiles').select('name').eq('id', myId).single()
+        const myName = meProf?.data?.name ?? ''
+        // Push通知（相手へ）
         _sb.functions.invoke('send-push', {
           body: {
-            title: 'ゲージMAX！',
-            body: `${myEmoji} 会いたいシグナル 💖`,
+            title: '💗 ゲージMAX！',
+            body: `${myEmoji} ${myName} が会いたい！(100%)`,
             url: '/closer.html',
-            sender_user_id: myId,  // service or client 両対応
+            sender_user_id: myId,
           },
         }).then(({ error }) => { if (error) console.error('[closer] push(partner) error:', error) })
 
-        // 「ふたり揃った」LINE 通知は updateDistance() 側で状態遷移として発火する
-        // (realtime 経由でパートナーが後からMAXになるケースにも対応するため)
+        // LINE 個人通知（相手へ）
+        _sb.functions.invoke('line-notify', {
+          body: {
+            sender_id: myId,
+            target: 'partner',
+            message: `💗 ゲージMAX！\n${myEmoji} ${myName} が会いたいってさ (100%)`,
+          },
+        }).then(({ error }) => { if (error) console.error('[closer] line-notify(partner) error:', error) })
+
+        // 「ふたり揃った」LINE群通知は updateDistance() 側で状態遷移として発火する
       }
     }
 
