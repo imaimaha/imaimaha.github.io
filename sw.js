@@ -11,7 +11,7 @@ self.addEventListener('push', event => {
   let payload = {}
   try { payload = event.data.json() } catch { payload = { body: event.data.text() } }
 
-  const { title = 'Notre Endroit', body = '', url = '/', replier_id = '', ask_ok = false } = payload
+  const { title = 'Notre Endroit', body = '', url = '/', replier_id = '', ask_ok = false, notif_id = '' } = payload
 
   const actions = ask_ok ? ASK_ACTIONS
     : (replier_id ? EMOJIS.map((e, i) => ({ action: `r${i}`, title: e })) : [])
@@ -22,7 +22,7 @@ self.addEventListener('push', event => {
     badge: '/badge.svg',
     vibrate: [200, 100, 200],
     requireInteraction: true,
-    data: { url, replier_id, ask_ok },
+    data: { url, replier_id, ask_ok, notif_id },
     ...(actions.length ? { actions } : {}),
   }
 
@@ -32,7 +32,7 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close()
 
-  const { ask_ok, replier_id, url } = event.notification.data ?? {}
+  const { ask_ok, replier_id, url, notif_id } = event.notification.data ?? {}
 
   // 「行っていい？」3択返答
   if (ask_ok && event.action && replier_id) {
@@ -67,7 +67,11 @@ self.addEventListener('notificationclick', event => {
   }
 
   const targetUrl = url || '/'
-  const fullUrl = targetUrl.startsWith('http') ? targetUrl : `https://imaimaha.github.io${targetUrl}`
+  // 通知タップで既読化するため notif_id をクエリに載せる。ページ側 (header.js) が既読化＋URL クリーンアップ
+  const withNotif = notif_id
+    ? targetUrl + (targetUrl.includes('?') ? '&' : '?') + `notif_id=${encodeURIComponent(notif_id)}`
+    : targetUrl
+  const fullUrl = withNotif.startsWith('http') ? withNotif : `https://imaimaha.github.io${withNotif}`
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
       const existing = cs.find(c => c.url.startsWith('https://imaimaha.github.io'))

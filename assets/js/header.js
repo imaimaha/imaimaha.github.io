@@ -147,6 +147,13 @@
           <div class="rules-item"><div class="r-desc">今日の帰宅時間を設定した</div><div class="r-val">→ 相手のLINE</div></div>
           <div class="rules-item"><div class="r-desc">「会社出た」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
           <div class="rules-item"><div class="r-desc">「帰宅」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
+          <div class="rules-item"><div class="r-desc">🎫 券を使った (ガチャ / 販売所)</div><div class="r-val">→ 相手のLINE</div></div>
+        </div>
+
+        <div class="rules-group">
+          <h3>🕐 帰宅時刻の自動通知</h3>
+          <div class="rules-item"><div class="r-desc">帰宅時刻 5分前</div><div class="r-val">→ 自分だけ</div></div>
+          <div class="rules-item"><div class="r-desc">帰宅時刻ちょうど</div><div class="r-val">→ 自分 & 相手</div></div>
         </div>
 
         <div class="rules-group">
@@ -167,6 +174,7 @@
           <div class="rules-item"><div class="r-desc">クイズの回答</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">割り勘の記録追加・精算</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item" style="border-top:1px solid rgba(100,180,255,0.15);padding-top:6px;margin-top:2px"><div class="r-desc">🔔 全てのお知らせは<b>お知らせセンター</b>に自動記録される</div><div class="r-val" style="font-size:0.7rem">履歴・未読管理可</div></div>
+          <div class="rules-item"><div class="r-desc">通知をタップしてページを開くと<b>自動で既読</b>になる</div><div class="r-val" style="font-size:0.7rem">🔔</div></div>
         </div>
 
         <div class="rules-group">
@@ -256,8 +264,8 @@
     bellBtn.addEventListener('touchend',   () => { bellBtn.style.transform = '' })
     document.body.appendChild(bellBtn)
 
-    // 未読件数を反映
-    updateNotifyBadge()
+    // 通知タップで来た場合 (?notif_id=<id>) は該当行を既読化して URL を掃除
+    markPushNotifRead().finally(() => updateNotifyBadge())
     // ページに戻ってきた時に更新
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') updateNotifyBadge()
@@ -331,6 +339,29 @@
       }
     } catch (e) {
       textEl.textContent = 'エラー'
+    }
+  }
+
+  async function markPushNotifRead() {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const nid = params.get('notif_id')
+      if (!nid) return
+      if (typeof _sb === 'undefined') return
+      const { data: { session } } = await _sb.auth.getSession()
+      if (session) {
+        await _sb.from('notifications_log')
+          .update({ read_at: new Date().toISOString() })
+          .eq('id', nid)
+          .eq('user_id', session.user.id)
+          .is('read_at', null)
+      }
+      params.delete('notif_id')
+      const qs = params.toString()
+      const clean = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash
+      history.replaceState(null, '', clean)
+    } catch (e) {
+      console.debug('[header] mark push notif read failed:', e)
     }
   }
 

@@ -675,16 +675,23 @@
         showToast('使用済にしました ✅')
       }
 
-      // 相手に通知
+      // 相手に通知 (Push + LINE)
       const counterId = source === 'gacha' ? partnerId : t.counterUserId
       if (counterId) {
         const bodyMsg = `${t.emoji || '🎁'} ${t.name}${t.description ? ' — ' + t.description : ''}`
+        const pushTitle = source === 'gacha' ? '🎰 ガチャ券が使われました' : '🎁 券が使われました'
         _sb.functions.invoke('send-push', { body: {
-          title: source === 'gacha' ? '🎰 ガチャ券が使われました' : '🎁 券が使われました',
+          title: pushTitle,
           body: bodyMsg,
           url: '/shop.html',
           recipient_user_id: counterId,
           kind: source === 'gacha' ? 'gacha' : 'shop',
+        }}).catch(() => {})
+        // LINE 個人にも通知（券は相手に対する約束事なので確実に届けたい）
+        _sb.functions.invoke('line-notify', { body: {
+          sender_id: currentUser.id,
+          target: 'partner',
+          message: `${pushTitle}\n${bodyMsg}`,
         }}).catch(() => {})
       }
 

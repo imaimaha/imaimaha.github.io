@@ -380,23 +380,40 @@
     function startEditNote(id, currentNote) {
       const noteEl = document.getElementById('note-display-' + id)
       if (!noteEl) return
-      noteEl.innerHTML = `
-        <div style="display:flex;gap:6px;margin-top:4px">
-          <input id="edit-note-${id}" type="text" value="${String(currentNote).replace(/"/g,'&quot;')}" maxlength="40"
-            style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(100,200,255,0.4);border-radius:8px;color:#e8f4fd;font-size:0.82rem;font-family:inherit">
-          <button data-id="${id}" onclick="saveNote(Number(this.dataset.id))" style="padding:5px 10px;background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:8px;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">保存</button>
-        </div>
-      `
-      const input = document.getElementById('edit-note-' + id)
-      if (input) { input.focus(); input.select() }
+      // .checkin-note の italic/small が入力欄に効かないよう wrapper で明示リセット
+      noteEl.innerHTML = ''
+      const wrap = document.createElement('div')
+      wrap.style.cssText = 'display:flex;gap:6px;margin-top:4px;font-style:normal;font-size:1rem;color:#e8f4fd'
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.id = 'edit-note-' + id
+      input.maxLength = 40
+      input.value = currentNote || ''
+      input.style.cssText = 'flex:1;min-width:0;padding:8px 10px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(100,200,255,0.4);border-radius:8px;color:#e8f4fd;font-size:16px;font-family:inherit;font-style:normal'
+      const btnSave = document.createElement('button')
+      btnSave.type = 'button'
+      btnSave.textContent = '保存'
+      btnSave.style.cssText = 'padding:6px 12px;background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap'
+      btnSave.onclick = () => saveNote(id, input)
+      const btnCancel = document.createElement('button')
+      btnCancel.type = 'button'
+      btnCancel.textContent = '×'
+      btnCancel.style.cssText = 'padding:6px 10px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(150,180,220,0.3);color:#98bedd;border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:inherit'
+      btnCancel.onclick = () => loadCheckins()
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') saveNote(id, input) })
+      wrap.appendChild(input)
+      wrap.appendChild(btnSave)
+      wrap.appendChild(btnCancel)
+      noteEl.appendChild(wrap)
+      input.focus(); input.select()
     }
 
-    async function saveNote(id) {
-      const input = document.getElementById('edit-note-' + id)
+    async function saveNote(id, inputEl) {
+      const input = inputEl || document.getElementById('edit-note-' + id)
       if (!input) return
       const newNote = input.value.trim() || null
       const { error } = await _sb.from('location_checkins').update({ note: newNote }).eq('id', id)
-      if (error) { showToast('更新失敗'); return }
+      if (error) { showToast('更新失敗: ' + (error.message || error.code || '')); return }
       showToast('メモを更新しました')
       await loadCheckins()
     }

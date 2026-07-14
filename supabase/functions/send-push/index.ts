@@ -64,8 +64,10 @@ async function handle(req: Request) {
   if (qErr) return json({ error: 'query failed: ' + qErr.message }, 500)
 
   // 通知履歴に記録（お知らせセンター用）—— サブスクの有無に関わらず、
-  // recipient が確定できる場合は必ずログを残す
-  await logNotifications(sb, {
+  // recipient が確定できる場合は必ずログを残す。
+  // 戻り値の Map<recipient_user_id, notif_id> を push payload に載せて
+  // 通知タップ時に該当行を既読化する
+  const notifMap = await logNotifications(sb, {
     title: title ?? 'Notre Endroit',
     body: msgBody ?? '',
     url: url ?? '/',
@@ -83,7 +85,7 @@ async function handle(req: Request) {
     url: url ?? '/',
     replier_id: replier_id ?? null,
     ask_ok: ask_ok ?? false,
-  }, VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
+  }, notifMap, VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE)
   if (typeof sent === 'string') return json({ error: sent }, 500)
 
   return json({ ok: true, sent })
@@ -100,7 +102,8 @@ async function logNotifications(
     exclude_user_id: string | null;
     kind: string | null;
   }
-) {
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
   try {
     let recipients: string[] = []
     if (msg.recipient_user_id) {
@@ -111,7 +114,7 @@ async function logNotifications(
       const { data: profs } = await q
       recipients = (profs ?? []).map((p: any) => p.id).filter(Boolean)
     }
-    if (!recipients.length) return
+    if (!recipients.length) return map
     const rows = recipients.map(uid => ({
       user_id: uid,
       sender_id: msg.sender_id,
@@ -120,11 +123,15 @@ async function logNotifications(
       url: msg.url,
       kind: msg.kind,
     }))
-    await sb.from('notifications_log').insert(rows)
+    const { data: inserted } = await sb.from('notifications_log').insert(rows).select('id, user_id')
+    ;(inserted ?? []).forEach((r: any) => {
+      if (r?.user_id && r?.id) map.set(String(r.user_id), String(r.id))
+    })
   } catch (e) {
     console.error('[send-push] notifications_log insert failed:', e)
     // ログ失敗はプッシュ本体には影響させない
   }
+  return map
 }
 
 function json(data: unknown, status = 200) {
@@ -151,16 +158,18 @@ async function sendToUser(
 ): Promise<Response> {
   const { data: subs } = await sb.from('push_subscriptions').select('*').eq('user_id', userId)
   if (!subs?.length) return json({ ok: true, sent: 0 })
-  const sent = await pushToSubs(sb, subs, { ...msg, replier_id: null, ask_ok: false }, vapidMailto, vapidPub, vapidPriv)
+  const sent = await pushToSubs(sb, subs, { ...msg, replier_id: null, ask_ok: false }, new Map(), vapidMailto, vapidPub, vapidPriv)
   if (typeof sent === 'string') return json({ error: sent }, 500)
   return json({ ok: true, sent })
 }
 
 // 購読リストに push 送信。成功数 or エラー文字列を返す
+// notifMap: recipient_user_id -> notifications_log.id （sw.js が既読化に使う）
 async function pushToSubs(
   sb: ReturnType<typeof import('https://esm.sh/@supabase/supabase-js@2').createClient>,
   subs: Record<string, unknown>[],
   payload: { title: string; body: string; url: string; replier_id: unknown; ask_ok: unknown },
+  notifMap: Map<string, string>,
   vapidMailto: string, vapidPub: string, vapidPriv: string,
 ): Promise<number | string> {
   const webpushMod = await import('npm:web-push')
@@ -170,15 +179,16 @@ async function pushToSubs(
   } catch (e: any) {
     return 'vapid setup failed: ' + (e?.message ?? String(e))
   }
-  const data = JSON.stringify(payload)
   let sent = 0
   await Promise.all(subs.map(async (sub) => {
     try {
-      await webpush.sendNotification(sub.subscription, data)
+      const notif_id = notifMap.get(String((sub as any).user_id)) ?? null
+      const perSubPayload = notif_id ? { ...payload, notif_id } : payload
+      await webpush.sendNotification((sub as any).subscription, JSON.stringify(perSubPayload))
       sent++
     } catch (e: any) {
       if (e?.statusCode === 410 || e?.statusCode === 404) {
-        await sb.from('push_subscriptions').delete().eq('id', sub.id)
+        await sb.from('push_subscriptions').delete().eq('id', (sub as any).id)
       }
     }
   }))

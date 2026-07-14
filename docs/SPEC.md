@@ -4,7 +4,7 @@
 > 実装が変わる度にここも更新すること。
 > Claude が「notre」「imaimaha」等の呼称で参照する時は、まずこのファイルを読む。
 
-**最終更新**: 2026-07-12
+**最終更新**: 2026-07-15
 
 > 📌 **重要**: 機能追加・ルール変更時は必ず以下を同時に更新すること:
 > - この SPEC.md（正式仕様）
@@ -371,6 +371,7 @@
 | `status.html` | 帰宅時間保存 | `{emoji} {name} の今日の帰宅予定: {time}` |
 | `status.html` | 「会社出た」ボタン | `{emoji} {name} が会社を出ました 🏃` |
 | `status.html` | 「帰宅」ボタン | `{emoji} {name} が帰宅しました 🏠` |
+| `shop.html` / `gacha.html` | 券使用（ガチャ・販売所） | `🎰/🎁 {name}` の使用を相手に確実に届ける |
 
 ※ LINE失敗時はPush通知にフォールバック
 
@@ -408,6 +409,8 @@
 |--------|---------|-----|------|--------|
 | `remind_status_1719` | 平日 17:19 | `19 8 * * 1-5` | 今日の`status`未登録 | 該当ユーザー |
 | `remind_status_1901` | 平日 19:01 | `1 10 * * 1-5` | 同上 | 同上 |
+| `status_5min_before` | 5分毎 | `*/5 * * * *` | 自分の帰宅予定 -5分 | **自分のみ** |
+| `status_arrival` | 5分毎 | `*/5 * * * *` | 自分の帰宅予定 ちょうど | **自分 + 相手** |
 | `remind_quiz_evening` | 毎日 22:00 | `0 13 * * *` | 今日の`quiz_answers`無し | 該当ユーザー |
 | `remind_capsule_morn` | 毎朝 8:00 | `0 23 * * *` (前日UTC) | 自分宛の未開封カプセル有り | 該当ユーザー |
 | `remind_bingo_sat` | 土 10:00 | `0 1 * * 6` | 今週のビンゴ<8マス | 該当ユーザー |
@@ -418,6 +421,8 @@
 ### 6.4 通知タップ挙動
 
 `payload.url` に指定されたパスへ遷移。既に開いてるウィンドウがあれば `navigate` してフォーカス、無ければ `openWindow`。（sw.js）
+
+**タップで自動既読化**: send-push は `notifications_log` insert で得た `id` を push payload の `notif_id` に載せる。sw.js は通知タップ時に `?notif_id=<id>` を URL に付与し、header.js が起動時に該当行を `read_at=now()` で更新して URL からクエリを剥がす。
 
 ### 6.5 通知アーキテクチャ
 
@@ -511,7 +516,7 @@ GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;
 | ビンゴ週次 | JST 月曜 00:00 | `getWeekStr()` で月曜YYYY-MM-DD |
 | カラーハント週次 | JST 月曜 00:00 | 同上 |
 | 帰宅ステータス | JST 06:00 リセット | pg_cron `daily-status-reset`（UTC 21:00 = JST 06:00） |
-| タイムカプセル配達 | 5分粒度 | pg_cron `notify-capsules-5min` |
+| タイムカプセル配達 | 1分粒度 | pg_cron `notify-capsules-5min` (schedule は `* * * * *`) |
 
 ---
 
