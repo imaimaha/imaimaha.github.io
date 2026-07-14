@@ -346,22 +346,29 @@
     try {
       const params = new URLSearchParams(window.location.search)
       const nid = params.get('notif_id')
-      if (!nid) return
+      if (!nid) { console.debug('[header] no notif_id in URL'); return }
+      console.log('[header] marking notif read:', nid)
       if (typeof _sb === 'undefined') return
       const { data: { session } } = await _sb.auth.getSession()
       if (session) {
-        await _sb.from('notifications_log')
+        // bigint 列に対して string を渡すため Number 化しておく
+        const nidNum = Number(nid)
+        const targetId = Number.isFinite(nidNum) ? nidNum : nid
+        const { data, error } = await _sb.from('notifications_log')
           .update({ read_at: new Date().toISOString() })
-          .eq('id', nid)
+          .eq('id', targetId)
           .eq('user_id', session.user.id)
           .is('read_at', null)
+          .select('id')
+        if (error) console.error('[header] mark read failed:', error)
+        else console.log('[header] marked read, rows:', data)
       }
       params.delete('notif_id')
       const qs = params.toString()
       const clean = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash
       history.replaceState(null, '', clean)
     } catch (e) {
-      console.debug('[header] mark push notif read failed:', e)
+      console.error('[header] mark push notif read exception:', e)
     }
   }
 

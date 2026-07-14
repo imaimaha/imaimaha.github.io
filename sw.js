@@ -1,3 +1,7 @@
+// SW 更新をすばやく反映させる
+self.addEventListener('install', event => { self.skipWaiting() })
+self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()) })
+
 const EMOJIS = ['❤️', '😊', '💨', '😫', '👍']
 const ASK_ACTIONS = [
   { action: 'ok',    title: 'いいよ ✅' },
