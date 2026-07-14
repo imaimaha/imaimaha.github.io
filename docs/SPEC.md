@@ -372,6 +372,7 @@
 | `status.html` | 「会社出た」ボタン | `{emoji} {name} が会社を出ました 🏃` |
 | `status.html` | 「帰宅」ボタン | `{emoji} {name} が帰宅しました 🏠` |
 | `shop.html` / `gacha.html` | 券使用（ガチャ・販売所） | `🎰/🎁 {name}` の使用を相手に確実に届ける |
+| `closer.html` | 自分のゲージが 100% に到達 (相手の%に関わらず) | `💗 ゲージMAX！ {emoji} {name} が会いたいってさ` |
 
 ※ LINE失敗時はPush通知にフォールバック
 
