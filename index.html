@@ -122,7 +122,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* 気分ピング (mood pings) */
+    /* 今のきもち (mood pings) */
     .mood-tile {
       margin: 14px 16px 0;
       padding: 14px 16px 12px;
@@ -236,9 +236,9 @@
     </div>
   </header>
 
-  <!-- 気分ピング: ワンタップで気持ちを送る -->
+  <!-- 今のきもち: ワンタップで気持ちを送る -->
   <div class="mood-tile" id="mood-tile">
-    <div class="mood-label">今の気分をひとタップで送る</div>
+    <div class="mood-label">💭 今のきもちを ひとタップで送る</div>
     <div class="mood-row">
       <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️</button>
       <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤</button>
@@ -697,7 +697,7 @@
       )
     }
 
-    // ========== 気分ピング ==========
+    // ========== 今のきもち ==========
     let _moodCooldown = false
     async function sendMoodPing(btn) {
       if (_moodCooldown) return
@@ -712,7 +712,7 @@
       const body = `${_locMyProfile.emoji} ${_locMyProfile.name}: ${emoji} ${label}`
       _sb.functions.invoke('send-push', {
         body: {
-          title: '🌤 気分ピング',
+          title: '💭 今のきもち',
           body,
           url: '/',
           recipient_user_id: _locPartnerId,
