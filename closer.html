@@ -506,9 +506,10 @@
           },
         }).then(({ error }) => { if (error) console.error('[closer] push(partner) error:', error) })
 
-        // 相手も既にMAXなら「ふたり揃った」通知（片方だけが発火するよう自分から）
+        // 相手も既にMAXなら「ふたり揃った」LINE通知（自分がタップした瞬間発火）
+        // effective 条件は外す: 24h以上経ってても raw>=100 なら OK
         const partnerType = myType === 'fox' ? 'hed' : 'fox'
-        if ((raw[partnerType]?.gauge ?? 0) >= 100 && effective(partnerType) > 0 && !bothMaxNotified) {
+        if ((raw[partnerType]?.gauge ?? 0) >= 100 && !bothMaxNotified) {
           bothMaxNotified = true
           sendLineMaxNotification()
         }

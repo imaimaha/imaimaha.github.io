@@ -1847,7 +1847,7 @@
         showToast('使用済みにしました ✅')
       }
 
-      // 相手（partner）に通知
+      // 相手（partner）に通知 (Push + LINE)
       if (partnerId) {
         const bodyMsg = `${ticket.reward_emoji || '🎁'} ${ticket.reward_name}${ticket.reward_desc ? ' — ' + ticket.reward_desc : ''}`
         _sb.functions.invoke('send-push', { body: {
@@ -1856,6 +1856,11 @@
           url: '/gacha.html',
           recipient_user_id: partnerId,
           kind: 'gacha',
+        }}).catch(() => {})
+        _sb.functions.invoke('line-notify', { body: {
+          sender_id: currentUser.id,
+          target: 'partner',
+          message: `🎰 ガチャ券が使われました\n${bodyMsg}`,
         }}).catch(() => {})
       }
 

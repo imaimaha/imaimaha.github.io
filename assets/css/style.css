@@ -569,7 +569,12 @@ footer {
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border-top: 1px solid var(--edge-1);
   box-shadow: 0 -6px 24px rgba(0,0,0,0.35);
+  /* iOS Safari: fixed 要素の momentum scroll / URL バー開閉時のジャンプを防ぐ */
+  transform: translateZ(0);
+  will-change: transform;
 }
+/* iOS のオーバースクロール (bounce) が bottom-nav を巻き込むのを抑止 */
+html, body { overscroll-behavior-y: none; }
 .bottom-nav a {
   position: relative;
   flex: 1;
