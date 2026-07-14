@@ -435,7 +435,27 @@
         hedEl.classList.toggle('merged', bothMax)
         if (dispEl) dispEl.style.opacity = bothMax ? '0' : '1'
         if (msgEl)  msgEl.style.display  = bothMax ? 'block' : 'none'
-        // sendLineMaxNotification はタップハンドラ側で自分がトリガーした時だけ発火（二重通知防止）
+        // 「ふたり揃った」LINE 通知は状態遷移で発火 (realtime 遅延・同時タップにも対応)
+        // 二重発火防止のため「後にMAXになった側」だけが送る (updated_at で判定、tiebreaker=fox)
+        // ページ load 時などの「たまたま両者MAX状態」で誤発火しないよう最新更新60s以内に限定
+        if (nowBothMax && !bothMaxNotified) {
+          const myType = (myId === foxUid) ? 'fox' : (myId === hedUid) ? 'hed' : null
+          if (myType) {
+            const partnerType = myType === 'fox' ? 'hed' : 'fox'
+            const myUpd  = new Date(raw[myType]?.updated_at || 0).getTime()
+            const parUpd = new Date(raw[partnerType]?.updated_at || 0).getTime()
+            const latestUpd = Math.max(myUpd, parUpd)
+            const isFresh = Date.now() - latestUpd < 60 * 1000
+            const iAmSender = myUpd > parUpd || (myUpd === parUpd && myType === 'fox')
+            if (isFresh && iAmSender) {
+              bothMaxNotified = true
+              sendLineMaxNotification()
+            } else if (!isFresh) {
+              // 古いMAX状態 (ページ load 直後など) は「通知済み」扱いにして次の遷移を待つ
+              bothMaxNotified = true
+            }
+          }
+        }
         if (!bothMax) {
           bothMaxNotified = false
           fl.fox.vx = 0.034; fl.fox.vy = 0.026
@@ -506,13 +526,8 @@
           },
         }).then(({ error }) => { if (error) console.error('[closer] push(partner) error:', error) })
 
-        // 相手も既にMAXなら「ふたり揃った」LINE通知（自分がタップした瞬間発火）
-        // effective 条件は外す: 24h以上経ってても raw>=100 なら OK
-        const partnerType = myType === 'fox' ? 'hed' : 'fox'
-        if ((raw[partnerType]?.gauge ?? 0) >= 100 && !bothMaxNotified) {
-          bothMaxNotified = true
-          sendLineMaxNotification()
-        }
+        // 「ふたり揃った」LINE 通知は updateDistance() 側で状態遷移として発火する
+        // (realtime 経由でパートナーが後からMAXになるケースにも対応するため)
       }
     }
 
@@ -572,14 +587,23 @@
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
         const me = (await _sb.from('profiles').select('emoji,name').eq('id', session.user.id).single()).data
-        const { error } = await _sb.functions.invoke('line-notify', {
-          body: {
-            sender_id: session.user.id,
-            target: 'group',
-            message: `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
-          },
+        const message = `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`
+        console.log('[closer] sending LINE group notification:', message)
+        const { data, error } = await _sb.functions.invoke('line-notify', {
+          body: { sender_id: session.user.id, target: 'group', message },
         })
-        if (error) console.error('[closer] line-notify(group) error:', error)
+        if (error) {
+          console.error('[closer] line-notify(group) error:', error)
+          // LINE 失敗時のフォールバックとして相手に Push
+          _sb.functions.invoke('send-push', { body: {
+            title: '🌟 ふたりMAX！',
+            body: 'ゲージが揃ったよ (LINE 通知失敗)',
+            url: '/closer.html',
+            sender_user_id: session.user.id,
+          }}).catch(() => {})
+        } else {
+          console.log('[closer] line-notify(group) ok:', data)
+        }
       } catch (e) { console.error('[closer] sendLineMaxNotification exception:', e) }
     }
 
