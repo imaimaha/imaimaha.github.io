@@ -122,6 +122,63 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* 気分ピング (mood pings) */
+    .mood-tile {
+      margin: 14px 16px 0;
+      padding: 14px 16px 12px;
+      background: var(--glass-2);
+      border: 1.5px solid var(--edge-2);
+      border-radius: var(--r-lg);
+      backdrop-filter: blur(8px);
+    }
+    .mood-tile .mood-label {
+      font-size: 0.78rem;
+      color: var(--ink-400);
+      margin-bottom: 10px;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+    .mood-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .mood-btn {
+      flex: 1;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      max-width: 60px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 14px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      transition: transform 0.14s, background 0.18s, border-color 0.18s;
+      -webkit-tap-highlight-color: transparent;
+      padding: 0;
+      font-family: inherit;
+    }
+    .mood-btn:active { transform: scale(0.9); background: rgba(150,200,255,0.15); border-color: rgba(150,200,255,0.4); }
+    .mood-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #mood-toast {
+      position: fixed;
+      bottom: 96px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(30,60,120,0.96), rgba(20,40,80,0.96));
+      color: #e8f4fd;
+      padding: 10px 20px;
+      border-radius: var(--r-pill);
+      font-size: 0.85rem;
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s, transform 0.28s;
+    }
+    #mood-toast.show {
+      opacity: 1;
+      transform: translate(-50%, -6px);
+    }
+
     /* Login bonus toast — dark theme */
     .login-toast {
       position: fixed;
@@ -178,6 +235,20 @@
       </div>
     </div>
   </header>
+
+  <!-- 気分ピング: ワンタップで気持ちを送る -->
+  <div class="mood-tile" id="mood-tile">
+    <div class="mood-label">今の気分をひとタップで送る</div>
+    <div class="mood-row">
+      <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️</button>
+      <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤</button>
+      <button class="mood-btn" data-mood="🌧" data-label="つかれた" onclick="sendMoodPing(this)">🌧</button>
+      <button class="mood-btn" data-mood="⛈" data-label="しんどい" onclick="sendMoodPing(this)">⛈</button>
+      <button class="mood-btn" data-mood="💗" data-label="会いたい" onclick="sendMoodPing(this)">💗</button>
+      <button class="mood-btn" data-mood="🥰" data-label="しあわせ" onclick="sendMoodPing(this)">🥰</button>
+    </div>
+  </div>
+  <div id="mood-toast"></div>
 
   <main>
     <div class="bento home-bento">
@@ -624,6 +695,41 @@
         },
         { enableHighAccuracy: true, timeout: 10000 }
       )
+    }
+
+    // ========== 気分ピング ==========
+    let _moodCooldown = false
+    async function sendMoodPing(btn) {
+      if (_moodCooldown) return
+      const emoji = btn.dataset.mood
+      const label = btn.dataset.label
+      await _locEnsureProfile()
+      if (!_locPartnerId || !_locMyProfile) return
+      _moodCooldown = true
+      document.querySelectorAll('.mood-btn').forEach(b => b.disabled = true)
+      if (navigator.vibrate) navigator.vibrate(15)
+
+      const body = `${_locMyProfile.emoji} ${_locMyProfile.name}: ${emoji} ${label}`
+      _sb.functions.invoke('send-push', {
+        body: {
+          title: '🌤 気分ピング',
+          body,
+          url: '/',
+          recipient_user_id: _locPartnerId,
+          kind: 'mood',
+        }
+      }).catch(() => {})
+
+      const toast = document.getElementById('mood-toast')
+      toast.textContent = `${emoji} 送信しました`
+      toast.classList.add('show')
+      setTimeout(() => toast.classList.remove('show'), 1600)
+
+      // 5秒後にクールダウン解除 (連打防止)
+      setTimeout(() => {
+        _moodCooldown = false
+        document.querySelectorAll('.mood-btn').forEach(b => b.disabled = false)
+      }, 5000)
     }
   </script>
 
