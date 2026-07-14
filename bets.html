@@ -655,7 +655,7 @@
 
       // 3. 相手に通知
       _sb.functions.invoke('send-push', { body: {
-        title: '⚔️ 賭け事の申し込み',
+        title: '⚔️ 賭け事のお誘い',
         body: `${myProfile?.emoji} ${myProfile?.name} から「${title}」(${stake}pt)`,
         url: '/bets.html',
         recipient_user_id: partnerProfile.id,
@@ -689,8 +689,8 @@
 
       // 3. 起票者に通知
       _sb.functions.invoke('send-push', { body: {
-        title: '⚔️ 賭け事が始まった！',
-        body: `${partnerProfile?.emoji} ${partnerProfile?.name} が「${bet.title}」を承諾。Pot ${bet.stake * 2}pt`,
+        title: '⚔️ 賭け事スタート！',
+        body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を受けて立ちました (Pot ${bet.stake * 2}pt)`,
         url: '/bets.html',
         recipient_user_id: bet.created_by,
         kind: 'bet',
@@ -719,8 +719,8 @@
 
       // 起票者に通知
       _sb.functions.invoke('send-push', { body: {
-        title: '❌ 賭け事 拒否',
-        body: `${partnerProfile?.emoji} ${partnerProfile?.name} が「${bet.title}」を断りました (${bet.stake}pt 返却)`,
+        title: '🙅 賭け事 お断り',
+        body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を断りました (${bet.stake}pt が返ってきました)`,
         url: '/bets.html',
         recipient_user_id: bet.created_by,
         kind: 'bet',
@@ -748,7 +748,7 @@
       // 相手に通知
       _sb.functions.invoke('send-push', { body: {
         title: '🚫 賭け事 取り下げ',
-        body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を取り下げました`,
+        body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」の申し込みを取り下げました`,
         url: '/bets.html',
         recipient_user_id: bet.opponent_id,
         kind: 'bet',
@@ -804,13 +804,15 @@
         })
       }
 
-      // 相手に通知
+      // 相手に通知 (受信者視点の文言に統一)
       const partnerId = iAmCreator ? bet.opponent_id : bet.created_by
       const outcome = result === 'draw'
-        ? `🤝 引き分け · ${bet.stake}pt 返却`
-        : (winnerId === partnerId ? `🏆 相手勝利 +${bet.stake * 2}pt` : `😔 相手敗北 -${bet.stake}pt`)
+        ? `🤝 引き分け · ${bet.stake}pt が返ってきました`
+        : (winnerId === partnerId
+            ? `🏆 あなたの勝ち！ +${bet.stake * 2}pt`
+            : `😔 あなたの負け -${bet.stake}pt`)
       _sb.functions.invoke('send-push', { body: {
-        title: '📜 勝負結果',
+        title: '⚖️ 勝負が確定しました',
         body: `「${bet.title}」の結果: ${outcome}`,
         url: '/bets.html',
         recipient_user_id: partnerId,
@@ -834,8 +836,8 @@
 
       const partnerId = bet.created_by === currentUser.id ? bet.opponent_id : bet.created_by
       _sb.functions.invoke('send-push', { body: {
-        title: '↩️ 結果の取り消し申請',
-        body: `「${bet.title}」の結果取り消しを申請されました`,
+        title: '↩️ 結果の取り消し依頼',
+        body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} から「${bet.title}」の結果を取り消したいとの依頼です`,
         url: '/bets.html',
         recipient_user_id: partnerId,
         kind: 'bet',
@@ -882,8 +884,8 @@
 
       const partnerId = bet.cancel_by
       _sb.functions.invoke('send-push', { body: {
-        title: '✅ 取り消し承認',
-        body: `「${bet.title}」の取り消しが承認されました`,
+        title: '✅ 取り消しOK',
+        body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${bet.title}」の取り消しを承認しました`,
         url: '/bets.html',
         recipient_user_id: partnerId,
         kind: 'bet',
@@ -905,8 +907,8 @@
       if (error) { showToast('更新失敗', true); return }
 
       _sb.functions.invoke('send-push', { body: {
-        title: '❌ 取り消し却下',
-        body: `「${bet.title}」の取り消しが却下されました`,
+        title: '❌ 取り消しNG',
+        body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${bet.title}」の取り消しを却下しました`,
         url: '/bets.html',
         recipient_user_id: bet.cancel_by,
         kind: 'bet',
