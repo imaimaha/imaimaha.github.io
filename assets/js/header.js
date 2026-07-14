@@ -163,7 +163,9 @@
 
         <div class="rules-group">
           <h3>🔔 Push通知（相手のみ）</h3>
-          <div class="rules-item"><div class="r-desc">「今 家 行っていい？」ボタン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">「行っていい？」ボタン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">「来ていいよ」ボタン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">💭 今のきもち (ワンタップ絵文字)</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">タイムカプセルが届いた</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">ビンゴでコンプ・ライン達成</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">ガチャ券・ショップの券を使った</div><div class="r-val">→ 相手</div></div>
