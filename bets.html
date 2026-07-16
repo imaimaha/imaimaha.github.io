@@ -340,6 +340,7 @@
   <div class="clouds"></div>
   <script src="assets/js/stars.js?v=3"></script>
   <script src="assets/js/push.js"></script>
+  <script src="assets/js/util.js"></script>
   <script src="assets/js/header.js"></script>
   <script src="assets/js/nav.js"></script>
 
@@ -639,19 +640,14 @@
       if (stake > currentPt) { showToast(`ポイントが足りません (残高 ${currentPt}pt)`, true); return }
       if (!partnerProfile) { showToast('相手が見つかりません', true); return }
 
-      // 1. bets に insert
-      const { data: bet, error } = await _sb.from('bets').insert({
-        created_by: currentUser.id,
-        opponent_id: partnerProfile.id,
-        title, description, stake,
-        status: 'pending',
-      }).select().single()
-      if (error) { showToast('作成失敗: ' + error.message, true); return }
-
-      // 2. 起票者から stake を pt に -stake で記録 (エスクロー)
-      await _sb.from('points').insert({
-        user_id: currentUser.id, amount: -stake, reason: 'bet_stake',
+      // 起票 + エスクローを RPC でアトミックに実行
+      const { error } = await _sb.rpc('create_bet', {
+        p_title: title,
+        p_description: description,
+        p_stake: stake,
+        p_opponent: partnerProfile.id,
       })
+      if (error) { showToast('作成失敗: ' + error.message, true); return }
 
       // 3. 相手に通知
       _sb.functions.invoke('send-push', { body: {
@@ -676,16 +672,9 @@
       if (bet.stake > currentPt) { showToast(`ポイントが足りません (残高 ${currentPt}pt)`, true); return }
       if (!confirm(`${bet.stake}pt を掛けて受けて立ちますか？`)) return
 
-      // 1. bets を active に
-      const { error } = await _sb.from('bets')
-        .update({ status: 'active', accepted_at: new Date().toISOString() })
-        .eq('id', id)
-      if (error) { showToast('承諾失敗', true); return }
-
-      // 2. 受けた側から stake を差し引く (エスクロー)
-      await _sb.from('points').insert({
-        user_id: currentUser.id, amount: -bet.stake, reason: 'bet_stake',
-      })
+      // active 遷移 + エスクローを RPC でアトミックに実行
+      const { error } = await _sb.rpc('accept_bet', { p_bet_id: id })
+      if (error) { showToast('承諾失敗: ' + error.message, true); return }
 
       // 3. 起票者に通知
       _sb.functions.invoke('send-push', { body: {
@@ -707,15 +696,9 @@
       if (!bet) return
       if (!confirm('この賭け事を断りますか？')) return
 
-      const { error } = await _sb.from('bets')
-        .update({ status: 'rejected', ended_at: new Date().toISOString() })
-        .eq('id', id)
-      if (error) { showToast('更新失敗', true); return }
-
-      // 起票者に stake 返却
-      await _sb.from('points').insert({
-        user_id: bet.created_by, amount: bet.stake, reason: 'bet_return',
-      })
+      // rejected 遷移 + 起票者への返却を RPC でアトミックに実行
+      const { error } = await _sb.rpc('reject_bet', { p_bet_id: id })
+      if (error) { showToast('更新失敗: ' + error.message, true); return }
 
       // 起票者に通知
       _sb.functions.invoke('send-push', { body: {
@@ -735,15 +718,9 @@
       if (!bet) return
       if (!confirm('この賭け事を取り下げますか？ (掛け金は返却されます)')) return
 
-      const { error } = await _sb.from('bets')
-        .update({ status: 'cancelled', ended_at: new Date().toISOString() })
-        .eq('id', id)
-      if (error) { showToast('更新失敗', true); return }
-
-      // 起票者に stake 返却
-      await _sb.from('points').insert({
-        user_id: bet.created_by, amount: bet.stake, reason: 'bet_return',
-      })
+      // cancelled 遷移 + 返却を RPC でアトミックに実行
+      const { error } = await _sb.rpc('cancel_bet', { p_bet_id: id })
+      if (error) { showToast('更新失敗: ' + error.message, true); return }
 
       // 相手に通知
       _sb.functions.invoke('send-push', { body: {
@@ -782,27 +759,9 @@
         : `相手の勝ちで確定しますか？ (Pot ${bet.stake * 2}pt を相手が受取)`
       if (!confirm(confirmMsg)) return
 
-      const { error } = await _sb.from('bets').update({
-        status: 'finished',
-        result,
-        result_by: currentUser.id,
-        finished_at: new Date().toISOString(),
-      }).eq('id', id)
-      if (error) { showToast('確定失敗: ' + error.message, true); return }
-
-      // pt 配当
-      if (result === 'draw') {
-        // 両者 +stake
-        await _sb.from('points').insert([
-          { user_id: bet.created_by, amount: bet.stake, reason: 'bet_draw' },
-          { user_id: bet.opponent_id, amount: bet.stake, reason: 'bet_draw' },
-        ])
-      } else {
-        // 勝者 +stake*2
-        await _sb.from('points').insert({
-          user_id: winnerId, amount: bet.stake * 2, reason: 'bet_win',
-        })
-      }
+      // finished 遷移 + 配当を RPC でアトミックに実行 (同時タップは片方が「確定済み」エラーになる)
+      const { error } = await _sb.rpc('settle_bet', { p_bet_id: id, p_choice: choice })
+      if (error) { showToast('確定失敗: ' + error.message, true); await loadBets(); return }
 
       // 相手に通知 (受信者視点の文言に統一)
       const partnerId = iAmCreator ? bet.opponent_id : bet.created_by
@@ -852,35 +811,9 @@
       if (!bet) return
       if (!confirm('取り消しを承認しますか？ (賭け事を active に戻し、支払われた pt を巻き戻します)')) return
 
-      // 支払い巻き戻し: どのstate から取り消しているかで違う
-      // 1. finished からの取り消し: 配当を巻き戻して active に戻す
-      if (bet.status === 'finished') {
-        if (bet.result === 'draw') {
-          await _sb.from('points').insert([
-            { user_id: bet.created_by, amount: -bet.stake, reason: 'bet_undo' },
-            { user_id: bet.opponent_id, amount: -bet.stake, reason: 'bet_undo' },
-          ])
-        } else {
-          const winnerId = bet.result === 'win_creator' ? bet.created_by : bet.opponent_id
-          await _sb.from('points').insert({
-            user_id: winnerId, amount: -bet.stake * 2, reason: 'bet_undo',
-          })
-        }
-        await _sb.from('bets').update({
-          status: 'active', result: null, result_by: null,
-          finished_at: null, cancel_requested: false, cancel_by: null,
-        }).eq('id', id)
-      } else if (bet.status === 'active') {
-        // active からの取り消し: 掛け金を両者に返して cancelled 状態に
-        await _sb.from('points').insert([
-          { user_id: bet.created_by, amount: bet.stake, reason: 'bet_return' },
-          { user_id: bet.opponent_id, amount: bet.stake, reason: 'bet_return' },
-        ])
-        await _sb.from('bets').update({
-          status: 'cancelled', ended_at: new Date().toISOString(),
-          cancel_requested: false, cancel_by: null,
-        }).eq('id', id)
-      }
+      // 巻き戻し (finished→active の配当巻き戻し / active→cancelled の返却) を RPC でアトミックに実行
+      const { error } = await _sb.rpc('approve_bet_cancel', { p_bet_id: id })
+      if (error) { showToast('承認失敗: ' + error.message, true); await loadBets(); return }
 
       const partnerId = bet.cancel_by
       _sb.functions.invoke('send-push', { body: {
