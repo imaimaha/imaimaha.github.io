@@ -586,18 +586,17 @@
 
       input.value = ''
       // 返信ポイント
-      _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'capsule_reply' }).then(() => {})
+      addPoints(myId, 1, 'capsule_reply')
 
       // 相手に push 通知
       const otherId = latest.sender_id === myId ? latest.recipient_id : latest.sender_id
-      _sb.functions.invoke('send-push', {
-        body: {
-          title: '↩️ タイムカプセルに返信',
-          body: text.length > 40 ? text.slice(0, 40) + '…' : text,
-          url: '/time_capsule.html',
-          recipient_user_id: otherId,
-        },
-      }).then(({ error }) => { if (error) console.error('[capsule reply] push error:', error) })
+      notify({
+        title: '↩️ タイムカプセルに返信',
+        body: text.length > 40 ? text.slice(0, 40) + '…' : text,
+        url: '/time_capsule.html',
+        kind: 'capsule',
+        recipient: otherId,
+      })
 
       await loadReceived()
       showToast('返信しました')
@@ -611,7 +610,7 @@
       }).eq('id', id)
 
       // 開封ポイント
-      _sb.from('points').insert({ user_id: myId, amount: 3, reason: 'capsule_open' }).then(() => {})
+      addPoints(myId, 3, 'capsule_open')
 
       // モーダル表示
       document.getElementById('open-from').textContent = `${senderEmoji} ${senderName} より`
@@ -684,7 +683,7 @@
       }
 
       // ポイント付与
-      _sb.from('points').insert({ user_id: myId, amount: 3, reason: 'capsule_send' }).then(() => {})
+      addPoints(myId, 3, 'capsule_send')
 
       let toastMsg
       if (timingMode === 'exact') {
@@ -706,10 +705,6 @@
       el.textContent = msg
       el.classList.add('show')
       setTimeout(() => el.classList.remove('show'), 2800)
-    }
-
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     function escAttr(s) {

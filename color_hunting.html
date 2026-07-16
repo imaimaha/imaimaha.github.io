@@ -323,9 +323,6 @@
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), 2500);
     }
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
     function getWeekStr(date = new Date()) {
       const d = new Date(date.getTime());
       d.setHours(0,0,0,0);
@@ -608,20 +605,19 @@
 
         // ポイント付与（新規スロット埋めのみ; 置換時は加算しない）
         if (existingIdx < 0) {
-          _sb.from('points').insert({ user_id: state.userId, amount: 2, reason: 'color_photo' }).then(() => {});
+          addPoints(state.userId, 2, 'color_photo');
 
           // 相手に push（コンプ or 4枚以上で報告）
-          const doPush = (msg) => _sb.functions.invoke('send-push', {
-            body: {
-              title: '🎨 カラーハント',
-              body: msg,
-              url: '/color_hunting.html',
-              sender_user_id: state.userId,
-            },
-          }).then(({ error }) => { if (error) console.error('[color] push error:', error) });
+          const doPush = (msg) => notify({
+            title: '🎨 カラーハント',
+            body: msg,
+            url: '/color_hunting.html',
+            kind: 'color',
+            sender: state.userId,
+          });
 
           if (!wasComplete && photos.length >= 8) {
-            _sb.from('points').insert({ user_id: state.userId, amount: 15, reason: 'color_complete' }).then(() => {});
+            addPoints(state.userId, 15, 'color_complete');
             doPush('🎨 全8枚コンプリート！');
             showToast('🎨 全8枚コンプリート！+15pt');
             return;

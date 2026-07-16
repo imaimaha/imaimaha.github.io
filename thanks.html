@@ -260,14 +260,13 @@
 
       // Push通知（ギフトありは金額もタイトルに含める）
       const notifTitle = giftAmount > 0 ? `🎁 ありがとう +${giftAmount * 2}pt` : '🌸 ありがとう'
-      _sb.functions.invoke('send-push', {
-        body: {
-          title: notifTitle,
-          body: msg.length > 50 ? msg.slice(0, 50) + '…' : msg,
-          url: '/thanks.html',
-          recipient_user_id: partnerId,
-        },
-      }).then(({ error }) => { if (error) console.error('[thanks] push:', error) })
+      notify({
+        title: notifTitle,
+        body: msg.length > 50 ? msg.slice(0, 50) + '…' : msg,
+        url: '/thanks.html',
+        kind: 'thanks',
+        recipient: partnerId,
+      })
 
       document.getElementById('msg-input').value = ''
       document.getElementById('gift-amount').value = '0'
@@ -316,10 +315,6 @@
       const { error } = await _sb.from('thanks_posts').delete().eq('id', id)
       if (error) { showToast('削除失敗'); return }
       await loadPosts()
-    }
-
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     function showToast(msg) {

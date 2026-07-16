@@ -510,25 +510,24 @@
 
       // タップごとに1pt付与（ただし％が増えないタップは付与しない）
       if (gaugeIncreased) {
-        _sb.from('points').insert({ user_id: myId, amount: 1, reason: 'gauge_tap' }).then(() => {})
+        addPoints(myId, 1, 'gauge_tap')
       }
 
       // MAX到達（自分が初めて100に達した瞬間だけ +5pt）
       // 相手の％に関わらず Push + LINE個人通知を送る
       if (!rawWasMax && newGauge >= 100) {
-        _sb.from('points').insert({ user_id: myId, amount: 5, reason: 'gauge_max' }).then(() => {})
+        addPoints(myId, 5, 'gauge_max')
         const myEmoji = myType === 'fox' ? '🦊' : '🦔'
         const meProf = await _sb.from('profiles').select('name').eq('id', myId).single()
         const myName = meProf?.data?.name ?? ''
         // Push通知（相手へ）
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '💗 ゲージMAX！',
-            body: `${myEmoji} ${myName} が会いたい！(100%)`,
-            url: '/closer.html',
-            sender_user_id: myId,
-          },
-        }).then(({ error }) => { if (error) console.error('[closer] push(partner) error:', error) })
+        notify({
+          title: '💗 ゲージMAX！',
+          body: `${myEmoji} ${myName} が会いたい！(100%)`,
+          url: '/closer.html',
+          kind: 'closer',
+          sender: myId,
+        })
 
         // LINE 個人通知は月間上限節約のため廃止 (2026-07: Push のみ)
         // 「ふたり揃った」通知は updateDistance() 側で状態遷移として発火する
@@ -592,13 +591,13 @@
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
         const me = (await _sb.from('profiles').select('emoji,name').eq('id', session.user.id).single()).data
-        const { error } = await _sb.functions.invoke('send-push', { body: {
+        await notify({
           title: '🌟 ふたりMAX！',
           body: `ゲージが揃ったよ！${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
           url: '/closer.html',
-          sender_user_id: session.user.id,
-        }})
-        if (error) console.error('[closer] push(bothMax) error:', error)
+          kind: 'closer',
+          sender: session.user.id,
+        })
       } catch (e) { console.error('[closer] sendLineMaxNotification exception:', e) }
     }
 
