@@ -312,10 +312,16 @@
         `
         el.addEventListener('click', async (e) => {
           if (e.target.closest('.noti-delete')) return
+          // <a> の即時遷移だと既読化 fetch が中断されるため、既読化を待ってから遷移する
+          e.preventDefault()
           if (!n.read_at) {
             n.read_at = new Date().toISOString()
-            await _sb.from('notifications_log').update({ read_at: n.read_at }).eq('id', n.id)
+            el.classList.remove('unread')
+            try {
+              await _sb.from('notifications_log').update({ read_at: n.read_at }).eq('id', n.id)
+            } catch (err) { console.error('[notifications] mark read failed:', err) }
           }
+          window.location.href = n.url || '/'
         })
         list.appendChild(el)
       })

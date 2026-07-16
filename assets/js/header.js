@@ -145,10 +145,8 @@
         <div class="rules-group">
           <h3>📱 LINE通知（個人）</h3>
           <div class="rules-item"><div class="r-desc">今日の帰宅時間を設定した</div><div class="r-val">→ 相手のLINE</div></div>
-          <div class="rules-item"><div class="r-desc">「会社出た」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
-          <div class="rules-item"><div class="r-desc">「帰宅」ボタンを押した</div><div class="r-val">→ 相手のLINE</div></div>
           <div class="rules-item"><div class="r-desc">🎫 券を使った (ガチャ / 販売所)</div><div class="r-val">→ 相手のLINE</div></div>
-          <div class="rules-item"><div class="r-desc">💗 ゲージが 100% に到達</div><div class="r-val">→ 相手のLINE</div></div>
+          <div class="rules-item"><div class="r-desc" style="opacity:0.6">※ LINE無料枠 (月200通) 節約のため、上の2つだけに絞ってるよ</div><div class="r-val"></div></div>
         </div>
 
         <div class="rules-group">
@@ -158,12 +156,10 @@
         </div>
 
         <div class="rules-group">
-          <h3>👥 LINE通知（グループ）</h3>
-          <div class="rules-item"><div class="r-desc">2人の会いたいゲージが同時にMAXになった</div><div class="r-val">→ グループ</div></div>
-        </div>
-
-        <div class="rules-group">
           <h3>🔔 Push通知（相手のみ）</h3>
+          <div class="rules-item"><div class="r-desc">「会社出た」「帰宅」「遅れそう」ボタン</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">💗 ゲージが 100% に到達</div><div class="r-val">→ 相手</div></div>
+          <div class="rules-item"><div class="r-desc">🌟 2人のゲージが同時にMAXになった</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">「行っていい？」ボタン</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">「来ていいよ」ボタン</div><div class="r-val">→ 相手</div></div>
           <div class="rules-item"><div class="r-desc">💭 今のきもち (ワンタップ絵文字)</div><div class="r-val">→ 相手</div></div>
