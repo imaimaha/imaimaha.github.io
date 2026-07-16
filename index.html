@@ -139,25 +139,29 @@
       letter-spacing: 0.05em;
     }
     .mood-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
     .mood-btn {
-      flex: 1;
       min-width: 0;
-      aspect-ratio: 1 / 1;
-      max-width: 60px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px;
       background: rgba(255,255,255,0.06);
       border: 1.5px solid rgba(150,200,255,0.18);
       border-radius: 14px;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       cursor: pointer;
       transition: transform 0.14s, background 0.18s, border-color 0.18s;
       -webkit-tap-highlight-color: transparent;
-      padding: 0;
+      padding: 9px 4px 7px;
       font-family: inherit;
+    }
+    .mood-btn .mood-btn-label {
+      font-size: 0.72rem;
+      color: var(--ink-400);
+      letter-spacing: 0.04em;
+      line-height: 1;
     }
     .mood-btn:active { transform: scale(0.9); background: rgba(150,200,255,0.15); border-color: rgba(150,200,255,0.4); }
     .mood-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -240,12 +244,12 @@
   <div class="mood-tile" id="mood-tile">
     <div class="mood-label">💭 今のきもちを ひとタップで送る</div>
     <div class="mood-row">
-      <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️</button>
-      <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤</button>
-      <button class="mood-btn" data-mood="🌧" data-label="つかれた" onclick="sendMoodPing(this)">🌧</button>
-      <button class="mood-btn" data-mood="⛈" data-label="しんどい" onclick="sendMoodPing(this)">⛈</button>
-      <button class="mood-btn" data-mood="💗" data-label="会いたい" onclick="sendMoodPing(this)">💗</button>
-      <button class="mood-btn" data-mood="🥰" data-label="しあわせ" onclick="sendMoodPing(this)">🥰</button>
+      <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️<span class="mood-btn-label">元気</span></button>
+      <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤<span class="mood-btn-label">まあまあ</span></button>
+      <button class="mood-btn" data-mood="🌧" data-label="つかれた" onclick="sendMoodPing(this)">🌧<span class="mood-btn-label">つかれた</span></button>
+      <button class="mood-btn" data-mood="⛈" data-label="しんどい" onclick="sendMoodPing(this)">⛈<span class="mood-btn-label">しんどい</span></button>
+      <button class="mood-btn" data-mood="💗" data-label="会いたい" onclick="sendMoodPing(this)">💗<span class="mood-btn-label">会いたい</span></button>
+      <button class="mood-btn" data-mood="🥰" data-label="しあわせ" onclick="sendMoodPing(this)">🥰<span class="mood-btn-label">しあわせ</span></button>
     </div>
   </div>
   <div id="mood-toast"></div>

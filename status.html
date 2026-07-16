@@ -498,21 +498,10 @@
       const resultEl = document.getElementById('status-event-result')
       resultEl.textContent = '送信中...'
 
-      // 「遅れそう」は Push 通知のみ (LINE には流さない — 帰宅系だけ LINE)
-      if (type === 'late') {
-        await _sb.functions.invoke('send-push', {
-          body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
-        })
-      } else {
-        const { error } = await _sb.functions.invoke('line-notify', {
-          body: { sender_id: session.user.id, target: 'partner', message: msg },
-        })
-        if (error) {
-          await _sb.functions.invoke('send-push', {
-            body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
-          })
-        }
-      }
+      // 全イベント Push 通知のみ (LINE は月間上限節約のため帰宅時間設定と券使用だけに限定 2026-07)
+      await _sb.functions.invoke('send-push', {
+        body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
+      })
       resultEl.textContent = '✅ 送りました！'
       setTimeout(() => { resultEl.textContent = '' }, 4000)
     }

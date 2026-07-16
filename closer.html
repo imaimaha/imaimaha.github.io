@@ -529,16 +529,8 @@
           },
         }).then(({ error }) => { if (error) console.error('[closer] push(partner) error:', error) })
 
-        // LINE 個人通知（相手へ）
-        _sb.functions.invoke('line-notify', {
-          body: {
-            sender_id: myId,
-            target: 'partner',
-            message: `💗 ゲージMAX！\n${myEmoji} ${myName} が会いたいってさ (100%)`,
-          },
-        }).then(({ error }) => { if (error) console.error('[closer] line-notify(partner) error:', error) })
-
-        // 「ふたり揃った」LINE群通知は updateDistance() 側で状態遷移として発火する
+        // LINE 個人通知は月間上限節約のため廃止 (2026-07: Push のみ)
+        // 「ふたり揃った」通知は updateDistance() 側で状態遷移として発火する
       }
     }
 
@@ -592,29 +584,20 @@
       document.getElementById('popup').classList.remove('open')
     }
 
-    // -------- LINE notification --------
+    // -------- both-MAX notification --------
+    // LINE グループ通知は月間上限節約のため廃止 (2026-07: Push のみ)
     async function sendLineMaxNotification() {
       try {
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
         const me = (await _sb.from('profiles').select('emoji,name').eq('id', session.user.id).single()).data
-        const message = `🌟 ふたりのゲージが MAX になったよ！✨\n${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`
-        console.log('[closer] sending LINE group notification:', message)
-        const { data, error } = await _sb.functions.invoke('line-notify', {
-          body: { sender_id: session.user.id, target: 'group', message },
-        })
-        if (error) {
-          console.error('[closer] line-notify(group) error:', error)
-          // LINE 失敗時のフォールバックとして相手に Push
-          _sb.functions.invoke('send-push', { body: {
-            title: '🌟 ふたりMAX！',
-            body: 'ゲージが揃ったよ (LINE 通知失敗)',
-            url: '/closer.html',
-            sender_user_id: session.user.id,
-          }}).catch(() => {})
-        } else {
-          console.log('[closer] line-notify(group) ok:', data)
-        }
+        const { error } = await _sb.functions.invoke('send-push', { body: {
+          title: '🌟 ふたりMAX！',
+          body: `ゲージが揃ったよ！${me?.emoji ?? ''} ${me?.name ?? ''} もくっついてるよ 🥰`,
+          url: '/closer.html',
+          sender_user_id: session.user.id,
+        }})
+        if (error) console.error('[closer] push(bothMax) error:', error)
       } catch (e) { console.error('[closer] sendLineMaxNotification exception:', e) }
     }
 
