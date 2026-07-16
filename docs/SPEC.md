@@ -4,7 +4,7 @@
 > 実装が変わる度にここも更新すること。
 > Claude が「notre」「imaimaha」等の呼称で参照する時は、まずこのファイルを読む。
 
-**最終更新**: 2026-07-15
+**最終更新**: 2026-07-17
 
 > 📌 **重要**: 機能追加・ルール変更時は必ず以下を同時に更新すること:
 > - この SPEC.md（正式仕様）
@@ -139,6 +139,8 @@
 - **今週のビンゴ**（毎週月曜切替、JST基準）+ カテゴリ別 + ランダム難易度3段階
 - 8カテゴリ: 日常 / 気持ち / 都会 / 二人限定 / 沖縄 / 💼 お仕事 / 📖 読書 / 🍚 ごはん（他に季節・平日/週末・ラッキー）
 - **お題プール**: 現在 11604個 (2026-07-15 に 450個の「達成不可能系」を削除: 特定地域限定祭り・稀有天体現象・動物園前提・海外旅行前提・希少種観察・接近観察必要な項目など)
+- **プールの置き場所**: `assets/data/bingo_pools.js`（2026-07-17 に bingo.html から分離。お題の追加・削除はこのファイルだけ編集する）
+- **ラッキーマス**: 週間・ランダムは汎用ラッキープール (`POOLS.lucky`) から1マス挿入。**カテゴリ別はカテゴリ内のお題1マスをラッキー指定**（テーマを壊さないため。2026-07-17〜）
 - **週間ビンゴでは「再生成」「過去から復元」ボタンは非表示** — 週次シード固定のため、書き換えると意味的に破綻するので UI 側で隠している
 - **メタ駆動設計** (`POOL_META`): 新カテゴリ追加時は `POOL_META` にフラグを立てるだけで、週間/ランダム/カテゴリ別への出現を制御可能
   - `weekly: true` → 週間ビンゴに含める
@@ -282,6 +284,8 @@
 
 **取り消し申請フロー**: `active` or `finished` 状態で結果宣言者/どちらかが取り消し申請 → 相手が承認/却下。承認で状態を巻き戻し (`finished` → `active` に戻る、`active` → `cancelled`)。
 
+**アトミック化 (2026-07-17〜)**: 状態遷移とポイント移動は SECURITY DEFINER の RPC（`create_bet` / `accept_bet` / `reject_bet` / `cancel_bet` / `settle_bet` / `approve_bet_cancel`）で単一トランザクション実行。`UPDATE ... WHERE status='<期待状態>'` ガードにより、2人が同時操作しても片方は「すでに処理済み」エラーになり二重配当しない。残高チェックもサーバ側。定義: `supabase/migrations/20260717000000_bets_atomic_rpc.sql`
+
 **通知**: 各遷移で相手に Push (kind: `bet`)。お知らせセンターの「⚔️ 賭け事」フィルタで絞れる。
 
 ### 4.17 お知らせセンター (`notifications.html`)
@@ -295,6 +299,7 @@
 
 ### 4.17 共通コンポーネント
 
+- `assets/js/util.js` — 共通ユーティリティ: `escHtml` / `notify`（url 必須の send-push ラッパ）/ `addPoints` / `jstDateStr`。全ページ include 済み。各ページのローカル実装からの移行は `docs/PLAN_REFACTOR_UTILJS.md` 参照
 - `assets/js/header.js` — 全ページ右上に絵文字ボタン(設定) と🔔ベルボタン(お知らせ) を挿入
 - `assets/js/nav.js` — 全ページ底部にタブナビ (ホーム/ふたり/遊ぶ/ショップ/もっと)。「遊ぶ」と「もっと」タップでシート表示
 - `assets/js/push.js` — Web Push 購読管理＋状態バッジ
@@ -474,7 +479,8 @@
 
 - `profiles`: authenticated 全員 SELECT 可
 - `closer_gauge`: 全操作許可
-- `points`/`quiz_answers`/`gacha_results`: authenticated 全員 SELECT / 自分の分のみ INSERT・UPDATE
+- `points`: authenticated 全員 SELECT / **INSERT は authenticated なら誰の分でも可**（販売所の売上・ありがとうプレゼント等、相手へのポイント移動をクライアントから行うため。2人だけの信頼モデル前提）。賭け事の配当は RPC (SECURITY DEFINER) 経由
+- `quiz_answers`/`gacha_results`: authenticated 全員 SELECT / 自分の分のみ INSERT・UPDATE
 - `bingo_sessions`/`color_hunts`: authenticated 全員 SELECT（履歴共有）/ 自分の分のみ INSERT/UPDATE/DELETE
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
