@@ -113,8 +113,10 @@
 
 ### 4.4 今日のクイズ (`quiz.html`)
 
-- 日替わり質問 30種（`QUESTIONS` 配列にハードコード）
-- 選出: `parseInt(dateStr.replace(/-/g,'')) % 30`（JST 0時ロールオーバー）
+- 日替わり質問 **278種**（`QUESTIONS` 配列にハードコード。2026-07-17 に 30→278 へ増量。約9ヶ月周期）
+- 選出: `parseInt(dateStr.replace(/-/g,'')) % QUESTIONS.length`（JST 0時ロールオーバー）
+- **質問の識別は配列 index ではなく `q.id`**。増量時は既存 id を変えず末尾追加のみ（過去回答の `question_id` 整合性を守るため）
+- カテゴリ: today / partner / self / couple / fun / memory / future / food / deep（各 `.cat-*` バッジ CSS + `CAT_LABEL`）
 - 回答で **+10pt**、相手にPush通知
 - 履歴閲覧: 過去の質問と2人の回答を並べて表示
 - 未回答時、トップページに強調バッジ表示

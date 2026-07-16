@@ -1,7 +1,23 @@
 # 設計改善リファクタ計画 (util.js 移行 + クイズ増量)
 
-**作成**: 2026-07-17
-**背景**: 設計レビューで見つかった負債の解消。5項目のうち 3 つは対応済み、残り 2 つ+検証をこの計画書で引き継ぐ。
+**作成**: 2026-07-17 / **完了**: 2026-07-17
+**背景**: 設計レビューで見つかった負債の解消。**全項目対応済み**（下記 §2・§3 も完了）。
+
+## ✅ 完了サマリ (2026-07-17)
+
+- **util.js 全ページ移行 完了**: `escHtml` 重複定義を全16ファイルから削除して util.js に統一（`escAttr`=encodeURIComponent は別物なので time_capsule に温存）。`send-push`→`notify()`、単発 `points` INSERT→`addPoints()` を全ページ移行。移行時に一部通知へ `kind` を追加（お知らせセンターのカテゴリ分けが効くように）
+- **クイズ 30→278問 完了**（約9ヶ月周期。カテゴリ4種追加: memory/future/food/deep）
+- **Playwright スモーク 19/19 パス**（`tests/refactor_smoke.spec.js`: 全ページで util 関数がグローバル解決・JSエラーなし・quiz 278問・escHtml 検証）
+- **意図的に生 invoke/insert を残した箇所**:
+  - `status.html` の `askOk`/`inviteCome`: `error` を UI 文言に使うため生 `send-push`（notify は error を握りつぶす）
+  - `status.html` の line-notify フォールバック内 `send-push`
+  - `gacha.html` の error 制御付き points INSERT 3件（gacha10 課金 / 10連景品 / 使用ボーナス）
+  - `thanks.html` の配列バッチ INSERT（1往復で原子的なので分割しない）
+  - `line-notify` 呼び出し（gacha/shop/status）は方針どおり不変
+
+---
+
+## （以下は着手時の計画メモ。実施済み）
 
 ---
 

@@ -26,10 +26,11 @@
 
 ## 1. 次回の候補タスク
 
-### 1.1 リファクタ残作業（→ `docs/PLAN_REFACTOR_UTILJS.md` に詳細手順）
-- **util.js への各ページ移行**: esc定義削除 / send-push→notify / points INSERT→addPoints。対象ファイル・箇所数・検証コマンドは計画書参照
-- **クイズ増量**: 30問→90問以上。既存30問の配列順は変えず末尾追加のみ
-- **実機確認**: カテゴリ別ビンゴのラッキーマス / プール分離後のカード動作 / 賭け事一連フロー
+### 1.1 リファクタ残作業 → ✅ 2026-07-17 完了
+- **util.js 全ページ移行 完了**（esc統一 / send-push→notify / points→addPoints）。詳細と例外は `docs/PLAN_REFACTOR_UTILJS.md`
+- **クイズ 30→278問 完了**（カテゴリ4種追加）
+- Playwright スモーク `tests/refactor_smoke.spec.js` 19/19 パス
+- **未実施の実機確認（次回、実データを使うので手動推奨）**: 賭け事の起票〜確定を実UIで通す / クイズ回答で +10pt が入り相手に通知 / ビンゴのカテゴリ別ラッキーマスが⭐表示
 
 ### 1.2 ビンゴ精査 pass 2（優先度: 高、ユーザー明示希望）
 サブエージェント出力 (everyday/city/couple 1610件 + seasonal他 470件) を再取得 → 過剰削除を精選 (1000件くらいに絞る) → 適用。**プールは `assets/data/bingo_pools.js` に移動済みなので diff がきれいに出る**。prune スクリプトは要再作成 (/tmp のものは揮発済み)
