@@ -670,7 +670,7 @@
       const bonus = t.bonusPoints || 0
       if (bonus > 0) {
         const reason = source === 'gacha' ? 'gacha_bonus' : 'shop_bonus'
-        await _sb.from('points').insert({ user_id: currentUser.id, amount: bonus, reason })
+        await addPoints(currentUser.id, bonus, reason)
         showToast(`使用済 ✅ +${bonus}pt`)
       } else {
         showToast('使用済にしました ✅')
@@ -681,13 +681,13 @@
       if (counterId) {
         const bodyMsg = `${t.emoji || '🎁'} ${t.name}${t.description ? ' — ' + t.description : ''}`
         const pushTitle = source === 'gacha' ? '🎰 ガチャ券が使われました' : '🎁 券が使われました'
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: pushTitle,
           body: bodyMsg,
           url: '/shop.html',
-          recipient_user_id: counterId,
           kind: source === 'gacha' ? 'gacha' : 'shop',
-        }}).catch(() => {})
+          recipient: counterId,
+        })
         // LINE 個人にも通知（券は相手に対する約束事なので確実に届けたい）
         _sb.functions.invoke('line-notify', { body: {
           sender_id: currentUser.id,
@@ -709,13 +709,13 @@
 
       const counterId = source === 'gacha' ? partnerId : t.counterUserId
       if (counterId) {
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '↩️ 取り消し申請',
           body: `${t.emoji || '🎁'} ${t.name} の取り消しを申請されました`,
           url: '/shop.html',
-          recipient_user_id: counterId,
           kind: source === 'gacha' ? 'gacha' : 'shop',
-        }}).catch(() => {})
+          recipient: counterId,
+        })
       }
       showToast('取り消しを申請しました')
       await loadTickets()
@@ -732,13 +732,13 @@
       if (error) { showToast('承認失敗', true); return }
 
       if (t.ownerUserId) {
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '✅ 取り消し承認',
           body: `${t.emoji || '🎁'} ${t.name} の取り消しが承認されました`,
           url: '/shop.html',
-          recipient_user_id: t.ownerUserId,
           kind: source === 'gacha' ? 'gacha' : 'shop',
-        }}).catch(() => {})
+          recipient: t.ownerUserId,
+        })
       }
       showToast('取り消しを承認しました')
       await loadTickets()
@@ -752,13 +752,13 @@
       if (error) { showToast('更新失敗', true); return }
 
       if (t.ownerUserId) {
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '❌ 取り消し却下',
           body: `${t.emoji || '🎁'} ${t.name} の申請が却下されました`,
           url: '/shop.html',
-          recipient_user_id: t.ownerUserId,
           kind: source === 'gacha' ? 'gacha' : 'shop',
-        }}).catch(() => {})
+          recipient: t.ownerUserId,
+        })
       }
       showToast('申請を却下しました')
       await loadTickets()
@@ -811,7 +811,7 @@
       })
       if (error) { showToast('出品失敗: ' + error.message, true); return }
 
-      _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'shop_item_add' }).then(() => {})
+      addPoints(currentUser.id, 1, 'shop_item_add')
 
       document.getElementById('new-name').value = ''
       document.getElementById('new-emoji').value = ''
@@ -836,10 +836,6 @@
       if (error) { showToast('削除失敗', true); return }
       showToast('削除しました')
       await loadSellList()
-    }
-
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     let _hasRequestsTable = null
@@ -881,10 +877,10 @@
           card.style.cssText = 'background:rgba(255,255,255,0.06);border:1.5px solid rgba(100,180,255,0.2);border-radius:14px;padding:14px 16px;margin-bottom:10px'
           card.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span style="font-size:1rem;color:#ffd97d;font-weight:bold">${escReq(r.title)}</span>
+              <span style="font-size:1rem;color:#ffd97d;font-weight:bold">${escHtml(r.title)}</span>
               <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
             </div>
-            ${r.description ? `<div style="font-size:0.82rem;color:#98bedd;margin-bottom:8px">${escReq(r.description)}</div>` : ''}
+            ${r.description ? `<div style="font-size:0.82rem;color:#98bedd;margin-bottom:8px">${escHtml(r.description)}</div>` : ''}
             <div style="display:flex;gap:8px">
               <button onclick="respondRequest('${r.id}','accepted')" style="flex:1;padding:8px;background:rgba(100,200,100,0.2);border:1.5px solid rgba(100,200,100,0.4);border-radius:10px;color:#b0f0d5;font-family:inherit;font-size:0.85rem;cursor:pointer">✅ 承諾</button>
               <button onclick="respondRequest('${r.id}','rejected')" style="flex:1;padding:8px;background:rgba(200,80,80,0.15);border:1.5px solid rgba(200,80,80,0.35);border-radius:10px;color:#f0a0a0;font-family:inherit;font-size:0.85rem;cursor:pointer">❌ 断る</button>
@@ -912,10 +908,10 @@
           card.style.cssText = 'background:rgba(255,255,255,0.05);border:1.5px solid rgba(100,180,255,0.15);border-radius:14px;padding:14px 16px;margin-bottom:10px'
           card.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span style="font-size:1rem;color:#e8f4fd">${escReq(r.title)}</span>
+              <span style="font-size:1rem;color:#e8f4fd">${escHtml(r.title)}</span>
               <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
             </div>
-            ${r.description ? `<div style="font-size:0.82rem;color:#7aadcc;margin-bottom:6px">${escReq(r.description)}</div>` : ''}
+            ${r.description ? `<div style="font-size:0.82rem;color:#7aadcc;margin-bottom:6px">${escHtml(r.description)}</div>` : ''}
             <div style="display:flex;align-items:center;justify-content:space-between">
               <span style="font-size:0.82rem;color:${statusColor[r.status] || '#98bedd'}">${statusMap[r.status] || r.status}</span>
               ${r.status === 'pending' ? `<button onclick="deleteRequest('${r.id}')" style="padding:4px 10px;background:rgba(200,80,80,0.1);border:1px solid rgba(200,80,80,0.3);border-radius:8px;color:#f0a0a0;font-family:inherit;font-size:0.75rem;cursor:pointer">削除</button>` : ''}
@@ -947,14 +943,13 @@
 
       // 相手に通知
       if (partnerId) {
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '📝 リクエストが届きました',
-            body: `「${title}」(${price}pt)`,
-            url: '/shop.html',
-            recipient_user_id: partnerId
-          }
-        }).catch(() => {})
+        notify({
+          title: '📝 リクエストが届きました',
+          body: `「${title}」(${price}pt)`,
+          url: '/shop.html',
+          kind: 'shop',
+          recipient: partnerId,
+        })
       }
 
       document.getElementById('req-title').value = ''
@@ -994,7 +989,7 @@
         } else {
           listed = true
           // 出品追加 +1pt
-          _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'shop_item_add' }).then(() => {})
+          addPoints(currentUser.id, 1, 'shop_item_add')
         }
       }
 
@@ -1008,14 +1003,13 @@
         const label = status === 'accepted'
           ? (listed ? '承諾されました✅ 買うタブから購入できます' : '承諾されました ✅')
           : '断られました ❌'
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: `📝 リクエストへの返答: ${req.title}`,
-            body: label,
-            url: '/shop.html',
-            recipient_user_id: partnerId
-          }
-        }).catch(() => {})
+        notify({
+          title: `📝 リクエストへの返答: ${req.title}`,
+          body: label,
+          url: '/shop.html',
+          kind: 'shop',
+          recipient: partnerId,
+        })
       }
 
       await loadRequests()
@@ -1028,10 +1022,6 @@
       if (error) { showToast('削除失敗', true); return }
       showToast('削除しました')
       await loadRequests()
-    }
-
-    function escReq(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     function showToast(msg, isError = false) {

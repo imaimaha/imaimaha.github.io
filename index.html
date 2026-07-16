@@ -498,7 +498,7 @@
           .insert({ user_id: myId, kind: 'login_bonus', date_str: dateStr })
         if (nErr) return
 
-        await _sb.from('points').insert({ user_id: myId, amount: 5, reason: 'login_bonus' })
+        await addPoints(myId, 5, 'login_bonus')
 
         const el = document.createElement('div')
         el.className = 'login-toast'
@@ -567,14 +567,13 @@
           const ids = toNotify.map(c => c.id)
           const { data: partnerProf } = await _sb.from('profiles').select('id').neq('id', myId).single()
           if (partnerProf) {
-            _sb.functions.invoke('send-push', {
-              body: {
-                title: '🎁 タイムカプセルが届きました',
-                body: 'Notre Endroit を開いてみてください',
-                url: '/time_capsule.html',
-                recipient_user_id: partnerProf.id,
-              },
-            }).then(({ error }) => { if (error) console.error('[index] push error:', error) })
+            notify({
+              title: '🎁 タイムカプセルが届きました',
+              body: 'Notre Endroit を開いてみてください',
+              url: '/time_capsule.html',
+              kind: 'capsule',
+              recipient: partnerProf.id,
+            })
           }
           await _sb.from('time_capsules').update({ line_notified: true }).in('id', ids)
         }
@@ -684,9 +683,7 @@
 
           if (_locPartnerId && _locMyProfile) {
             const body = `${_locMyProfile.emoji} ${_locMyProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}`
-            _sb.functions.invoke('send-push', {
-              body: { title: '📍 今ここにいるよ', body, url: '/location.html', recipient_user_id: _locPartnerId }
-            }).catch(() => {})
+            notify({ title: '📍 今ここにいるよ', body, url: '/location.html', kind: 'location', recipient: _locPartnerId })
           }
 
           if (navigator.vibrate) navigator.vibrate(20)
@@ -715,15 +712,13 @@
       if (navigator.vibrate) navigator.vibrate(15)
 
       const body = `${_locMyProfile.emoji} ${_locMyProfile.name}: ${emoji} ${label}`
-      _sb.functions.invoke('send-push', {
-        body: {
-          title: '💭 今のきもち',
-          body,
-          url: '/',
-          recipient_user_id: _locPartnerId,
-          kind: 'mood',
-        }
-      }).catch(() => {})
+      notify({
+        title: '💭 今のきもち',
+        body,
+        url: '/',
+        kind: 'mood',
+        recipient: _locPartnerId,
+      })
 
       const toast = document.getElementById('mood-toast')
       toast.textContent = `${emoji} 送信しました`

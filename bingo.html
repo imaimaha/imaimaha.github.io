@@ -1347,28 +1347,27 @@
     if (isNewCheck && state.userId) {
       const size = Math.round(Math.sqrt(totalCells));
       const pts = pointsForSize(size);
-      _sb.from('points').insert({ user_id: state.userId, amount: pts.check, reason: 'bingo_check' }).then(() => {});
+      addPoints(state.userId, pts.check, 'bingo_check');
       // 新規ビンゴライン
       const newLines = state.bingoLines.length - prevBingoCount;
       if (newLines > 0) {
-        _sb.from('points').insert({ user_id: state.userId, amount: pts.linePer * newLines, reason: 'bingo_line' }).then(() => {});
+        addPoints(state.userId, pts.linePer * newLines, 'bingo_line');
       }
       // 全マスコンプ
       if (!wasComplete && state.card.checks.length >= totalCells) {
-        _sb.from('points').insert({ user_id: state.userId, amount: pts.complete, reason: 'bingo_complete' }).then(() => {});
+        addPoints(state.userId, pts.complete, 'bingo_complete');
       }
 
       // 相手に push (line完成 or コンプ時のみ、通常チェックは静かに)
       if (newLines > 0 || (!wasComplete && state.card.checks.length >= totalCells)) {
         const title = state.card.checks.length >= totalCells ? '🏆 ビンゴカード完成！' : `🎊 ビンゴ ${state.bingoLines.length}本目`
-        _sb.functions.invoke('send-push', {
-          body: {
-            title,
-            body: state.card.label || 'ビンゴ',
-            url: '/bingo.html',
-            sender_user_id: state.userId,
-          },
-        }).then(({ error }) => { if (error) console.error('[bingo] push error:', error) });
+        notify({
+          title,
+          body: state.card.label || 'ビンゴ',
+          url: '/bingo.html',
+          kind: 'bingo',
+          sender: state.userId,
+        });
       }
     }
 
@@ -1664,10 +1663,6 @@
       checks: row.checks || []
     };
     openGridScreen(row.label || row.mode);
-  }
-
-  function escHtml(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function regenerateCard() {

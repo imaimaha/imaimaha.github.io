@@ -640,14 +640,13 @@
         const dateLabel = data.date_end && data.date_end !== data.date
           ? `${data.date}〜${data.date_end}` : data.date
         // Push通知だけ（LINE群通知は廃止）
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '📅 予定を追加したよ',
-            body: `${data.title}（${dateLabel}）`,
-            url: '/calendar.html',
-            sender_user_id: session.user.id,
-          },
-        }).then(({ error }) => { if (error) console.error('[calendar] push error:', error) })
+        notify({
+          title: '📅 予定を追加したよ',
+          body: `${data.title}（${dateLabel}）`,
+          url: '/calendar.html',
+          kind: 'calendar',
+          sender: session.user.id,
+        })
       }
       closeModal()
     }
@@ -662,10 +661,6 @@
 
     function toDateStr(d) {
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-    }
-
-    function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     loadEvents()

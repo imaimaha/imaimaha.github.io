@@ -399,9 +399,6 @@
     let allBets = []
     let currentTab = 'active'
 
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
     function showToast(msg, err) {
       const t = document.getElementById('toast')
       t.textContent = msg
@@ -650,13 +647,13 @@
       if (error) { showToast('作成失敗: ' + error.message, true); return }
 
       // 3. 相手に通知
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '⚔️ 賭け事のお誘い',
         body: `${myProfile?.emoji} ${myProfile?.name} から「${title}」(${stake}pt)`,
         url: '/bets.html',
-        recipient_user_id: partnerProfile.id,
+        recipient: partnerProfile.id,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       document.getElementById('in-title').value = ''
       document.getElementById('in-desc').value = ''
@@ -677,13 +674,13 @@
       if (error) { showToast('承諾失敗: ' + error.message, true); return }
 
       // 3. 起票者に通知
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '⚔️ 賭け事スタート！',
         body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を受けて立ちました (Pot ${bet.stake * 2}pt)`,
         url: '/bets.html',
-        recipient_user_id: bet.created_by,
+        recipient: bet.created_by,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('⚔️ 勝負スタート！')
       currentTab = 'active'
@@ -701,13 +698,13 @@
       if (error) { showToast('更新失敗: ' + error.message, true); return }
 
       // 起票者に通知
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '🙅 賭け事 お断り',
         body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」を断りました (${bet.stake}pt が返ってきました)`,
         url: '/bets.html',
-        recipient_user_id: bet.created_by,
+        recipient: bet.created_by,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('拒否しました')
       await loadBets()
@@ -723,13 +720,13 @@
       if (error) { showToast('更新失敗: ' + error.message, true); return }
 
       // 相手に通知
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '🚫 賭け事 取り下げ',
         body: `${myProfile?.emoji} ${myProfile?.name} が「${bet.title}」の申し込みを取り下げました`,
         url: '/bets.html',
-        recipient_user_id: bet.opponent_id,
+        recipient: bet.opponent_id,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('取り下げました')
       await loadPoints()
@@ -770,13 +767,13 @@
         : (winnerId === partnerId
             ? `🏆 あなたの勝ち！ +${bet.stake * 2}pt`
             : `😔 あなたの負け -${bet.stake}pt`)
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '⚖️ 勝負が確定しました',
         body: `「${bet.title}」の結果: ${outcome}`,
         url: '/bets.html',
-        recipient_user_id: partnerId,
+        recipient: partnerId,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('結果を確定しました')
       await loadPoints()
@@ -794,13 +791,13 @@
       if (error) { showToast('申請失敗', true); return }
 
       const partnerId = bet.created_by === currentUser.id ? bet.opponent_id : bet.created_by
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '↩️ 結果の取り消し依頼',
         body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} から「${bet.title}」の結果を取り消したいとの依頼です`,
         url: '/bets.html',
-        recipient_user_id: partnerId,
+        recipient: partnerId,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('申請しました')
       await loadBets()
@@ -816,13 +813,13 @@
       if (error) { showToast('承認失敗: ' + error.message, true); await loadBets(); return }
 
       const partnerId = bet.cancel_by
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '✅ 取り消しOK',
         body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${bet.title}」の取り消しを承認しました`,
         url: '/bets.html',
-        recipient_user_id: partnerId,
+        recipient: partnerId,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('取り消しました')
       await loadPoints()
@@ -839,13 +836,13 @@
         .eq('id', id)
       if (error) { showToast('更新失敗', true); return }
 
-      _sb.functions.invoke('send-push', { body: {
+      notify({
         title: '❌ 取り消しNG',
         body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${bet.title}」の取り消しを却下しました`,
         url: '/bets.html',
-        recipient_user_id: bet.cancel_by,
+        recipient: bet.cancel_by,
         kind: 'bet',
-      }}).catch(() => {})
+      })
 
       showToast('却下しました')
       await loadBets()

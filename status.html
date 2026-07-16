@@ -500,9 +500,7 @@
       resultEl.textContent = '送信中...'
 
       // 全イベント Push 通知のみ (LINE は月間上限節約のため帰宅時間設定と券使用だけに限定 2026-07)
-      await _sb.functions.invoke('send-push', {
-        body: { title: titles[type], body: msg, url: '/status.html', sender_user_id: session.user.id, kind: 'status' },
-      })
+      await notify({ title: titles[type], body: msg, url: '/status.html', kind: 'status', sender: session.user.id })
       resultEl.textContent = '✅ 送りました！'
       setTimeout(() => { resultEl.textContent = '' }, 4000)
     }
@@ -565,10 +563,6 @@
         result.textContent = '❌ ネットワークエラー: ' + (e?.message ?? String(e)).slice(0, 80)
       }
       setTimeout(() => { result.textContent = '' }, 8000)
-    }
-
-    function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     async function loadLineMessages() {

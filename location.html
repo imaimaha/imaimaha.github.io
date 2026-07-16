@@ -353,9 +353,7 @@
           // 相手にプッシュ通知
           if (partnerId && myProfile) {
             const body = `${myProfile.emoji} ${myProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}${note ? '「' + note + '」' : ''}`
-            _sb.functions.invoke('send-push', {
-              body: { title: '📍 今ここにいるよ', body, url: '/location.html', recipient_user_id: partnerId }
-            }).catch(() => {})
+            notify({ title: '📍 今ここにいるよ', body, url: '/location.html', kind: 'location', recipient: partnerId })
           }
 
           document.getElementById('note-input').value = ''
@@ -431,10 +429,6 @@
       el.textContent = msg
       el.classList.add('show')
       setTimeout(() => el.classList.remove('show'), 2500)
-    }
-
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     init()

@@ -1264,7 +1264,7 @@
       })
       if (error) { showToast('追加失敗: ' + error.message, true); return }
 
-      _sb.from('points').insert({ user_id: currentUser.id, amount: 1, reason: 'gacha_prize_add' }).then(() => {})
+      addPoints(currentUser.id, 1, 'gacha_prize_add')
 
       document.getElementById('new-name').value = ''
       document.getElementById('new-emoji').value = ''
@@ -1851,13 +1851,13 @@
       // 相手（partner）に通知 (Push + LINE)
       if (partnerId) {
         const bodyMsg = `${ticket.reward_emoji || '🎁'} ${ticket.reward_name}${ticket.reward_desc ? ' — ' + ticket.reward_desc : ''}`
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '🎰 ガチャ券が使われました',
           body: bodyMsg,
           url: '/gacha.html',
-          recipient_user_id: partnerId,
           kind: 'gacha',
-        }}).catch(() => {})
+          recipient: partnerId,
+        })
         _sb.functions.invoke('line-notify', { body: {
           sender_id: currentUser.id,
           target: 'partner',
@@ -1879,13 +1879,13 @@
         // ticket 情報を含めて具体的にする
         const ticket = allTickets ? allTickets.find(t => t.id === ticketId) : null
         const targetName = ticket ? `${ticket.reward_emoji || '🎁'} ${ticket.reward_name}` : '使用済みの券'
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '↩️ ガチャ券 取り消し申請',
           body: `${targetName} の取り消しを申請されました`,
           url: '/gacha.html',
-          recipient_user_id: partnerId,
           kind: 'gacha',
-        }}).catch(() => {})
+          recipient: partnerId,
+        })
       }
       showToast('取り消しを申請しました')
       await loadTickets()
@@ -1901,15 +1901,16 @@
         .eq('id', ticketId)
       if (error) { showToast('承認失敗', true); return }
       if (ticket?.bonus_points > 0 && ticket?.user_id) {
-        await _sb.from('points').insert({ user_id: ticket.user_id, amount: -ticket.bonus_points, reason: 'gacha_cancel' })
+        await addPoints(ticket.user_id, -ticket.bonus_points, 'gacha_cancel')
       }
       if (ticket?.user_id) {
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '✅ 取り消し承認',
           body: `「${ticket.reward_name}」の取り消しが承認されました`,
           url: '/gacha.html',
-          recipient_user_id: ticket.user_id,
-        }}).catch(() => {})
+          kind: 'gacha',
+          recipient: ticket.user_id,
+        })
       }
       showToast('取り消しを承認しました')
       await loadTickets()
@@ -1926,12 +1927,13 @@
         .eq('id', ticketId)
       if (error) { showToast('更新失敗', true); return }
       if (ticket?.user_id) {
-        _sb.functions.invoke('send-push', { body: {
+        notify({
           title: '❌ 取り消し却下',
           body: `「${ticket?.reward_name}」の申請が却下されました`,
           url: '/gacha.html',
-          recipient_user_id: ticket.user_id,
-        }}).catch(() => {})
+          kind: 'gacha',
+          recipient: ticket.user_id,
+        })
       }
       showToast('申請を却下しました')
       await loadTickets()
@@ -1952,14 +1954,6 @@
     }
 
     // ===================== UTILS =====================
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-    }
-
     // ===================== START =====================
     init()
   </script>
