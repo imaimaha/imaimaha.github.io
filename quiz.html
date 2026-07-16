@@ -106,6 +106,10 @@
     .cat-self    { background: rgba(80,180,240,0.2);   color: #80d4f8; border: 1px solid rgba(80,180,240,0.35); }
     .cat-couple  { background: rgba(255,130,160,0.2);  color: #ffaac8; border: 1px solid rgba(255,130,160,0.35); }
     .cat-fun     { background: rgba(255,200,80,0.2);   color: #ffd068; border: 1px solid rgba(255,200,80,0.35); }
+    .cat-memory  { background: rgba(255,170,120,0.2);  color: #ffc59a; border: 1px solid rgba(255,170,120,0.35); }
+    .cat-future  { background: rgba(120,220,220,0.2);  color: #8ee6e6; border: 1px solid rgba(120,220,220,0.35); }
+    .cat-food    { background: rgba(240,160,110,0.2);  color: #f5b482; border: 1px solid rgba(240,160,110,0.35); }
+    .cat-deep    { background: rgba(160,150,240,0.2);  color: #b0a8f5; border: 1px solid rgba(160,150,240,0.35); }
 
     .question-text {
       font-size: 1.15rem;
@@ -453,6 +457,292 @@
       { id:28, cat:'fun',     q:'100万円あったら何する？',                       type:'text' },
       { id:29, cat:'fun',     q:'理想の休日の過ごし方は？',                      type:'text' },
       { id:30, cat:'fun',     q:'最近見た夢で覚えているものは？',                type:'text' },
+
+      // ── 以下 2026-07-17 追加分 (id 31〜) ──────────────────
+      // 今日のこと
+      { id:31, cat:'today',   q:'今日の自分に点数をつけるなら？',               type:'choice', opts:['20点','40点','60点','80点','100点'] },
+      { id:32, cat:'today',   q:'今日一番笑ったのはどんな瞬間？',               type:'text' },
+      { id:33, cat:'today',   q:'今日の空、どんな色だった？',                   type:'text' },
+      { id:34, cat:'today',   q:'今日いちばん「めんどくさい」と思ったことは？',  type:'text' },
+      { id:35, cat:'today',   q:'今日、誰かにありがとうを言った？',             type:'choice', opts:['言った😊','言いそびれた😌','今日はなかったかも'] },
+      { id:36, cat:'today',   q:'今日の体調を天気予報っぽく言うと？',           type:'text' },
+      { id:37, cat:'today',   q:'今日はどれくらい眠れそう？',                   type:'choice', opts:['ぐっすり😴','ふつう','あんまり眠くない','夜ふかししそう'] },
+      { id:38, cat:'today',   q:'今日、思わず写真に撮りたくなったものは？',      type:'text' },
+      { id:39, cat:'today',   q:'今日の「あと1時間あったら」何がしたかった？',   type:'text' },
+      { id:40, cat:'today',   q:'今日聴いた曲でよかったものは？',               type:'text' },
+      { id:41, cat:'today',   q:'今日いちばん頑張った自分をほめるなら？',        type:'text' },
+      { id:42, cat:'today',   q:'今日のごはん、100点満点で何点だった？',         type:'choice', opts:['〜60点','70点','80点','90点','100点🍽'] },
+      { id:43, cat:'today',   q:'今日、相手のことを考えた回数は？',             type:'choice', opts:['1〜2回','3〜5回','数えきれない🥰','ずっと'] },
+      { id:44, cat:'today',   q:'今日いちばん「癒された」瞬間は？',             type:'text' },
+
+      // 相手のこと
+      { id:45, cat:'partner', q:'相手が今日いちばん食べたそうなものは？',        type:'text' },
+      { id:46, cat:'partner', q:'相手が寝る前に必ずしていることは？',           type:'text' },
+      { id:47, cat:'partner', q:'相手を動物に例えると？',                       type:'text' },
+      { id:48, cat:'partner', q:'相手が笑うのはどんな時？',                     type:'text' },
+      { id:49, cat:'partner', q:'相手の口ぐせは？',                             type:'text' },
+      { id:50, cat:'partner', q:'相手が休日にいちばんやりたいことは？',          type:'text' },
+      { id:51, cat:'partner', q:'相手が実はちょっと苦手なものは？',             type:'text' },
+      { id:52, cat:'partner', q:'相手の好きな色は？',                           type:'text' },
+      { id:53, cat:'partner', q:'相手が朝型か夜型か、どっちだと思う？',          type:'choice', opts:['朝型☀️','夜型🌙','どっちも','その日による'] },
+      { id:54, cat:'partner', q:'相手が今いちばんほしいものは？',               type:'text' },
+      { id:55, cat:'partner', q:'相手がテンション上がる話題は？',               type:'text' },
+      { id:56, cat:'partner', q:'相手の好きな匂いは何だと思う？',               type:'text' },
+      { id:57, cat:'partner', q:'相手が落ち込んだ時にしてほしいことは？',        type:'text' },
+      { id:58, cat:'partner', q:'相手を色に例えると何色？',                     type:'text' },
+      { id:59, cat:'partner', q:'相手が子どものころ好きだったものは？',          type:'text' },
+      { id:60, cat:'partner', q:'相手の隠れた特技は？',                         type:'text' },
+      { id:61, cat:'partner', q:'相手がいちばんリラックスできる場所はどこ？',    type:'text' },
+      { id:62, cat:'partner', q:'相手の今日の機嫌、何%くらいだと思う？',         type:'choice', opts:['20%','40%','60%','80%','100%🥰'] },
+
+      // 自分のこと
+      { id:63, cat:'self',    q:'最近ちょっと成長したなと思うことは？',          type:'text' },
+      { id:64, cat:'self',    q:'今いちばんハマっていることは？',               type:'text' },
+      { id:65, cat:'self',    q:'自分を励ますためにやっていることは？',          type:'text' },
+      { id:66, cat:'self',    q:'最近買ってよかったものは？',                   type:'text' },
+      { id:67, cat:'self',    q:'自分の好きなところを1つあげるなら？',           type:'text' },
+      { id:68, cat:'self',    q:'今、心の余裕は何%くらい？',                     type:'choice', opts:['20%','40%','60%','80%','100%'] },
+      { id:69, cat:'self',    q:'最近こっそり頑張っていることは？',             type:'text' },
+      { id:70, cat:'self',    q:'ひとりの時間、何をするのが好き？',             type:'text' },
+      { id:71, cat:'self',    q:'最近の「小さなご褒美」は？',                   type:'text' },
+      { id:72, cat:'self',    q:'今の自分に足りないなと思うものは？',           type:'text' },
+      { id:73, cat:'self',    q:'元気が出る食べ物は？',                         type:'text' },
+      { id:74, cat:'self',    q:'最近、涙が出たこと（うれし涙でも）は？',        type:'text' },
+      { id:75, cat:'self',    q:'今日の自分を色で表すと？',                     type:'text' },
+      { id:76, cat:'self',    q:'最近ちょっと自慢したいことは？',               type:'text' },
+      { id:77, cat:'self',    q:'今、いちばん癒される瞬間は？',                 type:'text' },
+
+      // ふたりのこと
+      { id:78, cat:'couple',  q:'2人で初めて行った場所、覚えてる？',            type:'text' },
+      { id:79, cat:'couple',  q:'相手の好きなところ、今日は1つ言うなら？',       type:'text' },
+      { id:80, cat:'couple',  q:'2人でやってみたい季節のイベントは？',          type:'text' },
+      { id:81, cat:'couple',  q:'一緒に住むならこだわりたいものは？',           type:'text' },
+      { id:82, cat:'couple',  q:'2人の記念日、どう過ごしたい？',                type:'text' },
+      { id:83, cat:'couple',  q:'相手にしてもらって嬉しかったことは？',          type:'text' },
+      { id:84, cat:'couple',  q:'2人でハマっているものは？',                    type:'text' },
+      { id:85, cat:'couple',  q:'ケンカしたあと、どう仲直りしたい？',           type:'text' },
+      { id:86, cat:'couple',  q:'2人の理想の休日プランは？',                    type:'text' },
+      { id:87, cat:'couple',  q:'相手に言われて嬉しい言葉は？',                 type:'text' },
+      { id:88, cat:'couple',  q:'2人だけの合言葉やあだ名はある？',              type:'text' },
+      { id:89, cat:'couple',  q:'一緒に見たい映画やドラマは？',                 type:'text' },
+      { id:90, cat:'couple',  q:'2人で育てるなら植物？ペット？',                type:'choice', opts:['植物🌱','ペット🐾','どっちも','今は考え中'] },
+      { id:91, cat:'couple',  q:'相手の「ここは直してほしい」をあえて1つ言うなら？', type:'text' },
+      { id:92, cat:'couple',  q:'2人でいて「幸せだな」と思う瞬間は？',          type:'text' },
+      { id:93, cat:'couple',  q:'相手と出会えてよかったと思う理由は？',          type:'text' },
+      { id:94, cat:'couple',  q:'2人の関係、これからどう深めたい？',            type:'text' },
+      { id:95, cat:'couple',  q:'相手に感謝していること、今日は何？',           type:'text' },
+      { id:96, cat:'couple',  q:'2人で決めた「ルール」はある？',                type:'text' },
+      { id:97, cat:'couple',  q:'相手の寝顔を見て思うことは？',                 type:'text' },
+
+      // 楽しい質問
+      { id:98,  cat:'fun',    q:'今日から1週間休みなら何する？',                type:'text' },
+      { id:99,  cat:'fun',    q:'魔法が1つ使えるなら何がいい？',                type:'text' },
+      { id:100, cat:'fun',    q:'透明人間になったら最初に何する？',             type:'text' },
+      { id:101, cat:'fun',    q:'タイムマシンがあったらいつに行きたい？',        type:'text' },
+      { id:102, cat:'fun',    q:'一生1つの食べ物しか食べられないなら？',        type:'text' },
+      { id:103, cat:'fun',    q:'自分のテーマソングを選ぶなら？',               type:'text' },
+      { id:104, cat:'fun',    q:'宝くじで3億円当たったら最初の買い物は？',       type:'text' },
+      { id:105, cat:'fun',    q:'超能力を1つ持てるなら？',                      type:'choice', opts:['空を飛ぶ🕊','瞬間移動✨','心が読める','時間を止める⏱'] },
+      { id:106, cat:'fun',    q:'生まれ変わるなら何になりたい？',               type:'text' },
+      { id:107, cat:'fun',    q:'無人島に相手と2人、まず何をする？',            type:'text' },
+      { id:108, cat:'fun',    q:'自分を映画にするならジャンルは？',             type:'choice', opts:['ラブコメ💕','アクション💥','ヒューマンドラマ','ホラー😱','ファンタジー🧚'] },
+      { id:109, cat:'fun',    q:'動物と話せるなら誰と話したい？',               type:'text' },
+      { id:110, cat:'fun',    q:'1日だけ違う仕事ができるなら何がいい？',         type:'text' },
+      { id:111, cat:'fun',    q:'ドラえもんの道具、1つもらえるなら？',          type:'text' },
+      { id:112, cat:'fun',    q:'自分にキャッチコピーをつけるなら？',           type:'text' },
+      { id:113, cat:'fun',    q:'今の気分を絵文字3つで表すと？',               type:'text' },
+      { id:114, cat:'fun',    q:'空から何でも降ってくるなら何がいい？',          type:'text' },
+      { id:115, cat:'fun',    q:'一瞬でどこでも行けるなら今どこに行く？',        type:'text' },
+      { id:116, cat:'fun',    q:'もし猫になったら1日どう過ごす？',              type:'text' },
+      { id:117, cat:'fun',    q:'自分の人生に副題をつけるなら？',               type:'text' },
+
+      // 思い出のこと
+      { id:118, cat:'memory', q:'2人の思い出で、写真に残したい1枚は？',         type:'text' },
+      { id:119, cat:'memory', q:'初めて会った日の第一印象は？',                 type:'text' },
+      { id:120, cat:'memory', q:'子どものころの夢は何だった？',                 type:'text' },
+      { id:121, cat:'memory', q:'今までで一番笑った出来事は？',                 type:'text' },
+      { id:122, cat:'memory', q:'学生時代に戻れるなら何をやり直す？',            type:'text' },
+      { id:123, cat:'memory', q:'相手との忘れられない一言は？',                 type:'text' },
+      { id:124, cat:'memory', q:'去年の今ごろ、何してたか覚えてる？',           type:'text' },
+      { id:125, cat:'memory', q:'人生で一番緊張した瞬間は？',                   type:'text' },
+      { id:126, cat:'memory', q:'子どものころの好きな遊びは？',                 type:'text' },
+      { id:127, cat:'memory', q:'初デートで印象に残っていることは？',           type:'text' },
+      { id:128, cat:'memory', q:'今まででいちばん嬉しかったプレゼントは？',      type:'text' },
+      { id:129, cat:'memory', q:'思い出の味（食べ物）はある？',                 type:'text' },
+      { id:130, cat:'memory', q:'昔ハマっていたものは？',                       type:'text' },
+      { id:131, cat:'memory', q:'相手を好きだと確信した瞬間は？',               type:'text' },
+      { id:132, cat:'memory', q:'今までで一番遠くに行った旅の思い出は？',        type:'text' },
+      { id:133, cat:'memory', q:'懐かしいと感じる音や匂いは？',                 type:'text' },
+      { id:134, cat:'memory', q:'2人の「初めて」で覚えてることは？',            type:'text' },
+
+      // これからのこと
+      { id:135, cat:'future', q:'1年後、2人でどうなっていたい？',               type:'text' },
+      { id:136, cat:'future', q:'いつか一緒に行きたい国は？',                   type:'text' },
+      { id:137, cat:'future', q:'次の休みに2人でやりたいことは？',              type:'text' },
+      { id:138, cat:'future', q:'5年後の自分は何をしていると思う？',            type:'text' },
+      { id:139, cat:'future', q:'これから挑戦してみたい趣味は？',               type:'text' },
+      { id:140, cat:'future', q:'老後、2人でどんな暮らしがしたい？',            type:'text' },
+      { id:141, cat:'future', q:'今年中に絶対やりたいことは？',                 type:'text' },
+      { id:142, cat:'future', q:'2人で貯金して叶えたい夢は？',                  type:'text' },
+      { id:143, cat:'future', q:'いつか飼ってみたいペットは？',                 type:'text' },
+      { id:144, cat:'future', q:'次の記念日にサプライズするなら何がいい？',      type:'text' },
+      { id:145, cat:'future', q:'これから2人で作りたい習慣は？',                type:'text' },
+      { id:146, cat:'future', q:'将来住んでみたい街は？',                       type:'text' },
+      { id:147, cat:'future', q:'来年の目標を1つあげるなら？',                  type:'text' },
+      { id:148, cat:'future', q:'いつか2人で挑戦したい大きなことは？',          type:'text' },
+      { id:149, cat:'future', q:'今度の週末、どこか行くならどこ？',             type:'text' },
+      { id:150, cat:'future', q:'これからの自分に期待していることは？',          type:'text' },
+
+      // たべもののこと
+      { id:151, cat:'food',   q:'最後の晩餐に選ぶなら何？',                     type:'text' },
+      { id:152, cat:'food',   q:'今いちばん食べたいものは？',                   type:'text' },
+      { id:153, cat:'food',   q:'2人で行きたいお店は？',                        type:'text' },
+      { id:154, cat:'food',   q:'ソウルフード（心の一皿）は？',                 type:'text' },
+      { id:155, cat:'food',   q:'甘いもの派？しょっぱいもの派？',               type:'choice', opts:['甘い🍰','しょっぱい🍟','どっちも','気分による'] },
+      { id:156, cat:'food',   q:'作ってもらって嬉しい手料理は？',               type:'text' },
+      { id:157, cat:'food',   q:'コンビニで必ず買っちゃうものは？',             type:'text' },
+      { id:158, cat:'food',   q:'朝ごはんの理想は？',                           type:'choice', opts:['パン🍞','ごはん🍚','しっかり派','食べない','その日次第'] },
+      { id:159, cat:'food',   q:'一緒に作ってみたい料理は？',                   type:'text' },
+      { id:160, cat:'food',   q:'実は苦手な食べ物は？',                         type:'text' },
+      { id:161, cat:'food',   q:'元気を出したい時に食べるものは？',             type:'text' },
+      { id:162, cat:'food',   q:'季節でいちばん好きな味覚は？',                 type:'text' },
+      { id:163, cat:'food',   q:'飲み物といえば何を選ぶ？',                     type:'text' },
+      { id:164, cat:'food',   q:'2人でシェアするならどんな料理がいい？',        type:'text' },
+      { id:165, cat:'food',   q:'次に食べに行きたいジャンルは？',               type:'choice', opts:['和食','洋食','中華','エスニック','スイーツ🍮'] },
+      { id:166, cat:'food',   q:'思い出に残っている外食は？',                   type:'text' },
+
+      // ちょっと深い質問
+      { id:167, cat:'deep',   q:'自分にとって「幸せ」って何だと思う？',          type:'text' },
+      { id:168, cat:'deep',   q:'最近、心が動いたことは？',                     type:'text' },
+      { id:169, cat:'deep',   q:'大切にしている価値観は？',                     type:'text' },
+      { id:170, cat:'deep',   q:'今、いちばん不安なことは？',                   type:'text' },
+      { id:171, cat:'deep',   q:'自分を変えたい部分はある？',                   type:'text' },
+      { id:172, cat:'deep',   q:'誰かに支えられてるなと感じる瞬間は？',          type:'text' },
+      { id:173, cat:'deep',   q:'相手といて安心するのはどんな時？',             type:'text' },
+      { id:174, cat:'deep',   q:'人生で大事にしたい3つを選ぶなら？',            type:'text' },
+      { id:175, cat:'deep',   q:'最近、感謝を伝えたい人は？',                   type:'text' },
+      { id:176, cat:'deep',   q:'自分の「ゆずれないもの」は？',                 type:'text' },
+      { id:177, cat:'deep',   q:'落ち込んだ時、どうやって立ち直る？',           type:'text' },
+      { id:178, cat:'deep',   q:'10年後の自分に伝えたいことは？',               type:'text' },
+      { id:179, cat:'deep',   q:'今の自分を作った出来事は？',                   type:'text' },
+      { id:180, cat:'deep',   q:'相手にいちばん知っておいてほしいことは？',      type:'text' },
+      { id:181, cat:'deep',   q:'「愛」って何だと思う？',                       type:'text' },
+      { id:182, cat:'deep',   q:'この先も変わらずにいたいと思うことは？',        type:'text' },
+
+      // ── 追加分 第2弾 (id 183〜) ──────────────────
+      // 今日のこと
+      { id:183, cat:'today',  q:'今日の「やってよかった」ことは？',             type:'text' },
+      { id:184, cat:'today',  q:'今日いちばん時間を使ったことは？',             type:'text' },
+      { id:185, cat:'today',  q:'今日、思わずニヤけた瞬間は？',                 type:'text' },
+      { id:186, cat:'today',  q:'今日の気分に合う天気は？',                     type:'choice', opts:['快晴☀️','くもり☁️','雨🌧','嵐⛈','虹🌈'] },
+      { id:187, cat:'today',  q:'今日いちばん「おいしい」と言った瞬間は？',      type:'text' },
+      { id:188, cat:'today',  q:'今日の自分にひとこと声をかけるなら？',          type:'text' },
+      { id:189, cat:'today',  q:'今日、明日に持ち越したいことは？',             type:'text' },
+      { id:190, cat:'today',  q:'今日いちばんホッとした瞬間は？',               type:'text' },
+      { id:191, cat:'today',  q:'今日の疲労度は？',                             type:'choice', opts:['元気いっぱい💪','ふつう','ちょい疲れ','くたくた😵'] },
+      { id:192, cat:'today',  q:'今日ちょっと気になったニュースや話題は？',      type:'text' },
+
+      // 相手のこと
+      { id:193, cat:'partner', q:'相手が今いちばん行きたいお店は？',            type:'text' },
+      { id:194, cat:'partner', q:'相手のいちばんかわいい仕草は？',              type:'text' },
+      { id:195, cat:'partner', q:'相手が疲れてる時のサインは？',                type:'text' },
+      { id:196, cat:'partner', q:'相手が絶対に譲らないこだわりは？',            type:'text' },
+      { id:197, cat:'partner', q:'相手の好きな音楽のジャンルは？',              type:'text' },
+      { id:198, cat:'partner', q:'相手が朝いちばんにすることは？',              type:'text' },
+      { id:199, cat:'partner', q:'相手が密かに自慢に思ってることは？',          type:'text' },
+      { id:200, cat:'partner', q:'相手が財布のヒモを緩めるものは？',            type:'text' },
+      { id:201, cat:'partner', q:'相手が好きなテレビ・動画のジャンルは？',      type:'text' },
+      { id:202, cat:'partner', q:'相手がされたら照れることは？',                type:'text' },
+      { id:203, cat:'partner', q:'相手のスマホの待ち受けは何だと思う？',        type:'text' },
+      { id:204, cat:'partner', q:'相手が今週いちばん頑張ってたことは？',        type:'text' },
+
+      // 自分のこと
+      { id:205, cat:'self',   q:'自分の「幸せスイッチ」が入る瞬間は？',         type:'text' },
+      { id:206, cat:'self',   q:'つい後回しにしがちなことは？',                 type:'text' },
+      { id:207, cat:'self',   q:'今いちばん行きたい場所は？',                   type:'text' },
+      { id:208, cat:'self',   q:'テンションが上がる音楽は？',                   type:'text' },
+      { id:209, cat:'self',   q:'最近、時間を忘れて夢中になったことは？',        type:'text' },
+      { id:210, cat:'self',   q:'自分へのご褒美に何をあげたい？',               type:'text' },
+      { id:211, cat:'self',   q:'今の自分に足りない休息を1つあげるなら？',       type:'text' },
+      { id:212, cat:'self',   q:'落ち込んだ時に見たくなるものは？',             type:'text' },
+      { id:213, cat:'self',   q:'今週いちばんの達成感は？',                     type:'text' },
+      { id:214, cat:'self',   q:'口には出さないけど密かな目標は？',             type:'text' },
+
+      // ふたりのこと
+      { id:215, cat:'couple', q:'相手のいちばん好きな表情は？',                 type:'text' },
+      { id:216, cat:'couple', q:'2人でやってみたいおうちデートは？',            type:'text' },
+      { id:217, cat:'couple', q:'相手にこっそり伝えたいお礼は？',               type:'text' },
+      { id:218, cat:'couple', q:'2人でいちばん盛り上がる話題は？',              type:'text' },
+      { id:219, cat:'couple', q:'相手のことをもっと知りたいと思う部分は？',      type:'text' },
+      { id:220, cat:'couple', q:'2人で乗り越えた出来事は？',                    type:'text' },
+      { id:221, cat:'couple', q:'相手が隣にいて安心する理由は？',               type:'text' },
+      { id:222, cat:'couple', q:'次の旅行で泊まるなら？',                       type:'choice', opts:['温泉旅館♨️','海辺のホテル🌊','都会のホテル🌃','キャンプ⛺','おうちでのんびり'] },
+      { id:223, cat:'couple', q:'2人の関係に名前をつけるなら？',                type:'text' },
+      { id:224, cat:'couple', q:'相手に「ありがとう」を伝えたい最近の出来事は？', type:'text' },
+      { id:225, cat:'couple', q:'2人で作りたい今年の思い出は？',                type:'text' },
+      { id:226, cat:'couple', q:'相手のおかげで変われたことは？',               type:'text' },
+
+      // 楽しい質問
+      { id:227, cat:'fun',    q:'自分の人生をゲームにするとタイトルは？',        type:'text' },
+      { id:228, cat:'fun',    q:'1日だけ入れ替われるなら誰になりたい？',         type:'text' },
+      { id:229, cat:'fun',    q:'good luckな数字は？',                          type:'text' },
+      { id:230, cat:'fun',    q:'相手と2人で組むなら何のコンビ名？',            type:'text' },
+      { id:231, cat:'fun',    q:'今の気分にぴったりの絵文字は？',               type:'text' },
+      { id:232, cat:'fun',    q:'突然100万円もらったら2人で何する？',           type:'text' },
+      { id:233, cat:'fun',    q:'自分を食べ物に例えると？',                     type:'text' },
+      { id:234, cat:'fun',    q:'未来から手紙が届くなら何て書いててほしい？',    type:'text' },
+      { id:235, cat:'fun',    q:'部屋に1つだけ置けるなら何を飾る？',            type:'text' },
+      { id:236, cat:'fun',    q:'相手と2人でYouTubeやるなら何チャンネル？',      type:'text' },
+      { id:237, cat:'fun',    q:'カラオケで絶対に歌う十八番は？',               type:'text' },
+      { id:238, cat:'fun',    q:'夢に出てきてほしい人・キャラは？',             type:'text' },
+
+      // 思い出のこと
+      { id:239, cat:'memory', q:'2人で笑い合った最近の出来事は？',              type:'text' },
+      { id:240, cat:'memory', q:'相手にドキッとさせられた瞬間は？',             type:'text' },
+      { id:241, cat:'memory', q:'去年いちばんの思い出は？',                     type:'text' },
+      { id:242, cat:'memory', q:'思い出の場所をもう一度訪れるなら？',           type:'text' },
+      { id:243, cat:'memory', q:'子どものころ憧れていた人は？',                 type:'text' },
+      { id:244, cat:'memory', q:'2人の記念すべき「初めて」でいちばんは？',       type:'text' },
+      { id:245, cat:'memory', q:'今でも心に残っている言葉は？',                 type:'text' },
+      { id:246, cat:'memory', q:'昔よく聴いていた思い出の曲は？',               type:'text' },
+      { id:247, cat:'memory', q:'いちばん緊張したデートは？',                   type:'text' },
+      { id:248, cat:'memory', q:'あの頃に戻れるなら、いつに戻りたい？',          type:'text' },
+
+      // これからのこと
+      { id:249, cat:'future', q:'来月、2人で必ずやりたいことは？',              type:'text' },
+      { id:250, cat:'future', q:'いつか一緒に見たい景色は？',                   type:'text' },
+      { id:251, cat:'future', q:'次の誕生日、どう祝ってほしい？',               type:'text' },
+      { id:252, cat:'future', q:'2人で始めたい新しいことは？',                  type:'text' },
+      { id:253, cat:'future', q:'将来のおうち、どんな雰囲気がいい？',           type:'text' },
+      { id:254, cat:'future', q:'これから作りたい2人の恒例行事は？',            type:'text' },
+      { id:255, cat:'future', q:'いつか行ってみたい憧れの場所は？',             type:'text' },
+      { id:256, cat:'future', q:'次のボーナスや臨時収入、何に使う？',           type:'text' },
+      { id:257, cat:'future', q:'半年後、どんな自分でいたい？',                 type:'text' },
+      { id:258, cat:'future', q:'2人で叶えたい小さな夢は？',                    type:'text' },
+
+      // たべもののこと
+      { id:259, cat:'food',   q:'雨の日に食べたくなるものは？',                 type:'text' },
+      { id:260, cat:'food',   q:'2人で食べ放題に行くなら何系？',               type:'choice', opts:['焼肉🍖','寿司🍣','スイーツ🍰','中華','しゃぶしゃぶ'] },
+      { id:261, cat:'food',   q:'夜食に食べたくなる背徳グルメは？',             type:'text' },
+      { id:262, cat:'food',   q:'相手に一度食べさせたい好物は？',               type:'text' },
+      { id:263, cat:'food',   q:'今の季節に食べたい旬のものは？',               type:'text' },
+      { id:264, cat:'food',   q:'ごはんのお供、これは外せないものは？',          type:'text' },
+      { id:265, cat:'food',   q:'コーヒー派？紅茶派？それとも？',               type:'choice', opts:['コーヒー☕','紅茶🫖','緑茶🍵','ジュース','その日の気分'] },
+      { id:266, cat:'food',   q:'旅先で絶対食べたいものは？',                   type:'text' },
+      { id:267, cat:'food',   q:'2人で作るなら得意料理は？',                    type:'text' },
+      { id:268, cat:'food',   q:'ちょっと贅沢するなら何を食べたい？',           type:'text' },
+
+      // ちょっと深い質問
+      { id:269, cat:'deep',   q:'最近、自分をほめてあげたいことは？',           type:'text' },
+      { id:270, cat:'deep',   q:'相手のどんなところを尊敬している？',           type:'text' },
+      { id:271, cat:'deep',   q:'「これだけは大切にしたい」時間は？',           type:'text' },
+      { id:272, cat:'deep',   q:'今の自分にとって心の支えは？',                 type:'text' },
+      { id:273, cat:'deep',   q:'いつか克服したい自分の弱さは？',               type:'text' },
+      { id:274, cat:'deep',   q:'相手に救われたと感じた瞬間は？',               type:'text' },
+      { id:275, cat:'deep',   q:'「無理しなくていいよ」と言いたい相手は？',      type:'text' },
+      { id:276, cat:'deep',   q:'自分の人生でいちばん誇れることは？',           type:'text' },
+      { id:277, cat:'deep',   q:'2人で歳を重ねたらどうありたい？',              type:'text' },
+      { id:278, cat:'deep',   q:'今この瞬間、いちばん感謝したいことは？',        type:'text' },
     ]
 
     const CAT_LABEL = {
@@ -461,6 +751,10 @@
       self:    '自分のこと',
       couple:  'ふたりのこと',
       fun:     '楽しい質問',
+      memory:  '思い出のこと',
+      future:  'これからのこと',
+      food:    'たべもののこと',
+      deep:    'ちょっと深い質問',
     }
 
     // ================================================================
@@ -476,13 +770,7 @@
     // ================================================================
     // Helpers
     // ================================================================
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-    }
+    // escHtml は assets/js/util.js の共通実装を使用
 
     function todayStr() {
       return new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD
@@ -542,24 +830,17 @@
         })
         if (qaErr) throw qaErr
 
-        // points insert
-        const { error: ptErr } = await _sb.from('points').insert({
-          user_id:    myId,
-          amount:     10,
-          reason:     'quiz',
-          created_at: new Date().toISOString(),
-        })
-        if (ptErr) console.error('points insert error:', ptErr)
+        // points 付与
+        await addPoints(myId, 10, 'quiz')
 
         // 相手に push
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '💬 クイズに回答したよ',
-            body: '今日の質問への回答を見てみよう',
-            url: '/quiz.html',
-            sender_user_id: myId,
-          },
-        }).then(({ error }) => { if (error) console.error('[quiz] push error:', error) })
+        notify({
+          title: '💬 クイズに回答したよ',
+          body: '今日の質問への回答を見てみよう',
+          url: '/quiz.html',
+          kind: 'quiz',
+          sender: myId,
+        })
 
         showToast('✨ +10pt 獲得！')
         await renderTodayAnswered(answer)
