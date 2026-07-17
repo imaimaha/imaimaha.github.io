@@ -79,7 +79,19 @@ async function handle(req: Request) {
 
   if (!subs?.length) return json({ ok: true, sent: 0 })
 
-  const sent = await pushToSubs(sb, subs, {
+  // 受信者ごとの通知設定を尊重: kind を OFF にしている人にはプッシュしない
+  // (お知らせセンターの履歴 notifications_log は上で既に記録済みなので残る)
+  let sendSubs = subs
+  if (kind) {
+    const { data: prefs } = await sb.from('notification_prefs')
+      .select('user_id').eq('kind', kind).eq('enabled', false)
+    const disabled = new Set((prefs ?? []).map((p: any) => p.user_id))
+    if (disabled.size) sendSubs = subs.filter((s: any) => !disabled.has(s.user_id))
+  }
+
+  if (!sendSubs.length) return json({ ok: true, sent: 0 })
+
+  const sent = await pushToSubs(sb, sendSubs, {
     title: title ?? 'Notre Endroit',
     body: msgBody ?? '',
     url: url ?? '/',
