@@ -235,6 +235,26 @@
 
     .history-list { display: flex; flex-direction: column; gap: 14px; }
 
+    .show-all-btn {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+      padding: 13px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(150,200,255,0.28);
+      border-radius: 14px;
+      color: #cfe4ff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      min-height: 50px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .show-all-btn:active { transform: scale(0.97); }
+
     .history-card {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(100,150,220,0.2);
@@ -414,7 +434,7 @@
     </div>
 
     <!-- 過去の回答履歴 -->
-    <h2 class="section-title">📖 過去の質問</h2>
+    <h2 class="section-title">📖 過去の回答</h2>
     <div id="history-list" class="history-list">
       <div class="empty-msg">読み込み中...</div>
     </div>
@@ -957,24 +977,17 @@
     }
 
     // ================================================================
-    // Load history (past 7 days)
+    // Load history (全期間・段階表示)
     // ================================================================
+    const HISTORY_INITIAL = 7   // 最初に見せる件数。残りは「すべて見る」で展開
     async function loadHistory() {
       const histEl = document.getElementById('history-list')
 
-      // Get past 7 date strings (excluding today)
-      const dates = []
-      for (let i = 1; i <= 7; i++) {
-        const d = new Date()
-        d.setDate(d.getDate() - i)
-        dates.push(d.toLocaleDateString('sv-SE'))
-      }
-
-      // Fetch all answers for those dates for both users
+      // 今日を除く過去すべての回答を取得（新しい順）
       const { data: rows, error } = await _sb
         .from('quiz_answers')
         .select('user_id, question_id, answer, date_str')
-        .in('date_str', dates)
+        .lt('date_str', todayStr())
         .order('date_str', { ascending: false })
 
       if (error) {
@@ -1008,56 +1021,82 @@
         return
       }
 
-      histEl.innerHTML = ''
-      keys.forEach(key => {
-        const group = grouped[key]
-        const qData = QUESTIONS.find(q => q.id === group.question_id)
-        if (!qData) return
+      // 表示できるカード（追跡している2人のどちらかが回答済み）だけに絞る
+      const renderable = keys
+        .map(key => grouped[key])
+        .filter(group => {
+          const qData = QUESTIONS.find(q => q.id === group.question_id)
+          if (!qData) return false
+          return group.answers.some(a => a.user_id === myId || a.user_id === partnerId)
+        })
 
-        const myAns      = group.answers.find(a => a.user_id === myId)
-        const partnerAns = group.answers.find(a => a.user_id === partnerId)
-
-        // Skip if no answer from anyone we track
-        if (!myAns && !partnerAns) return
-
-        const dateObj   = new Date(group.date_str + 'T00:00:00')
-        const dateLabel = dateObj.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
-
-        const card = document.createElement('div')
-        card.className = 'history-card'
-
-        let answersHtml = ''
-        if (myAns) {
-          const who = myProfile ? `${myProfile.emoji} ${escHtml(myProfile.name)}` : 'あなた'
-          answersHtml += `
-            <div class="history-answer">
-              <div class="history-answer-who">${who}</div>
-              <div class="history-answer-text">${escHtml(myAns.answer)}</div>
-            </div>`
-        }
-        if (partnerAns) {
-          const who = partnerProfile ? `${partnerProfile.emoji} ${escHtml(partnerProfile.name)}` : '相手'
-          answersHtml += `
-            <div class="history-answer">
-              <div class="history-answer-who">${who}</div>
-              <div class="history-answer-text">${escHtml(partnerAns.answer)}</div>
-            </div>`
-        }
-
-        card.innerHTML = `
-          <div class="history-meta">
-            <span class="cat-badge cat-${qData.cat}">${CAT_LABEL[qData.cat] ?? qData.cat}</span>
-            <span class="history-date">${dateLabel}</span>
-          </div>
-          <div class="history-question">${escHtml(qData.q)}</div>
-          <div class="history-answers">${answersHtml}</div>
-        `
-        histEl.appendChild(card)
-      })
-
-      if (histEl.children.length === 0) {
+      if (renderable.length === 0) {
         histEl.innerHTML = '<div class="empty-msg">まだ過去の回答はありません ✨</div>'
+        return
       }
+
+      histEl.innerHTML = ''
+
+      // 最初は HISTORY_INITIAL 件だけ描画。残りは「すべて見る」で展開
+      let shown = 0
+      const renderNext = (count) => {
+        const slice = renderable.slice(shown, shown + count)
+        slice.forEach(group => histEl.appendChild(buildHistoryCard(group)))
+        shown += slice.length
+      }
+      renderNext(HISTORY_INITIAL)
+
+      if (shown < renderable.length) {
+        const btn = document.createElement('button')
+        btn.className = 'show-all-btn'
+        btn.textContent = `📖 すべて見る（残り ${renderable.length - shown} 件）`
+        btn.onclick = () => {
+          btn.remove()
+          renderNext(renderable.length)  // 残り全部
+        }
+        histEl.appendChild(btn)
+      }
+    }
+
+    // 履歴カード1枚を組み立てて返す
+    function buildHistoryCard(group) {
+      const qData = QUESTIONS.find(q => q.id === group.question_id)
+      const myAns      = group.answers.find(a => a.user_id === myId)
+      const partnerAns = group.answers.find(a => a.user_id === partnerId)
+
+      const dateObj   = new Date(group.date_str + 'T00:00:00')
+      const dateLabel = dateObj.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+
+      const card = document.createElement('div')
+      card.className = 'history-card'
+
+      let answersHtml = ''
+      if (myAns) {
+        const who = myProfile ? `${myProfile.emoji} ${escHtml(myProfile.name)}` : 'あなた'
+        answersHtml += `
+          <div class="history-answer">
+            <div class="history-answer-who">${who}</div>
+            <div class="history-answer-text">${escHtml(myAns.answer)}</div>
+          </div>`
+      }
+      if (partnerAns) {
+        const who = partnerProfile ? `${partnerProfile.emoji} ${escHtml(partnerProfile.name)}` : '相手'
+        answersHtml += `
+          <div class="history-answer">
+            <div class="history-answer-who">${who}</div>
+            <div class="history-answer-text">${escHtml(partnerAns.answer)}</div>
+          </div>`
+      }
+
+      card.innerHTML = `
+        <div class="history-meta">
+          <span class="cat-badge cat-${qData.cat}">${CAT_LABEL[qData.cat] ?? qData.cat}</span>
+          <span class="history-date">${dateLabel}</span>
+        </div>
+        <div class="history-question">${escHtml(qData.q)}</div>
+        <div class="history-answers">${answersHtml}</div>
+      `
+      return card
     }
 
     // ================================================================
