@@ -41,9 +41,17 @@
       box-shadow: 0 6px 24px rgba(80,140,255,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
     }
     .hero-checkin-btn:disabled { opacity: 0.55; }
+    /* 確定待ち（1タップ目）: 緑系で「もう一度で送信」だと分かる */
+    .hero-checkin-btn.armed {
+      background: linear-gradient(135deg, rgba(80,210,130,0.32), rgba(120,220,160,0.28));
+      border-color: rgba(120,230,160,0.75);
+      box-shadow: 0 6px 24px rgba(80,210,130,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+      animation: armedPulse 1s ease-in-out infinite;
+    }
+    @keyframes armedPulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.04) } }
     .checkin-pin { display: inline-block; font-size: 1.05rem; animation: pinBob 2.2s ease-in-out infinite; }
     @keyframes pinBob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
-    @media (prefers-reduced-motion: reduce) { .checkin-pin { animation: none } }
+    @media (prefers-reduced-motion: reduce) { .checkin-pin, .hero-checkin-btn.armed { animation: none } }
     #loc-top-status { min-height: 18px; margin-top: 6px; font-size: 0.75rem; color: var(--ink-400); }
 
     /* --- 最上部の横長デイリーカード (今日の帰宅) --- */
@@ -254,7 +262,7 @@
       <div class="anniversary-badge" id="anniversary-badge"></div>
       <div>
         <button id="loc-top-btn" class="hero-checkin-btn" onclick="doCheckinTop()">
-          <span class="checkin-pin">📍</span><span>今ここにいるよ</span>
+          <span class="checkin-pin">📍</span><span class="checkin-label">今ここにいるよ</span>
         </button>
         <div id="loc-top-status"></div>
       </div>
@@ -666,7 +674,40 @@
       }
     }
 
-    async function doCheckinTop() {
+    // 誤タップ防止: 1タップ目は「確定待ち」にするだけ。2タップ目で実際に送信する
+    let _checkinArmed = false
+    let _checkinTimer = null
+    function resetCheckinBtn() {
+      _checkinArmed = false
+      clearTimeout(_checkinTimer)
+      const btn = document.getElementById('loc-top-btn')
+      if (!btn) return
+      btn.classList.remove('armed')
+      const lbl = btn.querySelector('.checkin-label')
+      if (lbl) lbl.textContent = '今ここにいるよ'
+    }
+    function doCheckinTop() {
+      const btn = document.getElementById('loc-top-btn')
+      const lbl = btn.querySelector('.checkin-label')
+      if (!_checkinArmed) {
+        // 1タップ目: 確定待ち表示にするだけ (うっかり押しても送信されない)
+        _checkinArmed = true
+        btn.classList.add('armed')
+        if (lbl) lbl.textContent = 'もう一度タップで送信'
+        if (navigator.vibrate) navigator.vibrate(10)
+        clearTimeout(_checkinTimer)
+        _checkinTimer = setTimeout(resetCheckinBtn, 4000) // 4秒で自動キャンセル
+        return
+      }
+      // 2タップ目: 確定 → 実送信
+      _checkinArmed = false
+      clearTimeout(_checkinTimer)
+      btn.classList.remove('armed')
+      if (lbl) lbl.textContent = '今ここにいるよ'
+      runCheckin()
+    }
+
+    async function runCheckin() {
       const btn = document.getElementById('loc-top-btn')
       const statusEl = document.getElementById('loc-top-status')
       btn.disabled = true
