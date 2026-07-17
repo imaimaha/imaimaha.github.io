@@ -211,8 +211,9 @@ img { max-width: 100%; height: auto; display: block; }
   padding: 12px 30px;
   box-shadow: var(--sh-2), inset 0 0 24px rgba(100,180,255,0.06);
 }
+.ann-main  { display: flex; align-items: baseline; gap: 4px; }
 .ann-days  { font-family: var(--f-display); font-size: 2.6rem; color: var(--ink-100); line-height: 1; }
-.ann-label { font-family: var(--f-display); font-size: 1.3rem; color: var(--ink-200); margin-left: 4px; }
+.ann-label { font-family: var(--f-display); font-size: 1.3rem; color: var(--ink-200); }
 .ann-sub   { font-size: 0.78rem; color: var(--ink-400); margin-top: 5px; letter-spacing: 0.05em; }
 
 /* Legacy hero-photo (safe leftover) */
