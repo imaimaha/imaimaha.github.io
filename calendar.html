@@ -244,12 +244,14 @@
 
     .event-past { opacity: 0.45; }
 
-    .delete-event-btn {
+    .delete-event-btn, .edit-event-btn {
       background: none; border: none; color: #5a7fa8;
       cursor: pointer; font-size: 1rem; padding: 4px;
       transition: color 0.18s;
     }
     .delete-event-btn:hover { color: #ff9d9d; }
+    .edit-event-btn:hover { color: #8ee6b0; }
+    .event-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 
     .empty { text-align: center; color: #7aadcc; padding: 32px 0; }
 
@@ -437,7 +439,7 @@
       <textarea id="ev-memo" placeholder="集合場所・時間など"></textarea>
       <div class="modal-btns">
         <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-save" onclick="saveEvent()">追加</button>
+        <button class="btn-save" id="ev-save-btn" onclick="saveEvent()">追加</button>
       </div>
     </div>
   </div>
@@ -580,13 +582,19 @@
             <div class="event-title">${escHtml(ev.title)}</div>
             ${ev.memo ? `<div class="event-memo">${escHtml(ev.memo)}</div>` : ''}
           </div>
-          ${ev.id ? `<button class="delete-event-btn" data-id="${ev.id}">✕</button>` : ''}
+          ${ev.id ? `<div class="event-actions">
+            <button class="edit-event-btn" data-edit-id="${ev.id}" aria-label="編集">✎</button>
+            <button class="delete-event-btn" data-id="${ev.id}" aria-label="削除">✕</button>
+          </div>` : ''}
         `
         list.appendChild(item)
       })
     }
 
     document.getElementById('event-list').addEventListener('click', async e => {
+      const editBtn = e.target.closest('.edit-event-btn')
+      if (editBtn) { openEditModal(editBtn.dataset.editId); return }
+
       const btn = e.target.closest('.delete-event-btn')
       if (!btn) return
       if (!confirm('この予定を削除しますか？')) return
@@ -606,13 +614,31 @@
     }
 
     let pendingDate = ''
+    let editingId = null   // null=追加 / 値あり=その予定を編集
 
     function openModal(dateStr) {
+      editingId = null
       pendingDate = dateStr
+      document.getElementById('modal-title').textContent = '予定を追加'
+      document.getElementById('ev-save-btn').textContent = '追加'
       document.getElementById('ev-date').value = dateStr
       document.getElementById('ev-date-end').value = ''
       document.getElementById('ev-title').value = ''
       document.getElementById('ev-memo').value = ''
+      document.getElementById('modal').classList.add('open')
+      setTimeout(() => document.getElementById('ev-title').focus(), 50)
+    }
+
+    function openEditModal(id) {
+      const ev = events.find(e => String(e.id) === String(id))
+      if (!ev) return
+      editingId = ev.id
+      document.getElementById('modal-title').textContent = '予定を編集'
+      document.getElementById('ev-save-btn').textContent = '保存'
+      document.getElementById('ev-date').value = ev.date
+      document.getElementById('ev-date-end').value = ev.date_end || ''
+      document.getElementById('ev-title').value = ev.title || ''
+      document.getElementById('ev-memo').value = ev.memo || ''
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
@@ -629,24 +655,44 @@
       if (!title || !date) return
 
       const payload = { title, date, memo: memo || null, date_end: dateEnd || null }
-      const { data } = await _sb.from('events').insert(payload).select().single()
-      if (data) {
-        events.push(data)
-        events.sort((a, b) => a.date.localeCompare(b.date))
-        renderCalendar()
-        renderEventList()
+      const { data: { session } } = await _sb.auth.getSession()
+      const dateLabel = payload.date_end && payload.date_end !== payload.date
+        ? `${payload.date}〜${payload.date_end}` : payload.date
 
-        const { data: { session } } = await _sb.auth.getSession()
-        const dateLabel = data.date_end && data.date_end !== data.date
-          ? `${data.date}〜${data.date_end}` : data.date
-        // Push通知だけ（LINE群通知は廃止）
-        notify({
-          title: '📅 予定を追加したよ',
-          body: `${data.title}（${dateLabel}）`,
-          url: '/calendar.html',
-          kind: 'calendar',
-          sender: session.user.id,
-        })
+      if (editingId) {
+        // 更新
+        const { data, error } = await _sb.from('events').update(payload).eq('id', editingId).select().single()
+        if (error) { alert('保存に失敗しました: ' + error.message); return }
+        if (data) {
+          const i = events.findIndex(e => String(e.id) === String(editingId))
+          if (i >= 0) events[i] = data
+          events.sort((a, b) => a.date.localeCompare(b.date))
+          renderCalendar()
+          renderEventList()
+          notify({
+            title: '📅 予定を変更したよ',
+            body: `${data.title}（${dateLabel}）`,
+            url: '/calendar.html',
+            kind: 'calendar',
+            sender: session.user.id,
+          })
+        }
+      } else {
+        // 追加
+        const { data } = await _sb.from('events').insert(payload).select().single()
+        if (data) {
+          events.push(data)
+          events.sort((a, b) => a.date.localeCompare(b.date))
+          renderCalendar()
+          renderEventList()
+          notify({
+            title: '📅 予定を追加したよ',
+            body: `${data.title}（${dateLabel}）`,
+            url: '/calendar.html',
+            kind: 'calendar',
+            sender: session.user.id,
+          })
+        }
       }
       closeModal()
     }
