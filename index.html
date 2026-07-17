@@ -19,22 +19,31 @@
 
     .hero-checkin-btn {
       margin-top: 18px;
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 22px;
-      background: var(--glass-2);
-      border: 1.5px solid var(--edge-2);
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 28px;
+      background: linear-gradient(135deg, rgba(100,160,255,0.24), rgba(150,120,255,0.22));
+      border: 1.5px solid rgba(140,180,255,0.5);
       border-radius: var(--r-pill);
-      color: var(--ink-200);
-      font-size: 0.9rem;
+      color: #eaf2ff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
       font-family: inherit;
       cursor: pointer;
       backdrop-filter: blur(8px);
-      box-shadow: var(--sh-1);
-      transition: background 0.18s, transform 0.14s, border-color 0.18s;
+      box-shadow: 0 4px 18px rgba(80,140,255,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
+      transition: background 0.18s, transform 0.14s, border-color 0.18s, box-shadow 0.18s;
     }
     .hero-checkin-btn:active { transform: scale(0.96); }
-    .hero-checkin-btn:hover:not(:disabled) { background: var(--glass-3); border-color: var(--edge-hi); }
-    .hero-checkin-btn:disabled { opacity: 0.5; }
+    .hero-checkin-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(100,160,255,0.34), rgba(150,120,255,0.30));
+      border-color: rgba(160,195,255,0.7);
+      box-shadow: 0 6px 24px rgba(80,140,255,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .hero-checkin-btn:disabled { opacity: 0.55; }
+    .checkin-pin { display: inline-block; font-size: 1.05rem; animation: pinBob 2.2s ease-in-out infinite; }
+    @keyframes pinBob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+    @media (prefers-reduced-motion: reduce) { .checkin-pin { animation: none } }
     #loc-top-status { min-height: 18px; margin-top: 6px; font-size: 0.75rem; color: var(--ink-400); }
 
     /* --- 最上部の横長デイリーカード (今日の帰宅) --- */
@@ -231,10 +240,21 @@
         <span class="hero-heart">✨</span>
         <span id="hero-emoji-right">🦔</span>
       </div>
+      <script>
+        // ログイン中ユーザーの向きをキャッシュから即時適用し、左右入れ替わりのちらつきを防ぐ
+        (function () {
+          try {
+            var l = localStorage.getItem('heroEmojiLeft')
+            var r = localStorage.getItem('heroEmojiRight')
+            if (l) document.getElementById('hero-emoji-left').textContent = l
+            if (r) document.getElementById('hero-emoji-right').textContent = r
+          } catch (e) {}
+        })()
+      </script>
       <div class="anniversary-badge" id="anniversary-badge"></div>
       <div>
         <button id="loc-top-btn" class="hero-checkin-btn" onclick="doCheckinTop()">
-          📍 <span>今ここにいるよ</span>
+          <span class="checkin-pin">📍</span><span>今ここにいるよ</span>
         </button>
         <div id="loc-top-status"></div>
       </div>
@@ -620,8 +640,14 @@
         if (!profiles || profiles.length < 2) return
         const me = profiles.find(p => p.id === session.user.id)
         const partner = profiles.find(p => p.id !== session.user.id)
-        if (me)      document.getElementById('hero-emoji-left').textContent  = me.emoji
-        if (partner) document.getElementById('hero-emoji-right').textContent = partner.emoji
+        if (me) {
+          document.getElementById('hero-emoji-left').textContent = me.emoji
+          try { localStorage.setItem('heroEmojiLeft', me.emoji) } catch (e) {}
+        }
+        if (partner) {
+          document.getElementById('hero-emoji-right').textContent = partner.emoji
+          try { localStorage.setItem('heroEmojiRight', partner.emoji) } catch (e) {}
+        }
       } catch {}
     }
     loadHeroEmoji()
