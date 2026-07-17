@@ -19,24 +19,34 @@
     { icon:'🎰', label:'ガチャ',         href:'/gacha.html',         desc:'100pt / 10+1連' },
   ]
 
-  const MORE_LINKS = [
-    { icon:'🕐', label:'今日の帰宅',        href:'/status.html' },
-    { icon:'💗', label:'ゲージ',             href:'/closer.html' },
-    { icon:'💬', label:'クイズ',             href:'/quiz.html' },
-    { icon:'🌸', label:'ありがとう',         href:'/thanks.html' },
-    { icon:'🎁', label:'タイムカプセル',     href:'/time_capsule.html' },
-    { icon:'🎯', label:'お散歩ビンゴ',       href:'/bingo.html' },
-    { icon:'🎨', label:'カラーハント',       href:'/color_hunting.html' },
-    { icon:'🎰', label:'ガチャ',             href:'/gacha.html' },
-    { icon:'🛍', label:'ポイント販売所',     href:'/shop.html' },
-    { icon:'💰', label:'割り勘',             href:'/expenses.html' },
-    { icon:'⚔️', label:'賭け事',             href:'/bets.html' },
-    { icon:'✨', label:'ポイント履歴',       href:'/points.html' },
-    { icon:'📅', label:'共有カレンダー',     href:'/calendar.html' },
-    { icon:'💫', label:'やりたいこと',       href:'/wishlist.html' },
-    { icon:'🤝', label:'1on1',               href:'/one_on_one.html' },
-    { icon:'📍', label:'今ここにいるよ',     href:'/location.html' },
-    { icon:'🔔', label:'お知らせ',           href:'/notifications.html' },
+  // セクション分けして見やすく
+  const MORE_SECTIONS = [
+    { title:'ふたり', items:[
+      { icon:'🕐', label:'今日の帰宅',      href:'/status.html' },
+      { icon:'💗', label:'ゲージ',          href:'/closer.html' },
+      { icon:'🌸', label:'ありがとう',      href:'/thanks.html' },
+      { icon:'🎁', label:'タイムカプセル',  href:'/time_capsule.html' },
+      { icon:'📍', label:'今ここ',          href:'/location.html' },
+      { icon:'🤝', label:'1on1',            href:'/one_on_one.html' },
+    ]},
+    { title:'あそび', items:[
+      { icon:'💬', label:'クイズ',          href:'/quiz.html' },
+      { icon:'🎯', label:'ビンゴ',          href:'/bingo.html' },
+      { icon:'🎨', label:'カラーハント',    href:'/color_hunting.html' },
+      { icon:'🎰', label:'ガチャ',          href:'/gacha.html' },
+    ]},
+    { title:'ポイント', items:[
+      { icon:'🛍', label:'販売所',          href:'/shop.html' },
+      { icon:'✨', label:'ポイント履歴',    href:'/points.html' },
+      { icon:'⚔️', label:'賭け事',          href:'/bets.html' },
+      { icon:'💰', label:'割り勘',          href:'/expenses.html' },
+    ]},
+    { title:'きろく・その他', items:[
+      { icon:'📅', label:'カレンダー',      href:'/calendar.html' },
+      { icon:'💫', label:'やりたいこと',    href:'/wishlist.html' },
+      { icon:'🔔', label:'お知らせ',        href:'/notifications.html' },
+      { icon:'⚙️', label:'設定',            href:'/settings.html' },
+    ]},
   ]
 
   const path = location.pathname
@@ -80,6 +90,11 @@
     }
 
     /* More sheet - compact grid */
+    #more-sheet .more-section-title {
+      font-size: 0.72rem; color: #8fb4d8; letter-spacing: 0.1em;
+      font-weight: 700; margin: 4px 2px 8px; text-align: left;
+    }
+    #more-sheet .more-section + .more-section { margin-top: 16px; }
     #more-sheet .more-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -183,13 +198,17 @@
   moreSheet.innerHTML = `
     <div class="sheet-handle"></div>
     <h3>✨ すべてのメニュー</h3>
-    <div class="more-grid">
-      ${MORE_LINKS.map(l => `
-        <a href="${l.href}" class="more-item">
-          <span class="m-icon">${l.icon}</span>
-          <span>${l.label}</span>
-        </a>`).join('')}
-    </div>
+    ${MORE_SECTIONS.map(sec => `
+      <div class="more-section">
+        <div class="more-section-title">${sec.title}</div>
+        <div class="more-grid">
+          ${sec.items.map(l => `
+            <a href="${l.href}" class="more-item">
+              <span class="m-icon">${l.icon}</span>
+              <span>${l.label}</span>
+            </a>`).join('')}
+        </div>
+      </div>`).join('')}
   `
   document.body.appendChild(moreSheet)
 

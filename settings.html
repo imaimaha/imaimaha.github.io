@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>設定 | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc;
+      min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 18px 16px calc(90px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+
+    /* アカウントカード */
+    .account-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 18px; padding: 18px 20px; margin-bottom: 22px;
+      backdrop-filter: blur(8px);
+    }
+    .account-emoji {
+      width: 54px; height: 54px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: 2px solid rgba(150,200,255,0.4);
+    }
+    .account-name { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.25rem; color: #f0f6ff; }
+    .account-sub  { font-size: 0.75rem; color: #7aadcc; margin-top: 2px; }
+
+    /* セクション */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 0.8rem; color: #8fb4d8; letter-spacing: 0.08em;
+      margin: 0 4px 10px; font-weight: 700;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.16);
+      border-radius: 16px; overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    /* プッシュ状態 */
+    .push-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; gap: 12px;
+    }
+    .push-info .push-label { font-size: 0.98rem; color: #e8f4fd; }
+    .push-info .push-status { font-size: 0.76rem; color: #7aadcc; margin-top: 3px; }
+    .push-btn {
+      flex-shrink: 0; padding: 9px 18px; border-radius: 14px;
+      font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      border: 1.5px solid rgba(80,220,120,0.45);
+      background: rgba(80,220,120,0.18); color: #baffcc;
+      white-space: nowrap; transition: transform 0.12s;
+    }
+    .push-btn:active { transform: scale(0.95); }
+    .push-btn.on { background: rgba(100,180,255,0.12); border-color: rgba(100,180,255,0.3); color: #98bedd; }
+
+    /* 通知トグル行 */
+    .toggle-hint {
+      font-size: 0.74rem; color: #7aadcc; margin: 8px 4px 10px; line-height: 1.5;
+    }
+    .toggle-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid rgba(150,200,255,0.08);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-emoji { font-size: 1.35rem; width: 30px; text-align: center; flex-shrink: 0; }
+    .toggle-text { flex: 1; min-width: 0; }
+    .toggle-label { font-size: 0.92rem; color: #e8f4fd; }
+    .toggle-desc  { font-size: 0.72rem; color: #7aadcc; margin-top: 1px; }
+
+    /* iOS 風スイッチ */
+    .switch { position: relative; flex-shrink: 0; width: 50px; height: 30px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute; inset: 0; cursor: pointer;
+      background: rgba(120,140,170,0.35);
+      border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 30px; transition: background 0.22s;
+    }
+    .switch .slider::before {
+      content: ''; position: absolute;
+      height: 22px; width: 22px; left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+      transition: transform 0.22s; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .switch input:checked + .slider {
+      background: linear-gradient(135deg, #4caf6a, #6ad48a);
+      border-color: rgba(120,230,160,0.5);
+    }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+    .switch input:disabled + .slider { opacity: 0.4; cursor: default; }
+
+    .bulk-row { display: flex; gap: 8px; margin: 12px 2px 0; }
+    .bulk-btn {
+      flex: 1; padding: 9px; border-radius: 12px;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(150,200,255,0.2);
+      color: #98bedd; font-family: inherit; font-size: 0.82rem; cursor: pointer;
+    }
+    .bulk-btn:active { transform: scale(0.97); }
+
+    /* ルール（折りたたみ） */
+    .rules-toggle {
+      width: 100%; text-align: left;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 18px; background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: 0.95rem; color: #e8f4fd;
+    }
+    .rules-toggle .chev { transition: transform 0.2s; color: #7aadcc; }
+    .rules-body { display: none; padding: 0 16px 8px; }
+    .card.open .rules-body { display: block; }
+    .card.open .rules-toggle .chev { transform: rotate(180deg); }
+    .rules-group { margin-bottom: 14px; }
+    .rules-group h4 { font-family: 'Zen Kurenaido', sans-serif; font-size: 0.9rem; color: #ffd97d; margin-bottom: 6px; }
+    .rules-item { font-size: 0.8rem; color: #c5ddf5; padding: 5px 0; border-bottom: 1px solid rgba(100,180,255,0.08); display: flex; justify-content: space-between; gap: 12px; }
+    .rules-item:last-child { border-bottom: none; }
+    .rules-item .r-val { color: #ffd97d; font-weight: bold; flex-shrink: 0; white-space: nowrap; }
+
+    .logout-btn {
+      width: 100%; padding: 14px; border-radius: 14px; margin-top: 4px;
+      font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      background: rgba(255,100,100,0.12); border: 1.5px solid rgba(255,100,100,0.4); color: #ff9d9d;
+    }
+    .logout-btn:active { transform: scale(0.98); }
+
+    .save-toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,40,80,0.95); border: 1.5px solid rgba(120,230,160,0.5);
+      color: #baffcc; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 300;
+    }
+    .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/push.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>⚙️ 設定</h1>
+  </div>
+
+  <div class="content">
+    <!-- アカウント -->
+    <div class="account-card">
+      <div class="account-emoji" id="acc-emoji">👤</div>
+      <div>
+        <div class="account-name" id="acc-name">読み込み中...</div>
+        <div class="account-sub" id="acc-sub"></div>
+      </div>
+    </div>
+
+    <!-- プッシュ通知 -->
+    <div class="section">
+      <div class="section-title">プッシュ通知</div>
+      <div class="card">
+        <div class="push-row">
+          <div class="push-info">
+            <div class="push-label">🔔 この端末のプッシュ通知</div>
+            <div class="push-status" id="push-status">確認中...</div>
+          </div>
+          <button class="push-btn" id="push-btn" onclick="onPushTap()">…</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 受け取る通知の種類 -->
+    <div class="section">
+      <div class="section-title">受け取るプッシュ通知</div>
+      <div class="toggle-hint">
+        オフにした種類はこの端末にプッシュされなくなります（あなた専用の設定です）。<br>
+        オフにしても🔔お知らせセンターには記録が残ります。
+      </div>
+      <div class="card" id="toggle-card">
+        <div style="padding:18px;text-align:center;color:#7aadcc;font-size:0.85rem">読み込み中...</div>
+      </div>
+      <div class="bulk-row">
+        <button class="bulk-btn" onclick="setAll(true)">すべてオン</button>
+        <button class="bulk-btn" onclick="setAll(false)">すべてオフ</button>
+      </div>
+    </div>
+
+    <!-- ルール -->
+    <div class="section">
+      <div class="section-title">ルール</div>
+      <div class="card" id="rules-card">
+        <button class="rules-toggle" onclick="document.getElementById('rules-card').classList.toggle('open')">
+          <span>📖 通知・ポイントのルールを見る</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="rules-body">
+          <div class="rules-group">
+            <h4>📱 LINE通知（個人）</h4>
+            <div class="rules-item"><span>今日の帰宅時間を設定した</span><span class="r-val">→ 相手のLINE</span></div>
+            <div class="rules-item"><span>🎫 券を使った (ガチャ / 販売所)</span><span class="r-val">→ 相手のLINE</span></div>
+            <div class="rules-item"><span style="opacity:0.6">※ LINE無料枠(月200通)節約のため上の2つだけ</span><span class="r-val"></span></div>
+          </div>
+          <div class="rules-group">
+            <h4>🕐 帰宅時刻の自動通知</h4>
+            <div class="rules-item"><span>帰宅時刻 5分前</span><span class="r-val">→ 自分だけ</span></div>
+            <div class="rules-item"><span>帰宅時刻ちょうど</span><span class="r-val">→ 自分 & 相手</span></div>
+          </div>
+          <div class="rules-group">
+            <h4>✨ ポイント付与（抜粋）</h4>
+            <div class="rules-item"><span>毎日ログインボーナス</span><span class="r-val">+5pt</span></div>
+            <div class="rules-item"><span>クイズの質問に答える</span><span class="r-val">+10pt</span></div>
+            <div class="rules-item"><span>ゲージMAX到達（初回100）</span><span class="r-val">+5pt</span></div>
+            <div class="rules-item"><span>ビンゴ コンプ（5×5）</span><span class="r-val">+30pt</span></div>
+            <div class="rules-item"><span>記念日当日ボーナス</span><span class="r-val">+100pt</span></div>
+          </div>
+          <div class="rules-group">
+            <h4>💸 ポイント消費</h4>
+            <div class="rules-item"><span>ガチャ 1回 / 10+1連</span><span class="r-val">-100 / -1000pt</span></div>
+            <div class="rules-item"><span>販売所で購入</span><span class="r-val">-商品価格</span></div>
+            <div class="rules-item"><span>ポイントプレゼント（相手に2倍）</span><span class="r-val">-任意pt</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ログアウト -->
+    <div class="section">
+      <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="save-toast" id="save-toast">保存しました ✓</div>
+
+  <script>
+    // 通知の種類 (send-push の kind と対応)。行が無ければ「オン」(opt-out)
+    const KINDS = [
+      { kind: 'closer',   emoji: '💗', label: 'ゲージ',           desc: '会いたいゲージ・MAX到達' },
+      { kind: 'mood',     emoji: '💭', label: '今のきもち',       desc: 'ワンタップ絵文字' },
+      { kind: 'status',   emoji: '🕐', label: '帰宅・おでかけ',   desc: '会社出た/帰宅/行っていい？等' },
+      { kind: 'quiz',     emoji: '💬', label: 'クイズ',           desc: '相手が回答したとき' },
+      { kind: 'thanks',   emoji: '🌸', label: 'ありがとう',       desc: 'メッセージ・ポイントプレゼント' },
+      { kind: 'capsule',  emoji: '🎁', label: 'タイムカプセル',   desc: '届いた・返信' },
+      { kind: 'bingo',    emoji: '🎯', label: 'お散歩ビンゴ',     desc: 'ライン達成・コンプ' },
+      { kind: 'color',    emoji: '🎨', label: 'カラーハント',     desc: '4枚・コンプ' },
+      { kind: 'gacha',    emoji: '🎰', label: 'ガチャ券',         desc: '券の使用・取消申請' },
+      { kind: 'shop',     emoji: '🛍', label: 'ポイント販売所',   desc: '券使用・リクエスト' },
+      { kind: 'expense',  emoji: '💰', label: '割り勘',           desc: '記録追加・精算' },
+      { kind: 'bet',      emoji: '⚔️', label: '賭け事',           desc: '起票・結果・取消' },
+      { kind: 'calendar', emoji: '📅', label: '予定',             desc: 'カレンダーに追加' },
+      { kind: 'location', emoji: '📍', label: '今ここにいるよ',   desc: 'チェックイン' },
+    ]
+
+    let myId = null
+    // オフの kind の集合 (行があり enabled=false のもの)
+    const disabled = new Set()
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+
+      // プロフィール
+      const { data: prof } = await _sb.from('profiles').select('emoji, name').eq('id', myId).single()
+      if (prof) {
+        document.getElementById('acc-emoji').textContent = prof.emoji || '👤'
+        document.getElementById('acc-name').textContent  = prof.name || 'あなた'
+        document.getElementById('acc-sub').textContent   = 'この設定はあなた専用です'
+      }
+
+      // 現在の設定を読み込み (enabled=false の行だけ拾う)
+      const { data: prefs } = await _sb.from('notification_prefs')
+        .select('kind, enabled').eq('user_id', myId)
+      ;(prefs ?? []).forEach(p => { if (p.enabled === false) disabled.add(p.kind) })
+
+      renderToggles()
+      updatePushStatus()
+    }
+
+    function renderToggles() {
+      const card = document.getElementById('toggle-card')
+      card.innerHTML = KINDS.map(k => `
+        <div class="toggle-row">
+          <span class="toggle-emoji">${k.emoji}</span>
+          <div class="toggle-text">
+            <div class="toggle-label">${escHtml(k.label)}</div>
+            <div class="toggle-desc">${escHtml(k.desc)}</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" data-kind="${k.kind}" ${disabled.has(k.kind) ? '' : 'checked'}
+                   onchange="onToggle('${k.kind}', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      `).join('')
+    }
+
+    async function onToggle(kind, enabled) {
+      // upsert: enabled を保存 (opt-out だが false/true 両方を明示保存して確実に)
+      if (enabled) disabled.delete(kind); else disabled.add(kind)
+      const { error } = await _sb.from('notification_prefs')
+        .upsert({ user_id: myId, kind, enabled, updated_at: new Date().toISOString() },
+                { onConflict: 'user_id,kind' })
+      if (error) {
+        console.error('[settings] pref save failed:', error)
+        showSaveToast('保存に失敗しました', true)
+        // ロールバック表示
+        if (enabled) disabled.add(kind); else disabled.delete(kind)
+        renderToggles()
+        return
+      }
+      showSaveToast('保存しました ✓')
+    }
+
+    async function setAll(enabled) {
+      const rows = KINDS.map(k => ({ user_id: myId, kind: k.kind, enabled, updated_at: new Date().toISOString() }))
+      const { error } = await _sb.from('notification_prefs').upsert(rows, { onConflict: 'user_id,kind' })
+      if (error) { console.error(error); showSaveToast('保存に失敗しました', true); return }
+      disabled.clear()
+      if (!enabled) KINDS.forEach(k => disabled.add(k.kind))
+      renderToggles()
+      showSaveToast(enabled ? 'すべてオンにしました ✓' : 'すべてオフにしました ✓')
+    }
+
+    let toastTimer = null
+    function showSaveToast(msg) {
+      const t = document.getElementById('save-toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1600)
+    }
+
+    async function onPushTap() {
+      if (typeof requestPush === 'function') await requestPush()
+      updatePushStatus()
+    }
+
+    async function updatePushStatus() {
+      const textEl = document.getElementById('push-status')
+      const btnEl  = document.getElementById('push-btn')
+      try {
+        if (typeof _diagnose !== 'function') { textEl.textContent = '未対応の端末です'; btnEl.textContent = '-'; return }
+        const d = await _diagnose()
+        if (d.perm === 'granted' && d.subExists) {
+          textEl.textContent = '有効になっています'
+          btnEl.textContent = '確認'; btnEl.className = 'push-btn on'
+        } else if (d.perm === 'denied') {
+          textEl.textContent = '拒否済み（端末の設定で許可してください）'
+          btnEl.textContent = '設定へ'; btnEl.className = 'push-btn'
+        } else if (d.isIos && !d.standalone) {
+          textEl.textContent = 'ホーム画面に追加すると使えます'
+          btnEl.textContent = '手順'; btnEl.className = 'push-btn'
+        } else {
+          textEl.textContent = 'まだ有効になっていません'
+          btnEl.textContent = '有効化'; btnEl.className = 'push-btn'
+        }
+      } catch (e) {
+        textEl.textContent = 'エラー: ' + (e?.message ?? e)
+      }
+    }
+
+    async function doLogout() {
+      if (!confirm('ログアウトしますか？')) return
+      await _sb.auth.signOut()
+      location.href = '/login.html'
+    }
+
+    init()
+  </script>
+</body>
+</html>
