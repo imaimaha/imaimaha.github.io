@@ -98,6 +98,11 @@
     }
     .source-badge.gacha { background:rgba(255,215,100,0.16); color:#ffd764; border:1px solid rgba(255,215,100,0.35); }
     .source-badge.shop  { background:rgba(100,180,255,0.16); color:#98bedd; border:1px solid rgba(100,180,255,0.35); }
+    .qty-badge {
+      display:inline-block; font-size:0.8rem; font-weight:bold;
+      padding:1px 9px; border-radius:999px; margin-left:6px; vertical-align:middle;
+      background:rgba(120,230,160,0.18); color:#a8f0c4; border:1px solid rgba(120,230,160,0.45);
+    }
 
     .item-card {
       display: flex; align-items:center; gap:14px;
@@ -120,7 +125,7 @@
     .item-meta { font-size: 0.72rem; color: #5a8fb8; }
     .item-price { font-family: 'Zen Kurenaido', sans-serif; color: #ffd764; font-weight: bold; }
 
-    .buy-btn, .toggle-btn, .delete-btn, .cancel-btn, .approve-btn, .deny-btn {
+    .buy-btn, .toggle-btn, .delete-btn, .cancel-btn, .approve-btn, .deny-btn, .restock-btn {
       flex-shrink: 0;
       padding: 8px 14px;
       border-radius: 18px;
@@ -129,6 +134,9 @@
       white-space: nowrap;
       transition: background 0.2s;
     }
+    .restock-btn { background: rgba(255,180,50,0.14); border-color: rgba(255,200,80,0.45); color: #ffd080; }
+    .restock-btn:hover:not(:disabled) { background: rgba(255,200,80,0.28); }
+    .restock-btn:disabled { opacity: 0.5; cursor: default; }
     .buy-btn { background: rgba(80,180,120,0.2); border-color: rgba(80,220,120,0.5); color: #baffcc; }
     .buy-btn:hover:not(:disabled) { background: rgba(80,220,120,0.35); }
     .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -360,10 +368,28 @@
               · 出品: ${seller?.emoji ?? '?'} ${escHtml(seller?.name ?? '?')}
             </div>
           </div>
-          <button class="buy-btn" ${canBuy ? '' : 'disabled'} onclick="buy('${it.id}')">${soldOut ? '売切' : '購入'}</button>
+          ${soldOut
+            ? `<button class="restock-btn" onclick="requestRestock('${it.id}', this)">🔁 再販リクエスト</button>`
+            : `<button class="buy-btn" ${canBuy ? '' : 'disabled'} onclick="buy('${it.id}')">購入</button>`}
         `
         list.appendChild(card)
       })
+    }
+
+    // 売り切れ商品の再販を出品者(相手)にリクエスト
+    async function requestRestock(itemId, btn) {
+      const { data: it } = await _sb.from('shop_items')
+        .select('name, emoji, seller_id').eq('id', itemId).single()
+      if (!it) { showToast('商品が見つかりません', true); return }
+      if (btn) { btn.disabled = true; btn.textContent = 'リクエスト済 ✓' }
+      notify({
+        title: '🔁 再販リクエスト',
+        body: `${it.emoji || '🛍'} ${it.name} をもう一度ほしいとリクエストされました`,
+        url: '/shop.html',
+        kind: 'shop',
+        recipient: it.seller_id,
+      })
+      showToast('再販リクエストを送りました 🔁')
     }
 
     async function loadSellList() {
@@ -584,8 +610,25 @@
         return
       }
 
+      // 未使用タブ(使える/相手が持ってる)は同一の券をまとめて ×N 表示。
+      // 使用済みタブは履歴なので個別表示のまま。
+      let display
+      if (ticketsTab === 'used') {
+        display = filtered.map(t => ({ rep: t, count: 1 }))
+      } else {
+        const groups = new Map()
+        filtered.forEach(t => {
+          const key = [t.source, t.name, t.emoji, t.rarity, t.description, t.bonusPoints].join('§')
+          if (!groups.has(key)) groups.set(key, { rep: t, count: 0 })
+          groups.get(key).count++
+        })
+        display = Array.from(groups.values())
+      }
+
       el.innerHTML = ''
-      filtered.forEach(t => {
+      display.forEach(g => {
+        const t = g.rep
+        const qty = g.count
         const isMine = t.ownerUserId === currentUser.id
         const hasCancelAlert = t.cancelRequested && (
           (t.source === 'shop' && t.counterUserId === currentUser.id) ||
@@ -609,8 +652,9 @@
         let actionHtml = ''
         if (isMine) {
           if (!t.used) {
-            const fn = t.source === 'gacha' ? `markUsedTicket('gacha','${t.id}')` : `markUsedTicket('shop','${t.id}')`
-            actionHtml = `<button class="buy-btn" onclick="${fn}">使用済にする</button>`
+            const fn = `markUsedTicket('${t.source}','${t.id}')`
+            const btnLabel = qty > 1 ? '1枚使う' : '使用済にする'
+            actionHtml = `<button class="buy-btn" onclick="${fn}">${btnLabel}</button>`
           } else if (t.cancelRequested) {
             actionHtml = `<span class="cancel-pending">申請中...</span>`
           } else if (!t.bonusPoints) {
@@ -642,7 +686,7 @@
           <div class="item-emoji">${escHtml(t.emoji)}</div>
           <div class="item-info" style="flex:1">
             <div class="item-name">
-              ${escHtml(t.name)}${sourceBadge}${t.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}
+              ${escHtml(t.name)}${qty > 1 ? `<span class="qty-badge">×${qty}</span>` : ''}${sourceBadge}${t.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}
             </div>
             ${t.description ? `<div class="item-desc">${escHtml(t.description)}</div>` : ''}
             <div class="item-meta">
