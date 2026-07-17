@@ -255,9 +255,34 @@
       box-shadow: 0 4px 20px rgba(80,140,255,0.28);
     }
 
+    .ask-btn.ok {
+      background: linear-gradient(135deg, rgba(140,240,180,0.24), rgba(80,200,130,0.30));
+      border-color: rgba(140,240,180,0.55);
+      color: #c4f5da;
+      box-shadow: 0 4px 20px rgba(80,200,130,0.28);
+      width: 100%;
+    }
     .ask-btn:hover { background: linear-gradient(135deg, rgba(244,143,177,0.35), rgba(233,30,99,0.4)); transform: scale(1.03); }
     .ask-btn.invite:hover { background: linear-gradient(135deg, rgba(140,200,255,0.35), rgba(80,140,255,0.4)); }
+    .ask-btn.ok:hover { background: linear-gradient(135deg, rgba(140,240,180,0.35), rgba(80,200,130,0.42)); }
     .ask-btn:active { transform: scale(0.97); }
+
+    /* 操作の記録 */
+    .status-log-title {
+      font-family: 'Zen Kurenaido', sans-serif; font-size: 1.05rem; color: #e8f4fd;
+      text-align: center; margin-bottom: 12px;
+    }
+    .status-log-list { display: flex; flex-direction: column; gap: 8px; max-width: 520px; margin: 0 auto; }
+    .status-log-item {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(150,200,255,0.14);
+      border-radius: 12px; padding: 10px 14px;
+    }
+    .status-log-emoji { font-size: 1.15rem; flex-shrink: 0; }
+    .status-log-text { flex: 1; font-size: 0.9rem; color: #e8f4fd; }
+    .status-log-time { font-size: 0.72rem; color: #7aadcc; flex-shrink: 0; white-space: nowrap; }
+    .status-log-empty { text-align: center; color: #6a8a9c; font-size: 0.85rem; padding: 16px 0; }
 
     .ask-result {
       margin-top: 12px;
@@ -326,8 +351,11 @@
 
     <div class="ask-section">
       <div class="ask-row">
-        <button class="ask-btn" onclick="askOk()">🐾 行っていい？</button>
-        <button class="ask-btn invite" onclick="inviteCome()">🏠 来ていいよ</button>
+        <button class="ask-btn" onclick="askOk()">🐾 行きたい</button>
+        <button class="ask-btn invite" onclick="inviteCome()">🏠 来てほしい</button>
+      </div>
+      <div class="ask-row" style="margin-top:10px">
+        <button class="ask-btn ok" onclick="sayOk()">👌 いいよ</button>
       </div>
       <div class="ask-result" id="ask-result"></div>
     </div>
@@ -338,18 +366,12 @@
     </div>
     <div id="status-event-result" style="text-align:center;margin-top:10px;font-size:0.85rem;color:#a1887f;min-height:18px"></div>
 
-    <div id="line-messages-section" style="margin-top:24px">
-      <h3 style="font-family:'Zen Kurenaido',sans-serif;font-size:1.05rem;color:#e8f4fd;text-align:center;margin-bottom:12px">💬 LINE 最新メッセージ</h3>
-      <div id="line-messages-list" style="display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto"></div>
-
-      <!-- 画面上から相手のLINEに返信 -->
-      <div style="max-width:520px;margin:12px auto 0;display:flex;gap:8px;align-items:flex-end">
-        <textarea id="line-reply-input" placeholder="ここから相手のLINEに返信できるよ" rows="1"
-          style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(100,180,255,0.25);border-radius:12px;color:#e8f4fd;font-size:15px;font-family:inherit;min-height:42px;max-height:120px;resize:vertical"></textarea>
-        <button id="line-reply-btn" onclick="sendLineReply()"
-          style="padding:10px 16px;background:rgba(80,180,120,0.25);border:1.5px solid rgba(80,220,120,0.5);color:#baffcc;border-radius:12px;font-family:inherit;font-size:0.9rem;cursor:pointer;white-space:nowrap">📤 送る</button>
+    <!-- 操作の記録 -->
+    <div id="status-log-section" style="margin-top:24px">
+      <div class="status-log-title">🕘 きろく</div>
+      <div id="status-log-list" class="status-log-list">
+        <div class="status-log-empty">読み込み中...</div>
       </div>
-      <div id="line-reply-status" style="text-align:center;font-size:0.8rem;color:#98bedd;margin-top:6px;min-height:1em"></div>
     </div>
   </div>
 
@@ -357,6 +379,50 @@
     let myProfile = null
     let partnerProfile = null
     let myStatus = null
+
+    // 操作の記録: 種類ごとの絵文字とラベル
+    const EVENT_META = {
+      set_time:  { emoji: '🕐', label: '帰宅時間を設定' },
+      late:      { emoji: '⏰', label: '遅れそう' },
+      left:      { emoji: '🏃', label: '会社を出た' },
+      home:      { emoji: '🏠', label: '帰宅した' },
+      want_go:   { emoji: '🐾', label: '行きたい' },
+      want_come: { emoji: '🏠', label: '来てほしい' },
+      ok:        { emoji: '👌', label: 'いいよ' },
+    }
+
+    async function logStatusEvent(kind, detail) {
+      try {
+        const { data: { session } } = await _sb.auth.getSession()
+        if (!session) return
+        await _sb.from('status_events').insert({ user_id: session.user.id, kind, detail: detail ?? null })
+        loadStatusLog()
+      } catch (e) { console.error('[status] log failed:', e) }
+    }
+
+    async function loadStatusLog() {
+      const el = document.getElementById('status-log-list')
+      if (!el) return
+      const { data, error } = await _sb.from('status_events')
+        .select('*').order('created_at', { ascending: false }).limit(30)
+      if (error) { el.innerHTML = '<div class="status-log-empty">読み込みに失敗しました</div>'; return }
+      if (!data || !data.length) { el.innerHTML = '<div class="status-log-empty">まだ記録はありません</div>'; return }
+      const profById = {}
+      if (myProfile) profById[myProfile.id] = myProfile
+      if (partnerProfile) profById[partnerProfile.id] = partnerProfile
+      el.innerHTML = data.map(ev => {
+        const m = EVENT_META[ev.kind] || { emoji: '•', label: ev.kind }
+        const who = profById[ev.user_id]
+        const whoLabel = who ? `${who.emoji} ${escHtml(who.name)}` : ''
+        const t = new Date(ev.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        const detail = ev.detail ? `（${escHtml(ev.detail)}）` : ''
+        return `<div class="status-log-item">
+          <span class="status-log-emoji">${m.emoji}</span>
+          <span class="status-log-text">${whoLabel} が ${m.label}${detail}</span>
+          <span class="status-log-time">${t}</span>
+        </div>`
+      }).join('')
+    }
 
     async function load() {
       const { data: { session } } = await _sb.auth.getSession()
@@ -385,6 +451,8 @@
       if (!myProfile && !partnerProfile) {
         cards.innerHTML = '<div style="text-align:center;color:#7aadcc;padding:40px 0">プロフィールが設定されていません</div>'
       }
+
+      loadStatusLog()
     }
 
     function makeCard(profile, status, isMine) {
@@ -462,6 +530,7 @@
       const user_id = session.user.id
 
       await _sb.from('status').upsert({ user_id, finish_time, note, updated_at: new Date().toISOString() })
+      logStatusEvent('set_time', finish_time ? `${finish_time} 退社` : '時間未定')
       await load()
 
       const btn = document.querySelector('.save-btn')
@@ -501,6 +570,7 @@
 
       // 全イベント Push 通知のみ (LINE は月間上限節約のため帰宅時間設定と券使用だけに限定 2026-07)
       await notify({ title: titles[type], body: msg, url: '/status.html', kind: 'status', sender: session.user.id })
+      logStatusEvent(type)
       resultEl.textContent = '✅ 送りました！'
       setTimeout(() => { resultEl.textContent = '' }, 4000)
     }
@@ -514,8 +584,8 @@
         const { data: { session } } = await _sb.auth.getSession()
         const { data, error } = await _sb.functions.invoke('send-push', {
           body: {
-            title: '🐾 行っていい？',
-            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が行っていいか聞いています`,
+            title: '🐾 行きたい',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が行きたいって`,
             url: '/status.html',
             recipient_user_id: partnerProfile.id,
             ask_ok: true,
@@ -523,6 +593,7 @@
           },
         })
         if (!error) {
+          logStatusEvent('want_go')
           result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に送りました！`
         } else {
           let errMsg = error?.message || ''
@@ -544,8 +615,8 @@
         const { data: { session } } = await _sb.auth.getSession()
         const { error } = await _sb.functions.invoke('send-push', {
           body: {
-            title: '🏠 来ていいよ',
-            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が「こっち来ていいよ」と言っています`,
+            title: '🏠 来てほしい',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が来てほしいって`,
             url: '/status.html',
             recipient_user_id: partnerProfile.id,
             sender_user_id: session.user.id,
@@ -553,6 +624,7 @@
           },
         })
         if (!error) {
+          logStatusEvent('want_come')
           result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に送りました！`
         } else {
           let errMsg = error?.message || ''
@@ -565,85 +637,38 @@
       setTimeout(() => { result.textContent = '' }, 8000)
     }
 
-    async function loadLineMessages() {
-      const list = document.getElementById('line-messages-list')
-      const { data } = await _sb.from('line_messages')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10)
-      if (!data || data.length === 0) {
-        list.innerHTML = '<div style="text-align:center;color:#6a8a9c;font-size:0.85rem;padding:20px 0">まだメッセージはありません</div>'
-        return
-      }
-      list.innerHTML = data.map(m => {
-        const time = new Date(m.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
-        const badge = m.source_type === 'group' ? '👥' : '💬'
-        return `
-          <div style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(150,200,255,0.2);border-radius:14px;padding:12px 16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;color:#98bedd">
-              <span>${badge} ${escHtml(m.sender_emoji || '')} ${escHtml(m.sender_name || '匿名')}</span>
-              <span style="color:#6a8a9c">${time}</span>
-            </div>
-            <div style="font-size:0.95rem;color:#e8f4fd;white-space:pre-wrap;word-break:break-word">${escHtml(m.message)}</div>
-          </div>
-        `
-      }).join('')
-    }
+    async function sayOk() {
+      const result = document.getElementById('ask-result')
+      if (!partnerProfile) { result.textContent = 'パートナーのプロフィールが見つかりません'; return }
 
-    // 5秒毎に更新（リアルタイムサブスクリプションでもいいがシンプルに）
-    let lineMsgTimer = null
-    function startLineMsgPolling() {
-      loadLineMessages()
-      if (lineMsgTimer) clearInterval(lineMsgTimer)
-      lineMsgTimer = setInterval(loadLineMessages, 5000)
-    }
-
-    // 画面上から相手のLINE(+Push)に返信を送る
-    async function sendLineReply() {
-      const input = document.getElementById('line-reply-input')
-      const status = document.getElementById('line-reply-status')
-      const btn = document.getElementById('line-reply-btn')
-      const text = input.value.trim()
-      if (!text) return
-      if (!myProfile) { status.textContent = 'プロフィール未取得'; return }
-
-      btn.disabled = true
-      status.textContent = '送信中…'
-
+      result.textContent = '送信中...'
       try {
         const { data: { session } } = await _sb.auth.getSession()
-        const { data, error } = await _sb.functions.invoke('line-notify', {
+        const { error } = await _sb.functions.invoke('send-push', {
           body: {
-            sender_id: session.user.id,
-            target: 'partner',
-            message: `${myProfile.emoji} ${myProfile.name}:\n${text}`,
+            title: '👌 いいよ',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? 'あなた'} が いいよ！って`,
+            url: '/status.html',
+            recipient_user_id: partnerProfile.id,
+            sender_user_id: session.user.id,
+            kind: 'status',
           },
         })
         if (!error) {
-          input.value = ''
-          status.textContent = '✅ 送信しました'
-          // 自分の line_messages にも記録して自画面に表示
-          await _sb.from('line_messages').insert({
-            sender_id: myProfile.id,
-            sender_name: myProfile.name,
-            sender_emoji: myProfile.emoji,
-            message: text,
-            source_type: 'personal',
-          })
-          await loadLineMessages()
+          logStatusEvent('ok')
+          result.textContent = `✅ ${partnerProfile.emoji} ${partnerProfile.name} に送りました！`
         } else {
           let errMsg = error?.message || ''
           try { const j = await error.context?.json?.(); if (j?.error) errMsg = j.error } catch {}
-          status.textContent = '❌ ' + errMsg.slice(0, 60)
+          result.textContent = '❌ 送信失敗: ' + errMsg.slice(0, 80)
         }
       } catch (e) {
-        status.textContent = '❌ ' + (e?.message ?? String(e)).slice(0, 60)
+        result.textContent = '❌ ネットワークエラー: ' + (e?.message ?? String(e)).slice(0, 80)
       }
-      btn.disabled = false
-      setTimeout(() => { if (status.textContent.startsWith('✅')) status.textContent = '' }, 4000)
+      setTimeout(() => { result.textContent = '' }, 8000)
     }
 
-    load().then(() => { startLineMsgPolling() })
+    load()
   </script>
 </body>
 </html>
