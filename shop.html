@@ -104,6 +104,25 @@
       background:rgba(120,230,160,0.18); color:#a8f0c4; border:1px solid rgba(120,230,160,0.45);
     }
 
+    /* 券タブ サマリー */
+    .ticket-summary {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, rgba(120,230,160,0.12), rgba(100,180,255,0.10));
+      border: 1.5px solid rgba(120,230,160,0.3);
+      border-radius: 12px; padding: 10px 14px; margin-bottom: 12px;
+      font-size: 0.85rem; color: #cdeede;
+    }
+    .ticket-summary b { color: #a8f0c4; font-family: 'Zen Kurenaido', sans-serif; font-size: 1.05rem; }
+
+    /* レア度チップ */
+    .rarity-chip {
+      display:inline-block; font-size:0.62rem; font-weight:bold; letter-spacing:0.05em;
+      padding:1px 7px; border-radius:6px; margin-left:6px; vertical-align:middle;
+    }
+    .rarity-chip.N  { background:rgba(126,200,240,0.16); color:#7ec8f0; border:1px solid rgba(126,200,240,0.35); }
+    .rarity-chip.R  { background:rgba(208,154,255,0.16); color:#d09aff; border:1px solid rgba(208,154,255,0.4); }
+    .rarity-chip.SR { background:rgba(255,215,0,0.16);   color:#ffd700; border:1px solid rgba(255,215,0,0.45); }
+
     .item-card {
       display: flex; align-items:center; gap:14px;
       background: rgba(255,255,255,0.07);
@@ -263,9 +282,10 @@
       <div style="font-size:0.8rem;color:#7aa;margin-bottom:10px">🎰 ガチャの券と 🛍 販売所の券をまとめて管理</div>
       <div class="ticket-filter-row" id="ticket-filter-row">
         <button class="ticket-filter-chip active" data-t-tab="usable"  onclick="setTicketsTab('usable')">🎫 使える (<span id="t-count-usable">0</span>)</button>
-        <button class="ticket-filter-chip"        data-t-tab="partner" onclick="setTicketsTab('partner')">🎁 相手が持ってる (<span id="t-count-partner">0</span>)</button>
+        <button class="ticket-filter-chip"        data-t-tab="partner" onclick="setTicketsTab('partner')">🎁 相手 (<span id="t-count-partner">0</span>)</button>
         <button class="ticket-filter-chip"        data-t-tab="used"    onclick="setTicketsTab('used')">✅ 使用済み (<span id="t-count-used">0</span>)</button>
       </div>
+      <div id="ticket-summary" class="ticket-summary" style="display:none"></div>
       <div id="tickets-list"><div class="empty">読み込み中…</div></div>
     </div>
 
@@ -595,6 +615,21 @@
       if (p) p.textContent = counts.partner
       if (s) s.textContent = counts.used
 
+      // サマリー: 使えるタブのとき「N枚 · 使うと合計 +Xpt」
+      const summaryEl = document.getElementById('ticket-summary')
+      if (summaryEl) {
+        if (ticketsTab === 'usable' && counts.usable > 0) {
+          const bonusTotal = _tickets
+            .filter(t => ticketMatchesTicketsTab(t, 'usable'))
+            .reduce((sum, t) => sum + (t.bonusPoints || 0), 0)
+          summaryEl.innerHTML = `🎫 使える券 <b>${counts.usable}</b> 枚`
+            + (bonusTotal > 0 ? ` · 使うと合計 <b>+${bonusTotal}pt</b>` : '')
+          summaryEl.style.display = 'flex'
+        } else {
+          summaryEl.style.display = 'none'
+        }
+      }
+
       if (_tickets.length === 0) {
         el.innerHTML = '<div class="empty">まだ券がありません。ガチャを回すか販売所で買おう 🎫</div>'
         return
@@ -625,6 +660,15 @@
         display = Array.from(groups.values())
       }
 
+      // レア度順(SR→R→N)、同レア度は新しい順で並べ替え → 良い券が上に来る
+      const RARITY_ORDER = { SR: 0, R: 1, N: 2 }
+      display.sort((a, b) => {
+        const ra = RARITY_ORDER[a.rep.rarity] ?? 3
+        const rb = RARITY_ORDER[b.rep.rarity] ?? 3
+        if (ra !== rb) return ra - rb
+        return new Date(b.rep.createdAt) - new Date(a.rep.createdAt)
+      })
+
       el.innerHTML = ''
       display.forEach(g => {
         const t = g.rep
@@ -653,7 +697,7 @@
         if (isMine) {
           if (!t.used) {
             const fn = `markUsedTicket('${t.source}','${t.id}')`
-            const btnLabel = qty > 1 ? '1枚使う' : '使用済にする'
+            const btnLabel = qty > 1 ? '🎫 1枚使う' : '🎫 使う'
             actionHtml = `<button class="buy-btn" onclick="${fn}">${btnLabel}</button>`
           } else if (t.cancelRequested) {
             actionHtml = `<span class="cancel-pending">申請中...</span>`
@@ -678,15 +722,16 @@
         // メタ
         const metaBits = []
         if (t.source === 'shop' && t.raw.price != null) metaBits.push(`${t.raw.price}pt`)
-        if (t.bonusPoints) metaBits.push(`使うと +${t.bonusPoints}pt`)
+        if (t.bonusPoints) metaBits.push(`<span style="color:#ffd764;font-weight:bold">使うと +${t.bonusPoints}pt</span>`)
         metaBits.push(dt)
         const meta = metaBits.join(' · ')
+        const rarityChip = t.rarity ? `<span class="rarity-chip ${t.rarity}">${t.rarity}</span>` : ''
 
         card.innerHTML = `
           <div class="item-emoji">${escHtml(t.emoji)}</div>
           <div class="item-info" style="flex:1">
             <div class="item-name">
-              ${escHtml(t.name)}${qty > 1 ? `<span class="qty-badge">×${qty}</span>` : ''}${sourceBadge}${t.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}
+              ${escHtml(t.name)}${rarityChip}${qty > 1 ? `<span class="qty-badge">×${qty}</span>` : ''}${sourceBadge}${t.used ? ' <span style="font-size:0.7rem;color:#5a8fb8">(使用済)</span>' : ''}
             </div>
             ${t.description ? `<div class="item-desc">${escHtml(t.description)}</div>` : ''}
             <div class="item-meta">
