@@ -37,13 +37,13 @@
     .hero-checkin-btn:disabled { opacity: 0.5; }
     #loc-top-status { min-height: 18px; margin-top: 6px; font-size: 0.75rem; color: var(--ink-400); }
 
-    /* --- Bento variants for home --- */
-    .home-bento .tile.big-hero {
-      grid-column: 1 / -1;
-      min-height: 132px;
+    /* --- 最上部の横長デイリーカード (今日の帰宅) --- */
+    .home-daily-card {
+      min-height: 118px;
+      margin-bottom: 12px;
     }
-    .home-bento .tile.big-hero .tile-title { font-size: 1.3rem; }
-    .home-bento .tile.big-hero .tile-icon { font-size: 2.4rem; }
+    .home-daily-card .tile-title { font-size: 1.3rem; }
+    .home-daily-card .tile-icon { font-size: 2.4rem; }
 
     .home-bento .status-line {
       display: flex; align-items: center; gap: 8px;
@@ -124,7 +124,7 @@
 
     /* 今のきもち (mood pings) */
     .mood-tile {
-      margin: 14px 16px 0;
+      margin: 0;
       padding: 14px 16px 12px;
       background: var(--glass-2);
       border: 1.5px solid var(--edge-2);
@@ -241,30 +241,30 @@
     </div>
   </header>
 
-  <!-- 今のきもち: ワンタップで気持ちを送る -->
-  <div class="mood-tile" id="mood-tile">
-    <div class="mood-label">💭 今のきもちを ひとタップで送る</div>
-    <div class="mood-row">
-      <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️<span class="mood-btn-label">元気</span></button>
-      <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤<span class="mood-btn-label">まあまあ</span></button>
-      <button class="mood-btn" data-mood="🌧" data-label="つかれた" onclick="sendMoodPing(this)">🌧<span class="mood-btn-label">つかれた</span></button>
-      <button class="mood-btn" data-mood="⛈" data-label="しんどい" onclick="sendMoodPing(this)">⛈<span class="mood-btn-label">しんどい</span></button>
-      <button class="mood-btn" data-mood="💗" data-label="会いたい" onclick="sendMoodPing(this)">💗<span class="mood-btn-label">会いたい</span></button>
-      <button class="mood-btn" data-mood="🥰" data-label="しあわせ" onclick="sendMoodPing(this)">🥰<span class="mood-btn-label">しあわせ</span></button>
-    </div>
-  </div>
-  <div id="mood-toast"></div>
-
   <main>
-    <div class="bento home-bento">
+    <!-- 今日の帰宅: 最上部の横長カード -->
+    <a href="/status.html" class="tile accent-sage home-daily-card">
+      <span class="tile-orb"></span>
+      <span class="tile-icon">🕐</span>
+      <span class="tile-title">今日の帰宅</span>
+      <span class="tile-desc" id="status-preview">読み込み中...</span>
+    </a>
 
-      <!-- Big hero tile: 帰宅 -->
-      <a href="/status.html" class="tile tile-big big-hero accent-sage">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🕐</span>
-        <span class="tile-title">今日の帰宅</span>
-        <span class="tile-desc" id="status-preview">読み込み中...</span>
-      </a>
+    <!-- 今のきもち: ワンタップで気持ちを送る -->
+    <div class="mood-tile" id="mood-tile">
+      <div class="mood-label">💭 今のきもちを ひとタップで送る</div>
+      <div class="mood-row">
+        <button class="mood-btn" data-mood="☀️" data-label="元気" onclick="sendMoodPing(this)">☀️<span class="mood-btn-label">元気</span></button>
+        <button class="mood-btn" data-mood="🌤" data-label="まあまあ" onclick="sendMoodPing(this)">🌤<span class="mood-btn-label">まあまあ</span></button>
+        <button class="mood-btn" data-mood="🌧" data-label="つかれた" onclick="sendMoodPing(this)">🌧<span class="mood-btn-label">つかれた</span></button>
+        <button class="mood-btn" data-mood="⛈" data-label="しんどい" onclick="sendMoodPing(this)">⛈<span class="mood-btn-label">しんどい</span></button>
+        <button class="mood-btn" data-mood="💗" data-label="会いたい" onclick="sendMoodPing(this)">💗<span class="mood-btn-label">会いたい</span></button>
+        <button class="mood-btn" data-mood="🥰" data-label="しあわせ" onclick="sendMoodPing(this)">🥰<span class="mood-btn-label">しあわせ</span></button>
+      </div>
+    </div>
+    <div id="mood-toast"></div>
+
+    <div class="bento home-bento">
 
       <!-- Gauge -->
       <a href="/closer.html" class="tile accent-pink">
@@ -301,8 +301,8 @@
         <span class="tile-desc" id="capsule-preview">未来へメッセージを残そう</span>
       </a>
 
-      <!-- Gacha (wide, gold) -->
-      <a href="/gacha.html" class="tile bento-wide accent-gold">
+      <!-- Gacha -->
+      <a href="/gacha.html" class="tile accent-gold">
         <span class="tile-orb"></span>
         <span class="tile-icon">🎰</span>
         <span class="tile-title">ガチャ</span>
@@ -365,16 +365,16 @@
         <span class="tile-desc">今日の足跡を振り返る</span>
       </a>
 
-      <!-- 割り勘 (wide) -->
-      <a href="/expenses.html" class="tile bento-wide accent-gold">
+      <!-- 割り勘 -->
+      <a href="/expenses.html" class="tile accent-gold">
         <span class="tile-orb"></span>
         <span class="tile-icon">💰</span>
         <span class="tile-title">割り勘</span>
         <span class="tile-desc" id="expenses-preview">共同生活のお金を記録・精算</span>
       </a>
 
-      <!-- 賭け事 (wide) -->
-      <a href="/bets.html" class="tile bento-wide accent-pink">
+      <!-- 賭け事 -->
+      <a href="/bets.html" class="tile accent-pink">
         <span class="tile-orb"></span>
         <span class="tile-icon">⚔️</span>
         <span class="tile-title">賭け事</span>
