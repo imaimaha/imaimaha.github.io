@@ -424,7 +424,7 @@
       const nYear = next.getFullYear() - START.getFullYear()
       const badge = document.getElementById('anniversary-badge')
       if (badge) badge.innerHTML = `
-        <span class="ann-days">${days}</span><span class="ann-label">日</span>
+        <div class="ann-main"><span class="ann-days">${days}</span><span class="ann-label">日</span></div>
         <span class="ann-sub">${nYear}年記念日まで あと ${daysToNext} 日</span>
       `
     }
