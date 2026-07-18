@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>今日の1曲 | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 18px 16px calc(90px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .section-label { font-size: 0.8rem; color: #8fb4d8; letter-spacing: 0.08em; font-weight: 700; margin: 0 4px 10px; }
+    .section + .section { margin-top: 26px; }
+
+    /* 投稿カード */
+    .post-card {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(150,200,255,0.22);
+      border-radius: 18px; padding: 16px; backdrop-filter: blur(8px);
+    }
+    .url-row { display: flex; gap: 8px; }
+    .url-row input {
+      flex: 1; min-width: 0; padding: 12px 14px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 12px; color: #e8f4fd; font-size: 15px; font-family: inherit; outline: none;
+    }
+    .url-row input:focus { border-color: rgba(140,200,255,0.5); }
+    .btn-preview {
+      flex-shrink: 0; padding: 12px 16px; border-radius: 12px;
+      background: rgba(100,160,255,0.18); border: 1.5px solid rgba(100,160,255,0.4);
+      color: #cfe4ff; font-family: inherit; font-size: 0.9rem; cursor: pointer; white-space: nowrap;
+    }
+    .btn-preview:active { transform: scale(0.96); }
+
+    /* プレビュー / 曲カード共通 */
+    .song-media {
+      display: flex; gap: 12px; align-items: center;
+      background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; margin-top: 12px;
+      text-decoration: none;
+    }
+    .song-thumb {
+      width: 72px; height: 72px; flex-shrink: 0; border-radius: 10px;
+      object-fit: cover; background: rgba(255,255,255,0.06);
+    }
+    .song-thumb.placeholder { display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .song-meta { flex: 1; min-width: 0; }
+    .song-title { font-size: 0.95rem; color: #f0f6ff; font-weight: 700; line-height: 1.35; word-break: break-word; }
+    .song-author { font-size: 0.78rem; color: #98bedd; margin-top: 3px; }
+    .svc-badge {
+      display: inline-block; font-size: 0.66rem; padding: 1px 8px; border-radius: 999px;
+      margin-top: 5px; border: 1px solid;
+    }
+    .svc-youtube    { background: rgba(255,80,80,0.14);  color: #ff9a9a; border-color: rgba(255,80,80,0.4); }
+    .svc-spotify    { background: rgba(80,220,120,0.14); color: #97ecb4; border-color: rgba(80,220,120,0.4); }
+    .svc-apple      { background: rgba(255,150,180,0.14);color: #ffb6cc; border-color: rgba(255,150,180,0.4); }
+    .svc-podcast    { background: rgba(180,140,255,0.14);color: #cbb0ff; border-color: rgba(180,140,255,0.4); }
+    .svc-soundcloud { background: rgba(255,170,80,0.14); color: #ffca8a; border-color: rgba(255,170,80,0.4); }
+    .svc-other      { background: rgba(150,200,255,0.14);color: #b8d6f5; border-color: rgba(150,200,255,0.4); }
+
+    .comment-input {
+      width: 100%; margin-top: 12px; padding: 11px 14px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 12px; color: #e8f4fd; font-size: 15px; font-family: inherit; outline: none;
+      resize: none; min-height: 46px;
+    }
+    .btn-submit {
+      width: 100%; margin-top: 12px; padding: 14px; border-radius: 14px;
+      background: linear-gradient(135deg, #b06ad4, #7f50ff);
+      color: #fff; border: none; font-family: inherit; font-size: 0.98rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(127,80,255,0.35);
+    }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-submit:active:not(:disabled) { transform: scale(0.98); }
+    .post-hint { font-size: 0.74rem; color: #7aadcc; margin-top: 8px; text-align: center; }
+
+    /* 曲カード (今日/履歴) */
+    .song-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.16);
+      border-radius: 16px; padding: 14px; margin-bottom: 12px;
+    }
+    .song-card .who { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: #cfe4ff; margin-bottom: 4px; }
+    .song-card .who .who-emoji { font-size: 1.1rem; }
+    .song-comment { font-size: 0.9rem; color: #e8f4fd; margin-top: 10px; line-height: 1.5; word-break: break-word; }
+
+    /* リアクション */
+    .reactions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .react-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.85rem; padding: 3px 9px; border-radius: 999px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(150,200,255,0.18); color: #cfe4ff;
+    }
+    .react-picker { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+    .react-btn {
+      font-size: 1.15rem; line-height: 1; padding: 6px 9px; border-radius: 12px;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(150,200,255,0.18);
+      cursor: pointer; transition: transform 0.12s, background 0.15s;
+    }
+    .react-btn:active { transform: scale(0.88); }
+    .react-btn.mine { background: rgba(255,120,170,0.22); border-color: rgba(255,120,170,0.55); }
+
+    .date-group-label {
+      font-family: 'Zen Kurenaido', sans-serif; font-size: 0.95rem; color: #ffd97d;
+      margin: 16px 2px 8px;
+    }
+    .empty-msg { text-align: center; color: #7aadcc; font-size: 0.88rem; padding: 22px 0; }
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,40,80,0.95); border: 1.5px solid rgba(140,200,255,0.5);
+      color: #cfe4ff; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 300;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>🎵 今日の1曲</h1>
+  </div>
+
+  <div class="content">
+    <!-- 投稿 -->
+    <div class="section">
+      <div class="section-label">きょうシェアする1曲</div>
+      <div class="post-card">
+        <div class="url-row">
+          <input type="url" id="url-input" placeholder="YouTube / Spotify などのURLを貼る" inputmode="url" autocomplete="off">
+          <button class="btn-preview" onclick="previewUrl()">プレビュー</button>
+        </div>
+        <div id="preview-area"></div>
+        <textarea class="comment-input" id="comment-input" maxlength="140" placeholder="ひとことコメント（任意）"></textarea>
+        <button class="btn-submit" id="submit-btn" onclick="submitSong()" disabled>プレビューしてね</button>
+        <div class="post-hint">1日ひとつ。貼り直すと今日の分は差し替わります</div>
+      </div>
+    </div>
+
+    <!-- 今日 -->
+    <div class="section">
+      <div class="section-label">今日のふたりの1曲</div>
+      <div id="today-list"><div class="empty-msg">読み込み中...</div></div>
+    </div>
+
+    <!-- 履歴 -->
+    <div class="section">
+      <div class="section-label">これまでの1曲</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const REACTIONS = ['💖', '🎧', '🔥', '🥰', '😭', '👍']
+    let myId = null, myProfile = null, partnerProfile = null
+    let profById = {}
+    let currentMeta = null   // プレビュー済みメタ
+
+    // ---- サービス判別 ----
+    function detectService(url) {
+      if (/youtu\.?be/.test(url))         return { key: 'youtube',    label: 'YouTube' }
+      if (/open\.spotify\.com/.test(url)) return { key: 'spotify',    label: 'Spotify' }
+      if (/music\.apple\.com/.test(url))  return { key: 'apple',      label: 'Apple Music' }
+      if (/podcasts\.apple\.com|\/podcast/.test(url)) return { key: 'podcast', label: 'Podcast' }
+      if (/soundcloud\.com/.test(url))    return { key: 'soundcloud', label: 'SoundCloud' }
+      return { key: 'other', label: 'リンク' }
+    }
+    function svcLabel(key) {
+      return ({ youtube:'YouTube', spotify:'Spotify', apple:'Apple Music', podcast:'Podcast', soundcloud:'SoundCloud', other:'リンク' })[key] || 'リンク'
+    }
+    function extractYouTubeId(url) {
+      const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([\w-]{11})/)
+      return m ? m[1] : null
+    }
+
+    // ---- メタ取得 (Spotifyは本家oEmbed, 他はnoembed) ----
+    async function fetchMeta(url) {
+      const svc = detectService(url)
+      try {
+        if (svc.key === 'spotify') {
+          const r = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`)
+          if (r.ok) {
+            const j = await r.json()
+            return { service: svc.key, title: j.title || '', author: j.provider_name || 'Spotify', thumbnail: j.thumbnail_url || '' }
+          }
+        } else {
+          const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`)
+          if (r.ok) {
+            const j = await r.json()
+            if (!j.error) return { service: svc.key, title: j.title || '', author: j.author_name || '', thumbnail: j.thumbnail_url || '' }
+          }
+        }
+      } catch (e) { console.warn('[song] meta fetch failed', e) }
+      // フォールバック: YouTube ならIDからサムネ
+      let thumb = ''
+      const yt = extractYouTubeId(url)
+      if (yt) thumb = `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`
+      return { service: svc.key, title: '', author: '', thumbnail: thumb }
+    }
+
+    function mediaHtml(meta, url, { asLink = true } = {}) {
+      const thumb = meta.thumbnail
+        ? `<img class="song-thumb" src="${escHtml(meta.thumbnail)}" alt="" onerror="this.style.display='none'">`
+        : `<div class="song-thumb placeholder">🎵</div>`
+      const title = meta.title || url
+      const tag = asLink ? 'a' : 'div'
+      const href = asLink ? `href="${escHtml(url)}" target="_blank" rel="noopener"` : ''
+      return `
+        <${tag} class="song-media" ${href}>
+          ${thumb}
+          <div class="song-meta">
+            <div class="song-title">${escHtml(title)}</div>
+            ${meta.author ? `<div class="song-author">${escHtml(meta.author)}</div>` : ''}
+            <span class="svc-badge svc-${meta.service}">${escHtml(svcLabel(meta.service))}</span>
+          </div>
+        </${tag}>`
+    }
+
+    async function previewUrl() {
+      const url = document.getElementById('url-input').value.trim()
+      const area = document.getElementById('preview-area')
+      const btn = document.getElementById('submit-btn')
+      if (!url) { area.innerHTML = ''; currentMeta = null; btn.disabled = true; btn.textContent = 'プレビューしてね'; return }
+      if (!/^https?:\/\//.test(url)) { area.innerHTML = '<div class="empty-msg">URLは http(s):// から入力してね</div>'; return }
+      area.innerHTML = '<div class="empty-msg">読み込み中...</div>'
+      const meta = await fetchMeta(url)
+      currentMeta = { ...meta, url }
+      area.innerHTML = mediaHtml(meta, url, { asLink: false })
+      btn.disabled = false
+      btn.textContent = todaysMine ? '今日の1曲を差し替える' : '今日の1曲にする'
+    }
+
+    let todaysMine = null
+
+    async function submitSong() {
+      if (!currentMeta) return
+      const btn = document.getElementById('submit-btn')
+      btn.disabled = true
+      const comment = document.getElementById('comment-input').value.trim()
+      const today = jstDateStr()
+      const payload = {
+        user_id: myId, date_str: today, url: currentMeta.url,
+        service: currentMeta.service, title: currentMeta.title || null,
+        author: currentMeta.author || null, thumbnail: currentMeta.thumbnail || null,
+        comment: comment || null, updated_at: new Date().toISOString(),
+      }
+      const { error } = await _sb.from('daily_songs').upsert(payload, { onConflict: 'user_id,date_str' })
+      if (error) { showToast('保存に失敗しました', true); console.error(error); btn.disabled = false; return }
+
+      // 相手に通知
+      if (partnerProfile) {
+        notify({
+          title: '🎵 今日の1曲が届いたよ',
+          body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''}: ${currentMeta.title || currentMeta.url}`,
+          url: '/one_song.html',
+          kind: 'song',
+          recipient: partnerProfile.id,
+        })
+      }
+      showToast('今日の1曲をシェアしました 🎵')
+      document.getElementById('url-input').value = ''
+      document.getElementById('comment-input').value = ''
+      document.getElementById('preview-area').innerHTML = ''
+      currentMeta = null
+      await loadAll()
+    }
+
+    // ---- リアクション ----
+    async function toggleReaction(songId, emoji, ownerId) {
+      const mine = reactionsBySong[songId]?.[myId]
+      if (mine === emoji) {
+        await _sb.from('song_reactions').delete().eq('song_id', songId).eq('user_id', myId)
+      } else {
+        await _sb.from('song_reactions').upsert(
+          { song_id: songId, user_id: myId, emoji }, { onConflict: 'song_id,user_id' })
+        if (ownerId && ownerId !== myId && partnerProfile) {
+          notify({
+            title: `${emoji} リアクション`,
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が ${emoji} をつけたよ`,
+            url: '/one_song.html', kind: 'song', recipient: ownerId,
+          })
+        }
+      }
+      await loadReactions()
+      renderAll()
+    }
+
+    // ---- データ ----
+    let songs = []
+    let reactionsBySong = {}   // song_id -> { user_id: emoji }
+
+    async function loadReactions() {
+      const ids = songs.map(s => s.id)
+      reactionsBySong = {}
+      if (!ids.length) return
+      const { data } = await _sb.from('song_reactions').select('*').in('song_id', ids)
+      ;(data || []).forEach(r => {
+        if (!reactionsBySong[r.song_id]) reactionsBySong[r.song_id] = {}
+        reactionsBySong[r.song_id][r.user_id] = r.emoji
+      })
+    }
+
+    async function loadAll() {
+      const { data } = await _sb.from('daily_songs')
+        .select('*').order('date_str', { ascending: false }).order('created_at', { ascending: false }).limit(200)
+      songs = data || []
+      todaysMine = songs.find(s => s.user_id === myId && s.date_str === jstDateStr()) || null
+      // 今日すでに投稿済みならボタン文言を調整
+      const btn = document.getElementById('submit-btn')
+      if (currentMeta) btn.textContent = todaysMine ? '今日の1曲を差し替える' : '今日の1曲にする'
+      await loadReactions()
+      renderAll()
+    }
+
+    function songCardHtml(s) {
+      const who = profById[s.user_id]
+      const whoLabel = who ? `${who.emoji} ${escHtml(who.name)}` : ''
+      const meta = { service: s.service || 'other', title: s.title, author: s.author, thumbnail: s.thumbnail }
+      const reacts = reactionsBySong[s.id] || {}
+      // 既存リアクション表示
+      const chips = Object.entries(reacts).map(([uid, em]) => {
+        const p = profById[uid]
+        return `<span class="react-chip">${em} ${p ? escHtml(p.emoji) : ''}</span>`
+      }).join('')
+      // 自分のリアクションピッカー (相手の曲のみ)
+      let picker = ''
+      if (s.user_id !== myId) {
+        const my = reacts[myId]
+        picker = `<div class="react-picker">${REACTIONS.map(em =>
+          `<button class="react-btn ${my === em ? 'mine' : ''}" onclick="toggleReaction('${s.id}','${em}','${s.user_id}')">${em}</button>`
+        ).join('')}</div>`
+      }
+      return `
+        <div class="song-card">
+          <div class="who"><span class="who-emoji">${who ? escHtml(who.emoji) : '👤'}</span>${whoLabel}</div>
+          ${mediaHtml(meta, s.url, { asLink: true })}
+          ${s.comment ? `<div class="song-comment">${escHtml(s.comment)}</div>` : ''}
+          ${chips ? `<div class="reactions">${chips}</div>` : ''}
+          ${picker}
+        </div>`
+    }
+
+    function renderAll() {
+      const today = jstDateStr()
+      // 今日
+      const todayList = document.getElementById('today-list')
+      const todays = songs.filter(s => s.date_str === today)
+      todayList.innerHTML = todays.length
+        ? todays.map(songCardHtml).join('')
+        : '<div class="empty-msg">まだ今日の1曲はありません。上からシェアしよう 🎶</div>'
+
+      // 履歴 (今日以外を日付ごと)
+      const hist = songs.filter(s => s.date_str < today)
+      const histEl = document.getElementById('history-list')
+      if (!hist.length) { histEl.innerHTML = '<div class="empty-msg">まだ履歴はありません</div>'; return }
+      const byDate = {}
+      hist.forEach(s => { (byDate[s.date_str] ||= []).push(s) })
+      histEl.innerHTML = Object.keys(byDate).sort((a, b) => b.localeCompare(a)).map(ds => {
+        const d = new Date(ds + 'T00:00:00')
+        const label = d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+        return `<div class="date-group-label">${label}</div>` + byDate[ds].map(songCardHtml).join('')
+      }).join('')
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      ;(profiles || []).forEach(p => { profById[p.id] = p })
+      myProfile = profById[myId] || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+      await loadAll()
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800)
+    }
+
+    // URL入力欄でEnter/貼り付けたら自動プレビュー
+    document.getElementById('url-input').addEventListener('keydown', e => { if (e.key === 'Enter') previewUrl() })
+    document.getElementById('url-input').addEventListener('paste', () => setTimeout(previewUrl, 50))
+
+    init()
+  </script>
+</body>
+</html>

@@ -24,6 +24,7 @@
     { title:'ふたり', items:[
       { icon:'🕐', label:'今日の帰宅',      href:'/status.html' },
       { icon:'💗', label:'ゲージ',          href:'/closer.html' },
+      { icon:'🎵', label:'今日の1曲',       href:'/one_song.html' },
       { icon:'🌸', label:'ありがとう',      href:'/thanks.html' },
       { icon:'🎁', label:'タイムカプセル',  href:'/time_capsule.html' },
       { icon:'📍', label:'今ここ',          href:'/location.html' },
