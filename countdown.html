@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>カウントダウン | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+    .top-bar .spacer { width: 40px; }
+
+    .content { max-width: 600px; margin: 0 auto; padding: 18px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px; border-radius: 15px; margin-bottom: 20px;
+      background: linear-gradient(135deg, #4a90d9, #7f50ff);
+      color: #fff; border: none; font-family: inherit; font-size: 0.98rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 5px 20px rgba(90,110,255,0.35);
+    }
+    .add-btn:active { transform: scale(0.98); }
+
+    .cd-card {
+      display: flex; align-items: center; gap: 13px; padding: 15px;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(150,200,255,0.2);
+      border-radius: 16px; margin-bottom: 11px;
+    }
+    .cd-card.soon { border-color: rgba(255,150,180,0.45); background: rgba(255,120,160,0.09); }
+    .cd-card.fixed { border-style: dashed; opacity: 0.96; }
+    .cd-emoji { font-size: 2rem; flex-shrink: 0; width: 44px; text-align: center; }
+    .cd-body { flex: 1; min-width: 0; }
+    .cd-label { font-size: 1rem; font-weight: 700; color: #f0f6ff; word-break: break-word; }
+    .cd-date { font-size: 0.76rem; color: #98bedd; margin-top: 3px; }
+    .cd-badge { display: inline-block; font-size: 0.64rem; padding: 1px 7px; border-radius: 999px; margin-left: 6px; border: 1px solid rgba(150,200,255,0.4); color: #b8d6f5; }
+    .cd-num { flex-shrink: 0; text-align: center; min-width: 62px; }
+    .cd-num .n { font-size: 1.7rem; font-weight: 700; color: #cfe4ff; line-height: 1; }
+    .cd-card.soon .cd-num .n { color: #ffb0cf; }
+    .cd-num .u { font-size: 0.64rem; color: #8fb4d8; margin-top: 2px; }
+    .cd-menu { flex-shrink: 0; background: none; border: none; color: #6f9ac0; font-size: 1.2rem; cursor: pointer; padding: 4px 6px; }
+    .empty-msg { text-align: center; color: #7aadcc; font-size: 0.88rem; padding: 24px 10px; line-height: 1.7; }
+    .section-label { font-size: 0.8rem; color: #8fb4d8; letter-spacing: 0.08em; font-weight: 700; margin: 20px 4px 10px; }
+
+    .modal-back { position: fixed; inset: 0; background: rgba(4,10,20,0.72); z-index: 200; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px); }
+    .modal-back.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 600px; background: linear-gradient(160deg,#0d2044,#112a5e);
+      border-top-left-radius: 22px; border-top-right-radius: 22px; border-top: 1.5px solid rgba(150,200,255,0.3);
+      padding: 20px 18px calc(28px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; overflow-y: auto;
+    }
+    .modal h2 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; margin-bottom: 16px; text-align: center; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.78rem; color: #8fb4d8; margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.25);
+      border: 1.5px solid rgba(150,200,255,0.28); border-radius: 12px;
+      color: #e8f4fd; font-size: 16px; font-family: inherit; outline: none;
+    }
+    .emoji-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .emoji-opt { font-size: 1.4rem; padding: 6px 9px; border-radius: 10px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1.5px solid transparent; }
+    .emoji-opt.sel { border-color: rgba(140,200,255,0.7); background: rgba(100,160,255,0.18); }
+    .recur-row { display: flex; gap: 8px; }
+    .recur-opt { flex: 1; text-align: center; padding: 11px; border-radius: 11px; cursor: pointer; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(150,200,255,0.22); color: #b8d6f5; }
+    .recur-opt.sel { border-color: rgba(140,200,255,0.7); background: rgba(100,160,255,0.2); color: #e8f4fd; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-actions button { flex: 1; padding: 14px; border-radius: 13px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(150,200,255,0.25); color: #98bedd; }
+    .btn-ok { background: linear-gradient(135deg, #4a90d9, #7f50ff); border: none; color: #fff; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,40,80,0.95); border: 1.5px solid rgba(140,200,255,0.5);
+      color: #cfe4ff; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>⏳ カウントダウン</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="content">
+    <button class="add-btn" onclick="openCreate()">＋ 記念日・誕生日を追加</button>
+    <div id="list"><div class="empty-msg">読み込み中...</div></div>
+  </div>
+
+  <div class="modal-back" id="modal-back">
+    <div class="modal">
+      <h2 id="modal-title">記念日を追加</h2>
+      <div class="field"><label>アイコン</label>
+        <div class="emoji-row" id="emoji-row"></div>
+      </div>
+      <div class="field"><label>なまえ</label><input type="text" id="f-label" maxlength="30" placeholder="例: hedの誕生日 / 沖縄旅行"></div>
+      <div class="field"><label>日にち</label><input type="date" id="f-date"></div>
+      <div class="field"><label>くりかえし</label>
+        <div class="recur-row">
+          <div class="recur-opt" data-r="none" onclick="setRecur('none')">一度きり</div>
+          <div class="recur-opt sel" data-r="yearly" onclick="setRecur('yearly')">毎年</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">やめる</button>
+        <button class="btn-ok" onclick="save()">追加する</button>
+      </div>
+      <button id="del-btn" onclick="del()" style="display:none;width:100%;margin-top:12px;padding:12px;border-radius:12px;background:none;border:1.5px solid rgba(255,120,120,0.4);color:#ffb0b0;font-family:inherit;font-size:0.88rem;cursor:pointer;">🗑 この記念日を削除</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const EMOJIS = ['🎂', '❤️', '✈️', '🎉', '💍', '🎄', '🎃', '🌸', '🎁', '🏖', '📌', '⭐']
+    const ANNIV_START = new Date('2025-11-22T00:00:00+09:00')  // 交際記念日 (index と揃える)
+
+    let myId = null
+    let rows = []
+    let editingId = null
+    let selEmoji = '🎂', selRecur = 'yearly'
+
+    function jstToday() {
+      return new Date(new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) + 'T00:00:00+09:00')
+    }
+    // 次の該当日までの残り日数。yearly は今年/来年の月日で最も近い未来
+    function nextOccurrence(dateStr, recurring) {
+      const today = jstToday()
+      const base = new Date(dateStr + 'T00:00:00+09:00')
+      if (recurring !== 'yearly') return base
+      const cand = new Date(today.getFullYear(), base.getMonth(), base.getDate())
+      if (cand < today) cand.setFullYear(today.getFullYear() + 1)
+      return cand
+    }
+    function daysBetween(target) {
+      return Math.round((target - jstToday()) / 86400000)
+    }
+    function fmtDate(d) {
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+    }
+
+    // 表示アイテムを組み立て (記念日auto + countdowns行)
+    function buildItems() {
+      const items = []
+      // 交際記念日 (毎年 11/22) — 固定・編集不可
+      const annNext = nextOccurrence('2025-11-22', 'yearly')
+      const annYear = annNext.getFullYear() - ANNIV_START.getFullYear()
+      items.push({ fixed: true, emoji: '❤️', label: `${annYear}年記念日`, target: annNext, recurring: 'yearly', dateNote: '11月22日' })
+      // 記念日の毎月の節目 (次の◯ヶ月)
+      const monthly = nextMonthly()
+      if (monthly) items.push({ fixed: true, emoji: '🌙', label: `つきあって${monthly.months}ヶ月`, target: monthly.date, recurring: 'monthly', dateNote: fmtShort(monthly.date) })
+      // ユーザー登録分
+      rows.forEach(r => {
+        const target = nextOccurrence(r.target_date, r.recurring)
+        items.push({ id: r.id, emoji: r.emoji, label: r.label, target, recurring: r.recurring, raw: r })
+      })
+      // 未来のみ / 近い順
+      return items.filter(it => daysBetween(it.target) >= 0).sort((a, b) => a.target - b.target)
+    }
+    function nextMonthly() {
+      const today = jstToday()
+      // ANNIV_START から数えて次の「n ヶ月ちょうど」の日
+      let d = new Date(ANNIV_START)
+      let m = 0
+      while (d < today) { m++; d = new Date(ANNIV_START); d.setMonth(ANNIV_START.getMonth() + m) }
+      return { months: m, date: d }
+    }
+    function fmtShort(d) { return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) }
+
+    function render() {
+      const items = buildItems()
+      const el = document.getElementById('list')
+      if (!items.length) { el.innerHTML = '<div class="empty-msg">追加された記念日はまだないよ</div>'; return }
+      el.innerHTML = items.map(it => {
+        const n = daysBetween(it.target)
+        const soon = n <= 7
+        const recurBadge = it.recurring === 'yearly' ? '<span class="cd-badge">毎年</span>'
+          : it.recurring === 'monthly' ? '<span class="cd-badge">月次</span>' : ''
+        const numHtml = n === 0 ? '<div class="n">今日</div>' : `<div class="n">${n}</div><div class="u">日</div>`
+        const menu = it.fixed ? '' : `<button class="cd-menu" onclick="editRow('${it.id}')">⋯</button>`
+        const dateNote = it.dateNote || fmtDate(it.target)
+        return `
+          <div class="cd-card ${soon ? 'soon' : ''} ${it.fixed ? 'fixed' : ''}">
+            <div class="cd-emoji">${it.emoji}</div>
+            <div class="cd-body">
+              <div class="cd-label">${escHtml(it.label)}${recurBadge}</div>
+              <div class="cd-date">${escHtml(dateNote)}</div>
+            </div>
+            <div class="cd-num">${numHtml}</div>
+            ${menu}
+          </div>`
+      }).join('')
+    }
+
+    async function load() {
+      const { data } = await _sb.from('countdowns').select('*')
+      rows = data || []
+      render()
+    }
+
+    function openCreate() {
+      editingId = null; selEmoji = '🎂'; selRecur = 'yearly'
+      document.getElementById('modal-title').textContent = '記念日を追加'
+      document.querySelector('.btn-ok').textContent = '追加する'
+      document.getElementById('f-label').value = ''
+      document.getElementById('f-date').value = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+      document.getElementById('del-btn').style.display = 'none'
+      renderEmojiRow(); renderRecur()
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function editRow(id) {
+      const r = rows.find(x => x.id === id); if (!r) return
+      editingId = id; selEmoji = r.emoji; selRecur = r.recurring
+      document.getElementById('modal-title').textContent = '記念日を編集'
+      document.querySelector('.btn-ok').textContent = '保存する'
+      document.getElementById('f-label').value = r.label
+      document.getElementById('f-date').value = r.target_date
+      document.getElementById('del-btn').style.display = 'block'
+      renderEmojiRow(); renderRecur()
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function renderEmojiRow() {
+      document.getElementById('emoji-row').innerHTML = EMOJIS.map(e =>
+        `<span class="emoji-opt ${e === selEmoji ? 'sel' : ''}" onclick="selectEmoji('${e}')">${e}</span>`).join('')
+    }
+    function selectEmoji(e) { selEmoji = e; renderEmojiRow() }
+    function setRecur(r) { selRecur = r; renderRecur() }
+    function renderRecur() {
+      document.querySelectorAll('.recur-opt').forEach(o => o.classList.toggle('sel', o.dataset.r === selRecur))
+    }
+    function closeModal() { document.getElementById('modal-back').classList.remove('open') }
+
+    async function save() {
+      const label = document.getElementById('f-label').value.trim()
+      const target_date = document.getElementById('f-date').value
+      if (!label) { showToast('なまえを入れてね'); return }
+      if (!target_date) { showToast('日にちを選んでね'); return }
+      if (editingId) {
+        const { error } = await _sb.from('countdowns').update({ label, emoji: selEmoji, target_date, recurring: selRecur }).eq('id', editingId)
+        if (error) { showToast('保存失敗'); console.error(error); return }
+        showToast('保存したよ')
+      } else {
+        const { error } = await _sb.from('countdowns').insert({ label, emoji: selEmoji, target_date, recurring: selRecur, created_by: myId })
+        if (error) { showToast('追加失敗'); console.error(error); return }
+        showToast('追加したよ ⏳')
+      }
+      closeModal(); load()
+    }
+
+    // 編集モーダルに削除導線 (長押し的にメニューから)。ここでは編集画面のやめる横に削除を出す代わりに confirm。
+    // シンプルに: 編集中に「やめる」長押しではなく、ラベル欄空で保存不可なので、削除は別ボタンで。
+    async function del() {
+      if (!editingId) return
+      if (!confirm('この記念日を削除する？')) return
+      await _sb.from('countdowns').delete().eq('id', editingId)
+      closeModal(); load(); showToast('削除しました')
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show')
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1800)
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      await load()
+    }
+    init()
+  </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>ふたりのデート | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #1a0a20 0%, #2a0d34 40%, #3a1050 100%) fixed;
+      color: #f3e8fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(60,20,80,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a.back { color: #d7a8dd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #f6e8fd; flex: 1; text-align: center; }
+    .top-bar .spacer { width: 52px; }
+
+    .content { max-width: 620px; margin: 0 auto; padding: 18px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .section-label { font-size: 0.8rem; color: #cf9fe0; letter-spacing: 0.08em; font-weight: 700; margin: 0 4px 10px; }
+    .section + .section { margin-top: 26px; }
+    .empty-msg { text-align: center; color: #b58fc8; font-size: 0.88rem; padding: 22px 10px; line-height: 1.7; }
+
+    /* --- 計画ボタン --- */
+    .plan-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 15px; border-radius: 16px; margin-bottom: 22px;
+      background: linear-gradient(135deg, #e26aa8, #a850e0);
+      color: #fff; border: none; font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 6px 22px rgba(180,80,200,0.4);
+    }
+    .plan-btn:active { transform: scale(0.98); }
+
+    /* --- デートカード (一覧) --- */
+    .date-card {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(220,170,240,0.22);
+      border-radius: 18px; padding: 15px; margin-bottom: 13px; cursor: pointer;
+      transition: transform 0.12s, border-color 0.15s;
+    }
+    .date-card:active { transform: scale(0.985); }
+    .date-card.done { border-color: rgba(255,215,130,0.28); }
+    .dc-top { display: flex; align-items: flex-start; gap: 10px; }
+    .dc-count {
+      flex-shrink: 0; min-width: 58px; text-align: center; border-radius: 13px; padding: 8px 6px;
+      background: rgba(226,106,168,0.16); border: 1.5px solid rgba(226,106,168,0.4);
+    }
+    .dc-count .num { font-size: 1.5rem; font-weight: 700; color: #ffc0e0; line-height: 1; }
+    .dc-count .unit { font-size: 0.62rem; color: #e0a8d0; margin-top: 2px; }
+    .dc-count.soon { background: rgba(255,120,120,0.18); border-color: rgba(255,120,120,0.5); }
+    .dc-count.done-badge { background: rgba(255,215,130,0.14); border-color: rgba(255,215,130,0.4); }
+    .dc-count.done-badge .num { font-size: 1.7rem; color: #ffe08a; }
+    .dc-body { flex: 1; min-width: 0; }
+    .dc-title { font-size: 1.02rem; font-weight: 700; color: #f6e8fd; word-break: break-word; }
+    .dc-sub { font-size: 0.78rem; color: #c79fd8; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+    .dc-thumbs { display: flex; gap: 5px; margin-top: 10px; }
+    .dc-thumbs img { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: rgba(255,255,255,0.06); }
+    .dc-thumbs .more { width: 46px; height: 46px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; color: #d7a8dd; }
+    .dc-rating { font-size: 0.82rem; margin-top: 8px; color: #ffd97d; }
+
+    /* --- 詳細ビュー --- */
+    #detail-view { display: none; }
+    .detail-head { margin-bottom: 4px; }
+    .detail-title { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.5rem; color: #f6e8fd; line-height: 1.3; word-break: break-word; }
+    .detail-meta { font-size: 0.85rem; color: #c79fd8; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .detail-memo { font-size: 0.9rem; color: #e6d3f0; margin-top: 10px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .detail-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .mini-btn {
+      padding: 9px 14px; border-radius: 11px; font-family: inherit; font-size: 0.82rem; cursor: pointer;
+      background: rgba(255,255,255,0.07); border: 1.5px solid rgba(220,170,240,0.28); color: #e6d3f0;
+    }
+    .mini-btn:active { transform: scale(0.96); }
+    .mini-btn.primary { background: linear-gradient(135deg, #e26aa8, #a850e0); border: none; color: #fff; font-weight: 700; }
+    .mini-btn.danger { color: #ffb0b0; border-color: rgba(255,120,120,0.4); }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(220,170,240,0.16);
+      border-radius: 16px; padding: 15px; margin-top: 16px;
+    }
+    .card h3 { font-size: 0.92rem; color: #f0d8fa; margin-bottom: 4px; }
+    .card .card-hint { font-size: 0.74rem; color: #b58fc8; margin-bottom: 12px; line-height: 1.5; }
+
+    /* フォトミッション */
+    .mission {
+      display: flex; align-items: center; gap: 10px; padding: 11px 0;
+      border-bottom: 1px solid rgba(220,170,240,0.1);
+    }
+    .mission:last-child { border-bottom: none; }
+    .mission .mi-check {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.3); color: transparent;
+    }
+    .mission.done .mi-check { background: linear-gradient(135deg,#7ee0a0,#54c47c); border: none; color: #08240f; }
+    .mission .mi-text { flex: 1; min-width: 0; font-size: 0.9rem; color: #f0e0fa; line-height: 1.4; }
+    .mission.done .mi-text { color: #b58fc8; text-decoration: line-through; }
+    .mission .mi-go {
+      flex-shrink: 0; padding: 7px 11px; border-radius: 10px; font-size: 0.78rem; cursor: pointer;
+      background: rgba(226,106,168,0.16); border: 1.5px solid rgba(226,106,168,0.42); color: #ffc0e0; font-family: inherit;
+    }
+    .mission .mi-go:active { transform: scale(0.95); }
+    .mission .mi-by { flex-shrink: 0; font-size: 1.05rem; }
+    .mission-progress { font-size: 0.78rem; color: #ffd97d; margin-top: 10px; text-align: center; }
+
+    /* 写真グリッド */
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 4px; }
+    .photo-cell { position: relative; aspect-ratio: 1; border-radius: 11px; overflow: hidden; background: rgba(255,255,255,0.05); cursor: pointer; }
+    .photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-cell .pc-who { position: absolute; top: 4px; left: 4px; font-size: 0.85rem; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7)); }
+    .photo-cell .pc-best { position: absolute; top: 4px; right: 4px; font-size: 0.9rem; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7)); }
+    .photo-cell .pc-mission { position: absolute; bottom: 0; left: 0; right: 0; padding: 3px 5px; font-size: 0.6rem; background: linear-gradient(0deg, rgba(0,0,0,0.72), transparent); color: #ffd6ec; line-height: 1.25; }
+    .add-photo-cell {
+      aspect-ratio: 1; border-radius: 11px; border: 1.5px dashed rgba(220,170,240,0.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      color: #d7a8dd; font-size: 0.72rem; cursor: pointer; background: rgba(255,255,255,0.03);
+    }
+    .add-photo-cell .plus { font-size: 1.5rem; line-height: 1; }
+    .add-photo-cell:active { transform: scale(0.96); }
+
+    /* コメント */
+    .comment { display: flex; gap: 9px; padding: 10px 0; border-bottom: 1px solid rgba(220,170,240,0.1); }
+    .comment:last-of-type { border-bottom: none; }
+    .comment .cm-emoji { font-size: 1.3rem; flex-shrink: 0; }
+    .comment .cm-body { flex: 1; min-width: 0; }
+    .comment .cm-name { font-size: 0.74rem; color: #c79fd8; }
+    .comment .cm-text { font-size: 0.9rem; color: #f0e0fa; margin-top: 2px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+    .comment .cm-del { flex-shrink: 0; color: #a878b8; font-size: 0.72rem; cursor: pointer; background: none; border: none; font-family: inherit; }
+    .comment-form { display: flex; gap: 8px; margin-top: 12px; }
+    .comment-form textarea {
+      flex: 1; min-width: 0; padding: 11px 13px; resize: none; min-height: 44px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(220,170,240,0.28);
+      border-radius: 12px; color: #f3e8fc; font-size: 15px; font-family: inherit; outline: none;
+    }
+    .comment-form button {
+      flex-shrink: 0; padding: 0 16px; border-radius: 12px; font-family: inherit; font-size: 0.85rem; cursor: pointer;
+      background: rgba(226,106,168,0.2); border: 1.5px solid rgba(226,106,168,0.45); color: #ffc0e0;
+    }
+
+    /* ふり返り */
+    .review-mine textarea {
+      width: 100%; padding: 11px 13px; resize: none; min-height: 60px; margin-top: 8px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(220,170,240,0.28);
+      border-radius: 12px; color: #f3e8fc; font-size: 15px; font-family: inherit; outline: none;
+    }
+    .stars { display: flex; gap: 6px; font-size: 1.7rem; }
+    .stars .star { cursor: pointer; filter: grayscale(1) opacity(0.45); transition: filter 0.12s, transform 0.1s; }
+    .stars .star.on { filter: none; }
+    .stars .star:active { transform: scale(1.2); }
+    .review-partner { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(220,170,240,0.14); }
+    .review-partner .rp-who { font-size: 0.78rem; color: #c79fd8; margin-bottom: 4px; }
+    .review-partner .rp-stars { font-size: 1.05rem; }
+    .review-partner .rp-body { font-size: 0.9rem; color: #f0e0fa; margin-top: 5px; line-height: 1.5; }
+
+    /* モーダル (作成/編集) */
+    .modal-back {
+      position: fixed; inset: 0; background: rgba(10,4,16,0.72); z-index: 200;
+      display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px);
+    }
+    .modal-back.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 620px; background: linear-gradient(160deg,#2a0d34,#3a1050);
+      border-top-left-radius: 22px; border-top-right-radius: 22px;
+      border-top: 1.5px solid rgba(220,170,240,0.3);
+      padding: 20px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+      max-height: 88vh; overflow-y: auto;
+    }
+    .modal h2 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.25rem; color: #f6e8fd; margin-bottom: 16px; text-align: center; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.78rem; color: #cf9fe0; margin-bottom: 6px; }
+    .field input, .field textarea {
+      width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.25);
+      border: 1.5px solid rgba(220,170,240,0.28); border-radius: 12px;
+      color: #f3e8fc; font-size: 16px; font-family: inherit; outline: none;
+    }
+    .field textarea { resize: none; min-height: 60px; }
+    .field input:focus, .field textarea:focus { border-color: rgba(226,106,168,0.6); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-actions button { flex: 1; padding: 14px; border-radius: 13px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(220,170,240,0.25); color: #d7a8dd; }
+    .btn-ok { background: linear-gradient(135deg, #e26aa8, #a850e0); border: none; color: #fff; }
+    .btn-ok:disabled { opacity: 0.5; }
+
+    /* ライトボックス */
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 100%; max-height: 74vh; border-radius: 12px; }
+    .lightbox .lb-cap { color: #f0e0fa; font-size: 0.9rem; margin-top: 14px; text-align: center; max-width: 90%; }
+    .lightbox .lb-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .lightbox .lb-actions button { padding: 10px 16px; border-radius: 12px; font-family: inherit; font-size: 0.85rem; cursor: pointer; background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(50,16,64,0.96); border: 1.5px solid rgba(226,106,168,0.5);
+      color: #ffd6ec; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a class="back" href="/index.html" id="back-link">← ホーム</a>
+    <h1>💕 ふたりのデート</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="content">
+    <!-- 一覧ビュー -->
+    <div id="list-view">
+      <button class="plan-btn" onclick="openCreate()">✨ デートを計画する</button>
+      <div class="section">
+        <div class="section-label">これからのデート</div>
+        <div id="planned-list"><div class="empty-msg">読み込み中...</div></div>
+      </div>
+      <div class="section">
+        <div class="section-label">ふたりの思い出</div>
+        <div id="done-list"></div>
+      </div>
+    </div>
+
+    <!-- 詳細ビュー -->
+    <div id="detail-view"></div>
+  </div>
+
+  <!-- 作成/編集モーダル -->
+  <div class="modal-back" id="modal-back">
+    <div class="modal">
+      <h2 id="modal-title">デートを計画する</h2>
+      <div class="field"><label>どんなデート？</label><input type="text" id="f-title" maxlength="40" placeholder="例: 水族館デート / おうち映画会"></div>
+      <div class="field"><label>いつ</label><input type="date" id="f-date"></div>
+      <div class="field"><label>どこで（任意）</label><input type="text" id="f-place" maxlength="60" placeholder="例: しながわ水族館"></div>
+      <div class="field"><label>メモ（任意）</label><textarea id="f-memo" maxlength="300" placeholder="集合時間・持ち物・やりたいこと など"></textarea></div>
+      <div id="mission-note" class="field" style="font-size:0.78rem;color:#cf9fe0;line-height:1.6;">📸 当日は「フォトミッション」が3つ届くよ。ふたりでクリアするともっと楽しい！</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">やめる</button>
+        <button class="btn-ok" id="modal-ok" onclick="saveDate()">計画する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ライトボックス -->
+  <div class="lightbox" id="lightbox" onclick="if(event.target.id==='lightbox')closeLightbox()">
+    <img id="lb-img" src="" alt="">
+    <div class="lb-cap" id="lb-cap"></div>
+    <div class="lb-actions" id="lb-actions"></div>
+  </div>
+
+  <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="onPhotoPicked(this)">
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ====== フォトミッション プール ======
+    const MISSION_POOL = [
+      '空を大きく入れて撮る', 'ふたりの手をつないで', '相手の“今日いちばんの笑顔”',
+      '色や服をおそろいにして', '今日食べたベストな一品', '変な顔でいっしょに自撮り',
+      '今いる場所がわかる景色や看板', '相手が夢中になってる瞬間', '足元・靴をならべて',
+      '見上げるアングルで', 'きょうの空の色', '相手にナイショで撮った1枚',
+      'ふたりの影を撮る', 'おそろいのドリンク', '遠くのものを指さして',
+      '今日の“かわいい”を見つけて', 'いつもと違う表情で', '窓・鏡ごしの2人',
+    ]
+    function pickMissions(n = 3) {
+      const pool = [...MISSION_POOL]
+      const out = []
+      while (out.length < n && pool.length) {
+        out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
+      }
+      return out
+    }
+
+    let myId = null, myProfile = null, partnerProfile = null, profById = {}
+    let dates = []
+    let editingId = null              // モーダルが編集中の date id
+    let openDateId = null             // 詳細表示中の date id
+    // 詳細ビューのデータ
+    let dPhotos = [], dComments = [], dReviews = {}
+    let signedCache = {}              // path -> signed url
+    let pendingMission = null         // 写真アップロード時にセットするミッション文言
+
+    // ====== ユーティリティ ======
+    function daysUntil(dateStr) {
+      const target = new Date(dateStr + 'T00:00:00+09:00')
+      const now = new Date()
+      const jstNow = new Date(now.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) + 'T00:00:00+09:00')
+      return Math.round((target - jstNow) / 86400000)
+    }
+    function fmtDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+    }
+    async function signUrl(path) {
+      if (!path) return ''
+      if (signedCache[path]) return signedCache[path]
+      const { data } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
+      if (data?.signedUrl) signedCache[path] = data.signedUrl
+      return signedCache[path] || ''
+    }
+
+    // ====== 一覧の読み込み ======
+    async function loadDates() {
+      const { data } = await _sb.from('dates').select('*').order('date_str', { ascending: false })
+      dates = data || []
+      // サムネ用に全写真を1回で取得
+      const ids = dates.map(d => d.id)
+      let photosByDate = {}, reviewsByDate = {}
+      if (ids.length) {
+        const { data: ph } = await _sb.from('date_photos').select('date_id,path,is_best').in('date_id', ids)
+        ;(ph || []).forEach(p => { (photosByDate[p.date_id] ||= []).push(p) })
+        const { data: rv } = await _sb.from('date_reviews').select('date_id,rating').in('date_id', ids)
+        ;(rv || []).forEach(r => { (reviewsByDate[r.date_id] ||= []).push(r.rating) })
+      }
+      await renderList(photosByDate, reviewsByDate)
+    }
+
+    async function renderList(photosByDate, reviewsByDate) {
+      const planned = dates.filter(d => d.status === 'planned').sort((a, b) => a.date_str.localeCompare(b.date_str))
+      const done = dates.filter(d => d.status === 'done')
+
+      const plEl = document.getElementById('planned-list')
+      if (!planned.length) {
+        plEl.innerHTML = '<div class="empty-msg">まだ予定はないよ。<br>「デートを計画する」で次の楽しみを決めよう ✨</div>'
+      } else {
+        plEl.innerHTML = planned.map(d => plannedCardHtml(d)).join('')
+      }
+
+      const dnEl = document.getElementById('done-list')
+      if (!done.length) {
+        dnEl.innerHTML = '<div class="empty-msg">思い出はまだこれから 💫</div>'
+      } else {
+        dnEl.innerHTML = done.map(d => doneCardHtml(d, photosByDate[d.id] || [], reviewsByDate[d.id] || [])).join('')
+        // サムネの signed url を後入れ
+        for (const d of done) {
+          const ph = (photosByDate[d.id] || []).slice(0, 4)
+          for (let i = 0; i < ph.length; i++) {
+            const url = await signUrl(ph[i].path)
+            const img = document.querySelector(`#dc-${d.id} .dc-thumbs img[data-i="${i}"]`)
+            if (img && url) img.src = url
+          }
+        }
+      }
+    }
+
+    function plannedCardHtml(d) {
+      const n = daysUntil(d.date_str)
+      const soon = n <= 3
+      let numHtml
+      if (n > 0) numHtml = `<div class="num">${n}</div><div class="unit">日後</div>`
+      else if (n === 0) numHtml = `<div class="num">今日</div>`
+      else numHtml = `<div class="num">${fmtShort(d.date_str)}</div><div class="unit">が予定日</div>`
+      const place = d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''
+      return `
+        <div class="date-card" id="dc-${d.id}" onclick="openDetail('${d.id}')">
+          <div class="dc-top">
+            <div class="dc-count ${soon ? 'soon' : ''}">${numHtml}</div>
+            <div class="dc-body">
+              <div class="dc-title">${escHtml(d.title)}</div>
+              <div class="dc-sub"><span>📅 ${fmtDate(d.date_str)}</span>${place}</div>
+            </div>
+          </div>
+        </div>`
+    }
+    function fmtShort(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+    }
+
+    function doneCardHtml(d, photos, ratings) {
+      const place = d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''
+      const thumbs = photos.slice(0, 4)
+      let thumbsHtml = ''
+      if (thumbs.length) {
+        thumbsHtml = '<div class="dc-thumbs">' + thumbs.map((p, i) =>
+          `<img data-i="${i}" alt="">`).join('') +
+          (photos.length > 4 ? `<div class="more">+${photos.length - 4}</div>` : '') + '</div>'
+      }
+      let ratingHtml = ''
+      if (ratings.length) {
+        const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length
+        ratingHtml = `<div class="dc-rating">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5 - Math.round(avg))} 満足度 ${avg.toFixed(1)}</div>`
+      }
+      return `
+        <div class="date-card done" id="dc-${d.id}" onclick="openDetail('${d.id}')">
+          <div class="dc-top">
+            <div class="dc-count done-badge"><div class="num">🎞</div></div>
+            <div class="dc-body">
+              <div class="dc-title">${escHtml(d.title)}</div>
+              <div class="dc-sub"><span>📅 ${fmtDate(d.date_str)}</span>${place}</div>
+              ${ratingHtml}
+            </div>
+          </div>
+          ${thumbsHtml}
+        </div>`
+    }
+
+    // ====== 詳細ビュー ======
+    async function openDetail(id) {
+      openDateId = id
+      const d = dates.find(x => x.id === id)
+      if (!d) return
+      document.getElementById('list-view').style.display = 'none'
+      const dv = document.getElementById('detail-view')
+      dv.style.display = 'block'
+      dv.innerHTML = '<div class="empty-msg">読み込み中...</div>'
+      window.scrollTo(0, 0)
+      // データ取得
+      const [{ data: ph }, { data: cm }, { data: rv }] = await Promise.all([
+        _sb.from('date_photos').select('*').eq('date_id', id).order('created_at', { ascending: true }),
+        _sb.from('date_comments').select('*').eq('date_id', id).order('created_at', { ascending: true }),
+        _sb.from('date_reviews').select('*').eq('date_id', id),
+      ])
+      dPhotos = ph || []; dComments = cm || []
+      dReviews = {}; (rv || []).forEach(r => { dReviews[r.user_id] = r })
+      await renderDetail(d)
+    }
+
+    function closeDetail() {
+      openDateId = null
+      document.getElementById('detail-view').style.display = 'none'
+      document.getElementById('list-view').style.display = 'block'
+      loadDates()
+    }
+
+    async function renderDetail(d) {
+      const dv = document.getElementById('detail-view')
+      const missions = Array.isArray(d.missions) ? d.missions : []
+      // ミッション達成状況
+      const doneMissions = {}
+      dPhotos.forEach(p => { if (p.mission) doneMissions[p.mission] = p.user_id })
+      const doneCount = missions.filter(m => doneMissions[m]).length
+
+      const missionHtml = missions.map(m => {
+        const by = doneMissions[m]
+        const isDone = !!by
+        const byEmoji = by ? (profById[by]?.emoji || '✅') : ''
+        return `
+          <div class="mission ${isDone ? 'done' : ''}">
+            <div class="mi-check">✓</div>
+            <div class="mi-text">${escHtml(m)}</div>
+            ${isDone ? `<span class="mi-by">${byEmoji}</span>`
+              : `<button class="mi-go" onclick="pickPhoto('${escAttr(m)}')">📸 達成</button>`}
+          </div>`
+      }).join('')
+
+      const statusBtn = d.status === 'planned'
+        ? `<button class="mini-btn primary" onclick="markDone('${d.id}')">🎉 デート完了にする</button>`
+        : `<button class="mini-btn" onclick="markPlanned('${d.id}')">↩ 予定に戻す</button>`
+
+      dv.innerHTML = `
+        <a class="back" href="#" onclick="closeDetail();return false;" style="color:#d7a8dd;font-size:0.9rem;text-decoration:none;">← デート一覧へ</a>
+        <div class="detail-head" style="margin-top:12px;">
+          <div class="detail-title">${escHtml(d.title)}</div>
+          <div class="detail-meta">
+            <span>📅 ${fmtDate(d.date_str)}${d.status === 'planned' ? countdownText(d.date_str) : ''}</span>
+            ${d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''}
+          </div>
+          ${d.memo ? `<div class="detail-memo">${escHtml(d.memo)}</div>` : ''}
+          <div class="detail-actions">
+            ${statusBtn}
+            <button class="mini-btn" onclick="openEdit('${d.id}')">✎ 編集</button>
+            <button class="mini-btn danger" onclick="deleteDate('${d.id}')">🗑 削除</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📸 フォトミッション</h3>
+          <div class="card-hint">デート中にこのお題の写真を撮ってクリア！ 達成すると +3pt</div>
+          ${missions.length ? missionHtml : '<div class="empty-msg">お題はありません</div>'}
+          <div class="mission-progress">${doneCount} / ${missions.length} クリア ${doneCount === missions.length && missions.length ? '🎊 コンプ！' : ''}</div>
+        </div>
+
+        <div class="card">
+          <h3>🖼 ふたりの写真</h3>
+          <div class="card-hint">お題以外の写真も自由に追加できるよ（+2pt）。タップで拡大・ベスト選出</div>
+          <div class="photo-grid" id="photo-grid"></div>
+        </div>
+
+        <div class="card">
+          <h3>💬 コメント</h3>
+          <div class="card-hint">デートの感想やツッコミをお互いに残そう（+1pt）</div>
+          <div id="comment-list"></div>
+          <div class="comment-form">
+            <textarea id="comment-text" maxlength="300" placeholder="コメントを書く…"></textarea>
+            <button onclick="submitComment()">送信</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>⭐ ふたりのふり返り</h3>
+          <div class="card-hint">星と一言で今日を記録（記入で +3pt）</div>
+          <div id="review-area"></div>
+        </div>
+      `
+      renderPhotos()
+      renderComments()
+      renderReviews()
+    }
+
+    function countdownText(dateStr) {
+      const n = daysUntil(dateStr)
+      if (n > 0) return ` ・ あと${n}日`
+      if (n === 0) return ' ・ 今日だ！'
+      return ''
+    }
+
+    // ---- 写真 ----
+    async function renderPhotos() {
+      const grid = document.getElementById('photo-grid')
+      if (!grid) return
+      let html = dPhotos.map(p => {
+        const who = profById[p.user_id]?.emoji || '👤'
+        const missionTag = p.mission ? `<div class="pc-mission">📸 ${escHtml(p.mission)}</div>` : ''
+        const best = p.is_best ? '<span class="pc-best">⭐</span>' : ''
+        return `<div class="photo-cell" data-path="${escAttr(p.path)}" onclick="openLightbox('${p.id}')">
+            <img data-path="${escAttr(p.path)}" alt="">
+            <span class="pc-who">${who}</span>${best}${missionTag}
+          </div>`
+      }).join('')
+      html += `<div class="add-photo-cell" onclick="pickPhoto(null)"><span class="plus">＋</span>写真を追加</div>`
+      grid.innerHTML = html
+      // signed url 後入れ
+      for (const p of dPhotos) {
+        const url = await signUrl(p.path)
+        const img = grid.querySelector(`img[data-path="${cssEsc(p.path)}"]`)
+        if (img && url) img.src = url
+      }
+    }
+
+    function pickPhoto(mission) {
+      pendingMission = mission
+      document.getElementById('photo-input').click()
+    }
+
+    async function onPhotoPicked(input) {
+      const file = input.files && input.files[0]
+      input.value = ''
+      if (!file || !openDateId) return
+      showToast('アップロード中…')
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const path = `date_photos/${openDateId}/${myId}/${Date.now()}_${Math.floor(Math.random() * 1e6)}.${ext}`
+      const { error: upErr } = await _sb.storage.from('memories').upload(path, file, { upsert: true })
+      if (upErr) { showToast('アップロード失敗'); console.error(upErr); return }
+      const { data: ins, error } = await _sb.from('date_photos')
+        .insert({ date_id: openDateId, user_id: myId, path, mission: pendingMission }).select('*').single()
+      if (error) { showToast('保存失敗'); console.error(error); return }
+      dPhotos.push(ins)
+      // ポイント: ミッション達成 +3 / 自由写真 +2
+      const isMission = !!pendingMission
+      await addPoints(myId, isMission ? 3 : 2, isMission ? 'date_mission' : 'date_photo')
+      const d = dates.find(x => x.id === openDateId)
+      notifyPartner(isMission ? '📸 フォトミッション達成！' : '🖼 デートの写真が追加されたよ',
+        `${myProfile?.emoji || ''} ${d?.title || ''}${isMission ? '「' + pendingMission + '」' : ''}`)
+      pendingMission = null
+      showToast(isMission ? 'ミッションクリア！ +3pt 🎉' : '写真を追加したよ +2pt')
+      await openDetail(openDateId)   // 再描画 (ミッション状況も更新)
+    }
+
+    // ---- ライトボックス ----
+    async function openLightbox(photoId) {
+      const p = dPhotos.find(x => x.id === photoId)
+      if (!p) return
+      const url = await signUrl(p.path)
+      document.getElementById('lb-img').src = url
+      document.getElementById('lb-cap').textContent =
+        (p.mission ? '📸 ' + p.mission : '') + (profById[p.user_id] ? `  (${profById[p.user_id].emoji})` : '')
+      const acts = document.getElementById('lb-actions')
+      const bestLabel = p.is_best ? '⭐ ベスト解除' : '⭐ ベストショットに'
+      let html = `<button onclick="toggleBest('${p.id}')">${bestLabel}</button>`
+      if (p.user_id === myId) html += `<button onclick="deletePhoto('${p.id}')">🗑 削除</button>`
+      html += `<button onclick="closeLightbox()">閉じる</button>`
+      acts.innerHTML = html
+      document.getElementById('lightbox').classList.add('open')
+    }
+    function closeLightbox() { document.getElementById('lightbox').classList.remove('open') }
+
+    async function toggleBest(photoId) {
+      const p = dPhotos.find(x => x.id === photoId)
+      if (!p) return
+      const makeBest = !p.is_best
+      if (makeBest) {
+        // このデートの他の写真のベストを外す
+        await _sb.from('date_photos').update({ is_best: false }).eq('date_id', openDateId).eq('is_best', true)
+      }
+      await _sb.from('date_photos').update({ is_best: makeBest }).eq('id', photoId)
+      closeLightbox()
+      await openDetail(openDateId)
+    }
+
+    async function deletePhoto(photoId) {
+      if (!confirm('この写真を削除する？')) return
+      const p = dPhotos.find(x => x.id === photoId)
+      if (p?.path) await _sb.storage.from('memories').remove([p.path])
+      await _sb.from('date_photos').delete().eq('id', photoId)
+      closeLightbox()
+      showToast('削除しました')
+      await openDetail(openDateId)
+    }
+
+    // ---- コメント ----
+    function renderComments() {
+      const el = document.getElementById('comment-list')
+      if (!el) return
+      if (!dComments.length) { el.innerHTML = '<div class="empty-msg" style="padding:12px;">まだコメントはないよ</div>'; return }
+      el.innerHTML = dComments.map(c => {
+        const who = profById[c.user_id]
+        const del = c.user_id === myId ? `<button class="cm-del" onclick="deleteComment('${c.id}')">削除</button>` : ''
+        return `<div class="comment">
+            <span class="cm-emoji">${who?.emoji || '👤'}</span>
+            <div class="cm-body"><div class="cm-name">${escHtml(who?.name || '')}</div><div class="cm-text">${escHtml(c.body)}</div></div>
+            ${del}
+          </div>`
+      }).join('')
+    }
+
+    async function submitComment() {
+      const ta = document.getElementById('comment-text')
+      const body = ta.value.trim()
+      if (!body || !openDateId) return
+      ta.value = ''
+      const { data: ins, error } = await _sb.from('date_comments')
+        .insert({ date_id: openDateId, user_id: myId, body }).select('*').single()
+      if (error) { showToast('送信失敗'); console.error(error); return }
+      dComments.push(ins)
+      await addPoints(myId, 1, 'date_comment')
+      const d = dates.find(x => x.id === openDateId)
+      notifyPartner('💬 デートにコメント', `${myProfile?.emoji || ''} ${d?.title || ''}: ${body.slice(0, 30)}`)
+      renderComments()
+      showToast('コメントしたよ +1pt')
+    }
+
+    async function deleteComment(id) {
+      await _sb.from('date_comments').delete().eq('id', id)
+      dComments = dComments.filter(c => c.id !== id)
+      renderComments()
+    }
+
+    // ---- ふり返り ----
+    let reviewDraftStars = 0
+    function renderReviews() {
+      const el = document.getElementById('review-area')
+      if (!el) return
+      const mine = dReviews[myId]
+      reviewDraftStars = mine?.rating || 5
+      const starHtml = (active) => [1, 2, 3, 4, 5].map(i =>
+        `<span class="star ${i <= active ? 'on' : ''}" data-v="${i}" onclick="setStar(${i})">★</span>`).join('')
+      let html = `<div class="review-mine">
+          <div class="stars" id="my-stars">${starHtml(reviewDraftStars)}</div>
+          <textarea id="review-text" maxlength="200" placeholder="今日はどうだった？ ひとことどうぞ">${escHtml(mine?.body || '')}</textarea>
+          <button class="mini-btn primary" style="margin-top:10px;" onclick="submitReview()">${mine ? '更新する' : '記録する'}</button>
+        </div>`
+      const partner = partnerProfile && dReviews[partnerProfile.id]
+      if (partner) {
+        html += `<div class="review-partner">
+            <div class="rp-who">${partnerProfile.emoji} ${escHtml(partnerProfile.name)} のふり返り</div>
+            <div class="rp-stars">${'★'.repeat(partner.rating)}${'☆'.repeat(5 - partner.rating)}</div>
+            ${partner.body ? `<div class="rp-body">${escHtml(partner.body)}</div>` : ''}
+          </div>`
+      }
+      el.innerHTML = html
+    }
+    function setStar(v) {
+      reviewDraftStars = v
+      document.querySelectorAll('#my-stars .star').forEach(s => {
+        s.classList.toggle('on', parseInt(s.dataset.v) <= v)
+      })
+    }
+    async function submitReview() {
+      if (!openDateId) return
+      const body = document.getElementById('review-text').value.trim()
+      const already = !!dReviews[myId]
+      const { error } = await _sb.from('date_reviews').upsert(
+        { date_id: openDateId, user_id: myId, rating: reviewDraftStars, body: body || null, updated_at: new Date().toISOString() },
+        { onConflict: 'date_id,user_id' })
+      if (error) { showToast('保存失敗'); console.error(error); return }
+      dReviews[myId] = { date_id: openDateId, user_id: myId, rating: reviewDraftStars, body }
+      if (!already) await addPoints(myId, 3, 'date_review')
+      const d = dates.find(x => x.id === openDateId)
+      notifyPartner('⭐ デートのふり返りが届いたよ', `${myProfile?.emoji || ''} ${d?.title || ''}: ${'★'.repeat(reviewDraftStars)}`)
+      showToast(already ? 'ふり返りを更新したよ' : 'ふり返りを記録 +3pt ⭐')
+      renderReviews()
+    }
+
+    // ====== 作成 / 編集 / 状態変更 ======
+    function openCreate() {
+      editingId = null
+      document.getElementById('modal-title').textContent = 'デートを計画する'
+      document.getElementById('modal-ok').textContent = '計画する'
+      document.getElementById('mission-note').style.display = 'block'
+      document.getElementById('f-title').value = ''
+      document.getElementById('f-date').value = jstDateStr()
+      document.getElementById('f-place').value = ''
+      document.getElementById('f-memo').value = ''
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function openEdit(id) {
+      const d = dates.find(x => x.id === id)
+      if (!d) return
+      editingId = id
+      document.getElementById('modal-title').textContent = 'デートを編集'
+      document.getElementById('modal-ok').textContent = '保存する'
+      document.getElementById('mission-note').style.display = 'none'
+      document.getElementById('f-title').value = d.title
+      document.getElementById('f-date').value = d.date_str
+      document.getElementById('f-place').value = d.place || ''
+      document.getElementById('f-memo').value = d.memo || ''
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function closeModal() { document.getElementById('modal-back').classList.remove('open') }
+
+    async function saveDate() {
+      const title = document.getElementById('f-title').value.trim()
+      const date_str = document.getElementById('f-date').value
+      const place = document.getElementById('f-place').value.trim() || null
+      const memo = document.getElementById('f-memo').value.trim() || null
+      if (!title) { showToast('タイトルを入れてね'); return }
+      if (!date_str) { showToast('日付を選んでね'); return }
+      const okBtn = document.getElementById('modal-ok'); okBtn.disabled = true
+
+      if (editingId) {
+        const { error } = await _sb.from('dates').update({ title, date_str, place, memo }).eq('id', editingId)
+        okBtn.disabled = false
+        if (error) { showToast('保存失敗'); console.error(error); return }
+        closeModal()
+        showToast('保存したよ')
+        if (openDateId === editingId) { const d = dates.find(x => x.id === editingId); Object.assign(d, { title, date_str, place, memo }); await openDetail(editingId) }
+        else loadDates()
+      } else {
+        const missions = pickMissions(3)
+        const { data: ins, error } = await _sb.from('dates')
+          .insert({ title, date_str, place, memo, status: 'planned', missions, created_by: myId }).select('*').single()
+        okBtn.disabled = false
+        if (error) { showToast('作成失敗'); console.error(error); return }
+        await addPoints(myId, 2, 'date_create')
+        notifyPartner('💕 デートの予定ができたよ', `${myProfile?.emoji || ''} ${title}（${fmtDate(date_str)}）`, ins.id)
+        closeModal()
+        showToast('デートを計画したよ +2pt ✨')
+        loadDates()
+      }
+    }
+
+    async function markDone(id) {
+      await _sb.from('dates').update({ status: 'done' }).eq('id', id)
+      const d = dates.find(x => x.id === id); if (d) d.status = 'done'
+      notifyPartner('🎉 デート完了！', `${myProfile?.emoji || ''} ${d?.title || ''} を思い出に登録したよ`)
+      showToast('思い出に登録したよ 🎞')
+      await openDetail(id)
+    }
+    async function markPlanned(id) {
+      await _sb.from('dates').update({ status: 'planned' }).eq('id', id)
+      const d = dates.find(x => x.id === id); if (d) d.status = 'planned'
+      await openDetail(id)
+    }
+
+    async function deleteDate(id) {
+      if (!confirm('このデートを削除する？写真・コメントも消えます')) return
+      // 写真実体を削除
+      const paths = dPhotos.map(p => p.path).filter(Boolean)
+      if (paths.length) await _sb.storage.from('memories').remove(paths)
+      await _sb.from('dates').delete().eq('id', id)
+      showToast('削除しました')
+      closeDetail()
+    }
+
+    // ====== 共通 ======
+    function notifyPartner(title, body, dateId) {
+      if (!partnerProfile) return
+      const id = dateId || openDateId
+      notify({ title, body, url: id ? `/dates.html?date=${id}` : '/dates.html', kind: 'date', recipient: partnerProfile.id })
+    }
+    function escAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;') }
+    function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&') }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2000)
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      ;(profiles || []).forEach(p => { profById[p.id] = p })
+      myProfile = profById[myId] || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+      // ?date=<id> で直接詳細を開く (通知タップ用)
+      await loadDates()
+      const params = new URLSearchParams(location.search)
+      const openId = params.get('date')
+      if (openId && dates.find(d => d.id === openId)) openDetail(openId)
+    }
+    init()
+  </script>
+</body>
+</html>
