@@ -210,6 +210,18 @@
 - **⚠️ 現在閉鎖中** (2026-07-12〜)。index.htmlのメニュー・セクションから削除済み。ファイル自体は残しているが導線なし。1on1側で写真機能があるので当面はそちらへ集約
 - 元機能: 写真アップロード（複数選択・ドラッグ&ドロップ・メモ付き）、Supabase Storage `memories` bucket、`createSignedUrl` (1時間有効)
 
+### 4.9.5 今日の1曲 / One Song a Day (`one_song.html`) — 2026-07-18 新設
+
+- 毎日ひとつだけ、音楽・動画・ポッドキャスト等のURLを相手にシェアする機能
+- **サービス判別**: URLから youtube / spotify / apple / podcast / soundcloud / other を判定しバッジ表示
+- **メタ取得**: Spotify (`open.spotify.com`) は本家 oEmbed (`open.spotify.com/oembed`)、それ以外は **noembed.com** (どちらも CORS `*`) でタイトル・投稿者・サムネイルを取得。取得失敗時は YouTube 動画IDからサムネ生成、それも無ければ🎵プレースホルダ。取得結果は `daily_songs` に保存し履歴で再取得不要
+- **投稿**: URL貼付→プレビュー→ひとことコメント(任意, 140字)→「今日の1曲にする」。**1人1日1曲**、同日は upsert で差し替え
+- **今日**: ふたりの今日の1曲をカード表示。**履歴**: 今日以外を日付ごとにグルーピングして新しい順
+- **リアクション**: 相手の曲に 💖🎧🔥🥰😭👍 を1つ付与(再タップで解除)。`song_reactions` テーブル(1人1曲1リアクション)
+- **通知**: 投稿・リアクションで相手に Push (kind: `song`)。設定でON/OFF可
+- **DB**: `daily_songs` (uuid PK, unique user_id+date_str) / `song_reactions` (PK song_id+user_id, song_id は daily_songs へ FK cascade)。RLS: SELECT全員 / 自分の分のみ書込
+- 導線: ホーム先頭タイル / もっとシート(ふたり) / 設定の通知kind / お知らせセンター(🎵)
+
 ### 4.10 共有カレンダー (`calendar.html`)
 
 - ふたりの予定を月表示

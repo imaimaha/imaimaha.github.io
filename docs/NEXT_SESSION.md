@@ -1,5 +1,18 @@
 # 次回セッション用: TODO と背景
 
+## 2026-07-18 新機能: One Song a Day (今日の1曲)
+
+- `one_song.html` 新設。毎日1曲(音楽/動画/ポッドキャスト)を相手にシェア
+- メタ取得: Spotifyは本家oEmbed、他はnoembed.com (両方CORS `*`)。取得結果はDB保存
+- DB: `daily_songs`(uuid PK, unique user_id+date_str, upsertで差し替え) / `song_reactions`(PK song_id+user_id, daily_songsへFK cascade)。RLS: select全員/自分のみ書込
+- リアクション 💖🎧🔥🥰😭👍 (相手の曲に1つ, 再タップ解除)
+- 投稿/リアクションで相手にPush (kind: `song`, 設定でON/OFF可)
+- 導線: ホーム先頭tile / もっと(ふたり) / 設定kind / お知らせ絵文字・フィルタ
+- **検証済**: Playwright で YouTube プレビュー→投稿→表示→DB(サムネ含む) / Spotifyメタ取得 / リアクション付与→解除。テスト `tests/song_flow.spec.js` (リアクションはRLSで他人の曲を作れないため、service_role で種まき→UI操作→掃除の手順で別途確認)
+- **メモ**: 実ユーザーは既に使用開始(hedgehogが米津玄師をシェア済み)。noembed非対応サービスが出たら fetchMeta にプロバイダ追加で対応
+
+---
+
 ## 2026-07-18 セッション追記 (後半: UI改善まとめ)
 
 **このセッション後半でやったこと (すべてデプロイ済み)**
