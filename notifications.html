@@ -198,6 +198,7 @@
     <div class="filter-chip" data-filter="status">🕐 帰宅</div>
     <div class="filter-chip" data-filter="expense">💰 割り勘</div>
     <div class="filter-chip" data-filter="mood">💭 きもち</div>
+    <div class="filter-chip" data-filter="song">🎵 今日の1曲</div>
   </div>
 
   <div class="actions-row">
@@ -223,7 +224,7 @@
         thanks: '🌸', gacha: '🎰', shop: '🛍', capsule: '🎁',
         bingo: '🎯', color: '🎨', location: '📍', status: '🕐',
         quiz: '💬', closer: '💗', calendar: '📅', expense: '💰',
-        mood: '💭', bet: '⚔️',
+        mood: '💭', bet: '⚔️', song: '🎵',
       }
       return map[kind] || '🔔'
     }
@@ -239,10 +240,6 @@
       const day = Math.floor(hour / 24)
       if (day < 7) return `${day}日前`
       return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
-    }
-
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
     function showToast(msg) {
