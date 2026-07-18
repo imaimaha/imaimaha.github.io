@@ -469,9 +469,6 @@
     let delTarget = null    // { id, title, category }
     let collapsed = { '達成': false }  // 達成セクション初期閉じ
 
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
     function showToast(msg) {
       const t = document.getElementById('toast')
       t.textContent = msg

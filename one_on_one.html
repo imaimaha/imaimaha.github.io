@@ -511,10 +511,6 @@
       setTimeout(() => el.classList.remove('show'), 2800)
     }
 
-    function escHtml(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
-
     init()
   </script>
 </body>
