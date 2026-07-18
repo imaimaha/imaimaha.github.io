@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>オルゴール | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎼</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #0a1628 0%, #0d2044 40%, #112a5e 100%) fixed;
+      color: #e8f0fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(26,48,96,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #98bedd; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #e8f4fd; flex: 1; text-align: center; }
+
+    .content { max-width: 560px; margin: 0 auto; padding: 14px 14px calc(90px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .section-label { font-size: 0.8rem; color: #8fb4d8; letter-spacing: 0.08em; font-weight: 700; margin: 20px 4px 10px; }
+    .hint { font-size: 0.74rem; color: #7aadcc; margin: 6px 4px 10px; line-height: 1.6; }
+
+    /* ── コントロール ── */
+    .ctrl-card {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,215,140,0.28);
+      border-radius: 18px; padding: 14px; backdrop-filter: blur(8px);
+    }
+    .title-input {
+      width: 100%; padding: 11px 14px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(255,215,140,0.3);
+      border-radius: 12px; color: #ffedc9; font-size: 16px; font-family: 'Zen Kurenaido', sans-serif;
+      outline: none;
+    }
+    .title-input::placeholder { color: rgba(255,225,170,0.35); }
+    .title-input:focus { border-color: rgba(255,215,140,0.6); }
+
+    .tempo-row { display: flex; gap: 6px; margin-top: 10px; }
+    .tempo-chip {
+      flex: 1; padding: 8px; border-radius: 999px;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(150,200,255,0.2);
+      color: #98bedd; font-family: inherit; font-size: 0.8rem; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tempo-chip.active {
+      background: rgba(255,215,140,0.18); border-color: rgba(255,215,140,0.55); color: #ffe4ad; font-weight: 700;
+    }
+
+    .play-row { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-play {
+      flex: 1.6; padding: 13px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,200,90,0.3), rgba(255,160,60,0.34));
+      border: 1.5px solid rgba(255,210,120,0.6); color: #ffedc9;
+      font-family: inherit; font-size: 0.98rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255,180,70,0.25);
+    }
+    .btn-play:active { transform: scale(0.97); }
+    .btn-clear {
+      flex: 1; padding: 13px; border-radius: 14px;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(150,200,255,0.22);
+      color: #98bedd; font-family: inherit; font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-send {
+      width: 100%; margin-top: 10px; padding: 14px; border-radius: 14px;
+      background: linear-gradient(135deg, #d4837a, #e85f8a);
+      border: none; color: #fff; font-family: inherit; font-size: 0.98rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(232,95,138,0.35);
+    }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-send:active:not(:disabled) { transform: scale(0.98); }
+    .editing-row {
+      display: none; align-items: center; justify-content: space-between;
+      margin-top: 10px; font-size: 0.78rem; color: #ffd97d;
+    }
+    .editing-row button {
+      background: none; border: 1px solid rgba(150,200,255,0.3); border-radius: 999px;
+      color: #98bedd; font-family: inherit; font-size: 0.76rem; padding: 4px 12px; cursor: pointer;
+    }
+
+    /* ── オルゴールカード (グリッド) ── */
+    .card-frame {
+      margin-top: 14px;
+      background: linear-gradient(180deg, rgba(48,38,20,0.55), rgba(30,24,14,0.55));
+      border: 1.5px solid rgba(255,215,140,0.35);
+      border-radius: 18px; padding: 12px 10px;
+      box-shadow: inset 0 0 30px rgba(255,200,100,0.05);
+    }
+    .pitch-header {
+      display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px;
+      padding: 0 2px 6px;
+    }
+    .pitch-header span {
+      text-align: center; font-size: 0.55rem; color: rgba(255,220,160,0.55); letter-spacing: 0;
+    }
+    .orgel-grid { display: flex; flex-direction: column; gap: 4px; }
+    .orgel-row {
+      display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px;
+      padding: 0 2px; border-radius: 6px;
+      position: relative;
+    }
+    .orgel-row.beat::before {
+      content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 60%; border-radius: 2px; background: rgba(255,215,140,0.25);
+    }
+    .orgel-row.playing { background: rgba(255,220,140,0.10); }
+    .orgel-cell {
+      aspect-ratio: 1; border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,220,160,0.13);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, box-shadow 0.12s, transform 0.1s;
+    }
+    .orgel-cell.on {
+      background: radial-gradient(circle at 35% 35%, #ffe9b0, #f5b942 70%);
+      border-color: rgba(255,230,170,0.8);
+      box-shadow: 0 0 10px rgba(255,200,90,0.55);
+    }
+    .orgel-row.playing .orgel-cell.on {
+      box-shadow: 0 0 18px rgba(255,230,150,0.95);
+      transform: scale(1.15);
+    }
+
+    /* ── ギャラリー ── */
+    .mel-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.16);
+      border-radius: 16px; padding: 13px 14px; margin-bottom: 10px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .mel-card.highlight { border-color: rgba(255,215,140,0.7); box-shadow: 0 0 20px rgba(255,200,100,0.25); }
+    .mel-head { display: flex; align-items: center; gap: 8px; }
+    .mel-title { flex: 1; min-width: 0; font-family: 'Zen Kurenaido', sans-serif; font-size: 1.02rem; color: #ffedc9; word-break: break-word; }
+    .mel-meta { font-size: 0.72rem; color: #7aadcc; margin-top: 3px; }
+    .mel-actions { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .mel-btn {
+      padding: 8px 16px; border-radius: 999px;
+      background: rgba(255,200,90,0.14); border: 1.5px solid rgba(255,210,120,0.4);
+      color: #ffe4ad; font-family: inherit; font-size: 0.84rem; cursor: pointer;
+    }
+    .mel-btn:active { transform: scale(0.95); }
+    .mel-btn.sub { background: rgba(255,255,255,0.05); border-color: rgba(150,200,255,0.25); color: #98bedd; }
+    .mel-btn.danger { background: rgba(255,100,100,0.1); border-color: rgba(255,100,100,0.35); color: #ff9d9d; }
+    .heart-btn {
+      padding: 8px 14px; border-radius: 999px; font-size: 0.88rem;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,140,180,0.3);
+      color: #ffc4d8; font-family: inherit; cursor: pointer;
+    }
+    .heart-btn.mine { background: rgba(255,120,170,0.22); border-color: rgba(255,120,170,0.6); }
+    .empty-msg { text-align: center; color: #7aadcc; font-size: 0.88rem; padding: 20px 0; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(40,32,16,0.96); border: 1.5px solid rgba(255,215,140,0.55);
+      color: #ffe4ad; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 300;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>🎼 オルゴール</h1>
+  </div>
+
+  <div class="content">
+    <div class="ctrl-card">
+      <input class="title-input" id="mel-title" maxlength="40" placeholder="曲の名前（例: きみのねがおのワルツ）">
+      <div class="tempo-row">
+        <button class="tempo-chip" data-bpm="88" onclick="setTempo(88, this)">ゆっくり</button>
+        <button class="tempo-chip active" data-bpm="112" onclick="setTempo(112, this)">ふつう</button>
+        <button class="tempo-chip" data-bpm="138" onclick="setTempo(138, this)">はやめ</button>
+      </div>
+      <div class="play-row">
+        <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ きく</button>
+        <button class="btn-clear" onclick="clearGrid()">クリア</button>
+      </div>
+      <button class="btn-send" id="send-btn" onclick="sendMelody()">💌 相手にとどける</button>
+      <div class="editing-row" id="editing-row">
+        <span>✎「<span id="editing-title"></span>」を編集中</span>
+        <button onclick="resetEditor()">🆕 新しく作る</button>
+      </div>
+    </div>
+
+    <div class="hint">
+      まるをタップすると穴があいて音が鳴るよ。上から下へ流れて演奏される。<br>
+      どこを押してもきれいにハモる音だけ並んでるから、適当に打っても大丈夫 ✨
+    </div>
+
+    <!-- オルゴールカード -->
+    <div class="card-frame">
+      <div class="pitch-header" id="pitch-header"></div>
+      <div class="orgel-grid" id="orgel-grid"></div>
+    </div>
+
+    <!-- ギャラリー -->
+    <div class="section-label">🎁 ふたりのオルゴール棚</div>
+    <div id="gallery"><div class="empty-msg">読み込み中...</div></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─────────────────────────────
+    // 設定: Cペンタトニック 2オクターブ+ (低→高)。外れる音が無いスケール
+    // ─────────────────────────────
+    const PITCHES = [
+      { n: 'ド', f: 523.25 }, { n: 'レ', f: 587.33 }, { n: 'ミ', f: 659.26 },
+      { n: 'ソ', f: 783.99 }, { n: 'ラ', f: 880.00 },
+      { n: 'ド', f: 1046.50 }, { n: 'レ', f: 1174.66 }, { n: 'ミ', f: 1318.51 },
+      { n: 'ソ', f: 1567.98 }, { n: 'ラ', f: 1760.00 }, { n: 'ド', f: 2093.00 },
+    ]
+    const STEPS = 32
+    let bpm = 112   // エディタのテンポ (1ステップ = 8分音符 = 30/bpm 秒)
+
+    let myId = null, myProfile = null, partnerProfile = null
+    const profById = {}
+    // 打った穴: "step:pitch" の Set
+    const holes = new Set()
+    let editingId = null
+
+    // ─────────────────────────────
+    // オルゴール音源 (Web Audio 合成: 基音 + 高次倍音 + きらめき + エコー)
+    // ─────────────────────────────
+    let ctx = null, master = null
+    function ensureAudio() {
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)()
+        master = ctx.createGain()
+        master.gain.value = 0.5
+        // ふんわりエコー
+        const delay = ctx.createDelay(1.0)
+        delay.delayTime.value = 0.28
+        const fb = ctx.createGain(); fb.gain.value = 0.22
+        const wet = ctx.createGain(); wet.gain.value = 0.14
+        master.connect(ctx.destination)
+        master.connect(delay)
+        delay.connect(fb); fb.connect(delay)
+        delay.connect(wet); wet.connect(ctx.destination)
+      }
+      if (ctx.state === 'suspended') ctx.resume()
+    }
+
+    function playNote(pitchIdx, time) {
+      const f = PITCHES[pitchIdx].f
+      const t = time ?? ctx.currentTime
+      const out = ctx.createGain()
+      out.gain.setValueAtTime(0, t)
+      out.gain.linearRampToValueAtTime(0.85, t + 0.004)
+      out.gain.exponentialRampToValueAtTime(0.0004, t + 1.6)
+      out.connect(master)
+
+      const mk = (freq, gain, dur) => {
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+        const g = ctx.createGain(); g.gain.value = gain
+        o.connect(g); g.connect(out)
+        o.start(t); o.stop(t + dur)
+      }
+      mk(f, 1.0, 1.7)          // 基音
+      mk(f * 4, 0.16, 0.9)     // 倍音 (箱鳴り)
+      mk(f * 6.7, 0.05, 0.25)  // きらめき (非整数倍音)
+    }
+
+    // ─────────────────────────────
+    // 再生 (ルックアヘッドスケジューラ)
+    // ─────────────────────────────
+    let playing = false
+    let schedTimer = null
+    let nextStepTime = 0
+    let nextStep = 0
+    let stepTimes = []           // {step, time} 再生UI用
+    let playSource = null       // 'editor' or melody id
+    let playNotes = null         // 再生中の notes Set (エディタ or ギャラリー曲)
+    let activeBpm = 112          // 再生中のBPM (エディタとギャラリー曲で分離)
+
+    function startPlayback(notesSet, sourceKey, playBpm) {
+      ensureAudio()
+      stopPlayback()
+      playing = true
+      playSource = sourceKey
+      playNotes = notesSet
+      activeBpm = playBpm || bpm
+      nextStep = 0
+      nextStepTime = ctx.currentTime + 0.08
+      stepTimes = []
+      schedTimer = setInterval(scheduleChunk, 25)
+      requestAnimationFrame(uiTick)
+      updatePlayButtons()
+    }
+
+    function stopPlayback() {
+      playing = false
+      if (schedTimer) { clearInterval(schedTimer); schedTimer = null }
+      document.querySelectorAll('.orgel-row.playing').forEach(r => r.classList.remove('playing'))
+      playSource = null
+      updatePlayButtons()
+    }
+
+    function scheduleChunk() {
+      if (!playing) return
+      while (nextStepTime < ctx.currentTime + 0.12) {
+        const s = nextStep % STEPS
+        for (let p = 0; p < PITCHES.length; p++) {
+          if (playNotes.has(s + ':' + p)) playNote(p, nextStepTime)
+        }
+        stepTimes.push({ step: s, time: nextStepTime })
+        if (stepTimes.length > 40) stepTimes.shift()
+        nextStepTime += 30 / activeBpm
+        nextStep++
+      }
+    }
+
+    function uiTick() {
+      if (!playing) return
+      const now = ctx.currentTime
+      let cur = null
+      for (const st of stepTimes) if (st.time <= now) cur = st.step
+      if (cur !== null && playSource === 'editor') {
+        const rows = document.querySelectorAll('.orgel-row')
+        rows.forEach((r, i) => r.classList.toggle('playing', i === cur))
+        const row = rows[cur]
+        if (row) row.scrollIntoView({ block: 'nearest' })
+      }
+      requestAnimationFrame(uiTick)
+    }
+
+    function togglePlay() {
+      if (playing && playSource === 'editor') { stopPlayback(); return }
+      if (holes.size === 0) { showToast('まずは まるをタップして穴をあけてみて 🎶'); return }
+      startPlayback(holes, 'editor')
+    }
+
+    function updatePlayButtons() {
+      document.getElementById('play-btn').textContent =
+        (playing && playSource === 'editor') ? '■ とめる' : '▶ きく'
+      document.querySelectorAll('[data-mel-play]').forEach(b => {
+        b.textContent = (playing && playSource === b.dataset.melPlay) ? '■ とめる' : '▶ きく'
+      })
+    }
+
+    function setTempo(v, chip) {
+      bpm = v
+      document.querySelectorAll('.tempo-chip').forEach(c => c.classList.toggle('active', c === chip))
+    }
+
+    // ─────────────────────────────
+    // グリッド
+    // ─────────────────────────────
+    function buildGrid() {
+      const head = document.getElementById('pitch-header')
+      head.innerHTML = PITCHES.map(p => `<span>${p.n}</span>`).join('')
+      const grid = document.getElementById('orgel-grid')
+      grid.innerHTML = ''
+      for (let s = 0; s < STEPS; s++) {
+        const row = document.createElement('div')
+        row.className = 'orgel-row' + (s % 4 === 0 ? ' beat' : '')
+        for (let p = 0; p < PITCHES.length; p++) {
+          const cell = document.createElement('button')
+          cell.className = 'orgel-cell'
+          cell.dataset.key = s + ':' + p
+          cell.setAttribute('aria-label', `${s + 1}拍目 ${PITCHES[p].n}`)
+          cell.addEventListener('click', () => toggleCell(cell, p))
+          row.appendChild(cell)
+        }
+        grid.appendChild(row)
+      }
+    }
+
+    function toggleCell(cell, pitchIdx) {
+      const key = cell.dataset.key
+      if (holes.has(key)) {
+        holes.delete(key)
+        cell.classList.remove('on')
+      } else {
+        holes.add(key)
+        cell.classList.add('on')
+        ensureAudio()
+        playNote(pitchIdx)   // 置いた瞬間に鳴る
+        if (navigator.vibrate) navigator.vibrate(6)
+      }
+    }
+
+    function paintGrid() {
+      document.querySelectorAll('.orgel-cell').forEach(c =>
+        c.classList.toggle('on', holes.has(c.dataset.key)))
+    }
+
+    function clearGrid() {
+      if (holes.size && !confirm('カードの穴を全部消しますか？')) return
+      holes.clear()
+      paintGrid()
+    }
+
+    function resetEditor() {
+      editingId = null
+      holes.clear()
+      paintGrid()
+      document.getElementById('mel-title').value = ''
+      document.getElementById('editing-row').style.display = 'none'
+      document.getElementById('send-btn').textContent = '💌 相手にとどける'
+    }
+
+    // ─────────────────────────────
+    // 保存 / とどける / ギャラリー
+    // ─────────────────────────────
+    function serializeNotes() {
+      return Array.from(holes).map(k => k.split(':').map(Number))
+    }
+
+    async function sendMelody() {
+      if (holes.size === 0) { showToast('穴がまだ無いよ。まるをタップしてね 🎶'); return }
+      const btn = document.getElementById('send-btn')
+      btn.disabled = true
+      const title = document.getElementById('mel-title').value.trim() || '名もないオルゴール'
+      const payload = { title, bpm, steps: STEPS, notes: serializeNotes(), updated_at: new Date().toISOString() }
+
+      if (editingId) {
+        const { error } = await _sb.from('melodies').update(payload).eq('id', editingId)
+        if (error) { showToast('保存に失敗しました'); console.error(error); btn.disabled = false; return }
+        showToast('保存しなおしました ✎')
+      } else {
+        const { data, error } = await _sb.from('melodies')
+          .insert({ ...payload, user_id: myId }).select().single()
+        if (error) { showToast('保存に失敗しました'); console.error(error); btn.disabled = false; return }
+        if (partnerProfile) {
+          notify({
+            title: '🎼 オルゴールが届いたよ',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${title}」を作ったよ`,
+            url: '/orgel.html?id=' + data.id,
+            kind: 'melody',
+            recipient: partnerProfile.id,
+          })
+        }
+        showToast('💌 とどけました！')
+        resetEditor()
+      }
+      btn.disabled = false
+      await loadGallery()
+    }
+
+    let melodies = []
+    let heartsByMel = {}   // melody_id -> Set(user_id)
+
+    async function loadGallery() {
+      const { data } = await _sb.from('melodies')
+        .select('*').order('created_at', { ascending: false }).limit(100)
+      melodies = data || []
+      heartsByMel = {}
+      if (melodies.length) {
+        const { data: hearts } = await _sb.from('melody_reactions')
+          .select('melody_id, user_id').in('melody_id', melodies.map(m => m.id))
+        ;(hearts || []).forEach(h => {
+          (heartsByMel[h.melody_id] ||= new Set()).add(h.user_id)
+        })
+      }
+      renderGallery()
+    }
+
+    function renderGallery() {
+      const el = document.getElementById('gallery')
+      if (!melodies.length) {
+        el.innerHTML = '<div class="empty-msg">まだオルゴールがありません。最初の1曲を作ってとどけよう 🎼</div>'
+        return
+      }
+      el.innerHTML = ''
+      melodies.forEach(m => {
+        const who = profById[m.user_id]
+        const mine = m.user_id === myId
+        const hearts = heartsByMel[m.id] || new Set()
+        const iHearted = hearts.has(myId)
+        const d = new Date(m.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+        const card = document.createElement('div')
+        card.className = 'mel-card'
+        card.id = 'mel-' + m.id
+        card.innerHTML = `
+          <div class="mel-head">
+            <span style="font-size:1.3rem">🎼</span>
+            <div style="flex:1;min-width:0">
+              <div class="mel-title">${escHtml(m.title || '名もないオルゴール')}</div>
+              <div class="mel-meta">${who ? escHtml(who.emoji + ' ' + who.name) : ''} · ${d} · ♪${(m.notes || []).length}</div>
+            </div>
+          </div>
+          <div class="mel-actions">
+            <button class="mel-btn" data-mel-play="${m.id}" onclick="playMelody('${m.id}')">▶ きく</button>
+            <button class="heart-btn ${iHearted ? 'mine' : ''}" onclick="toggleHeart('${m.id}', ${mine})">💖 ${hearts.size || ''}</button>
+            ${mine ? `<button class="mel-btn sub" onclick="openMelody('${m.id}')">✎ ひらく</button>` : ''}
+            ${mine ? `<button class="mel-btn danger" onclick="deleteMelody('${m.id}')">けす</button>` : ''}
+          </div>`
+        el.appendChild(card)
+      })
+      updatePlayButtons()
+    }
+
+    function playMelody(id) {
+      if (playing && playSource === id) { stopPlayback(); return }
+      const m = melodies.find(x => x.id === id)
+      if (!m) return
+      const set = new Set((m.notes || []).map(([s, p]) => s + ':' + p))
+      if (!set.size) { showToast('この曲にはまだ穴が無いみたい'); return }
+      startPlayback(set, id, m.bpm || 112)   // 曲の保存BPMで再生 (エディタのテンポは不変)
+    }
+
+    async function toggleHeart(id, mine) {
+      ensureAudio()
+      const hearts = heartsByMel[id] || new Set()
+      if (hearts.has(myId)) {
+        await _sb.from('melody_reactions').delete().eq('melody_id', id).eq('user_id', myId)
+      } else {
+        await _sb.from('melody_reactions').upsert(
+          { melody_id: id, user_id: myId, emoji: '💖' }, { onConflict: 'melody_id,user_id' })
+        const m = melodies.find(x => x.id === id)
+        if (m && m.user_id !== myId) {
+          notify({
+            title: '💖 オルゴールにリアクション',
+            body: `${myProfile?.emoji ?? ''} ${myProfile?.name ?? ''} が「${m.title || '名もないオルゴール'}」を気に入ったって`,
+            url: '/orgel.html?id=' + id,
+            kind: 'melody',
+            recipient: m.user_id,
+          })
+        }
+      }
+      await loadGallery()
+    }
+
+    function openMelody(id) {
+      const m = melodies.find(x => x.id === id)
+      if (!m) return
+      stopPlayback()
+      editingId = m.id
+      holes.clear()
+      ;(m.notes || []).forEach(([s, p]) => holes.add(s + ':' + p))
+      paintGrid()
+      document.getElementById('mel-title').value = m.title || ''
+      bpm = m.bpm || 112
+      document.querySelectorAll('.tempo-chip').forEach(c =>
+        c.classList.toggle('active', Number(c.dataset.bpm) === bpm))
+      document.getElementById('editing-title').textContent = m.title || '名もないオルゴール'
+      document.getElementById('editing-row').style.display = 'flex'
+      document.getElementById('send-btn').textContent = '保存しなおす'
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    async function deleteMelody(id) {
+      if (!confirm('このオルゴールを消しますか？')) return
+      await _sb.from('melodies').delete().eq('id', id)
+      if (editingId === id) resetEditor()
+      await loadGallery()
+    }
+
+    // ─────────────────────────────
+    // init
+    // ─────────────────────────────
+    async function init() {
+      buildGrid()
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      ;(profiles || []).forEach(p => { profById[p.id] = p })
+      myProfile = profById[myId] || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+      await loadGallery()
+
+      // 通知から来た場合 (?id=...) は該当カードへスクロール+ハイライト
+      const target = new URLSearchParams(location.search).get('id')
+      if (target) {
+        const card = document.getElementById('mel-' + target)
+        if (card) {
+          card.classList.add('highlight')
+          card.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          setTimeout(() => card.classList.remove('highlight'), 4000)
+        }
+      }
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2000)
+    }
+
+    init()
+  </script>
+</body>
+</html>
