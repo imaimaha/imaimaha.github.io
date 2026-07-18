@@ -206,6 +206,28 @@
       transform: translate(-50%, -6px);
     }
 
+    /* カウントダウンカード */
+    .countdown-card {
+      display: block; text-decoration: none;
+      margin: 0; padding: 13px 15px 11px;
+      background: linear-gradient(135deg, rgba(226,106,168,0.12), rgba(120,90,220,0.12));
+      border: 1.5px solid rgba(220,160,230,0.28);
+      border-radius: var(--r-lg);
+      backdrop-filter: blur(8px);
+    }
+    .countdown-card .cc-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.74rem; color: var(--ink-400); letter-spacing: 0.05em; margin-bottom: 9px;
+    }
+    .countdown-card .cc-head .cc-more { color: #d7a8dd; }
+    .cc-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+    .cc-row + .cc-row { border-top: 1px solid rgba(220,160,230,0.12); }
+    .cc-row .cc-emoji { font-size: 1.2rem; width: 24px; text-align: center; flex-shrink: 0; }
+    .cc-row .cc-label { flex: 1; min-width: 0; font-size: 0.9rem; color: #f0e0fa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cc-row .cc-days { flex-shrink: 0; font-size: 0.9rem; color: #ffc0e0; font-weight: 700; }
+    .cc-row .cc-days .big { font-size: 1.15rem; }
+    .cc-row.soon .cc-days { color: #ff9ec4; }
+
     /* Login bonus toast — dark theme */
     .login-toast {
       position: fixed;
@@ -298,7 +320,21 @@
     </div>
     <div id="mood-toast"></div>
 
+    <!-- カウントダウン -->
+    <a href="/countdown.html" class="countdown-card" id="countdown-card" style="display:none">
+      <div class="cc-head"><span>⏳ カウントダウン</span><span class="cc-more">すべて ›</span></div>
+      <div id="countdown-rows"></div>
+    </a>
+
     <div class="bento home-bento">
+
+      <!-- オルゴール -->
+      <a href="/orgel.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎼</span>
+        <span class="tile-title">オルゴール</span>
+        <span class="tile-desc">ふたりで曲をつくろう</span>
+      </a>
 
       <!-- One Song a Day -->
       <a href="/one_song.html" class="tile accent-purple">
@@ -306,6 +342,14 @@
         <span class="tile-icon">🎵</span>
         <span class="tile-title">今日の1曲</span>
         <span class="tile-desc">ひとつだけ音楽をシェア</span>
+      </a>
+
+      <!-- デート -->
+      <a href="/dates.html" class="tile accent-sakura">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">💕</span>
+        <span class="tile-title">ふたりのデート</span>
+        <span class="tile-desc" id="date-preview">計画して思い出にしよう</span>
       </a>
 
       <!-- Gauge -->
@@ -489,6 +533,66 @@
       }
     }
     loadNextEvent()
+
+    // ========== COUNTDOWN CARD ==========
+    function _jstToday() {
+      return new Date(new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) + 'T00:00:00+09:00')
+    }
+    function _nextOcc(dateStr, recurring) {
+      const today = _jstToday()
+      const base = new Date(dateStr + 'T00:00:00+09:00')
+      if (recurring !== 'yearly') return base
+      const cand = new Date(today.getFullYear(), base.getMonth(), base.getDate())
+      if (cand < today) cand.setFullYear(today.getFullYear() + 1)
+      return cand
+    }
+    function _daysTo(target) { return Math.round((target - _jstToday()) / 86400000) }
+
+    async function loadCountdown() {
+      const items = []
+      // 交際記念日 (毎年 11/22)
+      const annNext = _nextOcc('2025-11-22', 'yearly')
+      const annYear = annNext.getFullYear() - START.getFullYear()
+      items.push({ emoji: '❤️', label: `${annYear}年記念日`, target: annNext })
+      // ユーザー登録のカウントダウン
+      try {
+        const { data: cds } = await _sb.from('countdowns').select('*')
+        ;(cds || []).forEach(r => items.push({ emoji: r.emoji, label: r.label, target: _nextOcc(r.target_date, r.recurring) }))
+      } catch {}
+      // これからのデート予定
+      try {
+        const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+        const { data: ds } = await _sb.from('dates').select('title,date_str,status').eq('status', 'planned').gte('date_str', today)
+        ;(ds || []).forEach(d => items.push({ emoji: '💕', label: d.title, target: new Date(d.date_str + 'T00:00:00+09:00') }))
+      } catch {}
+
+      const upcoming = items.filter(it => _daysTo(it.target) >= 0).sort((a, b) => a.target - b.target).slice(0, 3)
+      if (!upcoming.length) return
+      const rowsEl = document.getElementById('countdown-rows')
+      rowsEl.innerHTML = upcoming.map(it => {
+        const n = _daysTo(it.target)
+        const soon = n <= 7
+        const daysHtml = n === 0 ? 'きょう！' : `あと <span class="big">${n}</span> 日`
+        const label = it.label.length > 12 ? it.label.slice(0, 12) + '…' : it.label
+        return `<div class="cc-row ${soon ? 'soon' : ''}"><span class="cc-emoji">${it.emoji}</span><span class="cc-label">${label}</span><span class="cc-days">${daysHtml}</span></div>`
+      }).join('')
+      document.getElementById('countdown-card').style.display = 'block'
+    }
+    loadCountdown()
+
+    // ========== DATE PREVIEW ==========
+    async function loadDatePreview() {
+      try {
+        const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+        const { data } = await _sb.from('dates').select('title,date_str,status').eq('status', 'planned').gte('date_str', today).order('date_str', { ascending: true }).limit(1)
+        const el = document.getElementById('date-preview')
+        if (el && data && data.length) {
+          const n = _daysTo(new Date(data[0].date_str + 'T00:00:00+09:00'))
+          el.textContent = n === 0 ? `💕 今日は「${data[0].title}」！` : `💕 ${data[0].title} まであと${n}日`
+        }
+      } catch {}
+    }
+    loadDatePreview()
 
     // ========== STATUS PREVIEW ==========
     async function loadStatusPreview() {

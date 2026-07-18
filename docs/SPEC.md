@@ -222,6 +222,18 @@
 - **DB**: `daily_songs` (uuid PK, unique user_id+date_str) / `song_reactions` (PK song_id+user_id, song_id は daily_songs へ FK cascade)。RLS: SELECT全員 / 自分の分のみ書込
 - 導線: ホーム先頭タイル / もっとシート(ふたり) / 設定の通知kind / お知らせセンター(🎵)
 
+### 4.9.6 ふたりのオルゴール (`orgel.html`) — 2026-07-19 新設
+
+- ブラウザだけで作曲できるオルゴール工房。**穴あきカード式**: 32ステップ(縦・上から下に演奏) × 11音のグリッドをタップして穴をあける
+- **スケール固定**: Cペンタトニック2オクターブ+ (ドレ ミ ソ ラ ×2 + ド, C5〜C7)。どこを押しても濁らない
+- **音源**: Web Audio API 合成 (基音サイン波 + 4倍音 + 6.7倍の非整数倍音キラメキ + フィードバックディレイのエコー)。音源ファイル不要
+- **再生**: ルックアヘッドスケジューラ(25ms tick / 0.12s 先読み)でモバイルでも安定。プレイヘッド行がハイライト+発光。テンポ3択 (88/112/138 BPM, 1ステップ=8分音符)
+- **穴をあけた瞬間その音が鳴る** (即時フィードバック)。iOS対策で AudioContext はユーザー操作時に生成/resume
+- **とどける**: タイトル(未入力なら「名もないオルゴール」)を付けて保存 → 相手に Push (kind: `melody`, url は `?id=` 付き)。通知から開くと該当カードへスクロール+ハイライト
+- **オルゴール棚 (ギャラリー)**: ふたりの全曲を一覧。▶再生(保存時のBPM) / 💖(1人1曲1つ, 相手の曲に付けると通知) / 自分の曲は ✎ひらく(再編集→保存しなおす) と けす
+- **DB**: `melodies` (uuid PK, user_id, title, bpm, steps, notes jsonb=[[step,pitch],...]) / `melody_reactions` (PK melody_id+user_id, FK cascade)。RLS: SELECT全員 / 自分の分のみ書込
+- 導線: ホームtile / もっと(ふたり) / 設定の通知kind / お知らせセンター(🎼)
+
 ### 4.10 共有カレンダー (`calendar.html`)
 
 - ふたりの予定を月表示
@@ -306,6 +318,28 @@
 **アトミック化 (2026-07-17〜)**: 状態遷移とポイント移動は SECURITY DEFINER の RPC（`create_bet` / `accept_bet` / `reject_bet` / `cancel_bet` / `settle_bet` / `approve_bet_cancel`）で単一トランザクション実行。`UPDATE ... WHERE status='<期待状態>'` ガードにより、2人が同時操作しても片方は「すでに処理済み」エラーになり二重配当しない。残高チェックもサーバ側。定義: `supabase/migrations/20260717000000_bets_atomic_rpc.sql`
 
 **通知**: 各遷移で相手に Push (kind: `bet`)。お知らせセンターの「⚔️ 賭け事」フィルタで絞れる。
+
+### 4.19 ふたりのデート (`dates.html`)
+
+デートを「ただ記録する」だけでなく、当日を楽しくする仕掛けを入れた機能。ライフサイクル: **計画(planned) → 当日 → 思い出(done)**。
+
+- **一覧**: これからのデート（予定・残り日数バッジ）/ ふたりの思い出（写真サムネ+満足度）
+- **計画**: タイトル・日付・場所・メモ。作成時に**フォトミッションをプールからランダム3つ自動付与**（`dates.missions` jsonb）
+- **フォトミッション（お題）**: 「空を大きく入れて撮る」「ふたりの手をつないで」等18種プール（`MISSION_POOL`）。デート中にお題の写真を撮ってクリア。達成写真は `date_photos.mission` に文言スナップショット。**達成 +3pt**
+- **ふたりの写真**: 自由に何枚でも追加（+2pt）。`memories` bucket の `date_photos/<date_id>/<user_id>/` に保存、`createSignedUrl`(1h) で表示。タップで拡大・**ベストショット選出**（1デート1枚・`is_best`）・削除（自分の写真のみ）
+- **コメント**: デートにお互いスレッド形式でコメント（`date_comments`、+1pt）
+- **ふり返り**: 各自が★1〜5 + ひとこと（`date_reviews`、1人1件・upsert、初回記入 +3pt）。相手の分も並べて表示、平均を「満足度」として一覧に表示
+- **状態変更**: 「🎉 デート完了にする」で planned→done。編集・削除（写真実体も削除）可
+- **通知**: 計画作成・写真追加・ミッション達成・コメント・ふり返りで相手に Push (kind: `date`)。`url` は `/dates.html?date=<id>` でタップすると該当デートを直接開く
+- **カウントダウン連携**: `status='planned'` の未来のデートはホームのカウントダウンカードに自動表示
+
+### 4.20 カウントダウン (`countdown.html`)
+
+記念日・誕生日・旅行など「その日までの残り日数」を集約表示。
+
+- **一覧**: 交際記念日（毎年11/22・自動・編集不可）+ つきあって◯ヶ月の節目（自動）+ ユーザー登録分（`countdowns` テーブル）を、次回到来日の近い順にソート。7日以内はピンク強調
+- **登録**: アイコン・なまえ・日にち・くりかえし（一度きり / 毎年）。毎年は月日だけ見て次の到来日を計算。編集・削除可
+- **ホームのカウントダウンカード**: `index.html` 上部（今のきもちの下）に、記念日 auto + `countdowns` + デート予定 を統合して近い順トップ3を表示。タップで `countdown.html` へ
 
 ### 4.17 お知らせセンター (`notifications.html`)
 
@@ -503,6 +537,11 @@
 | `settlements` | settled_by, net_amount, payer_id, receiver_id, period_from, period_to | 割り勘の精算履歴 |
 | `notifications_log` | user_id, sender_id, title, body, url, kind, read_at | send-push で送信された通知の受信者記録（お知らせセンター用） |
 | `bets` | created_by, opponent_id, title, description, stake, status, result, result_by, cancel_requested, cancel_by, proposed_at, accepted_at, finished_at, ended_at | 賭け事 |
+| `countdowns` | label, emoji, target_date, recurring('none'\|'yearly'), created_by | カウントダウン（記念日・誕生日等） |
+| `dates` | title, date_str, place, memo, status('planned'\|'done'), missions(jsonb), created_by | ふたりのデート本体 |
+| `date_photos` | date_id(fk), user_id, path, caption, mission, is_best | デートの写真（memories bucket） |
+| `date_comments` | date_id(fk), user_id, body | デートへのコメント |
+| `date_reviews` | date_id(fk), user_id, rating(1-5), body / PK(date_id,user_id) | デートのふり返り |
 | `settings` | key, value | LINE group ID など汎用設定 |
 
 ### 7.2 RLS ポリシーの原則
