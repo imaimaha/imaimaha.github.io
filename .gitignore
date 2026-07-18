@@ -8,3 +8,6 @@ playwright-report/
 .env
 .env.local
 .claude/settings.json
+
+# テスト時のスクリーンショット（throwaway）
+tests/screenshots/

@@ -387,14 +387,12 @@
 
       // 相手に push
       if (done > 0) {
-        _sb.functions.invoke('send-push', {
-          body: {
-            title: '🌸 思い出が追加されたよ',
-            body: `写真 ${done}枚がアップされました`,
-            url: '/memories.html',
-            sender_user_id: userId,
-          },
-        }).then(({ error }) => { if (error) console.error('[memories] push error:', error) })
+        notify({
+          title: '🌸 思い出が追加されたよ',
+          body: `写真 ${done}枚がアップされました`,
+          url: '/memories.html',
+          sender: userId,
+        })
       }
 
       loadPhotos()
@@ -491,10 +489,6 @@
       const diff = e.changedTouches[0].clientX - touchStartX
       if (Math.abs(diff) > 50) lbNav(diff > 0 ? -1 : 1)
     })
-
-    function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    }
 
     loadProfile().then(() => loadPhotos())
   </script>
