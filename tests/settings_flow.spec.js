@@ -7,9 +7,10 @@ test('設定ページ: トグルが表示され DB に保存される', async ({
   await page.goto('/settings.html', { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
 
-  // 14種のトグルが出る
+  // KINDS の全種類ぶんトグルが出る (種類数は機能追加で増えるため動的に比較)
+  const kindCount = await page.evaluate(() => KINDS.length)
   const toggles = page.locator('#toggle-card input[type="checkbox"]')
-  await expect(toggles).toHaveCount(14)
+  await expect(toggles).toHaveCount(kindCount)
 
   // quiz トグルを OFF にする (input は視覚的に隠しているのでラベルをクリック)
   const quiz = page.locator('#toggle-card input[data-kind="quiz"]')
