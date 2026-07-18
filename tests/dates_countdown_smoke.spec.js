@@ -24,9 +24,12 @@ test('dates: 計画→ミッション→写真→コメント→ふり返り', a
   await page.goto('/dates.html')
   await expect(page.locator('.plan-btn')).toBeVisible()
 
-  // 計画作成
+  // 計画作成 (ジャンル: 水族館・動物園 を選択)
   await page.click('.plan-btn')
   await page.fill('#f-title', UNIQ)
+  await expect(page.locator('.genre-chip')).toHaveCount(11) // おまかせ + 10ジャンル
+  await page.locator('.genre-chip', { hasText: '水族館' }).click()
+  await expect(page.locator('.genre-chip.sel', { hasText: '水族館' })).toBeVisible()
   await page.fill('#f-place', 'テスト水族館')
   await page.fill('#f-memo', 'スモークテストのデート')
   await page.click('#modal-ok')
@@ -36,8 +39,9 @@ test('dates: 計画→ミッション→写真→コメント→ふり返り', a
   // 詳細を開く
   await card.click()
   await expect(page.locator('.detail-title', { hasText: UNIQ })).toBeVisible()
-  // フォトミッションが3つ
+  // フォトミッションが3つ + ジャンルバッジ表示
   await expect(page.locator('.mission')).toHaveCount(3)
+  await expect(page.locator('.genre-badge', { hasText: '水族館' })).toBeVisible()
 
   // ミッション写真をアップ (1x1 png)
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')

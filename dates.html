@@ -197,6 +197,23 @@
     }
     .field textarea { resize: none; min-height: 60px; }
     .field input:focus, .field textarea:focus { border-color: rgba(226,106,168,0.6); }
+    .genre-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .genre-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 8px 12px; border-radius: 999px; cursor: pointer;
+      font-size: 0.82rem; color: #e6d3f0;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(220,170,240,0.25);
+      -webkit-tap-highlight-color: transparent; transition: background 0.15s, border-color 0.15s;
+    }
+    .genre-chip:active { transform: scale(0.95); }
+    .genre-chip.sel {
+      background: rgba(226,106,168,0.22); border-color: rgba(226,106,168,0.65); color: #ffd6ec;
+    }
+    .genre-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.72rem; padding: 2px 9px; border-radius: 999px;
+      background: rgba(226,106,168,0.14); border: 1px solid rgba(226,106,168,0.4); color: #ffc0e0;
+    }
     .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
     .modal-actions button { flex: 1; padding: 14px; border-radius: 13px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
     .btn-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(220,170,240,0.25); color: #d7a8dd; }
@@ -256,9 +273,12 @@
       <h2 id="modal-title">デートを計画する</h2>
       <div class="field"><label>どんなデート？</label><input type="text" id="f-title" maxlength="40" placeholder="例: 水族館デート / おうち映画会"></div>
       <div class="field"><label>いつ</label><input type="date" id="f-date"></div>
+      <div class="field" id="genre-field"><label>ジャンル（任意・フォトミッションのお題が変わるよ）</label>
+        <div class="genre-row" id="genre-row"></div>
+      </div>
       <div class="field"><label>どこで（任意）</label><input type="text" id="f-place" maxlength="60" placeholder="例: しながわ水族館"></div>
       <div class="field"><label>メモ（任意）</label><textarea id="f-memo" maxlength="300" placeholder="集合時間・持ち物・やりたいこと など"></textarea></div>
-      <div id="mission-note" class="field" style="font-size:0.78rem;color:#cf9fe0;line-height:1.6;">📸 当日は「フォトミッション」が3つ届くよ。ふたりでクリアするともっと楽しい！</div>
+      <div id="mission-note" class="field" style="font-size:0.78rem;color:#cf9fe0;line-height:1.6;">📸 フォトミッションが3つ届くよ。ジャンルを選ぶと「そのジャンル+季節+定番」のお題に！</div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">やめる</button>
         <button class="btn-ok" id="modal-ok" onclick="saveDate()">計画する</button>
@@ -278,21 +298,140 @@
 
   <script>
     // ====== フォトミッション プール ======
-    const MISSION_POOL = [
+    // 構成: 汎用 + 季節(予定日の月で自動) + ジャンル(計画時に選択)。
+    // ジャンル選択あり → ジャンル1 + 季節1 + 汎用1 / なし → 汎用2 + 季節1
+    const MISSION_GENERAL = [
       '空を大きく入れて撮る', 'ふたりの手をつないで', '相手の“今日いちばんの笑顔”',
       '色や服をおそろいにして', '今日食べたベストな一品', '変な顔でいっしょに自撮り',
       '今いる場所がわかる景色や看板', '相手が夢中になってる瞬間', '足元・靴をならべて',
       '見上げるアングルで', 'きょうの空の色', '相手にナイショで撮った1枚',
       'ふたりの影を撮る', 'おそろいのドリンク', '遠くのものを指さして',
       '今日の“かわいい”を見つけて', 'いつもと違う表情で', '窓・鏡ごしの2人',
+      'ジャンプした瞬間を撮る', '手だけで♡を作る', '相手の後ろ姿',
+      'ピースじゃないポーズでふたり', '今日いちばんきれいだった景色', 'ハートの形をどこかで見つける',
+      '相手のツボに入った瞬間', 'うんとローアングルで撮る', 'おかしな看板・貼り紙を見つける',
+      'お互いを同時に撮り合う', '白黒モードで1枚', '光と影がきれいな場所',
+      '真上を見上げて1枚', '地面の面白い模様', 'ふたりの飲み物で乾杯の瞬間',
+      '帰り道の1枚', '数字の「2」を探して撮る', '相手にベスト構図を指示して撮ってもらう',
+      '2人が写り込む鏡・ガラスを探す', '今日のテーマカラーを決めて探す',
     ]
-    function pickMissions(n = 3) {
-      const pool = [...MISSION_POOL]
+    const MISSION_SEASONS = {
+      spring: [
+        '桜や花と一緒に', '新緑を背景に', '春の空とふたり', 'お花見気分の1枚',
+        '春らしいピンクを探して撮る', '花びらが写ってる1枚', '春の味覚(いちご系など)と一緒に',
+        '春風で髪が乱れた瞬間', 'たんぽぽやつくしを見つける', '春限定のドリンクと一緒に',
+        '芽吹きや新芽を接写', '春っぽい色の服・小物を撮る',
+      ],
+      summer: [
+        '夏の空と入道雲', '冷たいもの(かき氷・アイス)と一緒に', '日陰で涼むふたり',
+        '青いものを探して撮る', '雨上がり・夕立のあとの空', 'セミや夏の虫を見つける',
+        '夏祭りっぽいものを見つける', '水辺の1枚', 'サングラス姿で1枚',
+        '花火(実物でもポスターでも)', '夏の飲み物で乾杯', '汗だくでもいい笑顔',
+      ],
+      autumn: [
+        '紅葉と一緒に', '落ち葉を持って1枚', '秋の空(うろこ雲)を撮る',
+        '秋の味覚(芋・栗・かぼちゃ)と一緒に', '金色に見える景色', 'どんぐり・松ぼっくりを見つける',
+        '夕暮れのふたり', '長くのびた影を撮る', '秋色コーデのポイントを撮る',
+        '読書の秋っぽい1枚', 'ハロウィンっぽいものを見つける', '温かい飲み物と一緒に',
+      ],
+      winter: [
+        '白い息を撮る', 'イルミネーションと一緒に', 'あったかグッズ(マフラー・手袋)と1枚',
+        '冬の澄んだ空', '温かい飲み物で乾杯', '鍋・おでん的なあったかごはん',
+        'クリスマスっぽいものを見つける', '寒くてくっつくふたり', '冬の夕焼け',
+        'コートの袖から手だけ出してつなぐ', '雪や霜を見つける', 'こたつ・毛布でぬくぬくの図',
+      ],
+    }
+    const MISSION_GENRES = {
+      aquarium: { emoji: '🐠', label: '水族館・動物園', items: [
+        '一番好きだった生き物', '生き物のマネをして撮る', '水槽ごしの相手',
+        'クラゲか魚をきれいに撮る', '「この生き物、相手に似てる」を見つける', '水槽の青い光で1枚',
+        'お土産コーナーのベストぬいぐるみ', '餌やり・ショーの瞬間', '生き物と同じ表情をする',
+        '意外と地味だけど好きなやつ',
+      ]},
+      movie: { emoji: '🎬', label: '映画・シアター', items: [
+        'チケットと一緒に', 'ポスターの前でポーズ', 'ポップコーン(売店のもの)と1枚',
+        '上映前のわくわく顔', '映画の登場人物っぽいポーズ', '半券をならべて',
+        '鑑賞後に感想を語ってる相手', 'パンフレットと一緒に', '次に観たい映画のポスター',
+        '映画館の雰囲気がわかる1枚',
+      ]},
+      cafe: { emoji: '☕', label: 'カフェ', items: [
+        'ラテアートや飲み物を真上から', 'スイーツと相手を一緒に', 'カップを持つ手元',
+        '店内のお気に入りポイント', '窓際の光で1枚', 'メニューを悩んでる相手',
+        'お店の看板・外観', 'ふたりの飲み物を並べて', '相手が「おいしい」って言った瞬間',
+        '限界まで寄ってスイーツを接写',
+      ]},
+      park: { emoji: '🌳', label: '公園・自然', items: [
+        '大きな木を見上げて撮る', 'ベンチでひと休みの図', '花や葉っぱの接写',
+        '芝生に寝転んで1枚', '鳥や虫を見つける', '遊具で遊ぶ相手',
+        '木漏れ日の1枚', '石や葉っぱでハートを作る', '散歩中の後ろ姿',
+        '自然の中のふたりの影',
+      ]},
+      home: { emoji: '🏠', label: 'おうち', items: [
+        'ソファでだらだらの図', '一緒に作った(食べた)ごはん', '部屋着・パジャマで1枚',
+        'ふたり分のマグカップ', '窓からの景色', 'くつろぎすぎな相手',
+        'ふたりの足だけ', 'お菓子をきれいに(or 変に)並べる', '毛布にくるまる図',
+        'ベストなだらけポーズ選手権',
+      ]},
+      shopping: { emoji: '🛍', label: 'ショッピング', items: [
+        '試着したものでポーズ', '「これ欲しい」の顔', '相手に似合いそうなものを探して撮る',
+        '買ったものを並べて', 'エスカレーターで前後のふたり', '店内の鏡でふたり',
+        '今日見た一番高い値札(買わなくていい)', 'お互いに1つずつ選んだもの', 'ショップバッグと一緒に',
+        '休憩中・フードコートの1枚',
+      ]},
+      dinner: { emoji: '🍚', label: 'ごはん・居酒屋', items: [
+        '乾杯の瞬間', '湯気が写ってる1枚', '一番おいしかったものを接写',
+        'メニューと悩む顔', 'お店の暖簾・看板', '完食したお皿',
+        '「うまい」が出た瞬間', '箸やグラスを持つ手元', 'シメの一品',
+        '相手の食べてる顔(許可をとってから)',
+      ]},
+      trip: { emoji: '🚃', label: '旅行・おでかけ', items: [
+        '駅名・地名の看板と一緒に', '乗り物の車窓から', '旅のおとも(切符・パンなど)',
+        'ご当地っぽいものを見つける', '地図・スマホで作戦会議中のふたり', '旅先の空',
+        '名物を食べてる顔', '記念スタンプやお土産', '行き先を指さして1枚',
+        '帰りの乗り物でうとうとする相手',
+      ]},
+      museum: { emoji: '🖼', label: '美術館・博物館', items: [
+        '一番好きだった展示(撮影OKのもの)', '建物の外観・建築を撮る', 'チケットや案内と一緒に',
+        '作品のポーズをマネする', '「これ何に見える?」なものを撮る', 'ミュージアムショップのベスト',
+        '照明がきれいな場所', '鑑賞中の相手の横顔', '記念スタンプを押す',
+        '感想を熱く語る相手',
+      ]},
+      sea: { emoji: '🌊', label: '海・プール', items: [
+        '水平線とふたり', '砂や水に触れる手足', '波・水しぶきの瞬間',
+        '貝殻や漂着物を見つける', '砂に文字や絵を描く', '夕日と海',
+        '水面のきらきらを撮る', '風で髪ぶわっの1枚', '海の色をバックに1枚',
+        'ビーチサンダル・浮き輪など夏小物',
+      ]},
+    }
+    function seasonForMonth(m) {
+      if (m === 12 || m <= 2) return 'winter'
+      if (m <= 5) return 'spring'
+      if (m <= 8) return 'summer'
+      return 'autumn'
+    }
+    function pickOne(pool, used) {
+      const cand = pool.filter(x => !used.has(x))
+      if (!cand.length) return null
+      const x = cand[Math.floor(Math.random() * cand.length)]
+      used.add(x)
+      return x
+    }
+    // ジャンルあり: ジャンル1 + 季節1 + 汎用1 / なし: 汎用2 + 季節1
+    function pickMissions(genreKey, dateStr) {
+      const month = parseInt((dateStr || jstDateStr()).split('-')[1], 10)
+      const seasonPool = MISSION_SEASONS[seasonForMonth(month)]
+      const used = new Set()
       const out = []
-      while (out.length < n && pool.length) {
-        out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
+      if (genreKey && MISSION_GENRES[genreKey]) {
+        out.push(pickOne(MISSION_GENRES[genreKey].items, used))
+        out.push(pickOne(seasonPool, used))
+        out.push(pickOne(MISSION_GENERAL, used))
+      } else {
+        out.push(pickOne(MISSION_GENERAL, used))
+        out.push(pickOne(seasonPool, used))
+        out.push(pickOne(MISSION_GENERAL, used))
       }
-      return out
+      return out.filter(Boolean)
     }
 
     let myId = null, myProfile = null, partnerProfile = null, profById = {}
@@ -375,13 +514,14 @@
       else if (n === 0) numHtml = `<div class="num">今日</div>`
       else numHtml = `<div class="num">${fmtShort(d.date_str)}</div><div class="unit">が予定日</div>`
       const place = d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''
+      const genre = d.genre && MISSION_GENRES[d.genre] ? `<span>${MISSION_GENRES[d.genre].emoji} ${MISSION_GENRES[d.genre].label}</span>` : ''
       return `
         <div class="date-card" id="dc-${d.id}" onclick="openDetail('${d.id}')">
           <div class="dc-top">
             <div class="dc-count ${soon ? 'soon' : ''}">${numHtml}</div>
             <div class="dc-body">
               <div class="dc-title">${escHtml(d.title)}</div>
-              <div class="dc-sub"><span>📅 ${fmtDate(d.date_str)}</span>${place}</div>
+              <div class="dc-sub"><span>📅 ${fmtDate(d.date_str)}</span>${place}${genre}</div>
             </div>
           </div>
         </div>`
@@ -479,6 +619,7 @@
           <div class="detail-meta">
             <span>📅 ${fmtDate(d.date_str)}${d.status === 'planned' ? countdownText(d.date_str) : ''}</span>
             ${d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''}
+            ${d.genre && MISSION_GENRES[d.genre] ? `<span class="genre-badge">${MISSION_GENRES[d.genre].emoji} ${MISSION_GENRES[d.genre].label}</span>` : ''}
           </div>
           ${d.memo ? `<div class="detail-memo">${escHtml(d.memo)}</div>` : ''}
           <div class="detail-actions">
@@ -707,15 +848,29 @@
     }
 
     // ====== 作成 / 編集 / 状態変更 ======
+    let selGenre = null   // 選択中ジャンル key (null = 指定なし)
+    function renderGenreRow() {
+      const row = document.getElementById('genre-row')
+      let html = `<span class="genre-chip ${selGenre === null ? 'sel' : ''}" onclick="setGenre(null)">✨ おまかせ</span>`
+      html += Object.entries(MISSION_GENRES).map(([key, g]) =>
+        `<span class="genre-chip ${selGenre === key ? 'sel' : ''}" onclick="setGenre('${key}')">${g.emoji} ${g.label}</span>`
+      ).join('')
+      row.innerHTML = html
+    }
+    function setGenre(key) { selGenre = key; renderGenreRow() }
+
     function openCreate() {
       editingId = null
+      selGenre = null
       document.getElementById('modal-title').textContent = 'デートを計画する'
       document.getElementById('modal-ok').textContent = '計画する'
       document.getElementById('mission-note').style.display = 'block'
+      document.getElementById('genre-field').style.display = 'block'
       document.getElementById('f-title').value = ''
       document.getElementById('f-date').value = jstDateStr()
       document.getElementById('f-place').value = ''
       document.getElementById('f-memo').value = ''
+      renderGenreRow()
       document.getElementById('modal-back').classList.add('open')
     }
     function openEdit(id) {
@@ -725,6 +880,8 @@
       document.getElementById('modal-title').textContent = 'デートを編集'
       document.getElementById('modal-ok').textContent = '保存する'
       document.getElementById('mission-note').style.display = 'none'
+      // ミッションは作成時に確定済みなので編集ではジャンル変更不可
+      document.getElementById('genre-field').style.display = 'none'
       document.getElementById('f-title').value = d.title
       document.getElementById('f-date').value = d.date_str
       document.getElementById('f-place').value = d.place || ''
@@ -751,9 +908,9 @@
         if (openDateId === editingId) { const d = dates.find(x => x.id === editingId); Object.assign(d, { title, date_str, place, memo }); await openDetail(editingId) }
         else loadDates()
       } else {
-        const missions = pickMissions(3)
+        const missions = pickMissions(selGenre, date_str)
         const { data: ins, error } = await _sb.from('dates')
-          .insert({ title, date_str, place, memo, status: 'planned', missions, created_by: myId }).select('*').single()
+          .insert({ title, date_str, place, memo, status: 'planned', missions, genre: selGenre, created_by: myId }).select('*').single()
         okBtn.disabled = false
         if (error) { showToast('作成失敗'); console.error(error); return }
         await addPoints(myId, 2, 'date_create')
