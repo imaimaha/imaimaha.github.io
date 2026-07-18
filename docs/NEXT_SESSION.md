@@ -1,5 +1,20 @@
 # 次回セッション用: TODO と背景
 
+## 2026-07-19 新機能: ふたりのデート (dates.html) + カウントダウン (countdown.html)
+
+**やったこと（DB適用済み・ローカルPlaywright green・push は要調整/下記注意）**
+- **ふたりのデート** (`dates.html`): 計画(planned)→当日→思い出(done)。フォトミッション(お題18種からランダム3つ自動付与)/写真アップ(memories bucket `date_photos/`)/お互いコメント/星ふり返り/ベストショット。通知 kind `date`、`?date=<id>` ディープリンク
+- **カウントダウン** (`countdown.html` + ホーム上部カード): 記念日auto+つきあってNヶ月auto+ユーザー登録(誕生日/旅行等)を近い順に集約。ホームカードは記念日/countdowns/デート予定トップ3
+- DBテーブル: `countdowns` / `dates` / `date_photos` / `date_comments` / `date_reviews`（migration `20260718220000_dates_and_countdowns.sql`、適用済み）
+- 導線: nav.js(ふたり:デート / きろく:カウントダウン)・notifications(💕date絵文字+フィルタ)・settings(date kind + ルール pt)・index(💕tile + ⏳カード)
+- テスト: `tests/dates_countdown_smoke.spec.js` 2件 green（実DB往復）
+- ポイント: デート作成+2 / 写真+2 / ミッション達成+3 / コメント+1 / ふり返り+3
+
+**⚠️ push 時の注意（並行セッションと同居）**
+- `index.html`/`nav.js`/`settings.html`/`notifications.html` は **オルゴール機能(別session)の変更と混在**。commit 時は両機能ぶんが入る
+- `memories/one_on_one/wishlist.html` + song系テストは **util.js検証中の別session管轄。触らない/巻き込まない**
+- 未実装の伸びしろ: デートの当日リマインダー(send-reminders連携) / ベストショットのポイント / デート予定→カレンダー相互連携
+
 ## 2026-07-19 新機能: ふたりのオルゴール (orgel.html)
 
 - 穴あきカード式の作曲機能 (32步×11音, Cペンタトニック固定, Web Audio合成のオルゴール音)
