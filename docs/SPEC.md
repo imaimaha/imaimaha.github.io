@@ -163,6 +163,7 @@
   - コンプリートは金色の左ボーダー
 - **再生成の横に「🔄 過去から復元」ボタン**: 自分の過去のカードから items を引き継いで新カード開始（間違えて再生成した時の救済）
 - **マスチェック +1pt / ライン揃った +5pt / コンプ +20pt**
+- **ポイントは一度きり (2026-07-19〜)**: `bingo_sessions.awarded` (jsonb `{cells:[], lines:N, complete:bool}`) に付与済み記録を保存。チェックを外して付け直しても、同じマス・過去最大本数以下のライン・コンプ済みカードには再付与しない。通知・お祝い演出も新規付与時のみ。カード再生成で awarded はリセット (新カード扱い)。復元では引き継ぐ。既存カードは 2026-07-19 のマイグレーションで当時のチェック状態を付与済みとして一括初期化済み
 - ライン揃った/コンプ時に相手にPush通知
 - シェア: `html2canvas` で PNG化 → Web Share API
 
@@ -176,6 +177,7 @@
 - 単発モードは **localStorage に active hunt ID** を保持 → ページ再訪で同じセッションに戻る
 - 再生成ボタンで初期画面（single-sub）へ、activeクリア
 - **写真追加 +2pt / コンプ(8/8) +15pt**
+- **ポイントは一度きり (2026-07-19〜)**: `color_hunts.awarded` (jsonb `{positions:[], complete:bool, half:bool}`) に付与済み記録を保存。写真を削除して再アップしても同じスロットには再付与しない (同スロット上書きは元々付与なし)。4枚/コンプの通知も一度きり。既存ハントはマイグレーションで一括初期化済み
 - 4枚達成・コンプで相手にPush通知
 - 写真は `memories` bucket の `color_hunts/<user_id>/` に保存、`createSignedUrl` で表示
 
@@ -520,8 +522,8 @@
 | `memories` | (未使用) | — |
 | `photos` | path, memo, user_id | 思い出アルバム写真 |
 | `wishes` | genre, title, done, user_id | Wishlist |
-| `bingo_sessions` | user_id, mode('weekly'\|'category'\|'random'), label, date_str(週の月曜), items, checks | ビンゴ進行状況 |
-| `color_hunts` | user_id, mode('weekly'\|'single'), week_key, color_hex, color_name, photos(jsonb) | カラーハンティング |
+| `bingo_sessions` | user_id, mode('weekly'\|'category'\|'random'), label, date_str(週の月曜), items, checks, awarded(jsonb 付与済み記録) | ビンゴ進行状況 |
+| `color_hunts` | user_id, mode('weekly'\|'single'), week_key, color_hex, color_name, photos(jsonb), awarded(jsonb 付与済み記録) | カラーハンティング |
 | `time_capsules` | sender_id, recipient_id, message, open_at, is_opened, line_notified, opened_at, replies(jsonb) | タイムカプセル＋スレッド返信 |
 | `points` | user_id, amount, reason | ポイント履歴（SUMで残高計算） |
 | `quiz_answers` | user_id, question_id, answer, date_str | クイズ回答 |

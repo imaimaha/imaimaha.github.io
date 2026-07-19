@@ -1073,6 +1073,7 @@
       if (state.card.id) {
         await _sb.from('bingo_sessions').update({
           checks: state.card.checks,
+          awarded: state.card.awarded || null,
           updated_at: new Date().toISOString()
         }).eq('id', state.card.id);
       } else {
@@ -1095,6 +1096,7 @@
           await _sb.from('bingo_sessions').update({
             items: state.card.items,
             checks: state.card.checks,
+            awarded: state.card.awarded || null,
             updated_at: new Date().toISOString()
           }).eq('id', existingId);
           state.card.id = existingId;
@@ -1105,7 +1107,8 @@
             label: state.card.label,
             date_str: state.card.date_str || null,
             items: state.card.items,
-            checks: state.card.checks
+            checks: state.card.checks,
+            awarded: state.card.awarded || null
           }).select().single();
           if (!error && data) {
             state.card.id = data.id;
@@ -1318,12 +1321,27 @@
     showToast('📷 写真を保存しました')
   }
 
+  // 付与済み記録 (再チェック・記録し直しでの二重付与防止)。
+  // 無ければ「現在のチェック状態 = 付与済み」として初期化する (既存カードの後方互換)
+  function ensureAwarded() {
+    if (!state.card) return null;
+    if (!state.card.awarded || !Array.isArray(state.card.awarded.cells)) {
+      const size = Math.round(Math.sqrt(state.card.items.length));
+      state.card.awarded = {
+        cells: state.card.checks.map(c => c.index),
+        lines: detectBingo(state.card.checks, size).length,
+        complete: state.card.checks.length >= state.card.items.length,
+      };
+    }
+    return state.card.awarded;
+  }
+
   function saveCheck(cellIndex) {
     const memo = document.getElementById('modal-memo').value.trim();
+    const awarded = ensureAwarded();   // ★ checks 変更前に付与済み状態を確定
     const existing = state.card.checks.findIndex(c => c.index === cellIndex);
     const isNewCheck = existing < 0;
     const totalCells = state.card.items.length;
-    const wasComplete = state.card.checks.length >= totalCells;
 
     if (existing >= 0) {
       state.card.checks[existing].memo = memo;
@@ -1338,29 +1356,34 @@
 
     document.getElementById('modal-backdrop').classList.remove('open');
 
-    const prevBingoCount = state.bingoLines.length;
     state.bingoLines = detectBingo(state.card.checks, Math.round(Math.sqrt(state.card.items.length)));
-    renderGrid();
-    saveCard();
 
-    // ポイント付与（新規チェックのみ・サイズ別の傾斜あり）
-    if (isNewCheck && state.userId) {
+    // ポイント付与: awarded (付与済み記録) を超えた分だけ一度きり
+    let newLines = 0, justCompleted = false;
+    if (state.userId && awarded) {
       const size = Math.round(Math.sqrt(totalCells));
       const pts = pointsForSize(size);
-      addPoints(state.userId, pts.check, 'bingo_check');
-      // 新規ビンゴライン
-      const newLines = state.bingoLines.length - prevBingoCount;
-      if (newLines > 0) {
-        addPoints(state.userId, pts.linePer * newLines, 'bingo_line');
+      // マス: 同じマスは何度チェックし直しても1回だけ
+      if (isNewCheck && !awarded.cells.includes(cellIndex)) {
+        addPoints(state.userId, pts.check, 'bingo_check');
+        awarded.cells.push(cellIndex);
       }
-      // 全マスコンプ
-      if (!wasComplete && state.card.checks.length >= totalCells) {
+      // ライン: 過去最大本数を超えた分のみ (外して同じラインを作り直しても再付与なし)
+      if (state.bingoLines.length > awarded.lines) {
+        newLines = state.bingoLines.length - awarded.lines;
+        addPoints(state.userId, pts.linePer * newLines, 'bingo_line');
+        awarded.lines = state.bingoLines.length;
+      }
+      // コンプ: カードにつき一度きり
+      if (!awarded.complete && state.card.checks.length >= totalCells) {
+        justCompleted = true;
         addPoints(state.userId, pts.complete, 'bingo_complete');
+        awarded.complete = true;
       }
 
-      // 相手に push (line完成 or コンプ時のみ、通常チェックは静かに)
-      if (newLines > 0 || (!wasComplete && state.card.checks.length >= totalCells)) {
-        const title = state.card.checks.length >= totalCells ? '🏆 ビンゴカード完成！' : `🎊 ビンゴ ${state.bingoLines.length}本目`
+      // 相手に push (新規付与があった時のみ。記録し直しでは送らない)
+      if (newLines > 0 || justCompleted) {
+        const title = justCompleted ? '🏆 ビンゴカード完成！' : `🎊 ビンゴ ${state.bingoLines.length}本目`
         notify({
           title,
           body: state.card.label || 'ビンゴ',
@@ -1371,10 +1394,14 @@
       }
     }
 
-    if (state.bingoLines.length > prevBingoCount && !state.celebrationShown) {
+    renderGrid();
+    saveCard();
+
+    // お祝い演出も新規ライン時のみ (記録し直しでは静かに)
+    if (newLines > 0 && !state.celebrationShown) {
       state.celebrationShown = true;
       setTimeout(showCelebration, 200);
-    } else if (state.bingoLines.length > prevBingoCount) {
+    } else if (newLines > 0) {
       showToast(`🎉 ビンゴ ${state.bingoLines.length}本目！`);
     }
   }
@@ -1479,7 +1506,8 @@
           label: '今週のビンゴ',
           date_str: existing.date_str,
           items: existing.items,
-          checks: existing.checks || []
+          checks: existing.checks || [],
+          awarded: existing.awarded || null
         };
         showToast('✨ 今週のビンゴを読み込みました');
       } else {
@@ -1523,7 +1551,8 @@
         label,
         date_str: null,
         items: existing.items,
-        checks: existing.checks || []
+        checks: existing.checks || [],
+        awarded: existing.awarded || null
       };
     } else {
       state.card = {
@@ -1553,7 +1582,8 @@
         label,
         date_str: null,
         items: existing.items,
-        checks: existing.checks || []
+        checks: existing.checks || [],
+        awarded: existing.awarded || null
       };
     } else {
       state.card = {
@@ -1683,6 +1713,8 @@
     }
     state.card.checks = [];
     state.card.id = null;
+    // 新しいカードなので付与済み記録もリセット (新カードの達成は新規付与される)
+    state.card.awarded = { cells: [], lines: 0, complete: false };
     state.bingoLines = [];
     state.celebrationShown = false;
     saveCard();
@@ -1767,7 +1799,8 @@
       label: row.label,
       date_str: row.date_str,
       items: row.items,
-      checks: row.checks || []
+      checks: row.checks || [],
+      awarded: row.awarded || null   // 復元でも付与済み記録を引き継ぎ二重付与を防ぐ
     };
     // ビンゴ判定を再計算
     state.bingoLines = [];

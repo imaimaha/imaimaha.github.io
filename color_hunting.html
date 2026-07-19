@@ -569,6 +569,22 @@
       document.getElementById('upload-input').click();
     }
 
+    // 付与済み記録 (写真の削除→再アップでの二重付与防止)。
+    // 無ければ「現在の写真状態 = 付与済み」として初期化 (既存ハントの後方互換)
+    function ensureAwarded() {
+      const h = state.currentHunt;
+      if (!h) return null;
+      if (!h.awarded || !Array.isArray(h.awarded.positions)) {
+        const photos = Array.isArray(h.photos) ? h.photos : [];
+        h.awarded = {
+          positions: photos.map(p => p.position),
+          complete: photos.length >= 8,
+          half: photos.length >= 4,
+        };
+      }
+      return h.awarded;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('upload-input');
       input.addEventListener('change', async (e) => {
@@ -581,6 +597,7 @@
         const { error: upErr } = await _sb.storage.from('memories').upload(path, file);
         if (upErr) { showToast('アップロード失敗: ' + upErr.message, true); return; }
 
+        const awarded = ensureAwarded();   // ★ photos 更新前に付与済み状態を確定
         const photos = Array.isArray(state.currentHunt.photos) ? [...state.currentHunt.photos] : [];
         // 同じposに既に写真があれば置換
         const existingIdx = photos.findIndex(p => p.position === state.selectingIndex);
@@ -593,38 +610,47 @@
         if (existingIdx >= 0) photos[existingIdx] = entry;
         else photos.push(entry);
 
+        // ポイント付与: 同じスロットは削除→再アップしても一度きり (awarded.positions で管理)
+        let gotPhoto = false, gotComplete = false, gotHalf = false;
+        if (awarded && !awarded.positions.includes(state.selectingIndex)) {
+          gotPhoto = true;
+          awarded.positions.push(state.selectingIndex);
+        }
+        if (awarded && !awarded.complete && photos.length >= 8) {
+          gotComplete = true;
+          awarded.complete = true;
+        }
+        if (awarded && !awarded.half && photos.length >= 4) {
+          gotHalf = true;
+          awarded.half = true;
+        }
+
         const { error: updErr } = await _sb.from('color_hunts')
-          .update({ photos, updated_at: new Date().toISOString() })
+          .update({ photos, awarded: state.currentHunt.awarded, updated_at: new Date().toISOString() })
           .eq('id', state.currentHunt.id);
         if (updErr) { showToast('保存失敗: ' + updErr.message, true); return; }
-
-        const wasComplete = state.currentHunt.photos.length >= 8;
 
         state.currentHunt.photos = photos;
         await renderBoard();
 
-        // ポイント付与（新規スロット埋めのみ; 置換時は加算しない）
-        if (existingIdx < 0) {
-          addPoints(state.userId, 2, 'color_photo');
+        if (gotPhoto) addPoints(state.userId, 2, 'color_photo');
 
-          // 相手に push（コンプ or 4枚以上で報告）
-          const doPush = (msg) => notify({
-            title: '🎨 カラーハント',
-            body: msg,
-            url: '/color_hunting.html',
-            kind: 'color',
-            sender: state.userId,
-          });
-
-          if (!wasComplete && photos.length >= 8) {
-            addPoints(state.userId, 15, 'color_complete');
-            doPush('🎨 全8枚コンプリート！');
-            showToast('🎨 全8枚コンプリート！+15pt');
-            return;
-          }
-          if (photos.length === 4) doPush('半分の4枚まで集めたよ');
+        // 相手に push (新規達成のみ。撮り直しでは送らない)
+        const doPush = (msg) => notify({
+          title: '🎨 カラーハント',
+          body: msg,
+          url: '/color_hunting.html',
+          kind: 'color',
+          sender: state.userId,
+        });
+        if (gotComplete) {
+          addPoints(state.userId, 15, 'color_complete');
+          doPush('🎨 全8枚コンプリート！');
+          showToast('🎨 全8枚コンプリート！+15pt');
+          return;
         }
-        showToast('✅ 追加しました');
+        if (gotHalf) doPush('半分の4枚まで集めたよ');
+        showToast(gotPhoto ? '✅ 追加しました' : '📷 差し替えました');
       });
     });
 
