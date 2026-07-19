@@ -22,7 +22,11 @@
 4. SPEC.md にサイレント方針を記載 (§5 ポイントか §10 開発ルール)
 5. 全部OKならコミット & push (`git add dates.html color_hunting.html quiz.html docs/ tests/dates_countdown_smoke.spec.js` — orgel系を巻き込まない)
 6. `tests/_ui_check.spec.js` / `_ui_check2.spec.js` は使い捨て診断用 → 終わったら削除
-7. **テスト残骸**: 「水族館デート」が dates に残っている可能性 → 確認して削除 (storage `date_photos/` も)
+7. **テスト残骸の掃除** (テストアカウント claude = `b45dcbdd-ba4d-4377-9618-7e7eb33812f1`。ユーザーから削除許可済み):
+   - `dates` の「水族館デート」(UIチェックで作成、失敗時は自動掃除が走っていない) + CASCADE で date_photos/date_comments/date_reviews も消える
+   - storage `memories` bucket の `date_photos/<date_id>/` 配下のテスト画像 (DELETE は service_role キーで `/storage/v1/object/memories` に prefixes 指定)
+   - `points` のテストアカウント分 (`user_id=claude AND created_at > '2026-07-19'` — date_create/date_mission 等が付与されている可能性)
+   - 確認SQL: `SELECT title FROM dates WHERE title LIKE '%テスト%' OR title='水族館デート';`
 8. 他ページの獲得pt表記の残りを grep で再確認 (`grep -n '+[0-9]*pt' *.html` で獲得系のみ削除。thanks のプレゼントptプレビューは機能なので残す)
 
 **⚠️ 実データ注意**: dates テーブルに「幡ヶ谷夏祭り(7/19)」「家具お買い物(8/2)」= ユーザーの本物のデート予定あり。絶対に消さない
