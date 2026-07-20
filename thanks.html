@@ -259,7 +259,7 @@
       await _sb.from('points').insert(pointRows)
 
       // Push通知（ギフトありは金額もタイトルに含める）
-      const notifTitle = giftAmount > 0 ? `🎁 ありがとう +${giftAmount * 2}pt` : '🌸 ありがとう'
+      const notifTitle = giftAmount > 0 ? '🎁 ポイント付きのありがとうが届いたよ' : '🌸 ありがとう'
       notify({
         title: notifTitle,
         body: msg.length > 50 ? msg.slice(0, 50) + '…' : msg,

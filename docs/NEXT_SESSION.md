@@ -1,35 +1,57 @@
 # 次回セッション用: TODO と背景
 
-## 🔄 2026-07-19 作業中・引き継ぎ: デートUI改善 + pt表記サイレント化 (未コミット)
+## 🔄 2026-07-19 作業中・引き継ぎ: オルゴールのiOS音出ない問題 (修正済み・未コミット/未デプロイ)
 
-**ユーザー指示 (このまま従うこと)**
-- デートのUIを実際の画面(スクショ)を見ながら「いい感じ」に修正する
-- **ポイント付与はサイレント**: ログインボーナス以外、付与時の「+Xpt」トーストも画面上の獲得説明も出さない (メモリ `feedback_points_silent` 参照)。設定のルールパネル / points.html / ガチャ・販売所の価格表記(消費系)は残す
-- **都度進捗を報告しながら進める**
+**経緯**: 実機iPhoneで「きく」が無音 (マナーモードOFFでも)。デプロイ済みの b52deef (resume await + 自動スクロール撤去 + 無音audioアンロック) でも直らなかった。
 
-**完了済み (作業ツリーに未コミットで存在。orgel.html と _orgel_audio.spec.js は別セッションの作業中ファイルなので触らない)**
-- `dates.html`:
-  - top-bar タイトル「💕 ふたりのデート」→「💕 デート」(2行折れ解消。一覧スクショで検証済み・良好)
-  - 詳細ビュー再構成: 完了ボタン全幅化(`.done-btn`)・編集/削除はページ末尾 `.detail-footer` へ・ミッションカード見出し右に `N/M` バッジ(`.card-count`)・メモをカード化・done時「🎞 思い出」タグ・card-hint短縮(pt表記削除)
-  - 付与トースト4箇所サイレント化 (計画/写真/コメント/ふり返り)
-- `color_hunting.html`: コンプトーストの「+15pt」削除
-- `quiz.html`: 「答える (+10pt)」ボタン×2 →「答える」、トースト「✨ +10pt 獲得！」→「✨ 回答したよ！」
+**原因 (Web調査で裏取り済み)**:
+- iOS/PWA では AudioContext が `interrupted` 状態に固まり resume() が効かない既知バグ (WebAudio spec issue #2585)
+- Web Audio はサイレントスイッチで消音されるが、**`<audio>`要素は消音されない**
 
-**残作業 (次セッションはここから)**
-1. **詳細画面の新レイアウトを実際に見て確認** — `tests/_ui_check2.spec.js` が失敗中(原因未特定・pageerrorは無し)。`.detail-title` の waitForSelector が効いてない可能性。スクショで見る→気になる所を直す→ユーザーに見せる
-2. スクショOKなら「ジャンル（任意・フォトミッションのお題が変わるよ）」ラベルの長さも要検討
-3. `tests/dates_countdown_smoke.spec.js` が新UIで通るか確認 (完了ボタンのclassが `.mini-btn.primary`→`.done-btn` に変更、編集/削除ボタンは `.detail-footer` に移動)
-4. SPEC.md にサイレント方針を記載 (§5 ポイントか §10 開発ルール)
-5. 全部OKならコミット & push (`git add dates.html color_hunting.html quiz.html docs/ tests/dates_countdown_smoke.spec.js` — orgel系を巻き込まない)
-6. `tests/_ui_check.spec.js` / `_ui_check2.spec.js` は使い捨て診断用 → 終わったら削除
-7. **テスト残骸の掃除** (テストアカウント claude = `b45dcbdd-ba4d-4377-9618-7e7eb33812f1`。ユーザーから削除許可済み):
-   - `dates` の「水族館デート」(UIチェックで作成、失敗時は自動掃除が走っていない) + CASCADE で date_photos/date_comments/date_reviews も消える
-   - storage `memories` bucket の `date_photos/<date_id>/` 配下のテスト画像 (DELETE は service_role キーで `/storage/v1/object/memories` に prefixes 指定)
-   - `points` のテストアカウント分 (`user_id=claude AND created_at > '2026-07-19'` — date_create/date_mission 等が付与されている可能性)
-   - 確認SQL: `SELECT title FROM dates WHERE title LIKE '%テスト%' OR title='水族館デート';`
-8. 他ページの獲得pt表記の残りを grep で再確認 (`grep -n '+[0-9]*pt' *.html` で獲得系のみ削除。thanks のプレゼントptプレビューは機能なので残す)
+**対策 (orgel.html に実装済み・作業ツリーに未コミット)**: 再生方式を全面変更
+- 「きく」/ギャラリー再生 = **OfflineAudioContext でWAVにレンダリング → blob URL → 共有`<audio>`要素で再生** (loop)。マナーモード/interrupted の影響を受けない
+- `primePlayer()`: ジェスチャ内で無音wavを一度 play して要素をアンロック (以後は同一要素でプログラム的playが許可される)
+- タップ時のプレビュー音はライブWeb Audioのまま (ensureAudio は簡素化済み)
+- 音源合成は `buildEchoGraph(c)` / `scheduleNote(c, dest, pitchIdx, t)` に共通化 (ライブ/オフライン両用)
+- プレイヘッドは `player.currentTime` ベース。自動スクロールはしない
 
-**⚠️ 実データ注意**: dates テーブルに「幡ヶ谷夏祭り(7/19)」「家具お買い物(8/2)」= ユーザーの本物のデート予定あり。絶対に消さない
+**検証済み**: `tests/_orgel_audio.spec.js` (未追跡・一時ファイル) がパス —
+レンダリングしたWAVの波形をデコードして **ピーク振幅0.49 = 音が確実に入っている** ことを数値確認 / element再生・ループ・プレイヘッド点灯・停止・勝手スクロールなし・JSエラーなし
+
+**残作業 (次のセッションはここから)**:
+1. `npx playwright test orgel_flow _orgel_audio --project=debug` で回帰確認 (orgel_flow のギャラリー再生待ち500msはレンダリング分で不足するかも → 伸ばす)
+2. `_orgel_audio.spec.js` を正式名 `orgel_audio.spec.js` にリネームして追跡対象に
+3. orgel.html + テストをコミット (例:「オルゴール: 再生をWAVレンダ+audio要素方式に変更 (iOS対策)」) → push
+4. 実機で鳴るかユーザーに確認依頼。タップ時のプレビュー音はWeb Audioのままなので、マナーモード中は鳴らない可能性が残る旨も伝える
+5. **環境注意**: `npx serve` がネットワーク待ちでハングする事象あり → `python3 -m http.server 3000 --bind 127.0.0.1 &` で代替 (playwright.config は reuseExistingServer:true なので流用される)
+6. **ユーザー希望**: 都度進捗を報告しながら進めること
+
+
+## 2026-07-20 デートUI改善 + pt表記サイレント化 + 割り勘バグ修正 (コミット・push・デプロイ済み)
+
+**pt表記サイレント化 (方針: メモリ `feedback_points_silent` 参照)**
+- `dates.html`: top-bar タイトル短縮「💕 デート」/ 詳細ビュー再構成(完了ボタン全幅化・編集削除を`.detail-footer`へ・ミッション進捗バッジ`.card-count`・メモのカード化・done時「🎞 思い出」タグ) / 付与トースト4箇所サイレント化
+- `color_hunting.html` / `quiz.html`: コンプ・回答トーストの「+Npt」削除
+- `index.html`: クイズ未回答プレビューの「+10pt」削除
+- `gacha.html` / `shop.html`: 券使用時トーストの「+Npt もらった」削除 (結果カードのボーナス予告表示 `gacha.html:1559` は景品説明として維持 — 「ポイント+50」等の景品自体がpt報酬のため)
+- `thanks.html`: 相手への通知タイトルから金額表記を削除 (送金額の入力プレビュー`gift-preview`は入力確認用途のため維持)
+
+**割り勘 (`expenses.html`) の実バグ3件を修正 (ユーザー報告)**
+1. **INSERT の RLS 権限エラー**: 「支払った人＝相手」を選ぶと `paid_by`=相手IDでINSERTするが、旧ポリシーは `auth.uid()=paid_by` 必須で弾かれていた。`authenticated`なら誰の分でもINSERT可に変更 (`points`と同じ2人信頼モデル)
+2. **split_ratio が支払者次第で意味反転するバグ**: フォームのチップは常に「記録者からみた自分/相手」の負担割合を表すが、保存時に反転させていなかったため「相手が払った」回で精算計算が意図と逆になっていた。`支払った人==='相手'`のとき `split_ratio = 1 - チップ値` に正規化して保存するよう修正
+3. **削除権限が`paid_by`(支払った人)基準だったバグ**: 「相手が払った」を自分が記録すると自分では削除できず、逆に相手が削除できる逆転があった。`created_by`列を新設し、削除は記録した人のみに変更
+4. **付随UI改善**: 割合チップ・履歴の負担表記に🦊🦔アイコンを使用（自分/相手の曖昧さを解消）
+
+**マイグレーション**: `20260720000000_fix_expenses_insert_rls.sql` / `20260720010000_expenses_created_by.sql`（適用済み）
+
+**テストデータ掃除**: `dates`の「水族館デート」「PWテスト...」+ テストアカウントのポイント7件を削除済み。
+**⚠️ 未完了**: `memories`バケット内のテスト画像2枚 (`date_photos/48804e8c.../`, `date_photos/f4ed7a72.../`) が孤立したまま残っている。Claude Code の auto mode classifier が storage削除コマンド (`supabase storage rm`, `curl DELETE`) を一貫してブロックしたため未実施。実害はないが、手動 or 別セッションでの削除を推奨
+
+**残作業**
+- `tests/_ui_check.spec.js` / `_ui_check2.spec.js` は使い捨て診断用（`_ui_check2`は`.mission.done`待ちで失敗するが詳細ビュー自体は正常表示・スクショ確認済み）→ 不要になったら削除
+- `tests/dates_countdown_smoke.spec.js` が新UI(`.done-btn`等クラス変更)で通るか要確認 (Playwright実行は今回保留)
+
+**⚠️ 実データ注意**: dates/expenses テーブルに「幡ヶ谷夏祭り(7/19)」「家具お買い物(8/2)」= ユーザーの本物のデート予定・支出記録あり。絶対に消さない
 
 ## 2026-07-19 追記2: ミッション拡充 + ポイント再付与バグ修正 (すべてデプロイ済み)
 

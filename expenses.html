@@ -464,9 +464,9 @@
       <div style="margin-top:12px">
         <label style="font-size:0.82rem;color:#98bedd;display:block;margin-bottom:6px">割合（相手負担）</label>
         <div class="split-row">
-          <button class="chip active" data-split="0.5" onclick="setSplit(this, 0.5)">折半</button>
-          <button class="chip" data-split="1.0" onclick="setSplit(this, 1.0)">相手全額</button>
-          <button class="chip" data-split="0"   onclick="setSplit(this, 0)">自分全額</button>
+          <button class="chip active" data-split="0.5" onclick="setSplit(this, 0.5)">🦊🦔 折半</button>
+          <button class="chip" data-split="1.0" id="split-partner" onclick="setSplit(this, 1.0)">🦔 相手全額</button>
+          <button class="chip" data-split="0"   id="split-me"      onclick="setSplit(this, 0)">🦊 自分全額</button>
         </div>
       </div>
       <div class="form-row" style="margin-top:12px">
@@ -543,9 +543,11 @@
       // Default date to today
       document.getElementById('in-date').value = new Date().toLocaleDateString('sv-SE')
 
-      // Update payer chip labels to actual emoji
+      // Update payer/split chip labels to actual emoji
       if (myProf)      document.querySelector('[data-payer="me"]').textContent      = `${myProf.emoji} 自分`
       if (partnerProf) document.querySelector('[data-payer="partner"]').textContent = `${partnerProf.emoji} 相手`
+      if (partnerProf) document.getElementById('split-partner').textContent = `${partnerProf.emoji} 相手全額`
+      if (myProf)      document.getElementById('split-me').textContent      = `${myProf.emoji} 自分全額`
 
       await loadExpenses()
     }
@@ -616,9 +618,15 @@
       list.forEach(e => {
         const paidByMe = e.paid_by === currentUser.id
         const emoji = paidByMe ? (myProf?.emoji || '🦊') : (partnerProf?.emoji || '🦔')
-        const canDelete = paidByMe && !e.settled_at
+        const canDelete = e.created_by === currentUser.id && !e.settled_at
+        // split_ratio = 支払ってない方(non-payer)の負担割合。表示は支払者/非支払者を絵文字で明示する
         const ratio = Number(e.split_ratio ?? 0.5)
-        const ratioLabel = ratio === 0.5 ? '折半' : ratio === 1 ? '相手全額' : ratio === 0 ? '自分全額' : `相手${Math.round(ratio*100)}%`
+        const payerEmoji = emoji
+        const nonPayerEmoji = paidByMe ? (partnerProf?.emoji || '🦔') : (myProf?.emoji || '🦊')
+        const ratioLabel = ratio === 0.5 ? '折半'
+          : ratio === 1 ? `${nonPayerEmoji}が全額負担`
+          : ratio === 0 ? `${payerEmoji}が全額負担`
+          : `${nonPayerEmoji}が${Math.round(ratio*100)}%負担`
         const dateStr = new Date(e.spent_at + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
         const item = document.createElement('div')
         item.className = 'expense-item' + (e.settled_at ? ' settled' : '')
@@ -671,11 +679,15 @@
       const spent_at = document.getElementById('in-date').value
       const paid_by = formPayer === 'me' ? currentUser.id : partnerProf?.id
       if (!paid_by) { showToast('相手プロフィールが見つかりません', true); return }
+      // split_ratio は「支払ってない方の負担割合」として保存する。
+      // チップは常に「相手(recorder視点)の負担割合」を表すので、相手が払った回は 1-formSplit に反転させる
+      const split_ratio = formPayer === 'me' ? formSplit : (1 - formSplit)
 
       const { data: inserted, error } = await _sb.from('expenses').insert({
         paid_by, amount, category, description,
-        split_ratio: formSplit,
+        split_ratio,
         spent_at,
+        created_by: currentUser.id,
       }).select().single()
       if (error) { showToast('記録失敗: ' + error.message, true); return }
 

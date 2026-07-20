@@ -760,7 +760,7 @@
       if (bonus > 0) {
         const reason = source === 'gacha' ? 'gacha_bonus' : 'shop_bonus'
         await addPoints(currentUser.id, bonus, reason)
-        showToast(`使用済 ✅ +${bonus}pt`)
+        showToast('使用済 ✅ ポイントを受け取ったよ')
       } else {
         showToast('使用済にしました ✅')
       }
