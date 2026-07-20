@@ -300,6 +300,9 @@
 - **履歴タイムライン**: 全部 / 未精算のみ / 精算済のみ フィルタ
 - **精算モーダル**: 未精算の合計を確定し、`expenses.settled_at` と `settlement_id` をまとめて記入
 - **バランス計算**: `net = Σ(未精算 e).amount × split_ratio × (paid_by === me ? +1 : -1)` → 正なら相手が私に返す、負なら私が相手に返す
+  - `split_ratio` は**支払ってない方(non-payer)の負担割合**として保存する。入力フォームのチップは常に「記録者からみた自分/相手」の負担割合を表すため、保存時に `支払った人==='相手' → split_ratio = 1 - チップ値` へ反転させて正規化する（2026-07-20〜。反転していなかったため「相手が払った」回で精算額が意図と逆転するバグがあった）
+  - 履歴表示は自分/相手ではなく**支払者/非支払者を絵文字で明示**（`🦊が全額負担`等）。どちらの視点で見ても曖昧にならないため
+- **削除権限は `created_by`（記録した人）基準**（2026-07-20〜。以前は `paid_by`（支払った人）基準で、「相手が払った」を自分が記録すると自分では削除できない逆転があった）
 - 記録追加時 +1pt、精算実行時 +3pt。相手に Push (kind: `expense`)
 
 ### 4.16 賭け事 (`bets.html`)
@@ -535,7 +538,7 @@
 | `shop_items` | seller_id, buyer_id, name, emoji, description, price, stock, bonus_points, rarity, active | 販売所の商品 |
 | `shop_purchases` | item_id, buyer_id, seller_id, price, name, emoji, description, bonus_points, rarity, used, purchased_at | 販売所の購入履歴 |
 | `shop_requests` | requester_id, title, price, description, status('pending'\|'accepted'\|'rejected') | 販売所リクエスト |
-| `expenses` | paid_by, amount, category, description, split_ratio, spent_at, settled_at, settlement_id | 割り勘の支出記録 |
+| `expenses` | paid_by, created_by, amount, category, description, split_ratio, spent_at, settled_at, settlement_id | 割り勘の支出記録 |
 | `settlements` | settled_by, net_amount, payer_id, receiver_id, period_from, period_to | 割り勘の精算履歴 |
 | `notifications_log` | user_id, sender_id, title, body, url, kind, read_at | send-push で送信された通知の受信者記録（お知らせセンター用） |
 | `bets` | created_by, opponent_id, title, description, stake, status, result, result_by, cancel_requested, cancel_by, proposed_at, accepted_at, finished_at, ended_at | 賭け事 |
@@ -551,6 +554,7 @@
 - `profiles`: authenticated 全員 SELECT 可
 - `closer_gauge`: 全操作許可
 - `points`: authenticated 全員 SELECT / **INSERT は authenticated なら誰の分でも可**（販売所の売上・ありがとうプレゼント等、相手へのポイント移動をクライアントから行うため。2人だけの信頼モデル前提）。賭け事の配当は RPC (SECURITY DEFINER) 経由
+- `expenses`: authenticated 全員 SELECT / **INSERT は authenticated なら誰の分（`paid_by`）でも可**（「支払った人＝相手」を選んで記録できる仕様のため。2026-07-20〜。以前は `auth.uid() = paid_by` 必須で相手払いの記録が RLS 違反になっていた）/ **DELETE は `auth.uid() = created_by`**（記録した人のみ削除可。以前は `paid_by` 基準で「相手が払った」を自分が記録すると自分では削除できなかった）
 - `quiz_answers`/`gacha_results`: authenticated 全員 SELECT / 自分の分のみ INSERT・UPDATE
 - `bingo_sessions`/`color_hunts`: authenticated 全員 SELECT（履歴共有）/ 自分の分のみ INSERT/UPDATE/DELETE
 - `time_capsules`:

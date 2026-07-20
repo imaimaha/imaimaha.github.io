@@ -410,7 +410,7 @@
           <input type="hidden" id="choice-value">
         </div>
 
-        <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">答える &nbsp;(+10pt)</button>
+        <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">答える</button>
       </div>
 
       <!-- 回答済み時 -->
@@ -862,14 +862,14 @@
           sender: myId,
         })
 
-        showToast('✨ +10pt 獲得！')
+        showToast('✨ 回答したよ！')
         await renderTodayAnswered(answer)
         loadHistory()
       } catch (err) {
         console.error('submitAnswer error:', err)
         showToast('送信に失敗しました', true)
         btn.disabled    = false
-        btn.textContent = '答える　(+10pt)'
+        btn.textContent = '答える'
       }
     }
 
