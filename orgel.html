@@ -247,63 +247,33 @@
     let editingId = null
 
     // ─────────────────────────────
-    // オルゴール音源 (Web Audio 合成: 基音 + 高次倍音 + きらめき + エコー)
+    // オルゴール音源 (合成: 基音 + 高次倍音 + きらめき + エコー)
+    // 任意の AudioContext / OfflineAudioContext に同じ音を組み立てる
     // ─────────────────────────────
-    let ctx = null, master = null, _unlockEl = null
-    async function ensureAudio() {
-      if (!ctx) {
-        ctx = new (window.AudioContext || window.webkitAudioContext)()
-        master = ctx.createGain()
-        master.gain.value = 0.5
-        // ふんわりエコー
-        const delay = ctx.createDelay(1.0)
-        delay.delayTime.value = 0.28
-        const fb = ctx.createGain(); fb.gain.value = 0.22
-        const wet = ctx.createGain(); wet.gain.value = 0.14
-        master.connect(ctx.destination)
-        master.connect(delay)
-        delay.connect(fb); fb.connect(delay)
-        delay.connect(wet); wet.connect(ctx.destination)
-      }
-      // iOS: resume が完了する前に鳴らすと無音になるので必ず待つ
-      if (ctx.state !== 'running') {
-        try { await ctx.resume() } catch (e) {}
-      }
-      // iOS アンロック: 無音バッファ1発 + 無音<audio>ループ
-      // (サイレントスイッチON でも Web Audio が鳴るようオーディオセッションを確立する)
-      if (!ensureAudio._unlocked) {
-        try {
-          const buf = ctx.createBuffer(1, 1, 22050)
-          const src = ctx.createBufferSource()
-          src.buffer = buf; src.connect(ctx.destination); src.start(0)
-        } catch (e) {}
-        try {
-          if (!_unlockEl) {
-            _unlockEl = document.createElement('audio')
-            // 無音の極小 wav (データURI)
-            _unlockEl.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
-            _unlockEl.loop = true
-            _unlockEl.setAttribute('playsinline', '')
-            document.body.appendChild(_unlockEl)
-          }
-          await _unlockEl.play().catch(() => {})
-        } catch (e) {}
-        ensureAudio._unlocked = true
-      }
+    function buildEchoGraph(c) {
+      const master = c.createGain()
+      master.gain.value = 0.5
+      const delay = c.createDelay(1.0)
+      delay.delayTime.value = 0.28
+      const fb = c.createGain(); fb.gain.value = 0.22
+      const wet = c.createGain(); wet.gain.value = 0.14
+      master.connect(c.destination)
+      master.connect(delay)
+      delay.connect(fb); fb.connect(delay)
+      delay.connect(wet); wet.connect(c.destination)
+      return master
     }
 
-    function playNote(pitchIdx, time) {
+    function scheduleNote(c, dest, pitchIdx, t) {
       const f = PITCHES[pitchIdx].f
-      const t = time ?? ctx.currentTime
-      const out = ctx.createGain()
+      const out = c.createGain()
       out.gain.setValueAtTime(0, t)
       out.gain.linearRampToValueAtTime(0.85, t + 0.004)
       out.gain.exponentialRampToValueAtTime(0.0004, t + 1.6)
-      out.connect(master)
-
+      out.connect(dest)
       const mk = (freq, gain, dur) => {
-        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
-        const g = ctx.createGain(); g.gain.value = gain
+        const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+        const g = c.createGain(); g.gain.value = gain
         o.connect(g); g.connect(out)
         o.start(t); o.stop(t + dur)
       }
@@ -312,64 +282,124 @@
       mk(f * 6.7, 0.05, 0.25)  // きらめき (非整数倍音)
     }
 
-    // ─────────────────────────────
-    // 再生 (ルックアヘッドスケジューラ)
-    // ─────────────────────────────
-    let playing = false
-    let schedTimer = null
-    let nextStepTime = 0
-    let nextStep = 0
-    let stepTimes = []           // {step, time} 再生UI用
-    let playSource = null       // 'editor' or melody id
-    let playNotes = null         // 再生中の notes Set (エディタ or ギャラリー曲)
-    let activeBpm = 112          // 再生中のBPM (エディタとギャラリー曲で分離)
+    // ── タップ時のプレビュー音 (ライブ Web Audio。ミュートスイッチONだと鳴らない端末あり) ──
+    let ctx = null, master = null
+    async function ensureAudio() {
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)()
+        master = buildEchoGraph(ctx)
+      }
+      if (ctx.state !== 'running') {
+        try { await ctx.resume() } catch (e) {}
+      }
+    }
+    function playNote(pitchIdx) {
+      if (!ctx || ctx.state !== 'running') return
+      scheduleNote(ctx, master, pitchIdx, ctx.currentTime)
+    }
 
-    function startPlayback(notesSet, sourceKey, playBpm) {
-      if (!ctx) return   // 呼び出し側で await ensureAudio() 済みの前提
+    // ─────────────────────────────
+    // 曲の再生: OfflineAudioContext で WAV にレンダリング → <audio> 要素で再生
+    // iOS 対策の本命。<audio> はサイレントスイッチONでも鳴り、
+    // AudioContext の interrupted 問題（iOS PWAで頻発）の影響も受けない
+    // ─────────────────────────────
+    const RENDER_LEAD = 0.06   // 頭の無音
+    const RENDER_TAIL = 1.8    // エコーの余韻
+    let player = null          // 共有 <audio>
+    let playing = false
+    let playSource = null      // 'editor' or melody id
+    let activeStepDur = 30 / 112
+    let _blobUrl = null
+
+    function ensurePlayer() {
+      if (player) return player
+      player = document.createElement('audio')
+      player.setAttribute('playsinline', '')
+      player.loop = true
+      document.body.appendChild(player)
+      player.addEventListener('ended', () => { if (playing) stopPlayback() })
+      return player
+    }
+
+    // AudioBuffer (mono) → 16bit PCM WAV
+    function bufferToWav(buf) {
+      const ch = buf.getChannelData(0)
+      const n = ch.length
+      const bytes = 44 + n * 2
+      const ab = new ArrayBuffer(bytes)
+      const v = new DataView(ab)
+      const wstr = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) }
+      wstr(0, 'RIFF'); v.setUint32(4, bytes - 8, true); wstr(8, 'WAVE')
+      wstr(12, 'fmt '); v.setUint32(16, 16, true)
+      v.setUint16(20, 1, true); v.setUint16(22, 1, true)
+      v.setUint32(24, buf.sampleRate, true)
+      v.setUint32(28, buf.sampleRate * 2, true)
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true)
+      wstr(36, 'data'); v.setUint32(40, n * 2, true)
+      for (let i = 0; i < n; i++) {
+        const s = Math.max(-1, Math.min(1, ch[i]))
+        v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+      }
+      return ab
+    }
+
+    async function renderWavUrl(notesSet, playBpm) {
+      const stepD = 30 / playBpm
+      const dur = RENDER_LEAD + STEPS * stepD + RENDER_TAIL
+      const sr = 44100
+      const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.ceil(sr * dur), sr)
+      const offMaster = buildEchoGraph(off)
+      notesSet.forEach(key => {
+        const [s, p] = key.split(':').map(Number)
+        scheduleNote(off, offMaster, p, RENDER_LEAD + s * stepD)
+      })
+      const rendered = await off.startRendering()
+      const url = URL.createObjectURL(new Blob([bufferToWav(rendered)], { type: 'audio/wav' }))
+      if (_blobUrl) URL.revokeObjectURL(_blobUrl)
+      _blobUrl = url
+      return url
+    }
+
+    let _startSeq = 0   // 連打対策
+    async function startPlayback(notesSet, sourceKey, playBpm) {
+      const seq = ++_startSeq
+      const el = ensurePlayer()
       stopPlayback()
       playing = true
       playSource = sourceKey
-      playNotes = notesSet
-      activeBpm = playBpm || bpm
-      nextStep = 0
-      nextStepTime = ctx.currentTime + 0.08
-      stepTimes = []
-      schedTimer = setInterval(scheduleChunk, 25)
-      requestAnimationFrame(uiTick)
+      activeStepDur = 30 / (playBpm || bpm)
+      updatePlayButtons('…')
+      try {
+        const url = await renderWavUrl(notesSet, playBpm || bpm)
+        if (seq !== _startSeq || !playing) return   // その間に停止/別再生された
+        el.src = url
+        el.loop = true
+        await el.play()
+        requestAnimationFrame(uiTick)
+      } catch (e) {
+        console.error('[orgel] playback failed:', e)
+        showToast('再生できませんでした… もう一度タップしてみて')
+        playing = false
+        playSource = null
+      }
       updatePlayButtons()
     }
 
     function stopPlayback() {
       playing = false
-      if (schedTimer) { clearInterval(schedTimer); schedTimer = null }
-      document.querySelectorAll('.orgel-row.playing').forEach(r => r.classList.remove('playing'))
       playSource = null
+      if (player) { try { player.pause(); player.currentTime = 0 } catch (e) {} }
+      document.querySelectorAll('.orgel-row.playing').forEach(r => r.classList.remove('playing'))
       updatePlayButtons()
     }
 
-    function scheduleChunk() {
-      if (!playing) return
-      while (nextStepTime < ctx.currentTime + 0.12) {
-        const s = nextStep % STEPS
-        for (let p = 0; p < PITCHES.length; p++) {
-          if (playNotes.has(s + ':' + p)) playNote(p, nextStepTime)
-        }
-        stepTimes.push({ step: s, time: nextStepTime })
-        if (stepTimes.length > 40) stepTimes.shift()
-        nextStepTime += 30 / activeBpm
-        nextStep++
-      }
-    }
-
     function uiTick() {
-      if (!playing) return
-      const now = ctx.currentTime
-      let cur = null
-      for (const st of stepTimes) if (st.time <= now) cur = st.step
-      if (cur !== null && playSource === 'editor') {
+      if (!playing || !player) return
+      if (playSource === 'editor') {
         // ハイライトのみ。自動スクロールはページ操作を奪うのでしない
+        const i = Math.floor((player.currentTime - RENDER_LEAD) / activeStepDur)
         const rows = document.querySelectorAll('.orgel-row')
-        rows.forEach((r, i) => r.classList.toggle('playing', i === cur))
+        rows.forEach((r, idx) => r.classList.toggle('playing', idx === i && i >= 0 && i < STEPS))
       }
       requestAnimationFrame(uiTick)
     }
@@ -377,15 +407,30 @@
     async function togglePlay() {
       if (playing && playSource === 'editor') { stopPlayback(); return }
       if (holes.size === 0) { showToast('まずは まるをタップして穴をあけてみて 🎶'); return }
-      await ensureAudio()
-      startPlayback(holes, 'editor')
+      // ジェスチャ内で <audio> を有効化 (以後は同じ要素ならプログラム的に再生できる)
+      primePlayer()
+      startPlayback(new Set(holes), 'editor', bpm)
     }
 
-    function updatePlayButtons() {
+    // ジェスチャ内で無音を一度 play して要素をアンロック (iOS)
+    function primePlayer() {
+      const el = ensurePlayer()
+      if (primePlayer._done) return
+      try {
+        el.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+        el.loop = false
+        el.play().catch(() => {})
+      } catch (e) {}
+      primePlayer._done = true
+    }
+
+    function updatePlayButtons(busy) {
+      const label = (on) => on ? '■ とめる' : '▶ きく'
       document.getElementById('play-btn').textContent =
-        (playing && playSource === 'editor') ? '■ とめる' : '▶ きく'
+        busy && playSource === 'editor' ? busy : label(playing && playSource === 'editor')
       document.querySelectorAll('[data-mel-play]').forEach(b => {
-        b.textContent = (playing && playSource === b.dataset.melPlay) ? '■ とめる' : '▶ きく'
+        const on = playing && playSource === b.dataset.melPlay
+        b.textContent = busy && playSource === b.dataset.melPlay ? busy : label(on)
       })
     }
 
@@ -542,13 +587,13 @@
       updatePlayButtons()
     }
 
-    async function playMelody(id) {
+    function playMelody(id) {
       if (playing && playSource === id) { stopPlayback(); return }
       const m = melodies.find(x => x.id === id)
       if (!m) return
       const set = new Set((m.notes || []).map(([s, p]) => s + ':' + p))
       if (!set.size) { showToast('この曲にはまだ穴が無いみたい'); return }
-      await ensureAudio()
+      primePlayer()   // ジェスチャ内でアンロック
       startPlayback(set, id, m.bpm || 112)   // 曲の保存BPMで再生 (エディタのテンポは不変)
     }
 
