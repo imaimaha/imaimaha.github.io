@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>筋トレしよ！ | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏋️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <script src="assets/data/workout_pool.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #14131a 0%, #241b2e 45%, #351f3a 100%) fixed;
+      color: #f3e8fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(50,30,50,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #e0a8c0; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #fbe8f4; flex: 1; text-align: center; }
+    .top-bar .spacer { width: 52px; }
+
+    .content { max-width: 620px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+
+    /* ストリーク */
+    .streak-card {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: rgba(255,150,80,0.1); border: 1.5px solid rgba(255,170,100,0.35);
+      border-radius: 16px; padding: 12px; margin-bottom: 16px; font-size: 0.92rem; color: #ffd0a0;
+    }
+    .streak-num { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.4rem; color: #ffe4b8; }
+
+    /* stepカード */
+    .step-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(220,170,240,0.18);
+      border-radius: 18px; padding: 16px; margin-bottom: 14px;
+    }
+    .step-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .step-badge {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #e26aa8, #a850e0);
+    }
+    .step-card.cleared .step-badge { background: linear-gradient(135deg, #7ee0a0, #54c47c); color: #08240f; }
+    .step-title { font-size: 0.82rem; color: #cf9fe0; font-weight: 700; letter-spacing: 0.03em; }
+    .step-ex { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.15rem; color: #f6e8fd; margin: 6px 0 12px; line-height: 1.4; }
+    .step-targets { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .target-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 12px; border-radius: 999px; font-size: 0.86rem;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.22); color: #e6d3f0;
+    }
+    .target-chip.me { border-color: rgba(226,106,168,0.5); background: rgba(226,106,168,0.12); }
+    .target-chip .num { font-weight: 700; color: #ffc0e0; }
+    .clear-btn {
+      display: block; width: 100%; padding: 13px; border-radius: 13px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #e26aa8, #a850e0); color: #fff;
+      font-family: inherit; font-size: 0.95rem; font-weight: 700;
+      box-shadow: 0 4px 16px rgba(180,80,200,0.32);
+    }
+    .clear-btn:active { transform: scale(0.98); }
+    .clear-btn.done {
+      background: rgba(126,224,160,0.16); border: 1.5px solid rgba(126,224,160,0.5);
+      color: #9ff0bc; box-shadow: none; cursor: default;
+    }
+    .step-card.locked { opacity: 0.55; }
+    .step-card.locked .step-ex { color: #b58fc8; }
+
+    /* step3 (ふたりチャレンジ) */
+    .step-card.duo { border-color: rgba(255,170,100,0.35); background: rgba(255,150,80,0.06); }
+    .duo-status { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .duo-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border-radius: 999px; font-size: 0.86rem;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.22); color: #e6d3f0;
+    }
+    .duo-chip.ok { border-color: rgba(126,224,160,0.5); background: rgba(126,224,160,0.12); color: #9ff0bc; }
+    .duo-note { font-size: 0.78rem; color: #ffb87a; margin-top: 8px; text-align: center; }
+
+    /* 個人レベル設定 */
+    .level-card {
+      background: rgba(255,255,255,0.04); border: 1.5px solid rgba(220,170,240,0.15);
+      border-radius: 14px; padding: 12px 14px; margin-top: 18px;
+    }
+    .level-card summary { font-size: 0.82rem; color: #cf9fe0; cursor: pointer; }
+    .level-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .level-chip {
+      padding: 7px 12px; border-radius: 999px; font-size: 0.8rem; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(220,170,240,0.25); color: #e6d3f0;
+    }
+    .level-chip.active { background: rgba(226,106,168,0.22); border-color: rgba(226,106,168,0.65); color: #ffd6ec; }
+    .level-hint { font-size: 0.74rem; color: #b58fc8; margin-top: 8px; line-height: 1.6; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(40,24,44,0.96); border: 1.5px solid rgba(226,106,168,0.5);
+      color: #ffd6ec; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* コーチの応援バブル */
+    .coach-bubble {
+      position: fixed; top: calc(66px + env(safe-area-inset-top, 0px));
+      left: 50%; transform: translateX(-50%) translateY(-14px);
+      max-width: calc(100% - 32px); width: 380px;
+      display: flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, rgba(255,170,100,0.22), rgba(226,106,168,0.22));
+      border: 1.5px solid rgba(255,200,150,0.5);
+      border-radius: 16px; padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      opacity: 0; pointer-events: none; z-index: 150;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .coach-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .coach-avatar { font-size: 1.7rem; flex-shrink: 0; }
+    .coach-text { font-size: 0.88rem; color: #fff0e0; line-height: 1.4; }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>🏋️ 筋トレしよ！</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="coach-bubble" id="coach-bubble">
+    <span class="coach-avatar" id="coach-avatar"></span>
+    <span class="coach-text" id="coach-text"></span>
+  </div>
+
+  <div class="content">
+    <div class="streak-card" id="streak-card" style="display:none">
+      <span>🔥</span>
+      <span>ふたり継続 <span class="streak-num" id="streak-num">0</span> 日</span>
+    </div>
+
+    <div id="steps"><div class="empty-msg" style="text-align:center;color:#b58fc8;padding:30px 0;">読み込み中...</div></div>
+
+    <details class="level-card">
+      <summary>🔧 自分の目標レベルを調整</summary>
+      <div class="level-row" id="level-row"></div>
+      <div class="level-hint">回数・秒数は基準値にこの倍率をかけて表示されるよ。無理のない範囲に合わせてね（あとからいつでも変更OK）</div>
+    </details>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const LEVELS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5]
+    const STEP_POINTS = { 1: 3, 2: 3, 3: 10 }
+
+    let myId = null, myProfile = null, partnerProfile = null
+    let today = null, quest = null
+    let myClears = new Set()      // このsessionで判明している自分のクリア済みstep
+    let partnerClears = new Set() // 相手のクリア済みstep (step3表示用)
+
+    function scaled(s, level) { return s.fixed ? s.base : Math.round(s.base * (level || 1)) }
+
+    function questForDate(dateStr) {
+      const idx = parseInt(dateStr.replace(/-/g, ''), 10) % WORKOUT_POOL.length
+      return WORKOUT_POOL[idx]
+    }
+
+    // ── コーチの応援ボイス (自分のアイコンの"逆"のマスコットが声をかけてくれるギミック) ──
+    const COACH_LINES = {
+      1: ['いいね、体があったまってきたよ🔥', 'その調子〜！ここからが本番だよ💪', 'ナイスウォームアップ！✨', 'いい滑り出し！このまま行こう〜'],
+      2: ['うおおお良いフォーム！🔥', 'あと少し、追い込んでこう！💥', 'サイコー！筋肉が喜んでるよ😤', '止まらないその根性、最高だよ！'],
+      3: ['よくやった…！最高だよ🎉', '君は最強だ…！🔥🔥', '感動した…！お疲れ様！✨', 'ふたりでここまで来たね、えらい！'],
+      done: ['🎉 ふたりともクリア！最高のチームだよ！', '🎉 やりきったね！お互い誇っていいよ！', '🎉 完璧！今日のMVPはふたりだ！'],
+    }
+    function opponentEmoji() {
+      const mine = myProfile?.emoji
+      if (mine === '🦊') return '🦔'
+      if (mine === '🦔') return '🦊'
+      return partnerProfile?.emoji || '🦊'
+    }
+    let coachTimer = null
+    function showCoach(step) {
+      const lines = COACH_LINES[step] || []
+      if (!lines.length) return
+      const line = lines[Math.floor(Math.random() * lines.length)]
+      document.getElementById('coach-avatar').textContent = opponentEmoji()
+      document.getElementById('coach-text').textContent = line
+      const bubble = document.getElementById('coach-bubble')
+      bubble.classList.add('show')
+      clearTimeout(coachTimer)
+      coachTimer = setTimeout(() => bubble.classList.remove('show'), 3200)
+    }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      myProfile = (profiles || []).find(p => p.id === myId) || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+
+      today = jstDateStr()
+      quest = questForDate(today)
+
+      renderLevelChips()
+
+      const { data: clears } = await _sb.from('workout_clears').select('user_id,step').eq('date_str', today)
+      ;(clears || []).forEach(c => {
+        if (c.user_id === myId) myClears.add(c.step)
+        else partnerClears.add(c.step)
+      })
+
+      renderSteps()
+      loadStreak()
+    }
+
+    function renderLevelChips() {
+      const row = document.getElementById('level-row')
+      const mine = myProfile?.workout_level || 1.0
+      row.innerHTML = LEVELS.map(v =>
+        `<span class="level-chip ${Math.abs(v - mine) < 0.001 ? 'active' : ''}" onclick="setLevel(${v})">${v}倍</span>`
+      ).join('')
+    }
+
+    async function setLevel(v) {
+      if (!myProfile) return
+      myProfile.workout_level = v
+      renderLevelChips()
+      renderSteps()
+      await _sb.from('profiles').update({ workout_level: v }).eq('id', myId)
+    }
+
+    function renderSteps() {
+      const el = document.getElementById('steps')
+      const myLevel = myProfile?.workout_level || 1.0
+      const partnerLevel = partnerProfile?.workout_level || 1.0
+
+      const stepCard = (n) => {
+        const s = quest['step' + n]
+        const myTarget = scaled(s, myLevel)
+        const partnerTarget = partnerProfile ? scaled(s, partnerLevel) : null
+        const done = myClears.has(n)
+        const locked = (n === 2 && !myClears.has(1)) || (n === 3 && !(myClears.has(1) && myClears.has(2)))
+        const label = n === 1 ? 'STEP 1 ・ ウォームアップ' : n === 2 ? 'STEP 2 ・ メイン種目' : 'STEP 3 ・ ふたりチャレンジ'
+
+        if (n === 3) {
+          const partnerDone = partnerClears.has(3)
+          const bothDone = done && partnerDone
+          return `
+            <div class="step-card duo ${done ? 'cleared' : ''} ${locked ? 'locked' : ''}">
+              <div class="step-head"><span class="step-badge">${bothDone ? '✓' : '3'}</span><span class="step-title">${label}</span></div>
+              <div class="step-ex">${escHtml(s.ex)}</div>
+              <div class="duo-status">
+                <span class="duo-chip ${done ? 'ok' : ''}">${myProfile?.emoji || '🙂'} ${myTarget}${s.unit} ${done ? '✓' : ''}</span>
+                ${partnerProfile ? `<span class="duo-chip ${partnerDone ? 'ok' : ''}">${partnerProfile.emoji} ${partnerTarget}${s.unit} ${partnerDone ? '✓' : ''}</span>` : ''}
+              </div>
+              <button class="clear-btn ${done ? 'done' : ''}" ${done || locked ? 'disabled' : ''} onclick="clearStep(3)">
+                ${done ? '✓ クリア済み' : locked ? 'STEP1・2を先にクリアしてね' : '💪 やった！'}
+              </button>
+              ${done && !partnerDone ? `<div class="duo-note">${partnerProfile?.emoji || ''} が終わるとクリアになるよ</div>` : ''}
+              ${bothDone ? `<div class="duo-note">🎉 ふたりともクリア！</div>` : ''}
+            </div>`
+        }
+
+        return `
+          <div class="step-card ${done ? 'cleared' : ''} ${locked ? 'locked' : ''}">
+            <div class="step-head"><span class="step-badge">${done ? '✓' : n}</span><span class="step-title">${label}</span></div>
+            <div class="step-ex">${escHtml(s.ex)}</div>
+            <div class="step-targets">
+              <span class="target-chip me"><span class="num">${myTarget}</span>${s.unit}（自分）</span>
+              ${partnerProfile ? `<span class="target-chip"><span class="num">${partnerTarget}</span>${s.unit}（${partnerProfile.emoji}）</span>` : ''}
+            </div>
+            <button class="clear-btn ${done ? 'done' : ''}" ${done || locked ? 'disabled' : ''} onclick="clearStep(${n})">
+              ${done ? '✓ クリア済み' : locked ? 'STEP1を先にクリアしてね' : '💪 やった！'}
+            </button>
+          </div>`
+      }
+
+      el.innerHTML = stepCard(1) + stepCard(2) + stepCard(3)
+    }
+
+    async function clearStep(n) {
+      if (myClears.has(n)) return
+      const { error } = await _sb.from('workout_clears').insert({ date_str: today, user_id: myId, step: n })
+      if (error) { showToast('記録に失敗しました'); console.error(error); return }
+      myClears.add(n)
+      renderSteps()
+
+      if (n !== 3) {
+        await addPoints(myId, STEP_POINTS[n], 'workout_step' + n)
+        showToast(n === 1 ? 'STEP1 クリア！' : 'STEP2 クリア！')
+        showCoach(n)
+        if (partnerProfile) {
+          notify({
+            title: '🏋️ 筋トレしよ！',
+            body: `${myProfile?.emoji || ''} が STEP${n} をクリアしたよ`,
+            url: '/workout.html', kind: 'workout', recipient: partnerProfile.id,
+          })
+        }
+        return
+      }
+
+      // step3: 相手も終わっているか確認 → 両方揃っていれば award を試みる (先着1件だけ成立)
+      showToast('STEP3 クリア！相手を待ってるよ')
+      showCoach(3)
+      if (partnerProfile) {
+        notify({
+          title: '🏋️ 筋トレしよ！',
+          body: `${myProfile?.emoji || ''} が STEP3 をクリア！あなたの番だよ`,
+          url: '/workout.html', kind: 'workout', recipient: partnerProfile.id,
+        })
+      }
+      const { count } = await _sb.from('workout_clears').select('user_id', { count: 'exact', head: true })
+        .eq('date_str', today).eq('step', 3)
+      if (count >= 2) await tryAwardStep3()
+    }
+
+    async function tryAwardStep3() {
+      const { data, error } = await _sb.from('workout_awards')
+        .insert({ date_str: today }).select().single()
+      if (error || !data) return   // 既に相手側が付与済み (ON CONFLICT) or 権利なし
+      partnerClears.add(3)
+      renderSteps()
+      await addPoints(myId, STEP_POINTS[3], 'workout_step3_duo')
+      if (partnerProfile) {
+        await addPoints(partnerProfile.id, STEP_POINTS[3], 'workout_step3_duo')
+        notify({
+          title: '🎉 今日の筋トレ、ふたりともクリア！',
+          body: '今日もお疲れ様！',
+          url: '/workout.html', kind: 'workout', recipient: partnerProfile.id,
+        })
+      }
+      showToast('🎉 ふたりともクリア！')
+      showCoach('done')
+    }
+
+    async function loadStreak() {
+      // 直近30日分の workout_clears を取って「両者がstep3をクリアした連続日数」を数える
+      const since = new Date(Date.now() - 30 * 86400000).toLocaleDateString('sv-SE')
+      const { data } = await _sb.from('workout_clears').select('date_str,user_id').eq('step', 3).gte('date_str', since)
+      if (!data || !partnerProfile) return
+      const byDate = {}
+      data.forEach(r => { (byDate[r.date_str] ||= new Set()).add(r.user_id) })
+      let streak = 0
+      let cur = new Date(today + 'T00:00:00+09:00')
+      // 今日はまだ揃ってないかもしれないので、揃っていなければ昨日から数える
+      if (!(byDate[today] && byDate[today].size >= 2)) cur.setDate(cur.getDate() - 1)
+      while (true) {
+        const ds = cur.toLocaleDateString('sv-SE')
+        if (byDate[ds] && byDate[ds].size >= 2) { streak++; cur.setDate(cur.getDate() - 1) }
+        else break
+      }
+      if (streak > 0) {
+        document.getElementById('streak-card').style.display = 'flex'
+        document.getElementById('streak-num').textContent = streak
+      }
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200)
+    }
+
+    init()
+  </script>
+</body>
+</html>

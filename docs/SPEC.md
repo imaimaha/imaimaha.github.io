@@ -4,7 +4,7 @@
 > 実装が変わる度にここも更新すること。
 > Claude が「notre」「imaimaha」等の呼称で参照する時は、まずこのファイルを読む。
 
-**最終更新**: 2026-07-17
+**最終更新**: 2026-07-22
 
 > 📌 **重要**: 機能追加・ルール変更時は必ず以下を同時に更新すること:
 > - この SPEC.md（正式仕様）
@@ -346,6 +346,20 @@
 - **登録**: アイコン・なまえ・日にち・くりかえし（一度きり / 毎年）。毎年は月日だけ見て次の到来日を計算。編集・削除可
 - **ホームのカウントダウンカード**: `index.html` 上部（今のきもちの下）に、記念日 auto + `countdowns` + デート予定 を統合して近い順トップ3を表示。タップで `countdown.html` へ
 
+### 4.21 筋トレしよ！ (`workout.html`) — 2026-07-22 新設
+
+日替わり3stepの運動クエスト。STEP1/2は個人戦、STEP3は「ふたりチャレンジ」で二人ともクリアして初めてポイントが入る。
+
+- **お題**: `assets/data/workout_pool.js` の `WORKOUT_POOL`（約36日分、日付ベース index で選出。quiz.htmlと同じ方式）。各日 step1=ウォームアップ / step2=メイン種目 / step3=ふたりチャレンジ（少し強度高め）。一部の日は中山きんに君の筋トレ動画・ヨガ動画・ダンス動画などの「動画系」お題（`fixed:true`、体力差でスケーリングしない）
+- **個人差の反映**: `profiles.workout_level`（デフォ1.0）を基準回数/秒数に掛けて各自の目標を算出・表示（`fixed:true`の種目は除く）。ページ内の折りたたみ「🔧 自分の目標レベルを調整」でいつでも変更可（0.5〜2.5倍のチップ選択）
+- **クリア方式**: 自己申告タップのみ（写真等の証拠は不要）。STEP1クリア後にSTEP2、STEP1+2クリア後にSTEP3が開放される順序制
+- **STEP1/2**: 自分がクリアした瞬間に個別付与。相手の状況も画面上に絵文字付きで見える
+- **STEP3（ふたりチャレンジ）**: 二人ともクリアして初めて両者にポイント付与。`workout_awards`テーブル（date_str主キー）への `INSERT ... ON CONFLICT DO NOTHING` で先着1件のみ付与権利を得る排他制御（bingo/color hunt の award-once と同様の考え方）
+- **応援コーチのギミック**: STEPクリア時、自分のマスコットと逆側（🦊なら🦔、🦔なら🦊）が励ましの一言をランダム表示するポップアップ（`COACH_LINES`）
+- **ストリーク表示**: 直近30日で「二人ともSTEP3をクリアした日」が連続何日続いているかをカード表示
+- **通知**: STEP1/2/3クリア時、二人とも達成時に相手へPush（kind: `workout`）
+- **ポイント表記はサイレント**（`feedback_points_silent`方針）: 画面上・通知本文に具体的な pt 数は表示しない。ルールパネル(settings.html)にのみ記載
+
 ### 4.17 お知らせセンター (`notifications.html`)
 
 - send-push で受信した全通知の一覧・既読管理
@@ -405,6 +419,8 @@
 | 賭け事 勝利 (Pot 総取り) | +stake×2 | `bet_win` |
 | 賭け事 引き分け 返却 | +stake | `bet_draw` |
 | 賭け事 拒否/取下 返却 | +stake | `bet_return` |
+| 筋トレ STEP1/2 クリア | +3 | `workout_step1` / `workout_step2` |
+| 筋トレ STEP3 (ふたりともクリアで両者に) | +10 | `workout_step3_duo` |
 
 ### 消費手段
 
@@ -467,6 +483,8 @@
 | `shop.html` | 券使用・取り消し申請/承認/却下 | 相手 |
 | `expenses.html` | 支出記録追加 | 相手 (kind: `expense`) |
 | `expenses.html` | 精算実行 | 相手 (kind: `expense`) |
+| `workout.html` | STEP1/2/3 クリア | 相手 (kind: `workout`) |
+| `workout.html` | STEP3 二人ともクリア | 相手 (kind: `workout`) |
 
 **注**: `send-push` は全ての push 送信時に `notifications_log` テーブルにも受信者ごとに insert する。お知らせセンター (`notifications.html`) で一覧・既読管理される。呼び出し時に `kind` を指定するとカテゴリフィルタで絞れる。
 
@@ -518,7 +536,7 @@
 
 | テーブル | 主なカラム | 用途 |
 |----------|-----------|------|
-| `profiles` | id, name, emoji, line_user_id | 2人のプロフィール |
+| `profiles` | id, name, emoji, line_user_id, workout_level | 2人のプロフィール（workout_levelは筋トレのお題回数スケーリング用、デフォ1.0） |
 | `closer_gauge` | user_id PK, gauge, updated_at | ゲージ値（24h線形減衰） |
 | `status` | user_id, finish_time, note | 退勤予定（朝6時DELETE） |
 | `events` | date, title, memo, user_id | カレンダーイベント |
@@ -548,6 +566,8 @@
 | `date_comments` | date_id(fk), user_id, body | デートへのコメント |
 | `date_reviews` | date_id(fk), user_id, rating(1-5), body / PK(date_id,user_id) | デートのふり返り |
 | `settings` | key, value | LINE group ID など汎用設定 |
+| `workout_clears` | date_str, user_id, step(1-3), cleared_at / PK(date_str,user_id,step) | 筋トレしよ！の自己申告クリア記録 |
+| `workout_awards` | date_str PK, step3_awarded_at | STEP3(ふたりチャレンジ)のポイント付与を一度きりにする排他ガード |
 
 ### 7.2 RLS ポリシーの原則
 
@@ -557,6 +577,8 @@
 - `expenses`: authenticated 全員 SELECT / **INSERT は authenticated なら誰の分（`paid_by`）でも可**（「支払った人＝相手」を選んで記録できる仕様のため。2026-07-20〜。以前は `auth.uid() = paid_by` 必須で相手払いの記録が RLS 違反になっていた）/ **DELETE は `auth.uid() = created_by`**（記録した人のみ削除可。以前は `paid_by` 基準で「相手が払った」を自分が記録すると自分では削除できなかった）
 - `quiz_answers`/`gacha_results`: authenticated 全員 SELECT / 自分の分のみ INSERT・UPDATE
 - `bingo_sessions`/`color_hunts`: authenticated 全員 SELECT（履歴共有）/ 自分の分のみ INSERT/UPDATE/DELETE
+- `workout_clears`: authenticated 全員 SELECT / **INSERT は `auth.uid() = user_id` のみ**（自己申告のクリアなので他人の分の代理記録は不可。ここは `expenses`/`points` と違いあえて自分の分のみに制限）
+- `workout_awards`: authenticated 全員 SELECT/INSERT 可（`date_str` PRIMARY KEY への `INSERT ... ON CONFLICT DO NOTHING` で先着1件のみ成立する排他制御。RLSでの人物制限は不要）
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
   - `recipient_view`: 受信者は `open_at <= now()` の分だけ見える

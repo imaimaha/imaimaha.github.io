@@ -6,7 +6,7 @@
 
   const TABS = [
     { key:'home',  label:'ホーム',   icon:'🌙', href:'/',            match:p => p === '/' || p === '/index.html' },
-    { key:'us',    label:'ふたり',   icon:'💗', href:'/closer.html', match:p => ['/closer.html','/thanks.html','/one_on_one.html','/time_capsule.html','/status.html','/dates.html','/one_song.html'].includes(p) },
+    { key:'us',    label:'ふたり',   icon:'💗', href:'/closer.html', match:p => ['/closer.html','/thanks.html','/one_on_one.html','/time_capsule.html','/status.html','/dates.html','/one_song.html','/workout.html'].includes(p) },
     { key:'play',  label:'遊ぶ',     icon:'🎯', href:'#play',        match:p => ['/quiz.html','/bingo.html','/color_hunting.html','/gacha.html'].includes(p), sheet:'play' },
     { key:'shop',  label:'ショップ', icon:'🛍', href:'/shop.html',   match:p => ['/shop.html','/points.html'].includes(p) },
     { key:'more',  label:'もっと',   icon:'☰',  href:'#more',        match:() => false, sheet:'more' },
@@ -24,6 +24,7 @@
     { title:'ふたり', items:[
       { icon:'🕐', label:'今日の帰宅',      href:'/status.html' },
       { icon:'💗', label:'ゲージ',          href:'/closer.html' },
+      { icon:'🏋️', label:'筋トレしよ！',    href:'/workout.html' },
       { icon:'🎵', label:'今日の1曲',       href:'/one_song.html' },
       { icon:'🎼', label:'オルゴール',      href:'/orgel.html' },
       { icon:'💕', label:'デート',          href:'/dates.html' },
