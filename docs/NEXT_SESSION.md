@@ -1,6 +1,22 @@
 # 次回セッション用: TODO と背景
 
-## 🔄 2026-07-19 作業中・引き継ぎ: オルゴールのiOS音出ない問題 (修正済み・未コミット/未デプロイ)
+## 2026-07-22 新機能: 筋トレしよ！ (workout.html) — コミット・push・デプロイ済み
+
+日替わり3stepの運動クエスト。ユーザー要望「毎日お題(3step)、クリアでpt、step1.2は個別、step3は二人ともクリアで初めてpt」を実装。
+
+- **お題プール**: `assets/data/workout_pool.js`（約36日分、日付ベースindex選出）。中山きんに君の動画・ヨガ動画・ダンス動画などの「動画系」お題も混在（`fixed:true`で体力差スケーリング対象外）
+- **個人差対応** (ユーザー追加要望): `profiles.workout_level`（デフォ1.0、hedgehogは初期値1.5に設定済み — 実績申告(nick腕立て5膝つき2+腹筋30 / hed腕立て15+腹筋50)を踏まえた仮値）を基準回数に掛けて表示。ページ内の折りたたみでいつでも変更可
+- **クリア方式**: 自己申告タップのみ（ユーザー選択、写真証拠なし）。STEP1→2→3の順に開放
+- **STEP3のポイント一度きり付与**: `workout_awards`(date_str PK) への `INSERT...ON CONFLICT DO NOTHING` で先着1件のみ成立 (bingo/color hunt の award-once と同じ考え方)
+- **応援コーチのギミック** (ユーザー追加要望): STEPクリア時、自分と逆のマスコット(🦊⇔🦔)が励ましをランダム表示
+- **ストリーク表示**: 直近30日で二人ともSTEP3クリアした連続日数
+- **ポイント表記はサイレント** (`feedback_points_silent`方針に準拠、UI・通知本文に具体的pt数は出さない)
+- 導線: nav.js(ふたり) / index.htmlタイル / notifications.html(🏋️) / settings.html(通知トグル+ルールパネル)
+- マイグレーション: `20260722000000_workout.sql`(workout_clears/workout_awards) / `20260722010000_workout_level.sql`(profiles.workout_level)
+
+**残作業**: 実機での動作確認（Playwrightテスト未作成・未実行）。ストリーク表示・応援コーチの見え方はスクショ未確認
+
+## 2026-07-20 オルゴールのiOS音出ない問題 → 修正・コミット・push・デプロイ済み・ユーザー確認済み(音鳴った)
 
 **経緯**: 実機iPhoneで「きく」が無音 (マナーモードOFFでも)。デプロイ済みの b52deef (resume await + 自動スクロール撤去 + 無音audioアンロック) でも直らなかった。
 
@@ -8,23 +24,17 @@
 - iOS/PWA では AudioContext が `interrupted` 状態に固まり resume() が効かない既知バグ (WebAudio spec issue #2585)
 - Web Audio はサイレントスイッチで消音されるが、**`<audio>`要素は消音されない**
 
-**対策 (orgel.html に実装済み・作業ツリーに未コミット)**: 再生方式を全面変更
+**対策 (コミット e3ed658 で適用済み)**: 再生方式を全面変更
 - 「きく」/ギャラリー再生 = **OfflineAudioContext でWAVにレンダリング → blob URL → 共有`<audio>`要素で再生** (loop)。マナーモード/interrupted の影響を受けない
 - `primePlayer()`: ジェスチャ内で無音wavを一度 play して要素をアンロック (以後は同一要素でプログラム的playが許可される)
 - タップ時のプレビュー音はライブWeb Audioのまま (ensureAudio は簡素化済み)
 - 音源合成は `buildEchoGraph(c)` / `scheduleNote(c, dest, pitchIdx, t)` に共通化 (ライブ/オフライン両用)
 - プレイヘッドは `player.currentTime` ベース。自動スクロールはしない
 
-**検証済み**: `tests/_orgel_audio.spec.js` (未追跡・一時ファイル) がパス —
-レンダリングしたWAVの波形をデコードして **ピーク振幅0.49 = 音が確実に入っている** ことを数値確認 / element再生・ループ・プレイヘッド点灯・停止・勝手スクロールなし・JSエラーなし
+**検証済み**: `tests/orgel_audio.spec.js`（正式名にリネーム済み・トラッキング対象）がパス —
+レンダリングしたWAVの波形をデコードして **ピーク振幅0.49 = 音が確実に入っている** ことを数値確認 / element再生・ループ・プレイヘッド点灯・停止・勝手スクロールなし・JSエラーなし。**実機iPhoneでユーザー確認済み（音が鳴った）**
 
-**残作業 (次のセッションはここから)**:
-1. `npx playwright test orgel_flow _orgel_audio --project=debug` で回帰確認 (orgel_flow のギャラリー再生待ち500msはレンダリング分で不足するかも → 伸ばす)
-2. `_orgel_audio.spec.js` を正式名 `orgel_audio.spec.js` にリネームして追跡対象に
-3. orgel.html + テストをコミット (例:「オルゴール: 再生をWAVレンダ+audio要素方式に変更 (iOS対策)」) → push
-4. 実機で鳴るかユーザーに確認依頼。タップ時のプレビュー音はWeb Audioのままなので、マナーモード中は鳴らない可能性が残る旨も伝える
-5. **環境注意**: `npx serve` がネットワーク待ちでハングする事象あり → `python3 -m http.server 3000 --bind 127.0.0.1 &` で代替 (playwright.config は reuseExistingServer:true なので流用される)
-6. **ユーザー希望**: 都度進捗を報告しながら進めること
+**残作業**: `tests/orgel_flow.spec.js` のギャラリー再生待ち時間が新方式のレンダリング分で不足する可能性あり（次回Playwright実行時に確認）
 
 
 ## 2026-07-20 デートUI改善 + pt表記サイレント化 + 割り勘バグ修正 (コミット・push・デプロイ済み)
