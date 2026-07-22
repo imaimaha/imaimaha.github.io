@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>わたしえらい！ | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #14131a 0%, #241b2e 45%, #351f3a 100%) fixed;
+      color: #f3e8fc; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(50,30,50,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #e0a8c0; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #fbe8f4; flex: 1; text-align: center; }
+    .top-bar .spacer { width: 52px; }
+
+    .content { max-width: 640px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .section-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #f0d8fa; font-weight: 700; margin: 6px 4px 12px; }
+    .section + .section { margin-top: 24px; }
+    .empty-msg { text-align: center; color: #b58fc8; font-size: 0.88rem; padding: 20px 10px; line-height: 1.7; }
+
+    .add-goal-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px; border-radius: 14px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #e26aa8, #a850e0);
+      color: #fff; border: none; font-family: inherit; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 5px 18px rgba(180,80,200,0.35);
+    }
+    .add-goal-btn:active { transform: scale(0.98); }
+
+    .goal-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(220,170,240,0.2);
+      border-radius: 18px; padding: 16px; margin-bottom: 14px;
+    }
+    .goal-card.done { border-color: rgba(255,215,130,0.4); background: rgba(255,215,130,0.05); }
+    .goal-head { display: flex; align-items: flex-start; gap: 8px; }
+    .goal-title { flex: 1; font-family: 'Zen Kurenaido', sans-serif; font-size: 1.1rem; color: #f6e8fd; word-break: break-word; }
+    .goal-period { font-size: 0.74rem; color: #cf9fe0; margin-top: 3px; }
+    .goal-trophy { flex-shrink: 0; font-size: 1.3rem; }
+    .goal-progress { font-size: 0.76rem; color: #b58fc8; margin: 8px 0 10px; }
+
+    .step-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(220,170,240,0.1); }
+    .step-row:last-child { border-bottom: none; }
+    .step-check {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 0.75rem;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.3); color: transparent;
+    }
+    .step-row.done .step-check { background: linear-gradient(135deg,#7ee0a0,#54c47c); border: none; color: #08240f; }
+    .step-text { flex: 1; min-width: 0; font-size: 0.9rem; color: #f0e0fa; word-break: break-word; }
+    .step-row.done .step-text { color: #b58fc8; text-decoration: line-through; }
+    .step-action {
+      flex-shrink: 0; padding: 6px 11px; border-radius: 10px; font-size: 0.76rem; cursor: pointer;
+      background: rgba(226,106,168,0.16); border: 1.5px solid rgba(226,106,168,0.42); color: #ffc0e0; font-family: inherit;
+    }
+    .step-action:active { transform: scale(0.95); }
+    .step-praise {
+      flex-shrink: 0; padding: 6px 11px; border-radius: 10px; font-size: 0.76rem; cursor: pointer;
+      background: rgba(255,200,90,0.16); border: 1.5px solid rgba(255,210,120,0.5); color: #ffe4ad; font-family: inherit;
+    }
+    .step-praise:active { transform: scale(0.95); }
+    .step-praised { flex-shrink: 0; font-size: 0.76rem; color: #ffd97d; }
+
+    .step-add-row { display: flex; gap: 8px; margin-top: 10px; }
+    .step-add-row input {
+      flex: 1; min-width: 0; padding: 9px 12px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(220,170,240,0.28);
+      border-radius: 10px; color: #f3e8fc; font-size: 15px; font-family: inherit; outline: none;
+    }
+    .step-add-row button {
+      flex-shrink: 0; padding: 0 14px; border-radius: 10px; font-family: inherit; font-size: 0.82rem; cursor: pointer;
+      background: rgba(226,106,168,0.2); border: 1.5px solid rgba(226,106,168,0.45); color: #ffc0e0;
+    }
+
+    .goal-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .mini-btn {
+      padding: 9px 14px; border-radius: 11px; font-family: inherit; font-size: 0.8rem; cursor: pointer;
+      background: rgba(255,255,255,0.07); border: 1.5px solid rgba(220,170,240,0.28); color: #e6d3f0;
+    }
+    .mini-btn:active { transform: scale(0.96); }
+    .mini-btn.primary { background: linear-gradient(135deg, #e26aa8, #a850e0); border: none; color: #fff; font-weight: 700; }
+    .mini-btn.gold { background: rgba(255,200,90,0.18); border-color: rgba(255,210,120,0.55); color: #ffe4ad; font-weight: 700; }
+    .mini-btn.danger { color: #ffb0b0; border-color: rgba(255,120,120,0.4); }
+    .goal-praised-tag { font-size: 0.78rem; color: #ffd97d; margin-top: 10px; }
+
+    /* モーダル (目標作成) */
+    .modal-back {
+      position: fixed; inset: 0; background: rgba(10,4,16,0.72); z-index: 200;
+      display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px);
+    }
+    .modal-back.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 620px; background: linear-gradient(160deg,#241b2e,#351f3a);
+      border-top-left-radius: 22px; border-top-right-radius: 22px;
+      border-top: 1.5px solid rgba(220,170,240,0.3);
+      padding: 20px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal h2 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #f6e8fd; margin-bottom: 16px; text-align: center; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.78rem; color: #cf9fe0; margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.25);
+      border: 1.5px solid rgba(220,170,240,0.28); border-radius: 12px;
+      color: #f3e8fc; font-size: 16px; font-family: inherit; outline: none;
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .modal-actions button { flex: 1; padding: 14px; border-radius: 13px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(220,170,240,0.25); color: #d7a8dd; }
+    .btn-ok { background: linear-gradient(135deg, #e26aa8, #a850e0); border: none; color: #fff; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(40,24,44,0.96); border: 1.5px solid rgba(226,106,168,0.5);
+      color: #ffd6ec; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>🎉 わたしえらい！</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="content">
+    <button class="add-goal-btn" onclick="openCreate()">✨ 目標をつくる</button>
+
+    <div class="section">
+      <div class="section-label" id="my-label">自分の目標</div>
+      <div id="my-goals"><div class="empty-msg">読み込み中...</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label" id="partner-label">相手の目標</div>
+      <div id="partner-goals"></div>
+    </div>
+  </div>
+
+  <!-- 目標作成モーダル -->
+  <div class="modal-back" id="modal-back">
+    <div class="modal">
+      <h2>✨ 目標をつくる</h2>
+      <div class="field"><label>目標</label><input type="text" id="f-title" maxlength="60" placeholder="例: パスポート取得"></div>
+      <div class="field"><label>期限の目安（任意）</label><input type="text" id="f-period" maxlength="30" placeholder="例: 7月中"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">やめる</button>
+        <button class="btn-ok" onclick="saveGoal()">つくる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let myId = null, myProfile = null, partnerProfile = null
+    let goals = [], steps = [], praises = []
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      myProfile = (profiles || []).find(p => p.id === myId) || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+
+      document.getElementById('my-label').textContent = `${myProfile?.emoji || ''} 自分の目標`
+      document.getElementById('partner-label').textContent = partnerProfile ? `${partnerProfile.emoji} ${partnerProfile.name || '相手'}の目標` : '相手の目標'
+
+      await loadAll()
+    }
+
+    async function loadAll() {
+      const [{ data: g }, { data: s }, { data: p }] = await Promise.all([
+        _sb.from('goals').select('*').order('created_at', { ascending: false }),
+        _sb.from('goal_steps').select('*').order('created_at', { ascending: true }),
+        _sb.from('goal_praises').select('*'),
+      ])
+      goals = g || []; steps = s || []; praises = p || []
+      render()
+    }
+
+    function stepsFor(goalId) { return steps.filter(s => s.goal_id === goalId) }
+    function stepPraised(stepId) { return praises.some(p => p.step_id === stepId) }
+    function goalPraised(goalId) { return praises.some(p => p.goal_id === goalId && p.step_id === null) }
+
+    function render() {
+      const mine = goals.filter(g => g.user_id === myId)
+      const theirs = goals.filter(g => g.user_id !== myId)
+
+      const myEl = document.getElementById('my-goals')
+      myEl.innerHTML = mine.length ? mine.map(g => goalCardHtml(g, true)).join('')
+        : '<div class="empty-msg">まだ目標がないよ。「✨ 目標をつくる」から始めよう</div>'
+
+      const pEl = document.getElementById('partner-goals')
+      if (!partnerProfile) { pEl.innerHTML = ''; return }
+      pEl.innerHTML = theirs.length ? theirs.map(g => goalCardHtml(g, false)).join('')
+        : '<div class="empty-msg">まだ目標がないみたい</div>'
+    }
+
+    function goalCardHtml(g, isMine) {
+      const gSteps = stepsFor(g.id)
+      const doneCount = gSteps.filter(s => s.done).length
+      const isDone = g.status === 'done'
+
+      const stepsHtml = gSteps.map(s => {
+        if (isMine) {
+          return `<div class="step-row ${s.done ? 'done' : ''}">
+              <div class="step-check">✓</div>
+              <div class="step-text">${escHtml(s.title)}</div>
+              ${!s.done ? `<button class="step-action" onclick="completeStep('${s.id}')">達成</button>` : ''}
+            </div>`
+        }
+        const praised = stepPraised(s.id)
+        return `<div class="step-row ${s.done ? 'done' : ''}">
+            <div class="step-check">✓</div>
+            <div class="step-text">${escHtml(s.title)}</div>
+            ${s.done ? (praised
+              ? `<span class="step-praised">🎉 済</span>`
+              : `<button class="step-praise" onclick="praiseStep('${s.id}','${g.id}')">🎉 えらい！</button>`)
+              : ''}
+          </div>`
+      }).join('')
+
+      const addRow = isMine ? `
+        <div class="step-add-row">
+          <input type="text" maxlength="60" placeholder="ステップを追加 (例: 申請書を出す)" id="new-step-${g.id}" onkeydown="if(event.key==='Enter')addStep('${g.id}')">
+          <button onclick="addStep('${g.id}')">追加</button>
+        </div>` : ''
+
+      let actions = ''
+      if (isMine && !isDone) {
+        actions = `<div class="goal-actions"><button class="mini-btn primary" onclick="completeGoal('${g.id}')">🏆 目標を達成にする</button><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
+      } else if (isMine && isDone) {
+        actions = `<div class="goal-actions"><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
+      } else if (!isMine && isDone) {
+        const praised = goalPraised(g.id)
+        actions = praised
+          ? `<div class="goal-praised-tag">🎉 えらい！送信済み</div>`
+          : `<div class="goal-actions"><button class="mini-btn gold" onclick="praiseGoal('${g.id}')">🎉 えらい！を送る</button></div>`
+      }
+
+      return `
+        <div class="goal-card ${isDone ? 'done' : ''}">
+          <div class="goal-head">
+            <div>
+              <div class="goal-title">${escHtml(g.title)}</div>
+              ${g.period ? `<div class="goal-period">📅 ${escHtml(g.period)}</div>` : ''}
+            </div>
+            ${isDone ? '<span class="goal-trophy">🏆</span>' : ''}
+          </div>
+          ${gSteps.length ? `<div class="goal-progress">${doneCount} / ${gSteps.length} ステップ達成</div>` : ''}
+          ${stepsHtml}
+          ${addRow}
+          ${actions}
+        </div>`
+    }
+
+    // ── 自分の操作 ──
+    async function addStep(goalId) {
+      const input = document.getElementById('new-step-' + goalId)
+      const title = input.value.trim()
+      if (!title) return
+      const { data, error } = await _sb.from('goal_steps').insert({ goal_id: goalId, user_id: myId, title }).select().single()
+      if (error) { showToast('追加に失敗しました'); console.error(error); return }
+      steps.push(data)
+      input.value = ''
+      render()
+    }
+
+    async function completeStep(stepId) {
+      const s = steps.find(x => x.id === stepId)
+      if (!s || s.done) return
+      const { error } = await _sb.from('goal_steps').update({ done: true, done_at: new Date().toISOString() }).eq('id', stepId)
+      if (error) { showToast('更新に失敗しました'); console.error(error); return }
+      s.done = true
+      render()
+      await addPoints(myId, 1, 'goal_step')
+      showToast('ステップ達成！')
+      const g = goals.find(x => x.id === s.goal_id)
+      if (partnerProfile) {
+        notify({
+          title: '🎯 わたしえらい！',
+          body: `${myProfile?.emoji || ''} が「${g?.title || ''}」の1ステップをクリアしたよ`,
+          url: '/goals.html', kind: 'goal', recipient: partnerProfile.id,
+        })
+      }
+    }
+
+    async function completeGoal(goalId) {
+      const g = goals.find(x => x.id === goalId)
+      if (!g || g.status === 'done') return
+      if (!confirm(`「${g.title}」を達成済みにしますか？`)) return
+      const { error } = await _sb.from('goals').update({ status: 'done', done_at: new Date().toISOString() }).eq('id', goalId)
+      if (error) { showToast('更新に失敗しました'); console.error(error); return }
+      g.status = 'done'; g.done_at = new Date().toISOString()
+      render()
+      await addPoints(myId, 10, 'goal_complete')
+      showToast('🏆 目標達成！')
+      if (partnerProfile) {
+        notify({
+          title: '🏆 わたしえらい！',
+          body: `${myProfile?.emoji || ''} が「${g.title}」を達成したよ！`,
+          url: '/goals.html', kind: 'goal', recipient: partnerProfile.id,
+        })
+      }
+    }
+
+    async function deleteGoal(goalId) {
+      if (!confirm('この目標を削除しますか？ステップも消えます')) return
+      await _sb.from('goals').delete().eq('id', goalId)
+      goals = goals.filter(g => g.id !== goalId)
+      steps = steps.filter(s => s.goal_id !== goalId)
+      render()
+      showToast('削除しました')
+    }
+
+    // ── 相手への「えらい！」(相手の残高からは引かれない・システム贈呈) ──
+    async function praiseStep(stepId, goalId) {
+      const { data, error } = await _sb.from('goal_praises').insert({ goal_id: goalId, step_id: stepId, from_user_id: myId }).select().single()
+      if (error || !data) { showToast('もう送信済みかも'); return }   // ユニーク制約違反 = 既に誰かが送信済み
+      praises.push(data)
+      render()
+      const s = steps.find(x => x.id === stepId)
+      await addPoints(s.user_id, 3, 'goal_praise')
+      showToast('🎉 えらい！を送ったよ')
+      notify({
+        title: '🎉 えらい！が届いたよ',
+        body: `${myProfile?.emoji || ''} が応援してくれてるよ`,
+        url: '/goals.html', kind: 'goal', recipient: s.user_id,
+      })
+    }
+
+    async function praiseGoal(goalId) {
+      const { data, error } = await _sb.from('goal_praises').insert({ goal_id: goalId, step_id: null, from_user_id: myId }).select().single()
+      if (error || !data) { showToast('もう送信済みかも'); return }
+      praises.push(data)
+      render()
+      const g = goals.find(x => x.id === goalId)
+      await addPoints(g.user_id, 3, 'goal_praise')
+      showToast('🎉 えらい！を送ったよ')
+      notify({
+        title: '🎉 えらい！が届いたよ',
+        body: `${myProfile?.emoji || ''} が「${g?.title || ''}」の達成を褒めてくれてるよ`,
+        url: '/goals.html', kind: 'goal', recipient: g.user_id,
+      })
+    }
+
+    // ── 作成モーダル ──
+    function openCreate() {
+      document.getElementById('f-title').value = ''
+      document.getElementById('f-period').value = ''
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function closeModal() { document.getElementById('modal-back').classList.remove('open') }
+
+    async function saveGoal() {
+      const title = document.getElementById('f-title').value.trim()
+      const period = document.getElementById('f-period').value.trim() || null
+      if (!title) { showToast('目標を入れてね'); return }
+      const { data, error } = await _sb.from('goals').insert({ user_id: myId, title, period }).select().single()
+      if (error) { showToast('作成に失敗しました'); console.error(error); return }
+      goals.unshift(data)
+      closeModal()
+      render()
+      showToast('目標をつくったよ ✨')
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200)
+    }
+
+    init()
+  </script>
+</body>
+</html>
