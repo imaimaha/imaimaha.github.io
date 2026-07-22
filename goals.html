@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a1628">
-  <title>わたしえらい！ | Notre Endroit</title>
+  <title>目標達成するよ～✊ | Notre Endroit</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✊</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -150,7 +150,7 @@
 
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
-    <h1>🎉 わたしえらい！</h1>
+    <h1>✊ 目標達成するよ～</h1>
     <span class="spacer"></span>
   </div>
 
@@ -311,7 +311,7 @@
       const g = goals.find(x => x.id === s.goal_id)
       if (partnerProfile) {
         notify({
-          title: '🎯 わたしえらい！',
+          title: '✊ 目標達成するよ～',
           body: `${myProfile?.emoji || ''} が「${g?.title || ''}」の1ステップをクリアしたよ`,
           url: '/goals.html', kind: 'goal', recipient: partnerProfile.id,
         })
@@ -330,7 +330,7 @@
       showToast('🏆 目標達成！')
       if (partnerProfile) {
         notify({
-          title: '🏆 わたしえらい！',
+          title: '🏆 目標達成するよ～',
           body: `${myProfile?.emoji || ''} が「${g.title}」を達成したよ！`,
           url: '/goals.html', kind: 'goal', recipient: partnerProfile.id,
         })

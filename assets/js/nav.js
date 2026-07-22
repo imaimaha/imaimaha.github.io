@@ -25,7 +25,7 @@
       { icon:'🕐', label:'今日の帰宅',      href:'/status.html' },
       { icon:'💗', label:'ゲージ',          href:'/closer.html' },
       { icon:'🏋️', label:'筋トレしよ！',    href:'/workout.html' },
-      { icon:'🎉', label:'わたしえらい！',  href:'/goals.html' },
+      { icon:'✊', label:'目標達成するよ～', href:'/goals.html' },
       { icon:'🎵', label:'今日の1曲',       href:'/one_song.html' },
       { icon:'🎼', label:'オルゴール',      href:'/orgel.html' },
       { icon:'💕', label:'デート',          href:'/dates.html' },
