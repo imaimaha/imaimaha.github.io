@@ -360,6 +360,17 @@
 - **通知**: STEP1/2/3クリア時、二人とも達成時に相手へPush（kind: `workout`）
 - **ポイント表記はサイレント**（`feedback_points_silent`方針）: 画面上・通知本文に具体的な pt 数は表示しない。ルールパネル(settings.html)にのみ記載
 
+### 4.22 わたしえらい！ (`goals.html`) — 2026-07-22 新設
+
+各自の個人目標（例: パスポート取得、NISA積立開始）をサブタスク(ステップ)単位で管理し、達成を報告・お互いに褒め合う機能。
+
+- **目標作成**: タイトル + 期限の目安(自由記述、任意)。自分の目標のみ作成・削除可
+- **ステップ**: 目標に紐づくサブタスクを自由に追加。自分のステップのみ「達成」ボタンでクリア可（一度達成すると取り消し不可）
+- **相手の目標は閲覧のみ**: 自分の目標・相手の目標を上下セクションで両方表示（お互いの進捗が見える）
+- **えらい！(褒め)**: 相手のステップが達成済みで未褒め状態のとき「🎉 えらい！」ボタンが出る。押すと相手にpt付与されるが**自分のptは減らない**（システムからの贈呈。1step/1目標につき一度きり、`goal_praises`のユニークインデックスで排他制御）
+- **通知**: ステップ達成・目標達成・えらい！受信で相手にPush (kind: `goal`)
+- **ポイント表記はサイレント**（`feedback_points_silent`方針）: 画面上・通知本文に具体的pt数は表示しない
+
 ### 4.17 お知らせセンター (`notifications.html`)
 
 - send-push で受信した全通知の一覧・既読管理
@@ -421,6 +432,9 @@
 | 賭け事 拒否/取下 返却 | +stake | `bet_return` |
 | 筋トレ STEP1/2 クリア | +3 | `workout_step1` / `workout_step2` |
 | 筋トレ STEP3 (ふたりともクリアで両者に) | +10 | `workout_step3_duo` |
+| わたしえらい！ ステップ達成 | +1 | `goal_step` |
+| わたしえらい！ 目標達成 | +10 | `goal_complete` |
+| わたしえらい！ 相手から「えらい！」（相手の残高は減らない） | +3 | `goal_praise` |
 
 ### 消費手段
 
@@ -485,6 +499,7 @@
 | `expenses.html` | 精算実行 | 相手 (kind: `expense`) |
 | `workout.html` | STEP1/2/3 クリア | 相手 (kind: `workout`) |
 | `workout.html` | STEP3 二人ともクリア | 相手 (kind: `workout`) |
+| `goals.html` | ステップ達成・目標達成・えらい！受信 | 相手 (kind: `goal`) |
 
 **注**: `send-push` は全ての push 送信時に `notifications_log` テーブルにも受信者ごとに insert する。お知らせセンター (`notifications.html`) で一覧・既読管理される。呼び出し時に `kind` を指定するとカテゴリフィルタで絞れる。
 
@@ -568,6 +583,9 @@
 | `settings` | key, value | LINE group ID など汎用設定 |
 | `workout_clears` | date_str, user_id, step(1-3), cleared_at / PK(date_str,user_id,step) | 筋トレしよ！の自己申告クリア記録 |
 | `workout_awards` | date_str PK, step3_awarded_at | STEP3(ふたりチャレンジ)のポイント付与を一度きりにする排他ガード |
+| `goals` | id, user_id, title, period, status('active'\|'done'), done_at | わたしえらい！の個人目標 |
+| `goal_steps` | id, goal_id(fk), user_id, title, done, done_at | 目標のサブタスク |
+| `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
 
 ### 7.2 RLS ポリシーの原則
 
@@ -579,6 +597,8 @@
 - `bingo_sessions`/`color_hunts`: authenticated 全員 SELECT（履歴共有）/ 自分の分のみ INSERT/UPDATE/DELETE
 - `workout_clears`: authenticated 全員 SELECT / **INSERT は `auth.uid() = user_id` のみ**（自己申告のクリアなので他人の分の代理記録は不可。ここは `expenses`/`points` と違いあえて自分の分のみに制限）
 - `workout_awards`: authenticated 全員 SELECT/INSERT 可（`date_str` PRIMARY KEY への `INSERT ... ON CONFLICT DO NOTHING` で先着1件のみ成立する排他制御。RLSでの人物制限は不要）
+- `goals`/`goal_steps`: authenticated 全員 SELECT（相手の目標を見るため）/ 自分の分のみ INSERT・UPDATE・DELETE
+- `goal_praises`: authenticated 全員 SELECT / **INSERT は `auth.uid() = from_user_id`**（なりすまし防止。自分の目標への自演褒めを防ぐサーバ側チェックはせず、UIで相手の目標にしかボタンを出さない運用で対応）。`step_id`/`goal_id`(step_id NULL時)のpartial unique indexで1step/1goalにつき一度きり
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
   - `recipient_view`: 受信者は `open_at <= now()` の分だけ見える
