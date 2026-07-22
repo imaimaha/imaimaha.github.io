@@ -360,7 +360,7 @@
 - **通知**: STEP1/2/3クリア時、二人とも達成時に相手へPush（kind: `workout`）
 - **ポイント表記はサイレント**（`feedback_points_silent`方針）: 画面上・通知本文に具体的な pt 数は表示しない。ルールパネル(settings.html)にのみ記載
 
-### 4.22 わたしえらい！ (`goals.html`) — 2026-07-22 新設
+### 4.22 目標達成するよ～ (`goals.html`) — 2026-07-22 新設
 
 各自の個人目標（例: パスポート取得、NISA積立開始）をサブタスク(ステップ)単位で管理し、達成を報告・お互いに褒め合う機能。
 
@@ -432,9 +432,9 @@
 | 賭け事 拒否/取下 返却 | +stake | `bet_return` |
 | 筋トレ STEP1/2 クリア | +3 | `workout_step1` / `workout_step2` |
 | 筋トレ STEP3 (ふたりともクリアで両者に) | +10 | `workout_step3_duo` |
-| わたしえらい！ ステップ達成 | +1 | `goal_step` |
-| わたしえらい！ 目標達成 | +10 | `goal_complete` |
-| わたしえらい！ 相手から「えらい！」（相手の残高は減らない） | +3 | `goal_praise` |
+| 目標達成するよ～ ステップ達成 | +1 | `goal_step` |
+| 目標達成するよ～ 目標達成 | +10 | `goal_complete` |
+| 目標達成するよ～ 相手から「えらい！」（相手の残高は減らない） | +3 | `goal_praise` |
 
 ### 消費手段
 
@@ -583,7 +583,7 @@
 | `settings` | key, value | LINE group ID など汎用設定 |
 | `workout_clears` | date_str, user_id, step(1-3), cleared_at / PK(date_str,user_id,step) | 筋トレしよ！の自己申告クリア記録 |
 | `workout_awards` | date_str PK, step3_awarded_at | STEP3(ふたりチャレンジ)のポイント付与を一度きりにする排他ガード |
-| `goals` | id, user_id, title, period, status('active'\|'done'), done_at | わたしえらい！の個人目標 |
+| `goals` | id, user_id, title, period, status('active'\|'done'), done_at | 目標達成するよ～の個人目標 |
 | `goal_steps` | id, goal_id(fk), user_id, title, done, done_at | 目標のサブタスク |
 | `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
 
