@@ -43,6 +43,14 @@
     .section + .section { margin-top: 26px; }
     .empty-msg { text-align: center; color: #a890b0; font-size: 0.86rem; padding: 18px 10px; line-height: 1.7; }
 
+    .streak-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .streak-chip {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px; border-radius: 14px; font-size: 0.86rem; color: #ffd0a0;
+      background: rgba(255,150,80,0.1); border: 1.5px solid rgba(255,170,100,0.3);
+    }
+    .streak-chip b { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.05rem; color: #ffe4b8; }
+
     .today-card {
       background: rgba(255,255,255,0.05);
       border: 1.5px solid rgba(220,180,240,0.2);
@@ -108,6 +116,7 @@
 
   <div class="content">
     <div class="section">
+      <div class="streak-row" id="streak-row"></div>
       <div class="today-card">
         <div class="today-date" id="today-date"></div>
         <div class="mood-row" id="mood-row"></div>
@@ -171,6 +180,48 @@
       renderPartnerToday()
       renderMemories()
       renderHistory()
+      renderStreaks()
+    }
+
+    // ── 連続記入ストリーク ──
+    const STREAK_BONUS = { 3: 3, 7: 10, 14: 15, 30: 30, 60: 50, 100: 100, 200: 150, 365: 300 }
+
+    function streakFor(userId) {
+      const mySet = new Set(entries.filter(e => e.user_id === userId).map(e => e.date_str))
+      let streak = 0
+      let cur = new Date(today + 'T00:00:00+09:00')
+      // 今日がまだなら昨日から数える
+      if (!mySet.has(today)) cur.setDate(cur.getDate() - 1)
+      while (true) {
+        const ds = cur.toLocaleDateString('sv-SE')
+        if (mySet.has(ds)) { streak++; cur.setDate(cur.getDate() - 1) } else break
+      }
+      return streak
+    }
+
+    function renderStreaks() {
+      const row = document.getElementById('streak-row')
+      const chips = []
+      if (myProfile) chips.push(`<div class="streak-chip">${myProfile.emoji} <b>🔥${streakFor(myId)}</b>日</div>`)
+      if (partnerProfile) chips.push(`<div class="streak-chip">${partnerProfile.emoji} <b>🔥${streakFor(partnerProfile.id)}</b>日</div>`)
+      row.innerHTML = chips.join('')
+    }
+
+    async function checkStreakBonus() {
+      const streak = streakFor(myId)
+      const bonus = STREAK_BONUS[streak]
+      if (!bonus) return
+      const { data, error } = await _sb.from('diary_streak_awards').insert({ user_id: myId, milestone: streak }).select().single()
+      if (error || !data) return   // 既に付与済み (ON CONFLICT)
+      await addPoints(myId, bonus, 'diary_streak')
+      showToast(`🔥 ${streak}日連続達成！`)
+      if (partnerProfile) {
+        notify({
+          title: '🔥 日記が続いてるね',
+          body: `${myProfile?.emoji || ''} が ${streak}日連続で日記を書いたよ`,
+          url: '/diary.html', kind: 'diary', recipient: partnerProfile.id,
+        })
+      }
     }
 
     function renderMoodRow() {
@@ -241,6 +292,7 @@
       entries = entries.filter(e => !(e.user_id === myId && e.date_str === today))
       entries.unshift(data)
       showToast(already ? '更新したよ' : '今日の日記を書いたよ 📔')
+      renderStreaks()
       if (!already) {
         await addPoints(myId, 2, 'diary_entry')
         if (partnerProfile) {
@@ -250,6 +302,7 @@
             url: '/diary.html', kind: 'diary', recipient: partnerProfile.id,
           })
         }
+        await checkStreakBonus()
       }
       renderHistory()
     }

@@ -171,6 +171,16 @@ Deno.serve(async (req) => {
         skipped++
       }
       continue
+    } else if (kind === 'diary_evening') {
+      // 1日の終わり (JST 23:00) にその日まだ日記を書いていない人へリマインド
+      const { data: entry } = await sb.from('diary_entries')
+        .select('id').eq('user_id', p.id).eq('date_str', today).maybeSingle()
+      if (!entry) {
+        shouldNotify = true
+        body = `${p.emoji} 今日の日記まだ書いてないよ📔`
+        url = '/diary.html'
+      }
+
     } else if (kind === 'anniversary') {
       // 記念日カウントダウン（毎朝2:05 JST に判定）
       const START = new Date('2025-11-22T02:00:00+09:00')
