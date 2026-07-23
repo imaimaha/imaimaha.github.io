@@ -4,7 +4,7 @@
 > 実装が変わる度にここも更新すること。
 > Claude が「notre」「imaimaha」等の呼称で参照する時は、まずこのファイルを読む。
 
-**最終更新**: 2026-07-23
+**最終更新**: 2026-07-23（ふたりの日記 追加）
 
 > 📌 **重要**: 機能追加・ルール変更時は必ず以下を同時に更新すること:
 > - この SPEC.md（正式仕様）
@@ -374,6 +374,18 @@
 - **通知**: ステップ達成・目標達成・えらい！受信で相手にPush (kind: `goal`)
 - **ポイント表記はサイレント**（`feedback_points_silent`方針）: 画面上・通知本文に具体的pt数は表示しない
 
+### 4.23 ふたりの日記 (`diary.html`) — 2026-07-23 新設
+
+「ほぼ日」のような、日々の出来事を書き残す共有日記。
+
+- **今日の日記**: 天気/きもち絵文字(任意・複数候補から1つ選択・再タップで解除) + 本文。1人1日1件、`diary_entries`に`upsert`(同日に何度でも編集可)
+- **相手の今日の日記**: 自分のカードの下に読み取り専用で表示。未記入なら「まだ書いてないみたい」
+- **✨この日の思い出**: 今日と同じ月日(月日部分が一致)の**過去の年**の日記を年ごとにグルーピングして表示（ほぼ日の5年日記のような「n年前の今日」機能）。該当がなければセクション自体非表示
+- **📖 これまでの日記**: 今日以外の全日記を新しい順にフィード表示（自分の分は✎編集可、相手の分は閲覧のみ）。直近120件表示
+- **ポイント**: 新規記入(その日初回のみ) +2pt。編集では再付与されない
+- **通知**: 初回記入時のみ相手にPush (kind: `diary`)
+- **ポイント表記はサイレント**（`feedback_points_silent`方針）
+
 ### 4.17 お知らせセンター (`notifications.html`)
 
 - send-push で受信した全通知の一覧・既読管理
@@ -438,6 +450,7 @@
 | 目標達成するよ～ ステップ達成 | +1 | `goal_step` |
 | 目標達成するよ～ 目標達成 | +10 | `goal_complete` |
 | 目標達成するよ～ 相手から「えらい！」（相手の残高は減らない） | +3 | `goal_praise` |
+| ふたりの日記 新規記入（その日初回のみ） | +2 | `diary_entry` |
 
 ### 消費手段
 
@@ -503,6 +516,7 @@
 | `workout.html` | STEP1/2/3 クリア | 相手 (kind: `workout`) |
 | `workout.html` | STEP3 二人ともクリア | 相手 (kind: `workout`) |
 | `goals.html` | ステップ達成・目標達成・えらい！受信 | 相手 (kind: `goal`) |
+| `diary.html` | 今日の日記を初めて書いた | 相手 (kind: `diary`) |
 
 **注**: `send-push` は全ての push 送信時に `notifications_log` テーブルにも受信者ごとに insert する。お知らせセンター (`notifications.html`) で一覧・既読管理される。呼び出し時に `kind` を指定するとカテゴリフィルタで絞れる。
 
@@ -589,6 +603,7 @@
 | `goals` | id, user_id, title, period, status('active'\|'done'), done_at, awarded | 目標達成するよ～の個人目標（awardedは達成ptの一度きり付与ガード） |
 | `goal_steps` | id, goal_id(fk), user_id, title, done, done_at, sort_order, awarded | 目標のサブタスク（sort_orderで並び替え、awardedで達成ptの一度きり付与ガード） |
 | `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
+| `diary_entries` | id, user_id, date_str, mood, body, created_at, updated_at / UNIQUE(user_id,date_str) | ふたりの日記（1人1日1件、upsertで編集） |
 
 ### 7.2 RLS ポリシーの原則
 
@@ -602,6 +617,7 @@
 - `workout_awards`: authenticated 全員 SELECT/INSERT 可（`date_str` PRIMARY KEY への `INSERT ... ON CONFLICT DO NOTHING` で先着1件のみ成立する排他制御。RLSでの人物制限は不要）
 - `goals`/`goal_steps`: authenticated 全員 SELECT（相手の目標を見るため）/ 自分の分のみ INSERT・UPDATE・DELETE
 - `goal_praises`: authenticated 全員 SELECT / **INSERT は `auth.uid() = from_user_id`**（なりすまし防止。自分の目標への自演褒めを防ぐサーバ側チェックはせず、UIで相手の目標にしかボタンを出さない運用で対応）。`step_id`/`goal_id`(step_id NULL時)のpartial unique indexで1step/1goalにつき一度きり
+- `diary_entries`: authenticated 全員 SELECT（お互いに見える共有日記）/ 自分の分のみ INSERT・UPDATE（`UNIQUE(user_id,date_str)`への`upsert`で編集）
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
   - `recipient_view`: 受信者は `open_at <= now()` の分だけ見える

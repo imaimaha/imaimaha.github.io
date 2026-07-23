@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <title>ふたりの日記 | Notre Endroit</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _sb = window.supabase.createClient(
+      'https://qivnfiqyjfajlzbdqodd.supabase.co',
+      'sb_publishable_PR_chyGmNVRJJ24eVqlqYg_CGAOjfpx'
+    )
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = '/login.html'
+    })
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #1a1610 0%, #241e2e 45%, #1e2438 100%) fixed;
+      color: #f3ecf3; min-height: 100vh;
+    }
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(180deg, rgba(40,34,50,0.85) 0%, transparent 100%);
+      backdrop-filter: blur(4px); position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar a { color: #d0b8d8; text-decoration: none; font-size: 0.9rem; }
+    .top-bar h1 { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.2rem; color: #f8ecf4; flex: 1; text-align: center; }
+    .top-bar .spacer { width: 52px; }
+
+    .content { max-width: 640px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .section-label { font-size: 0.86rem; color: #e8d0ec; font-weight: 700; margin: 4px 4px 12px; }
+    .section + .section { margin-top: 26px; }
+    .empty-msg { text-align: center; color: #a890b0; font-size: 0.86rem; padding: 18px 10px; line-height: 1.7; }
+
+    .today-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(220,180,240,0.2);
+      border-radius: 18px; padding: 16px; margin-bottom: 8px;
+    }
+    .today-date { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.05rem; color: #f6e8fd; margin-bottom: 10px; }
+    .mood-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .mood-chip {
+      padding: 7px 11px; border-radius: 999px; font-size: 1rem; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(220,180,240,0.22);
+    }
+    .mood-chip.sel { background: rgba(226,140,106,0.22); border-color: rgba(226,140,106,0.6); }
+    .diary-textarea {
+      width: 100%; min-height: 110px; padding: 12px 14px; resize: vertical;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(220,180,240,0.25);
+      border-radius: 12px; color: #f3ecf3; font-size: 16px; font-family: inherit; line-height: 1.6; outline: none;
+    }
+    .diary-save-btn {
+      display: block; width: 100%; margin-top: 10px; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #e28c6a, #a8608c); color: #fff;
+      font-family: inherit; font-size: 0.92rem; font-weight: 700;
+    }
+    .diary-save-btn:active { transform: scale(0.98); }
+
+    .entry-card {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(220,180,240,0.15);
+      border-radius: 16px; padding: 13px 15px; margin-bottom: 10px;
+    }
+    .entry-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .entry-who { font-size: 1.1rem; }
+    .entry-date { flex: 1; font-size: 0.76rem; color: #b89ac0; }
+    .entry-mood { font-size: 0.95rem; }
+    .entry-body { font-size: 0.92rem; color: #f0e0f0; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+    .entry-edit-btn {
+      flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,180,240,0.28); color: #dcc0e4; font-family: inherit;
+    }
+
+    .memory-year-label { font-size: 0.78rem; color: #e2a878; font-weight: 700; margin: 14px 4px 6px; }
+    .memory-year-label:first-child { margin-top: 0; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(36,30,44,0.96); border: 1.5px solid rgba(226,140,106,0.5);
+      color: #ffe0c8; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body style="visibility:hidden" onload="document.body.style.visibility='visible'">
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/header.js"></script>
+  <script src="assets/js/nav.js"></script>
+
+  <div class="top-bar">
+    <a href="/index.html">← ホーム</a>
+    <h1>📔 ふたりの日記</h1>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="content">
+    <div class="section">
+      <div class="today-card">
+        <div class="today-date" id="today-date"></div>
+        <div class="mood-row" id="mood-row"></div>
+        <textarea class="diary-textarea" id="my-body" maxlength="2000" placeholder="今日はどんな一日だった？"></textarea>
+        <button class="diary-save-btn" onclick="saveEntry()">📔 今日の日記を書く</button>
+      </div>
+      <div id="partner-today"></div>
+    </div>
+
+    <div class="section" id="memory-section" style="display:none">
+      <div class="section-label">✨ この日の思い出</div>
+      <div id="memory-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">📖 これまでの日記</div>
+      <div id="history-list"><div class="empty-msg">読み込み中...</div></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MOODS = ['☀️', '🌤️', '☁️', '🌧️', '⛈️', '❄️', '🌈', '🥰', '😊', '😴', '😢', '😤']
+
+    let myId = null, myProfile = null, partnerProfile = null, profById = {}
+    let entries = []
+    let today = null
+    let selMood = null
+
+    function fmtDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+    }
+    function fmtShort(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' })
+    }
+    function monthDay(dateStr) { return dateStr.slice(5) }   // "MM-DD"
+    function yearOf(dateStr) { return parseInt(dateStr.slice(0, 4), 10) }
+
+    async function init() {
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) { location.href = '/login.html'; return }
+      myId = session.user.id
+      const { data: profiles } = await _sb.from('profiles').select('*')
+      ;(profiles || []).forEach(p => { profById[p.id] = p })
+      myProfile = profById[myId] || null
+      partnerProfile = (profiles || []).find(p => p.id !== myId) || null
+
+      today = jstDateStr()
+      document.getElementById('today-date').textContent = fmtDate(today)
+      renderMoodRow()
+
+      const { data } = await _sb.from('diary_entries').select('*').order('date_str', { ascending: false })
+      entries = data || []
+
+      const mine = entries.find(e => e.user_id === myId && e.date_str === today)
+      if (mine) { document.getElementById('my-body').value = mine.body; selMood = mine.mood; renderMoodRow() }
+
+      renderPartnerToday()
+      renderMemories()
+      renderHistory()
+    }
+
+    function renderMoodRow() {
+      document.getElementById('mood-row').innerHTML = MOODS.map(m =>
+        `<span class="mood-chip ${m === selMood ? 'sel' : ''}" onclick="setMood('${m}')">${m}</span>`
+      ).join('')
+    }
+    function setMood(m) { selMood = (selMood === m) ? null : m; renderMoodRow() }
+
+    function renderPartnerToday() {
+      const el = document.getElementById('partner-today')
+      if (!partnerProfile) { el.innerHTML = ''; return }
+      const p = entries.find(e => e.user_id === partnerProfile.id && e.date_str === today)
+      if (!p) {
+        el.innerHTML = `<div class="empty-msg">${partnerProfile.emoji} ${escHtml(partnerProfile.name || '相手')}はまだ今日の日記を書いてないみたい</div>`
+        return
+      }
+      el.innerHTML = entryCardHtml(p, false)
+    }
+
+    function entryCardHtml(e, editable) {
+      const who = profById[e.user_id]
+      return `
+        <div class="entry-card">
+          <div class="entry-head">
+            <span class="entry-who">${who?.emoji || '👤'}</span>
+            <span class="entry-date">${escHtml(who?.name || '')} ・ ${fmtShort(e.date_str)}</span>
+            <span class="entry-mood">${e.mood || ''}</span>
+            ${editable ? `<button class="entry-edit-btn" onclick="editEntry('${e.id}')">✎ 編集</button>` : ''}
+          </div>
+          <div class="entry-body">${escHtml(e.body)}</div>
+        </div>`
+    }
+
+    function renderMemories() {
+      const md = monthDay(today)
+      const thisYear = yearOf(today)
+      const past = entries.filter(e => e.date_str !== today && monthDay(e.date_str) === md && yearOf(e.date_str) < thisYear)
+      const sec = document.getElementById('memory-section')
+      if (!past.length) { sec.style.display = 'none'; return }
+      sec.style.display = 'block'
+      // 年ごとにグルーピング (新しい年から)
+      const byYear = {}
+      past.forEach(e => { (byYear[yearOf(e.date_str)] ||= []).push(e) })
+      const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
+      document.getElementById('memory-list').innerHTML = years.map(y => {
+        const rows = byYear[y].sort((a, b) => a.user_id.localeCompare(b.user_id))
+        return `<div class="memory-year-label">${y}年 (${thisYear - y}年前)</div>` +
+          rows.map(e => entryCardHtml(e, e.user_id === myId)).join('')
+      }).join('')
+    }
+
+    function renderHistory() {
+      const el = document.getElementById('history-list')
+      const past = entries.filter(e => e.date_str !== today)
+      if (!past.length) { el.innerHTML = '<div class="empty-msg">まだ日記はないよ。今日から書いてみよう ✨</div>'; return }
+      el.innerHTML = past.slice(0, 120).map(e => entryCardHtml(e, e.user_id === myId)).join('')
+    }
+
+    async function saveEntry() {
+      const body = document.getElementById('my-body').value.trim()
+      if (!body) { showToast('本文を入れてね'); return }
+      const already = entries.find(e => e.user_id === myId && e.date_str === today)
+      const { data, error } = await _sb.from('diary_entries')
+        .upsert({ user_id: myId, date_str: today, mood: selMood, body, updated_at: new Date().toISOString() }, { onConflict: 'user_id,date_str' })
+        .select().single()
+      if (error) { showToast('保存に失敗しました'); console.error(error); return }
+      entries = entries.filter(e => !(e.user_id === myId && e.date_str === today))
+      entries.unshift(data)
+      showToast(already ? '更新したよ' : '今日の日記を書いたよ 📔')
+      if (!already) {
+        await addPoints(myId, 2, 'diary_entry')
+        if (partnerProfile) {
+          notify({
+            title: '📔 ふたりの日記',
+            body: `${myProfile?.emoji || ''} が今日の日記を書いたよ`,
+            url: '/diary.html', kind: 'diary', recipient: partnerProfile.id,
+          })
+        }
+      }
+      renderHistory()
+    }
+
+    function editEntry(entryId) {
+      const e = entries.find(x => x.id === entryId)
+      if (!e || e.user_id !== myId) return
+      const body = prompt('日記を編集', e.body)
+      if (body === null) return
+      const trimmed = body.trim()
+      if (!trimmed) { showToast('空にはできないよ'); return }
+      _sb.from('diary_entries').update({ body: trimmed, updated_at: new Date().toISOString() }).eq('id', entryId)
+        .then(({ error }) => {
+          if (error) { showToast('更新に失敗しました'); console.error(error); return }
+          e.body = trimmed
+          renderMemories(); renderHistory()
+          showToast('更新したよ')
+        })
+    }
+
+    let toastTimer = null
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200)
+    }
+
+    init()
+  </script>
+</body>
+</html>
