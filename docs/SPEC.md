@@ -383,7 +383,9 @@
 - **✨この日の思い出**: 今日と同じ月日(月日部分が一致)の**過去の年**の日記を年ごとにグルーピングして表示（ほぼ日の5年日記のような「n年前の今日」機能）。該当がなければセクション自体非表示
 - **📖 これまでの日記**: 今日以外の全日記を新しい順にフィード表示（自分の分は✎編集可、相手の分は閲覧のみ）。直近120件表示
 - **ポイント**: 新規記入(その日初回のみ) +2pt。編集では再付与されない
-- **通知**: 初回記入時のみ相手にPush (kind: `diary`)
+- **連続記入ボーナス**: 自分の連続記入日数(streak)が 3/7/14/30/60/100/200/365日 の節目に達すると追加ボーナス(+3〜+300pt)。`diary_streak_awards`(user_id,milestone主キー)への`INSERT`で一度きり付与を保証。ホーム上部に🦊🦔それぞれの現在のstreakを表示
+- **通知**: 初回記入時・連続記入ボーナス達成時に相手へPush (kind: `diary`)
+- **1日の終わりのリマインダー**: JST 23:00にその日まだ書いていない人へPush（`send-reminders`の`diary_evening`、pg_cron `remind_diary_evening`）
 - **ポイント表記はサイレント**（`feedback_points_silent`方針）
 
 ### 4.17 お知らせセンター (`notifications.html`)
@@ -451,6 +453,7 @@
 | 目標達成するよ～ 目標達成 | +10 | `goal_complete` |
 | 目標達成するよ～ 相手から「えらい！」（相手の残高は減らない） | +3 | `goal_praise` |
 | ふたりの日記 新規記入（その日初回のみ） | +2 | `diary_entry` |
+| ふたりの日記 連続記入ボーナス（3/7/14/30/60/100/200/365日） | +3〜+300 | `diary_streak` |
 
 ### 消費手段
 
@@ -531,6 +534,7 @@
 | `status_5min_before` | 5分毎 | `*/5 * * * *` | 自分の帰宅予定 -5分 | **自分のみ** |
 | `status_arrival` | 5分毎 | `*/5 * * * *` | 自分の帰宅予定 ちょうど | **自分 + 相手** |
 | `remind_quiz_evening` | 毎日 22:00 | `0 13 * * *` | 今日の`quiz_answers`無し | 該当ユーザー |
+| `remind_diary_evening` | 毎日 23:00 | `0 14 * * *` | 今日の`diary_entries`無し | 該当ユーザー |
 | `remind_capsule_morn` | 毎朝 8:00 | `0 23 * * *` (前日UTC) | 自分宛の未開封カプセル有り | 該当ユーザー |
 | `remind_bingo_sat` | 土 10:00 | `0 1 * * 6` | 今週のビンゴ<8マス | 該当ユーザー |
 | `remind_color_sat` | 土 10:00 | `0 1 * * 6` | 今週のカラーハント<4枚 | 該当ユーザー |
@@ -604,6 +608,7 @@
 | `goal_steps` | id, goal_id(fk), user_id, title, done, done_at, sort_order, awarded | 目標のサブタスク（sort_orderで並び替え、awardedで達成ptの一度きり付与ガード） |
 | `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
 | `diary_entries` | id, user_id, date_str, mood, body, created_at, updated_at / UNIQUE(user_id,date_str) | ふたりの日記（1人1日1件、upsertで編集） |
+| `diary_streak_awards` | user_id, milestone / PK(user_id,milestone) | 日記の連続記入ボーナスの一度きり付与ガード |
 
 ### 7.2 RLS ポリシーの原則
 
@@ -618,6 +623,7 @@
 - `goals`/`goal_steps`: authenticated 全員 SELECT（相手の目標を見るため）/ 自分の分のみ INSERT・UPDATE・DELETE
 - `goal_praises`: authenticated 全員 SELECT / **INSERT は `auth.uid() = from_user_id`**（なりすまし防止。自分の目標への自演褒めを防ぐサーバ側チェックはせず、UIで相手の目標にしかボタンを出さない運用で対応）。`step_id`/`goal_id`(step_id NULL時)のpartial unique indexで1step/1goalにつき一度きり
 - `diary_entries`: authenticated 全員 SELECT（お互いに見える共有日記）/ 自分の分のみ INSERT・UPDATE（`UNIQUE(user_id,date_str)`への`upsert`で編集）
+- `diary_streak_awards`: authenticated 全員 SELECT / 自分の分のみ INSERT（`PRIMARY KEY(user_id,milestone)`への`INSERT`で一度きり付与を保証）
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
   - `recipient_view`: 受信者は `open_at <= now()` の分だけ見える
