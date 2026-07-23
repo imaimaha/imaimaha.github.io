@@ -169,7 +169,7 @@
           <input id="gift-amount" type="number" value="0" min="0" step="1" class="gift-input">
           <span class="gift-label">pt → 相手 <span id="gift-preview" class="gift-preview-val">+0pt</span></span>
         </div>
-        <div class="gift-hint">自分のptを消費して相手に<b>2倍</b>で届きます (残高: <span id="gift-balance" class="gift-preview-val">…</span>)</div>
+        <div class="gift-hint">自分のptを消費して相手に<b>1.5倍</b>で届きます (残高: <span id="gift-balance" class="gift-preview-val">…</span>)</div>
       </div>
 
       <button class="send-btn" id="send-btn" onclick="sendThanks()">🌸 送る</button>
@@ -200,7 +200,7 @@
       const gPreview = document.getElementById('gift-preview')
       const upd = () => {
         const n = parseInt(gAmount.value) || 0
-        gPreview.textContent = '+' + (n * 2) + 'pt'
+        gPreview.textContent = '+' + Math.round(n * 1.5) + 'pt'
       }
       gAmount.addEventListener('input', upd)
       upd()
@@ -254,7 +254,7 @@
       ]
       if (giftAmount > 0) {
         pointRows.push({ user_id: currentUser.id, amount: -giftAmount, reason: 'thanks_gift_sent' })
-        pointRows.push({ user_id: partnerId, amount: giftAmount * 2, reason: 'thanks_gift_received' })
+        pointRows.push({ user_id: partnerId, amount: Math.round(giftAmount * 1.5), reason: 'thanks_gift_received' })
       }
       await _sb.from('points').insert(pointRows)
 
@@ -303,7 +303,7 @@
             <span>${escHtml(to?.name ?? '?')}</span>
           </div>
           <div class="post-message">${escHtml(p.message)}</div>
-          ${p.gift_amount ? `<div style="margin-top:6px;padding:6px 10px;background:linear-gradient(135deg,rgba(255,215,100,0.14),rgba(255,180,50,0.18));border:1px solid rgba(255,215,100,0.35);border-radius:10px;font-size:0.82rem;color:#ffd764;font-weight:bold">🎁 +${p.gift_amount * 2}pt プレゼント（消費: ${p.gift_amount}pt）</div>` : ''}
+          ${p.gift_amount ? `<div style="margin-top:6px;padding:6px 10px;background:linear-gradient(135deg,rgba(255,215,100,0.14),rgba(255,180,50,0.18));border:1px solid rgba(255,215,100,0.35);border-radius:10px;font-size:0.82rem;color:#ffd764;font-weight:bold">🎁 +${Math.round(p.gift_amount * 1.5)}pt プレゼント（消費: ${p.gift_amount}pt）</div>` : ''}
           <div class="post-time">${time}</div>
         `
         list.appendChild(el)
