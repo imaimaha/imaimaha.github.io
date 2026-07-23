@@ -68,6 +68,20 @@
     .home-daily-card .tile-title { font-size: 1.3rem; }
     .home-daily-card .tile-icon { font-size: 2.4rem; }
 
+    .home-sec {
+      grid-column: 1 / -1;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;
+      color: var(--ink-300); margin: 8px 4px 0;
+    }
+    .home-sec:first-child { margin-top: 0; }
+    .home-more-link {
+      grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 13px; margin-top: 4px; border-radius: 14px; cursor: pointer;
+      background: rgba(255,255,255,0.04); border: 1.5px dashed var(--ink-600);
+      color: var(--ink-300); font-family: inherit; font-size: 0.86rem; text-decoration: none;
+    }
+    .home-more-link:active { transform: scale(0.98); }
+
     .home-bento .status-line {
       display: flex; align-items: center; gap: 8px;
       font-size: 0.8rem; color: var(--ink-300);
@@ -328,53 +342,7 @@
 
     <div class="bento home-bento">
 
-      <!-- ふたりの日記 -->
-      <a href="/diary.html" class="tile accent-purple">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">📔</span>
-        <span class="tile-title">ふたりの日記</span>
-        <span class="tile-desc">今日のことを書こう</span>
-      </a>
-
-      <!-- 目標達成するよ～ -->
-      <a href="/goals.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">✊</span>
-        <span class="tile-title">目標達成するよ～</span>
-        <span class="tile-desc">目標をたてて褒め合おう</span>
-      </a>
-
-      <!-- 筋トレしよ！ -->
-      <a href="/workout.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🏋️</span>
-        <span class="tile-title">筋トレしよ！</span>
-        <span class="tile-desc">今日のお題にチャレンジ</span>
-      </a>
-
-      <!-- オルゴール -->
-      <a href="/orgel.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🎼</span>
-        <span class="tile-title">オルゴール</span>
-        <span class="tile-desc">ふたりで曲をつくろう</span>
-      </a>
-
-      <!-- One Song a Day -->
-      <a href="/one_song.html" class="tile accent-purple">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🎵</span>
-        <span class="tile-title">今日の1曲</span>
-        <span class="tile-desc">ひとつだけ音楽をシェア</span>
-      </a>
-
-      <!-- デート -->
-      <a href="/dates.html" class="tile accent-sakura">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">💕</span>
-        <span class="tile-title">ふたりのデート</span>
-        <span class="tile-desc" id="date-preview">計画して思い出にしよう</span>
-      </a>
+      <div class="home-sec">🌤 まいにち</div>
 
       <!-- Gauge -->
       <a href="/closer.html" class="tile accent-pink">
@@ -394,6 +362,56 @@
         <span class="tile-desc" id="quiz-preview">今日の質問に答えよう</span>
       </a>
 
+      <!-- ふたりの日記 -->
+      <a href="/diary.html" class="tile accent-purple">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">📔</span>
+        <span class="tile-title">ふたりの日記</span>
+        <span class="tile-desc">今日のことを書こう</span>
+      </a>
+
+      <!-- 筋トレしよ！ -->
+      <a href="/workout.html" class="tile accent-sage">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🏋️</span>
+        <span class="tile-title">筋トレしよ！</span>
+        <span class="tile-desc">今日のお題にチャレンジ</span>
+      </a>
+
+      <div class="home-sec">💞 ふたりで</div>
+
+      <!-- デート -->
+      <a href="/dates.html" class="tile accent-sakura">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">💕</span>
+        <span class="tile-title">ふたりのデート</span>
+        <span class="tile-desc" id="date-preview">計画して思い出にしよう</span>
+      </a>
+
+      <!-- 目標達成するよ～ -->
+      <a href="/goals.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">✊</span>
+        <span class="tile-title">目標達成するよ～</span>
+        <span class="tile-desc">目標をたてて褒め合おう</span>
+      </a>
+
+      <!-- One Song a Day -->
+      <a href="/one_song.html" class="tile accent-purple">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎵</span>
+        <span class="tile-title">今日の1曲</span>
+        <span class="tile-desc">ひとつだけ音楽をシェア</span>
+      </a>
+
+      <!-- オルゴール -->
+      <a href="/orgel.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">🎼</span>
+        <span class="tile-title">オルゴール</span>
+        <span class="tile-desc">ふたりで曲をつくろう</span>
+      </a>
+
       <!-- Thanks -->
       <a href="/thanks.html" class="tile accent-sakura">
         <span class="tile-orb"></span>
@@ -411,37 +429,7 @@
         <span class="tile-desc" id="capsule-preview">未来へメッセージを残そう</span>
       </a>
 
-      <!-- Gacha -->
-      <a href="/gacha.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🎰</span>
-        <span class="tile-title">ガチャ</span>
-        <span class="tile-desc" id="gacha-preview">ポイントを使って回そう</span>
-      </a>
-
-      <!-- Bingo -->
-      <a href="/bingo.html" class="tile accent-blue">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🎯</span>
-        <span class="tile-title">お散歩ビンゴ</span>
-        <span class="tile-desc">小さな発見をあつめよう</span>
-      </a>
-
-      <!-- Color hunting -->
-      <a href="/color_hunting.html" class="tile accent-pink">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🎨</span>
-        <span class="tile-title">カラーハント</span>
-        <span class="tile-desc">今週の色を写真で集めよう</span>
-      </a>
-
-      <!-- Shop -->
-      <a href="/shop.html" class="tile accent-purple">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">🛍</span>
-        <span class="tile-title">ポイント販売所</span>
-        <span class="tile-desc">出品・購入・リクエスト</span>
-      </a>
+      <div class="home-sec">🗒 くらし・きろく</div>
 
       <!-- Calendar -->
       <a href="/calendar.html" class="tile accent-blue">
@@ -449,6 +437,14 @@
         <span class="tile-icon">📅</span>
         <span class="tile-title">つぎの予定</span>
         <span class="tile-desc" id="next-event-preview">2人の予定を共有</span>
+      </a>
+
+      <!-- 割り勘 -->
+      <a href="/expenses.html" class="tile accent-gold">
+        <span class="tile-orb"></span>
+        <span class="tile-icon">💰</span>
+        <span class="tile-title">割り勘</span>
+        <span class="tile-desc" id="expenses-preview">共同生活のお金を記録・精算</span>
       </a>
 
       <!-- Wishlist -->
@@ -467,37 +463,8 @@
         <span class="tile-desc">感謝・KPT・未来を記録</span>
       </a>
 
-      <!-- Location -->
-      <a href="/location.html" class="tile accent-blue">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">📍</span>
-        <span class="tile-title">今ここ</span>
-        <span class="tile-desc">今日の足跡を振り返る</span>
-      </a>
-
-      <!-- 割り勘 -->
-      <a href="/expenses.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">💰</span>
-        <span class="tile-title">割り勘</span>
-        <span class="tile-desc" id="expenses-preview">共同生活のお金を記録・精算</span>
-      </a>
-
-      <!-- 賭け事 -->
-      <a href="/bets.html" class="tile accent-pink">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">⚔️</span>
-        <span class="tile-title">賭け事</span>
-        <span class="tile-desc" id="bets-preview">ポイントを賭けてバトルしよう</span>
-      </a>
-
-      <!-- Points -->
-      <a href="/points.html" class="tile accent-gold">
-        <span class="tile-orb"></span>
-        <span class="tile-icon">✨</span>
-        <span class="tile-title">ポイント履歴</span>
-        <span class="tile-desc" id="points-preview">獲得と消費を確認</span>
-      </a>
+      <!-- あそび・ショップは下タブから。残りはもっとへ -->
+      <a href="#" class="home-more-link" onclick="const m=document.querySelector('#bottom-nav [data-sheet=&quot;more&quot;]'); if(m) m.click(); return false;">🎯 あそび・🛍 ショップ・その他は「もっと」から</a>
 
     </div>
   </main>
