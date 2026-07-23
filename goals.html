@@ -64,21 +64,26 @@
     .goal-trophy { flex-shrink: 0; font-size: 1.3rem; }
     .goal-progress { font-size: 0.76rem; color: #b58fc8; margin: 8px 0 10px; }
 
-    .step-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(220,170,240,0.1); }
+    .step-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-bottom: 1px solid rgba(220,170,240,0.1); }
     .step-row:last-child { border-bottom: none; }
+    .step-main { display: flex; align-items: center; gap: 8px; }
     .step-check {
-      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
       display: flex; align-items: center; justify-content: center; font-size: 0.75rem;
       background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.3); color: transparent;
+      font-family: inherit; padding: 0;
     }
     .step-row.done .step-check { background: linear-gradient(135deg,#7ee0a0,#54c47c); border: none; color: #08240f; }
     .step-text { flex: 1; min-width: 0; font-size: 0.9rem; color: #f0e0fa; word-break: break-word; }
     .step-row.done .step-text { color: #b58fc8; text-decoration: line-through; }
-    .step-action {
-      flex-shrink: 0; padding: 6px 11px; border-radius: 10px; font-size: 0.76rem; cursor: pointer;
-      background: rgba(226,106,168,0.16); border: 1.5px solid rgba(226,106,168,0.42); color: #ffc0e0; font-family: inherit;
+    .step-tools { display: flex; gap: 6px; justify-content: flex-end; padding-left: 32px; }
+    .tool-btn {
+      flex-shrink: 0; width: 28px; height: 28px; padding: 0; border-radius: 8px; font-size: 0.78rem; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,170,240,0.25); color: #d7b8e8; font-family: inherit;
     }
-    .step-action:active { transform: scale(0.95); }
+    .tool-btn:active { transform: scale(0.92); }
+    .tool-btn:disabled { opacity: 0.3; cursor: default; }
+    .tool-btn.danger { color: #ffb0b0; border-color: rgba(255,120,120,0.35); }
     .step-praise {
       flex-shrink: 0; padding: 6px 11px; border-radius: 10px; font-size: 0.76rem; cursor: pointer;
       background: rgba(255,200,90,0.16); border: 1.5px solid rgba(255,210,120,0.5); color: #ffe4ad; font-family: inherit;
@@ -176,7 +181,7 @@
       <div class="field"><label>期限の目安（任意）</label><input type="text" id="f-period" maxlength="30" placeholder="例: 7月中"></div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">やめる</button>
-        <button class="btn-ok" onclick="saveGoal()">つくる</button>
+        <button class="btn-ok" id="modal-ok" onclick="saveGoal()">つくる</button>
       </div>
     </div>
   </div>
@@ -204,14 +209,17 @@
     async function loadAll() {
       const [{ data: g }, { data: s }, { data: p }] = await Promise.all([
         _sb.from('goals').select('*').order('created_at', { ascending: false }),
-        _sb.from('goal_steps').select('*').order('created_at', { ascending: true }),
+        _sb.from('goal_steps').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         _sb.from('goal_praises').select('*'),
       ])
       goals = g || []; steps = s || []; praises = p || []
       render()
     }
 
-    function stepsFor(goalId) { return steps.filter(s => s.goal_id === goalId) }
+    function stepsFor(goalId) {
+      return steps.filter(s => s.goal_id === goalId)
+        .sort((a, b) => (a.sort_order - b.sort_order) || (a.created_at || '').localeCompare(b.created_at || ''))
+    }
     function stepPraised(stepId) { return praises.some(p => p.step_id === stepId) }
     function goalPraised(goalId) { return praises.some(p => p.goal_id === goalId && p.step_id === null) }
 
@@ -234,22 +242,31 @@
       const doneCount = gSteps.filter(s => s.done).length
       const isDone = g.status === 'done'
 
-      const stepsHtml = gSteps.map(s => {
+      const stepsHtml = gSteps.map((s, idx) => {
         if (isMine) {
           return `<div class="step-row ${s.done ? 'done' : ''}">
-              <div class="step-check">✓</div>
-              <div class="step-text">${escHtml(s.title)}</div>
-              ${!s.done ? `<button class="step-action" onclick="completeStep('${s.id}')">達成</button>` : ''}
+              <div class="step-main">
+                <button class="step-check" onclick="toggleStep('${s.id}')">✓</button>
+                <div class="step-text">${escHtml(s.title)}</div>
+              </div>
+              <div class="step-tools">
+                <button class="tool-btn" onclick="moveStep('${s.id}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                <button class="tool-btn" onclick="moveStep('${s.id}',1)" ${idx === gSteps.length - 1 ? 'disabled' : ''}>▼</button>
+                <button class="tool-btn" onclick="editStepPrompt('${s.id}')">✎</button>
+                <button class="tool-btn danger" onclick="deleteStep('${s.id}')">✕</button>
+              </div>
             </div>`
         }
         const praised = stepPraised(s.id)
         return `<div class="step-row ${s.done ? 'done' : ''}">
-            <div class="step-check">✓</div>
-            <div class="step-text">${escHtml(s.title)}</div>
-            ${s.done ? (praised
-              ? `<span class="step-praised">🎉 済</span>`
-              : `<button class="step-praise" onclick="praiseStep('${s.id}','${g.id}')">🎉 えらい！</button>`)
-              : ''}
+            <div class="step-main">
+              <div class="step-check">✓</div>
+              <div class="step-text">${escHtml(s.title)}</div>
+              ${s.done ? (praised
+                ? `<span class="step-praised">🎉 済</span>`
+                : `<button class="step-praise" onclick="praiseStep('${s.id}','${g.id}')">🎉 えらい！</button>`)
+                : ''}
+            </div>
           </div>`
       }).join('')
 
@@ -261,9 +278,9 @@
 
       let actions = ''
       if (isMine && !isDone) {
-        actions = `<div class="goal-actions"><button class="mini-btn primary" onclick="completeGoal('${g.id}')">🏆 目標を達成にする</button><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
+        actions = `<div class="goal-actions"><button class="mini-btn primary" onclick="toggleGoalStatus('${g.id}')">🏆 目標を達成にする</button><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
       } else if (isMine && isDone) {
-        actions = `<div class="goal-actions"><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
+        actions = `<div class="goal-actions"><button class="mini-btn" onclick="toggleGoalStatus('${g.id}')">↩ 予定に戻す</button><button class="mini-btn danger" onclick="deleteGoal('${g.id}')">🗑 削除</button></div>`
       } else if (!isMine && isDone) {
         const praised = goalPraised(g.id)
         actions = praised
@@ -274,10 +291,11 @@
       return `
         <div class="goal-card ${isDone ? 'done' : ''}">
           <div class="goal-head">
-            <div>
+            <div style="flex:1;min-width:0">
               <div class="goal-title">${escHtml(g.title)}</div>
               ${g.period ? `<div class="goal-period">📅 ${escHtml(g.period)}</div>` : ''}
             </div>
+            ${isMine ? `<button class="tool-btn" onclick="openEditGoal('${g.id}')">✎</button>` : ''}
             ${isDone ? '<span class="goal-trophy">🏆</span>' : ''}
           </div>
           ${gSteps.length ? `<div class="goal-progress">${doneCount} / ${gSteps.length} ステップ達成</div>` : ''}
@@ -292,23 +310,32 @@
       const input = document.getElementById('new-step-' + goalId)
       const title = input.value.trim()
       if (!title) return
-      const { data, error } = await _sb.from('goal_steps').insert({ goal_id: goalId, user_id: myId, title }).select().single()
+      const existing = stepsFor(goalId)
+      const sort_order = existing.length ? Math.max(...existing.map(s => s.sort_order)) + 1 : 1
+      const { data, error } = await _sb.from('goal_steps').insert({ goal_id: goalId, user_id: myId, title, sort_order }).select().single()
       if (error) { showToast('追加に失敗しました'); console.error(error); return }
       steps.push(data)
       input.value = ''
       render()
     }
 
-    async function completeStep(stepId) {
+    async function toggleStep(stepId) {
       const s = steps.find(x => x.id === stepId)
-      if (!s || s.done) return
-      const { error } = await _sb.from('goal_steps').update({ done: true, done_at: new Date().toISOString() }).eq('id', stepId)
+      if (!s) return
+      const nowDone = !s.done
+      const patch = nowDone ? { done: true, done_at: new Date().toISOString() } : { done: false, done_at: null }
+      const { error } = await _sb.from('goal_steps').update(patch).eq('id', stepId)
       if (error) { showToast('更新に失敗しました'); console.error(error); return }
-      s.done = true
+      Object.assign(s, patch)
       render()
-      await addPoints(myId, 1, 'goal_step')
+      if (!nowDone) { showToast('チェックを外したよ'); return }   // 取り消し (未達成に戻す) はpt付与しない
       showToast('ステップ達成！')
       const g = goals.find(x => x.id === s.goal_id)
+      if (!s.awarded) {
+        s.awarded = true
+        await _sb.from('goal_steps').update({ awarded: true }).eq('id', stepId)
+        await addPoints(myId, 1, 'goal_step')
+      }
       if (partnerProfile) {
         notify({
           title: '✊ 目標達成するよ～',
@@ -318,16 +345,61 @@
       }
     }
 
-    async function completeGoal(goalId) {
-      const g = goals.find(x => x.id === goalId)
-      if (!g || g.status === 'done') return
-      if (!confirm(`「${g.title}」を達成済みにしますか？`)) return
-      const { error } = await _sb.from('goals').update({ status: 'done', done_at: new Date().toISOString() }).eq('id', goalId)
+    async function editStepPrompt(stepId) {
+      const s = steps.find(x => x.id === stepId)
+      if (!s) return
+      const title = prompt('ステップを編集', s.title)
+      if (title === null) return
+      const trimmed = title.trim()
+      if (!trimmed) { showToast('空にはできないよ'); return }
+      const { error } = await _sb.from('goal_steps').update({ title: trimmed }).eq('id', stepId)
       if (error) { showToast('更新に失敗しました'); console.error(error); return }
-      g.status = 'done'; g.done_at = new Date().toISOString()
+      s.title = trimmed
       render()
-      await addPoints(myId, 10, 'goal_complete')
+    }
+
+    async function deleteStep(stepId) {
+      if (!confirm('このステップを削除しますか？')) return
+      await _sb.from('goal_steps').delete().eq('id', stepId)
+      steps = steps.filter(s => s.id !== stepId)
+      render()
+    }
+
+    async function moveStep(stepId, dir) {
+      const s = steps.find(x => x.id === stepId)
+      if (!s) return
+      const siblings = stepsFor(s.goal_id)
+      const idx = siblings.findIndex(x => x.id === stepId)
+      const swapIdx = idx + dir
+      if (swapIdx < 0 || swapIdx >= siblings.length) return
+      const other = siblings[swapIdx]
+      const a = s.sort_order, b = other.sort_order
+      // 実際の sort_order 値そのものを入れ替える (他の未変更ステップの値と衝突させないため)
+      s.sort_order = b; other.sort_order = a
+      render()
+      await Promise.all([
+        _sb.from('goal_steps').update({ sort_order: b }).eq('id', s.id),
+        _sb.from('goal_steps').update({ sort_order: a }).eq('id', other.id),
+      ])
+    }
+
+    async function toggleGoalStatus(goalId) {
+      const g = goals.find(x => x.id === goalId)
+      if (!g) return
+      const nowDone = g.status !== 'done'
+      if (nowDone && !confirm(`「${g.title}」を達成済みにしますか？`)) return
+      const patch = nowDone ? { status: 'done', done_at: new Date().toISOString() } : { status: 'active', done_at: null }
+      const { error } = await _sb.from('goals').update(patch).eq('id', goalId)
+      if (error) { showToast('更新に失敗しました'); console.error(error); return }
+      Object.assign(g, patch)
+      render()
+      if (!nowDone) { showToast('予定に戻したよ'); return }   // 取り消しはpt付与しない
       showToast('🏆 目標達成！')
+      if (!g.awarded) {
+        g.awarded = true
+        await _sb.from('goals').update({ awarded: true }).eq('id', goalId)
+        await addPoints(myId, 10, 'goal_complete')
+      }
       if (partnerProfile) {
         notify({
           title: '🏆 目標達成するよ～',
@@ -377,10 +449,24 @@
       })
     }
 
-    // ── 作成モーダル ──
+    // ── 作成/編集モーダル ──
+    let editingGoalId = null
     function openCreate() {
+      editingGoalId = null
+      document.querySelector('.modal h2').textContent = '✨ 目標をつくる'
+      document.getElementById('modal-ok').textContent = 'つくる'
       document.getElementById('f-title').value = ''
       document.getElementById('f-period').value = ''
+      document.getElementById('modal-back').classList.add('open')
+    }
+    function openEditGoal(goalId) {
+      const g = goals.find(x => x.id === goalId)
+      if (!g) return
+      editingGoalId = goalId
+      document.querySelector('.modal h2').textContent = '✎ 目標を編集'
+      document.getElementById('modal-ok').textContent = '保存する'
+      document.getElementById('f-title').value = g.title
+      document.getElementById('f-period').value = g.period || ''
       document.getElementById('modal-back').classList.add('open')
     }
     function closeModal() { document.getElementById('modal-back').classList.remove('open') }
@@ -389,6 +475,18 @@
       const title = document.getElementById('f-title').value.trim()
       const period = document.getElementById('f-period').value.trim() || null
       if (!title) { showToast('目標を入れてね'); return }
+
+      if (editingGoalId) {
+        const { error } = await _sb.from('goals').update({ title, period }).eq('id', editingGoalId)
+        if (error) { showToast('更新に失敗しました'); console.error(error); return }
+        const g = goals.find(x => x.id === editingGoalId)
+        Object.assign(g, { title, period })
+        closeModal()
+        render()
+        showToast('保存したよ')
+        return
+      }
+
       const { data, error } = await _sb.from('goals').insert({ user_id: myId, title, period }).select().single()
       if (error) { showToast('作成に失敗しました'); console.error(error); return }
       goals.unshift(data)
