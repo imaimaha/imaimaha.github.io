@@ -40,6 +40,7 @@
     .top-bar .spacer { width: 52px; }
 
     .content { max-width: 620px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 1; }
+    .empty-msg { text-align: center; color: #b58fc8; font-size: 0.88rem; padding: 22px 10px; line-height: 1.7; }
 
     /* ストリーク */
     .streak-card {
@@ -156,12 +157,12 @@
   </div>
 
   <div class="content">
-    <div class="streak-card" id="streak-card" style="display:none">
+    <div class="streak-card" id="streak-card">
       <span>🔥</span>
-      <span>ふたり継続 <span class="streak-num" id="streak-num">0</span> 日</span>
+      <span id="streak-text">ふたり継続 <span class="streak-num" id="streak-num">0</span> 日</span>
     </div>
 
-    <div id="steps"><div class="empty-msg" style="text-align:center;color:#b58fc8;padding:30px 0;">読み込み中...</div></div>
+    <div id="steps"><div class="empty-msg">読み込み中...</div></div>
 
     <details class="level-card">
       <summary>🔧 自分の目標レベルを調整</summary>
@@ -196,10 +197,8 @@
       done: ['🎉 ふたりともクリア！最高のチームだよ！', '🎉 やりきったね！お互い誇っていいよ！', '🎉 完璧！今日のMVPはふたりだ！'],
     }
     function opponentEmoji() {
-      const mine = myProfile?.emoji
-      if (mine === '🦊') return '🦔'
-      if (mine === '🦔') return '🦊'
-      return partnerProfile?.emoji || '🦊'
+      // 応援コーチは「相手」のマスコット。プロフィール由来にして絵文字変更にも追従
+      return partnerProfile?.emoji || '💪'
     }
     let coachTimer = null
     function showCoach(step) {
@@ -373,9 +372,11 @@
         if (byDate[ds] && byDate[ds].size >= 2) { streak++; cur.setDate(cur.getDate() - 1) }
         else break
       }
+      const textEl = document.getElementById('streak-text')
       if (streak > 0) {
-        document.getElementById('streak-card').style.display = 'flex'
-        document.getElementById('streak-num').textContent = streak
+        textEl.innerHTML = `ふたり継続 <span class="streak-num">${streak}</span> 日`
+      } else {
+        textEl.innerHTML = 'ふたりでクリアして継続日数をのばそう！'
       }
     }
 

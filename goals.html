@@ -101,6 +101,16 @@
       flex-shrink: 0; padding: 0 14px; border-radius: 10px; font-family: inherit; font-size: 0.82rem; cursor: pointer;
       background: rgba(226,106,168,0.2); border: 1.5px solid rgba(226,106,168,0.45); color: #ffc0e0;
     }
+    .step-edit-area { width: 100%; }
+    .step-edit-area input {
+      width: 100%; padding: 9px 12px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(226,106,168,0.5);
+      border-radius: 10px; color: #f3e8fc; font-size: 16px; font-family: inherit; outline: none;
+    }
+    .step-edit-btns { display: flex; gap: 8px; margin-top: 8px; }
+    .step-edit-btns button { flex: 1; padding: 8px; border-radius: 10px; font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+    .step-edit-btns .se-save { background: linear-gradient(135deg,#e26aa8,#a850e0); border: none; color: #fff; }
+    .step-edit-btns .se-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(220,170,240,0.25); color: #d7a8dd; }
 
     .goal-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .mini-btn {
@@ -191,6 +201,8 @@
   <script>
     let myId = null, myProfile = null, partnerProfile = null
     let goals = [], steps = [], praises = []
+    let editingStepId = null
+    function escAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') }
 
     async function init() {
       const { data: { session } } = await _sb.auth.getSession()
@@ -244,6 +256,17 @@
 
       const stepsHtml = gSteps.map((s, idx) => {
         if (isMine) {
+          if (s.id === editingStepId) {
+            return `<div class="step-row">
+                <div class="step-edit-area">
+                  <input type="text" maxlength="60" id="edit-step-${s.id}" value="${escAttr(s.title)}" onkeydown="if(event.key==='Enter')saveStepEdit('${s.id}')">
+                  <div class="step-edit-btns">
+                    <button class="se-cancel" onclick="cancelStepEdit()">やめる</button>
+                    <button class="se-save" onclick="saveStepEdit('${s.id}')">保存</button>
+                  </div>
+                </div>
+              </div>`
+          }
           return `<div class="step-row ${s.done ? 'done' : ''}">
               <div class="step-main">
                 <button class="step-check" onclick="toggleStep('${s.id}')">✓</button>
@@ -252,7 +275,7 @@
               <div class="step-tools">
                 <button class="tool-btn" onclick="moveStep('${s.id}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
                 <button class="tool-btn" onclick="moveStep('${s.id}',1)" ${idx === gSteps.length - 1 ? 'disabled' : ''}>▼</button>
-                <button class="tool-btn" onclick="editStepPrompt('${s.id}')">✎</button>
+                <button class="tool-btn" onclick="editStep('${s.id}')">✎</button>
                 <button class="tool-btn danger" onclick="deleteStep('${s.id}')">✕</button>
               </div>
             </div>`
@@ -317,6 +340,7 @@
       steps.push(data)
       input.value = ''
       render()
+      showToast('ステップを追加したよ')
     }
 
     async function toggleStep(stepId) {
@@ -345,17 +369,26 @@
       }
     }
 
-    async function editStepPrompt(stepId) {
+    function editStep(stepId) {
+      editingStepId = stepId
+      render()
+      const inp = document.getElementById('edit-step-' + stepId)
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length) }
+    }
+    function cancelStepEdit() { editingStepId = null; render() }
+
+    async function saveStepEdit(stepId) {
       const s = steps.find(x => x.id === stepId)
       if (!s) return
-      const title = prompt('ステップを編集', s.title)
-      if (title === null) return
-      const trimmed = title.trim()
+      const inp = document.getElementById('edit-step-' + stepId)
+      const trimmed = (inp?.value || '').trim()
       if (!trimmed) { showToast('空にはできないよ'); return }
       const { error } = await _sb.from('goal_steps').update({ title: trimmed }).eq('id', stepId)
       if (error) { showToast('更新に失敗しました'); console.error(error); return }
       s.title = trimmed
+      editingStepId = null
       render()
+      showToast('更新したよ')
     }
 
     async function deleteStep(stepId) {
