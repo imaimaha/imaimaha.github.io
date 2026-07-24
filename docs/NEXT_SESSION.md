@@ -1,5 +1,14 @@
 # 次回セッション用: TODO と背景
 
+## 2026-07-25 アプリアイコン刷新（A案「星座のふたり」）
+
+- 旧: 濃紺角丸＋🌈絵文字1つ → 新: 夜空に三日月＋2つの光る星(暖色=🦊/ピンク=🦔)を点線ハートで結ぶベクターデザイン（`icon.svg`）
+- 候補は Artifact で7案提示して A案採用: https://claude.ai/code/artifact/11d9ed21-848f-405e-a696-6b5af00959f7
+- **PNG生成**: 環境にrsvg/imagemagick/sharp等が無いため、Playwrightのchromiumで `icon.svg`→PNGラスタライズ。スクリプト `scripts/rasterize_icon.js`（`node scripts/rasterize_icon.js`で再生成可）。生成物: `apple-touch-icon.png`(180) / `icon-192.png` / `icon-512.png`
+- manifest.jsonにPNG(192/512, purpose any)＋svg(maskable)を登録。index.htmlのfaviconを`/icon.svg`に、apple-touch-icon(180png)を追加
+- 各機能ページの絵文字ファビコン(💗📔等)は個性として据え置き。iOSでアイコン変更が反映されない場合はホーム画面から一度削除→再追加が必要な旨ユーザーに伝えること
+- badge.svg(通知バッジ=白丸に星)は星テーマと合うため据え置き
+
 ## 2026-07-24 ブラッシュアップ: 編集UI改善・日記削除・ホーム整理
 
 Explore+レビューで洗い出した改善を実装（コミット・push・デプロイ予定）。
