@@ -23,7 +23,7 @@
   const MORE_SECTIONS = [
     { title:'ふたり', items:[
       { icon:'🕐', label:'今日の帰宅',      href:'/status.html' },
-      { icon:'💗', label:'好きゲージ',      href:'/closer.html' },
+      { icon:'💗', label:'Gravity',         href:'/closer.html' },
       { icon:'📔', label:'ふたりの日記',    href:'/diary.html' },
       { icon:'🏋️', label:'筋トレしよ！',    href:'/workout.html' },
       { icon:'✊', label:'目標達成するよ～', href:'/goals.html' },
