@@ -36,6 +36,29 @@ async function addPoints(userId, amount, reason) {
   return true
 }
 
+// ポイント残高。PostgREST の select はデフォルト最大1000行で、points が1000行を超えると
+// クライアント側合計 (select amount → reduce) が取りこぼすため、必ずこの RPC 経由で取得する
+// 戻り値: 残高 (integer)。失敗時は null (呼び出し側で消費系の処理を止めること)
+async function getBalance(userId) {
+  const { data, error } = await _sb.rpc('point_balance', { uid: userId })
+  if (error) {
+    console.error('[points] 残高取得失敗:', error.message)
+    return null
+  }
+  return data
+}
+
+// ポイントの獲得/消費/合計の内訳 (points.html 用)。同じく DB 側で集計する
+// 戻り値: { earned, spent, total }。失敗時は null
+async function getPointSummary(userId) {
+  const { data, error } = await _sb.rpc('point_summary', { uid: userId })
+  if (error) {
+    console.error('[points] 集計取得失敗:', error.message)
+    return null
+  }
+  return Array.isArray(data) ? data[0] : data
+}
+
 // JST の今日 (YYYY-MM-DD)
 function jstDateStr(date = new Date()) {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })

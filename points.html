@@ -171,23 +171,21 @@
       if (!session) return
       const myId = session.user.id
 
-      // 全レコード取得
-      const { data } = await _sb.from('points')
-        .select('*')
-        .eq('user_id', myId)
-        .order('created_at', { ascending: false })
+      // 履歴 (表示は直近最大1000件 — 全量ページングは未対応) と集計 (DB側で全行を合計) を並行取得
+      const [{ data }, summary] = await Promise.all([
+        _sb.from('points')
+          .select('*')
+          .eq('user_id', myId)
+          .order('created_at', { ascending: false }),
+        getPointSummary(myId),
+      ])
       allRecords = data || []
 
-      // 集計
-      let earned = 0, spent = 0
-      allRecords.forEach(r => {
-        if (r.amount >= 0) earned += r.amount
-        else spent += r.amount
-      })
-      const total = earned + spent
-      document.getElementById('total-pts').textContent = total.toLocaleString()
-      document.getElementById('sum-earned').textContent = '+' + earned.toLocaleString()
-      document.getElementById('sum-spent').textContent = spent.toLocaleString()
+      if (summary) {
+        document.getElementById('total-pts').textContent = summary.total.toLocaleString()
+        document.getElementById('sum-earned').textContent = '+' + summary.earned.toLocaleString()
+        document.getElementById('sum-spent').textContent = summary.spent.toLocaleString()
+      }
 
       renderHistory()
     }

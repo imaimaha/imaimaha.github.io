@@ -429,8 +429,9 @@
     }
 
     async function loadPoints() {
-      const { data } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
-      currentPt = (data || []).reduce((s, r) => s + (r.amount || 0), 0)
+      const balance = await getBalance(currentUser.id)
+      if (balance === null) return
+      currentPt = balance
       document.getElementById('pt-value').textContent = currentPt + 'pt'
     }
 
