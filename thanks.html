@@ -207,8 +207,8 @@
     }
 
     async function loadBalance() {
-      const { data } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
-      const total = (data || []).reduce((s, r) => s + r.amount, 0)
+      const total = await getBalance(currentUser.id)
+      if (total === null) return null
       const el = document.getElementById('gift-balance')
       if (el) el.textContent = total + 'pt'
       return total
@@ -228,9 +228,10 @@
       if (!msg) { showToast('メッセージを入力してください'); return }
       if (!partnerId) { showToast('相手情報が取得できません'); return }
 
-      // ギフトあり時は残高チェック
+      // ギフトあり時は残高チェック (消費直前にDBの実残高を再確認)
       if (giftAmount > 0) {
         const balance = await loadBalance()
+        if (balance === null) { showToast('残高の確認に失敗しました'); return }
         if (giftAmount > balance) {
           showToast(`残高不足（${balance}pt しかありません）`)
           return

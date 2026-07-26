@@ -1292,13 +1292,12 @@
 
     // ===================== POINTS =====================
     async function loadPoints() {
-      const { data, error } = await _sb.from('points').select('amount').eq('user_id', currentUser.id)
-      if (error) {
-        console.error('points load error:', error)
+      const balance = await getBalance(currentUser.id)
+      if (balance === null) {
         showToast('ポイントの読み込みに失敗しました', true)
         return
       }
-      currentPoints = data ? data.reduce((sum, r) => sum + (r.amount || 0), 0) : 0
+      currentPoints = balance
       updatePointDisplay()
     }
 
@@ -1330,6 +1329,16 @@
       const b1 = document.getElementById('gacha-btn')
       const b10 = document.getElementById('gacha10-btn')
       b1.disabled = true; b10.disabled = true
+
+      // 消費直前に実残高を再確認（表示が古くてもマイナスまで引けないように）
+      const balance = await getBalance(currentUser.id)
+      if (balance === null || balance < 1000) {
+        currentPoints = balance ?? currentPoints
+        updatePointDisplay()
+        showToast(balance === null ? '残高の確認に失敗しました' : 'ポイントが足りません (1000pt必要)', true)
+        return
+      }
+      currentPoints = balance
 
       const globe = document.getElementById('machine-globe')
       const ball = document.getElementById('capsule-ball')
@@ -1604,6 +1613,17 @@
       receiveBtn.disabled = true
 
       try {
+        // 消費直前に実残高を再確認（表示が古くてもマイナスまで引けないように）
+        const balance = await getBalance(currentUser.id)
+        if (balance === null) throw new Error('残高の確認に失敗')
+        currentPoints = balance
+        if (balance < 100) {
+          document.getElementById('result-overlay').classList.remove('open')
+          updatePointDisplay()
+          showToast('ポイントが足りません (100pt必要)', true)
+          return
+        }
+
         // Insert gacha result (bonus_points は使用時に付与するのでここでは記録のみ)
         const insertData = {
           user_id:       currentUser.id,

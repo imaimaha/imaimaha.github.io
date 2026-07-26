@@ -609,9 +609,8 @@
       try {
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
-        const { data } = await _sb.from('points').select('amount').eq('user_id', session.user.id)
-        if (!data) return
-        const total = data.reduce((s, r) => s + r.amount, 0)
+        const total = await getBalance(session.user.id)
+        if (total === null) return
         const gp = document.getElementById('gacha-preview')
         if (gp) gp.textContent = `✨ ${total}pt 所持 ・ 100ptで1回 / 1000ptで10+1連`
         const pp = document.getElementById('points-preview')
