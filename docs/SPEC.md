@@ -420,7 +420,11 @@
 
 ## 5. ポイントシステム
 
-**残高計算**: `SELECT SUM(amount) FROM points WHERE user_id = ?`
+**残高計算**: 必ず RPC `point_balance(uid)`（= `SUM(amount)` を DB 側で実行）経由で取得する。クライアントは `util.js` の `getBalance(userId)` / 獲得・消費の内訳は `getPointSummary(userId)`（RPC `point_summary`）を使う。
+
+> ⚠️ **原則: クライアント側で points の全行を取得して合計してはいけない。** PostgREST の select はデフォルト最大1000行のため、履歴が1000行を超えると取りこぼして残高がズレる（2026-07-26 に nick 1018行で発覚。表示残高が実際より多く出てマイナスまで消費できた）。定義: `supabase/migrations/20260726000000_point_balance_rpc.sql`
+
+**消費直前の再確認ガード**: ガチャ（単発は受け取り時 / 10連は開始時）とありがとうのギフト送信は、消費レコードを INSERT する直前に `getBalance` で DB の実残高を再確認し、不足なら中止する（画面表示が古くてもマイナスまで引けないための二重ガード）。
 
 ### 獲得手段
 
@@ -582,7 +586,7 @@
 | `bingo_sessions` | user_id, mode('weekly'\|'category'\|'random'), label, date_str(週の月曜), items, checks, awarded(jsonb 付与済み記録) | ビンゴ進行状況 |
 | `color_hunts` | user_id, mode('weekly'\|'single'), week_key, color_hex, color_name, photos(jsonb), awarded(jsonb 付与済み記録) | カラーハンティング |
 | `time_capsules` | sender_id, recipient_id, message, open_at, is_opened, line_notified, opened_at, replies(jsonb) | タイムカプセル＋スレッド返信 |
-| `points` | user_id, amount, reason | ポイント履歴（SUMで残高計算） |
+| `points` | user_id, amount, reason | ポイント履歴（残高は RPC `point_balance` で DB 側 SUM。§5参照） |
 | `quiz_answers` | user_id, question_id, answer, date_str | クイズ回答 |
 | `gacha_results` | user_id, reward_id(nullable), custom_prize_id(nullable), reward_name, reward_emoji, reward_desc, rarity, used, bonus_points | ガチャ獲得券 |
 | `gacha_custom_prizes` | added_by, target_user_id, name, emoji, rarity, description, bonus_points, weight, active | 相手ラインナップに追加する景品 |
