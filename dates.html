@@ -676,6 +676,7 @@
 
         <div class="detail-footer">
           ${d.status === 'done' ? `<button class="mini-btn" onclick="markPlanned('${d.id}')">↩ 予定に戻す</button>` : ''}
+          <button class="mini-btn" id="cal-add-btn" onclick="addDateToCalendar('${d.id}')">📅 カレンダーに登録</button>
           <button class="mini-btn" onclick="openEdit('${d.id}')">✎ 編集</button>
           <button class="mini-btn danger" onclick="deleteDate('${d.id}')">🗑 削除</button>
         </div>
@@ -683,6 +684,57 @@
       renderPhotos()
       renderComments()
       renderReviews()
+      refreshCalendarBtn(d)
+    }
+
+    // ---- カレンダー連携 ----
+    // デートの予定を共有カレンダー (events) に「ふたりの予定」として登録する
+    async function findCalendarEvent(d) {
+      const { data } = await _sb.from('events').select('id').eq('date', d.date_str).eq('title', d.title).limit(1)
+      return (data && data[0]) || null
+    }
+
+    async function refreshCalendarBtn(d) {
+      const btn = document.getElementById('cal-add-btn')
+      if (!btn) return
+      try {
+        if (await findCalendarEvent(d)) {
+          btn.textContent = '📅 カレンダー登録済み'
+          btn.disabled = true
+          btn.style.opacity = '0.55'
+        }
+      } catch {}
+    }
+
+    async function addDateToCalendar(dateId) {
+      const d = dates.find(x => x.id === dateId)
+      if (!d) return
+      const btn = document.getElementById('cal-add-btn')
+      if (btn) btn.disabled = true
+
+      try {
+        if (await findCalendarEvent(d)) {
+          showToast('もうカレンダーに入ってるよ')
+          refreshCalendarBtn(d)
+          return
+        }
+        const memo = [d.place ? `📍 ${d.place}` : '', d.memo || ''].filter(Boolean).join('\n')
+        const { error } = await _sb.from('events').insert({
+          title: d.title, date: d.date_str, memo: memo || null, owner_id: null,
+        })
+        if (error) throw error
+        showToast('📅 カレンダーに登録したよ')
+        refreshCalendarBtn(d)
+        notify({
+          title: '📅 予定を追加したよ',
+          body: `${d.title}（${d.date_str}）`,
+          url: '/calendar.html', kind: 'calendar', sender: myId,
+        })
+      } catch (e) {
+        console.error('[dates] calendar add failed', e)
+        showToast('登録に失敗しました')
+        if (btn) btn.disabled = false
+      }
     }
 
     function countdownText(dateStr) {
@@ -958,10 +1010,14 @@
 
     async function deleteDate(id) {
       if (!confirm('このデートを削除する？写真・コメントも消えます')) return
-      // 写真実体を削除
+      // 写真実体を削除。ここで失敗してもデート自体の削除は進める
       const paths = dPhotos.map(p => p.path).filter(Boolean)
-      if (paths.length) await _sb.storage.from('memories').remove(paths)
-      await _sb.from('dates').delete().eq('id', id)
+      if (paths.length) {
+        const { error: rmErr } = await _sb.storage.from('memories').remove(paths)
+        if (rmErr) console.error('[dates] 写真の削除に失敗:', rmErr.message)
+      }
+      const { error } = await _sb.from('dates').delete().eq('id', id)
+      if (error) { console.error('[dates] 削除に失敗:', error.message); showToast('削除に失敗しました'); return }
       showToast('削除しました')
       closeDetail()
     }

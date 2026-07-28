@@ -122,6 +122,10 @@
       color: #98bedd;
       margin-bottom: 8px;
       min-height: 20px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .status-updated {
@@ -171,7 +175,11 @@
     }
 
     .form-row input {
-      flex: 1;
+      flex: 1 1 auto;
+      /* min-width:auto だと input の既定幅(size属性由来)を下回れずカードから突き抜ける */
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
       padding: 8px 12px;
       background: rgba(0,0,0,0.24);
       border: 1.5px solid rgba(150,200,255,0.28);
@@ -183,6 +191,40 @@
     }
 
     .form-row input:focus { border-color: rgba(140,240,180,0.6); }
+
+    /* メモ: ラベルを上に置いて横幅いっぱいの textarea */
+    .form-row.stack {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .form-row.stack label { display: block; margin-bottom: 6px; }
+
+    .note-input {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 72px;
+      resize: vertical;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.24);
+      border: 1.5px solid rgba(150,200,255,0.28);
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+      line-height: 1.6;
+      color: #e8f4fd;
+      outline: none;
+    }
+    .note-input:focus { border-color: rgba(140,240,180,0.6); }
+
+    .note-count {
+      margin-top: 4px;
+      text-align: right;
+      font-size: 0.72rem;
+      color: #5a7fa8;
+    }
+    .note-count.over { color: #ffa0a0; }
 
     .save-btn {
       width: 100%;
@@ -452,6 +494,7 @@
         cards.innerHTML = '<div style="text-align:center;color:#7aadcc;padding:40px 0">プロフィールが設定されていません</div>'
       }
 
+      updateNoteCount()
       loadStatusLog()
     }
 
@@ -486,9 +529,10 @@
               <button type="button" class="quick-btn" onclick="adjustTime(-30)">−30分</button>
               <button type="button" class="quick-btn" onclick="adjustTime(30)">+30分</button>
             </div>
-            <div class="form-row">
+            <div class="form-row stack">
               <label>メモ</label>
-              <input type="text" id="input-note" placeholder="例：ちょっと遅れるかも" maxlength="40" value="${escHtml(noteText)}">
+              <textarea id="input-note" class="note-input" placeholder="例：ちょっと遅れるかも / 途中でスーパー寄るね" maxlength="300" oninput="updateNoteCount()">${escHtml(noteText)}</textarea>
+              <div class="note-count" id="note-count"></div>
             </div>
             <button class="save-btn" onclick="saveStatus()">保存</button>
           </div>
@@ -501,6 +545,16 @@
       const form = document.getElementById('edit-form')
       form.classList.toggle('open')
       btn.textContent = form.classList.contains('open') ? '閉じる' : '編集'
+    }
+
+    const NOTE_MAX = 300
+    function updateNoteCount() {
+      const ta = document.getElementById('input-note')
+      const el = document.getElementById('note-count')
+      if (!ta || !el) return
+      const n = ta.value.length
+      el.textContent = `${n} / ${NOTE_MAX}`
+      el.classList.toggle('over', n >= NOTE_MAX)
     }
 
     // 直接指定（例: 19:00 ボタン）

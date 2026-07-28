@@ -24,7 +24,8 @@
     try {
       const { data: { session } } = await _sb.auth.getSession()
       if (session) {
-        const { data: profile } = await _sb.from('profiles').select('emoji').eq('id', session.user.id).single()
+        // profile 行が無いアカウント(テスト用など)もあるので maybeSingle。single() だと 406 が出る
+        const { data: profile } = await _sb.from('profiles').select('emoji').eq('id', session.user.id).maybeSingle()
         if (profile?.emoji) emoji = profile.emoji
       }
     } catch (_) {}

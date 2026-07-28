@@ -240,6 +240,20 @@
 
     .event-info { flex: 1; }
     .event-title { font-size: 0.95rem; color: #e8f4fd; }
+    /* だれの予定か */
+    .ev-owner {
+      display: inline-block; margin-right: 5px; padding: 1px 7px;
+      border-radius: 999px; font-size: 0.78rem;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(150,200,255,0.28);
+    }
+    .owner-chips { display: flex; gap: 8px; margin-bottom: 14px; }
+    .owner-chip {
+      flex: 1; padding: 10px 6px; border-radius: 12px; cursor: pointer;
+      background: rgba(0,0,0,0.24); border: 1.5px solid rgba(150,200,255,0.28);
+      color: #cfe4f8; font-family: inherit; font-size: 0.82rem; text-align: center;
+    }
+    .owner-chip.sel { background: rgba(140,240,180,0.2); border-color: rgba(140,240,180,0.65); color: #eafff2; }
+    .owner-chip:active { transform: scale(0.97); }
     .event-memo  { font-size: 0.8rem; color: #98bedd; margin-top: 2px; }
 
     .event-past { opacity: 0.45; }
@@ -429,6 +443,8 @@
   <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal">
       <h3 id="modal-title">予定を追加</h3>
+      <label>だれの予定？</label>
+      <div class="owner-chips" id="owner-chips"></div>
       <label>タイトル</label>
       <input type="text" id="ev-title" placeholder="どこ行く？なにする？" maxlength="60">
       <label>開始日</label>
@@ -449,6 +465,38 @@
     let currentYear  = new Date().getFullYear()
     let currentMonth = new Date().getMonth()
     let events = []
+    let myId = null, profiles = [], profById = {}
+    let selOwner = null   // null = ふたりの予定 / user_id = その人だけの予定
+
+    async function loadProfiles() {
+      const { data: { session } } = await _sb.auth.getSession()
+      myId = session?.user?.id || null
+      const { data } = await _sb.from('profiles').select('id, name, emoji')
+      profiles = data || []
+      profById = {}
+      profiles.forEach(p => { profById[p.id] = p })
+      renderOwnerChips()
+    }
+
+    // だれの予定か: ふたり / 各人のみ
+    function renderOwnerChips() {
+      const el = document.getElementById('owner-chips')
+      if (!el) return
+      // 自分を先に並べる
+      const ordered = [...profiles].sort((a, b) => (a.id === myId ? -1 : b.id === myId ? 1 : 0))
+      el.innerHTML = [
+        `<button type="button" class="owner-chip ${selOwner === null ? 'sel' : ''}" onclick="setOwner(null)">👫 ふたり</button>`,
+        ...ordered.map(p =>
+          `<button type="button" class="owner-chip ${selOwner === p.id ? 'sel' : ''}" onclick="setOwner('${p.id}')">${p.emoji} ${escHtml(p.name || '')}のみ</button>`),
+      ].join('')
+    }
+    function setOwner(id) { selOwner = id; renderOwnerChips() }
+
+    function ownerBadge(ev) {
+      if (!ev.owner_id) return ''
+      const p = profById[ev.owner_id]
+      return `<span class="ev-owner">${p ? p.emoji : '👤'}${p?.id === myId ? ' 自分' : ''}</span>`
+    }
 
     async function loadEvents() {
       const { data } = await _sb
@@ -522,7 +570,9 @@
         dayEvents.slice(0, 2).forEach(ev => {
           const dot = document.createElement('div')
           dot.className = 'day-event-dot'
-          dot.textContent = ev.title
+          // 個人の予定は誰のものか絵文字で分かるようにする（ふたりの予定はそのまま）
+          const oe = ev.owner_id ? (profById[ev.owner_id]?.emoji || '👤') : ''
+          dot.textContent = oe ? `${oe}${ev.title}` : ev.title
           dotsEl.appendChild(dot)
         })
         cell.appendChild(dotsEl)
@@ -579,7 +629,7 @@
             <div class="event-date-day" style="font-size:${dayLabel.length > 3 ? '0.9rem' : '1.3rem'}">${dayLabel}</div>
           </div>
           <div class="event-info">
-            <div class="event-title">${escHtml(ev.title)}</div>
+            <div class="event-title">${ownerBadge(ev)}${escHtml(ev.title)}</div>
             ${ev.memo ? `<div class="event-memo">${escHtml(ev.memo)}</div>` : ''}
           </div>
           ${ev.id ? `<div class="event-actions">
@@ -625,6 +675,8 @@
       document.getElementById('ev-date-end').value = ''
       document.getElementById('ev-title').value = ''
       document.getElementById('ev-memo').value = ''
+      selOwner = null   // 既定は「ふたりの予定」
+      renderOwnerChips()
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
@@ -639,6 +691,8 @@
       document.getElementById('ev-date-end').value = ev.date_end || ''
       document.getElementById('ev-title').value = ev.title || ''
       document.getElementById('ev-memo').value = ev.memo || ''
+      selOwner = ev.owner_id || null
+      renderOwnerChips()
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
@@ -654,10 +708,12 @@
       const memo    = document.getElementById('ev-memo').value.trim()
       if (!title || !date) return
 
-      const payload = { title, date, memo: memo || null, date_end: dateEnd || null }
+      const payload = { title, date, memo: memo || null, date_end: dateEnd || null, owner_id: selOwner }
       const { data: { session } } = await _sb.auth.getSession()
       const dateLabel = payload.date_end && payload.date_end !== payload.date
         ? `${payload.date}〜${payload.date_end}` : payload.date
+      // 個人の予定は誰のものか通知本文にも出す
+      const whose = selOwner ? `${profById[selOwner]?.emoji || ''}${profById[selOwner]?.name || ''}の予定・` : ''
 
       if (editingId) {
         // 更新
@@ -671,7 +727,7 @@
           renderEventList()
           notify({
             title: '📅 予定を変更したよ',
-            body: `${data.title}（${dateLabel}）`,
+            body: `${data.title}（${whose}${dateLabel}）`,
             url: '/calendar.html',
             kind: 'calendar',
             sender: session.user.id,
@@ -687,7 +743,7 @@
           renderEventList()
           notify({
             title: '📅 予定を追加したよ',
-            body: `${data.title}（${dateLabel}）`,
+            body: `${data.title}（${whose}${dateLabel}）`,
             url: '/calendar.html',
             kind: 'calendar',
             sender: session.user.id,
@@ -709,7 +765,8 @@
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     }
 
-    loadEvents()
+    // プロフィール(だれの予定か表示用)を先に読んでからカレンダーを描く
+    loadProfiles().then(loadEvents).catch(() => loadEvents())
 
     // ユーザーバッジ
   </script>
