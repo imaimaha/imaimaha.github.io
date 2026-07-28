@@ -61,6 +61,17 @@
     @media (prefers-reduced-motion: reduce) { .checkin-pin, .hero-checkin-btn.armed { animation: none } }
     #loc-top-status { min-height: 18px; margin-top: 6px; font-size: 0.75rem; color: var(--ink-400); }
 
+    /* 今ここ: 地図ページへの導線 */
+    .hero-map-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 4px; padding: 7px 16px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(140,180,255,0.28);
+      color: #cfe0ff; font-size: 0.78rem; text-decoration: none;
+    }
+    .hero-map-link:active { transform: scale(0.97); }
+
     /* --- 最上部の横長デイリーカード (今日の帰宅) --- */
     .home-daily-card {
       min-height: 118px;
@@ -221,10 +232,39 @@
       transform: translate(-50%, -6px);
     }
 
+    /* 当日のデートカード (今のきもち と カウントダウン の間) */
+    .today-date-card {
+      display: block; text-decoration: none;
+      margin: 12px 0 0; padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(255,120,170,0.20), rgba(255,175,120,0.12));
+      border: 1.5px solid rgba(255,150,190,0.45);
+      border-radius: var(--r-lg);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 18px rgba(255,120,170,0.18);
+    }
+    .today-date-card:active { transform: scale(0.985); }
+    .today-date-card .tdc-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.74rem; letter-spacing: 0.05em; margin-bottom: 7px;
+    }
+    .today-date-card .tdc-badge { color: #ffd0e2; font-weight: 700; }
+    .today-date-card .tdc-more { color: #ffb8d4; }
+    .today-date-card .tdc-title {
+      font-size: 1.12rem; font-weight: 700; color: #fff0f6; line-height: 1.4;
+      word-break: break-word;
+    }
+    .today-date-card .tdc-meta {
+      margin-top: 5px; font-size: 0.78rem; color: #ffcfe0;
+      display: flex; flex-wrap: wrap; gap: 4px 12px;
+    }
+    .today-date-card .tdc-pulse { display: inline-block; animation: tdcPulse 1.8s ease-in-out infinite; }
+    @keyframes tdcPulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.18) } }
+    @media (prefers-reduced-motion: reduce) { .today-date-card .tdc-pulse { animation: none } }
+
     /* カウントダウンカード */
     .countdown-card {
       display: block; text-decoration: none;
-      margin: 0; padding: 13px 15px 11px;
+      margin: 12px 0 0; padding: 13px 15px 11px;
       background: linear-gradient(135deg, rgba(226,106,168,0.12), rgba(120,90,220,0.12));
       border: 1.5px solid rgba(220,160,230,0.28);
       border-radius: var(--r-lg);
@@ -308,6 +348,7 @@
           <span class="checkin-pin">📍</span><span class="checkin-label">今ここにいるよ</span>
         </button>
         <div id="loc-top-status"></div>
+        <a href="/location.html" class="hero-map-link">🗺 ふたりの地図をみる ›</a>
       </div>
     </div>
   </header>
@@ -334,6 +375,16 @@
       </div>
     </div>
     <div id="mood-toast"></div>
+
+    <!-- 当日のデート: その日にデート予定がある時だけ出る -->
+    <a href="/dates.html" class="today-date-card" id="today-date-card" style="display:none">
+      <div class="tdc-head">
+        <span class="tdc-badge"><span class="tdc-pulse">💕</span> <span id="tdc-badge-label">きょうはデートの日</span></span>
+        <span class="tdc-more">ひらく ›</span>
+      </div>
+      <div class="tdc-title" id="tdc-title"></div>
+      <div class="tdc-meta" id="tdc-meta"></div>
+    </a>
 
     <!-- カウントダウン -->
     <a href="/countdown.html" class="countdown-card" id="countdown-card" style="display:none">
@@ -554,7 +605,8 @@
       // これからのデート予定
       try {
         const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
-        const { data: ds } = await _sb.from('dates').select('title,date_str,status').eq('status', 'planned').gte('date_str', today)
+        // 当日のデートは専用カード (today-date-card) に出すのでここでは翌日以降だけ
+        const { data: ds } = await _sb.from('dates').select('title,date_str,status').eq('status', 'planned').gt('date_str', today)
         ;(ds || []).forEach(d => items.push({ emoji: '💕', label: d.title, target: new Date(d.date_str + 'T00:00:00+09:00') }))
       } catch {}
 
@@ -585,6 +637,44 @@
       } catch {}
     }
     loadDatePreview()
+
+    // ========== 当日のデートカード ==========
+    // 今日デートの予定がある日だけ、今のきもち直下に出して1タップで詳細へ飛べるようにする
+    async function loadTodayDate() {
+      try {
+        const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+        const { data } = await _sb.from('dates')
+          .select('id,title,place,missions,date_str,status')
+          .eq('status', 'planned').eq('date_str', today)
+          .order('created_at', { ascending: true })
+        if (!data || !data.length) return
+
+        const d = data[0]
+        const card = document.getElementById('today-date-card')
+        if (!card) return
+        card.href = `/dates.html?date=${d.id}`
+        document.getElementById('tdc-title').textContent = d.title || 'デート'
+
+        const metas = []
+        if (d.place) metas.push(`📍 ${d.place}`)
+        const missions = Array.isArray(d.missions) ? d.missions : []
+        if (missions.length) {
+          let done = 0
+          try {
+            const { data: ph } = await _sb.from('date_photos').select('mission').eq('date_id', d.id)
+            const doneSet = new Set((ph || []).map(p => p.mission).filter(Boolean))
+            done = missions.filter(m => doneSet.has(m)).length
+          } catch {}
+          metas.push(`📸 ミッション ${done}/${missions.length}`)
+        }
+        if (data.length > 1) metas.push(`ほかに ${data.length - 1}件`)
+        document.getElementById('tdc-meta').innerHTML =
+          metas.map(escHtml).join('<span style="opacity:.45">・</span>')
+
+        card.style.display = 'block'
+      } catch (e) { console.error('[home] today date card', e) }
+    }
+    loadTodayDate()
 
     // ========== STATUS PREVIEW ==========
     async function loadStatusPreview() {

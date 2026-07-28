@@ -102,6 +102,32 @@
     .entry-edit-btns .ee-save { background: linear-gradient(135deg,#e28c6a,#a8608c); border: none; color: #fff; }
     .entry-edit-btns .ee-cancel { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(220,180,240,0.25); color: #d0b8d8; }
 
+    /* スタンプ反応 */
+    .rx-row {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+      margin-top: 10px; padding-top: 9px;
+      border-top: 1px solid rgba(220,180,240,0.12);
+    }
+    .rx-given {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 5px 10px; border-radius: 999px; font-size: 0.95rem;
+      background: rgba(226,140,106,0.16); border: 1.5px solid rgba(226,140,106,0.4);
+    }
+    .rx-add {
+      padding: 6px 12px; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(220,180,240,0.35);
+      color: #d0b8d8; font-family: inherit; font-size: 0.78rem;
+    }
+    .rx-add:active { transform: scale(0.96); }
+    .rx-chip {
+      min-width: 44px; padding: 7px 10px; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,180,240,0.24);
+      font-size: 1.15rem; line-height: 1; font-family: inherit;
+    }
+    .rx-chip.sel { background: rgba(226,140,106,0.24); border-color: rgba(226,140,106,0.65); }
+    .rx-chip:active { transform: scale(0.94); }
+    .rx-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
     .memory-year-label { font-size: 0.78rem; color: #e2a878; font-weight: 700; margin: 14px 4px 6px; }
     .memory-year-label:first-child { margin-top: 0; }
 
@@ -153,9 +179,12 @@
 
   <script>
     const MOODS = ['☀️', '🌤️', '☁️', '🌧️', '⛈️', '❄️', '🌈', '🥰', '😊', '😴', '😢', '😤']
+    // 相手の日記に押せるスタンプ
+    const STAMPS = ['💖', '🥰', '👏', '🙏', '🫂', '😆', '🥲', '✨', '💪', '😴']
 
     let myId = null, myProfile = null, partnerProfile = null, profById = {}
     let entries = []
+    let reactions = []
     let today = null
     let selMood = null
     let editingEntryId = null
@@ -184,8 +213,12 @@
       document.getElementById('today-date').textContent = fmtDate(today)
       renderMoodRow()
 
-      const { data } = await _sb.from('diary_entries').select('*').order('date_str', { ascending: false })
+      const [{ data }, { data: rx }] = await Promise.all([
+        _sb.from('diary_entries').select('*').order('date_str', { ascending: false }),
+        _sb.from('diary_reactions').select('*'),
+      ])
       entries = data || []
+      reactions = rx || []
 
       const mine = entries.find(e => e.user_id === myId && e.date_str === today)
       if (mine) { document.getElementById('my-body').value = mine.body; selMood = mine.mood; renderMoodRow() }
@@ -284,7 +317,77 @@
             <button class="entry-edit-btn danger" onclick="deleteEntry('${e.id}')">🗑</button>` : ''}
           </div>
           <div class="entry-body">${escHtml(e.body)}</div>
+          ${reactionBarHtml(e)}
         </div>`
+    }
+
+    // ── スタンプ反応 ──
+    // 相手の日記: 自分のスタンプを付け外しできる (1エントリ1つ・再タップで解除)
+    // 自分の日記: 相手がくれたスタンプを表示するだけ
+    function reactionBarHtml(e) {
+      const rs = reactions.filter(r => r.entry_id === e.id)
+      const mine = rs.find(r => r.user_id === myId)
+      const given = rs.filter(r => r.user_id !== myId)
+        .map(r => `<span class="rx-given">${profById[r.user_id]?.emoji || '👤'}${r.emoji}</span>`).join('')
+
+      if (e.user_id === myId) return given ? `<div class="rx-row">${given}</div>` : ''
+
+      return `
+        <div class="rx-row">
+          ${given}
+          ${mine
+            ? `<button class="rx-chip sel" onclick="toggleRxPicker('${e.id}')">${mine.emoji}</button>`
+            : `<button class="rx-add" onclick="toggleRxPicker('${e.id}')">＋ スタンプ</button>`}
+        </div>
+        <div class="rx-picker" id="rx-picker-${e.id}" style="display:none">
+          ${STAMPS.map(s => `<button class="rx-chip ${mine?.emoji === s ? 'sel' : ''}" onclick="setReaction('${e.id}','${s}')">${s}</button>`).join('')}
+        </div>`
+    }
+
+    function toggleRxPicker(entryId) {
+      const el = document.getElementById('rx-picker-' + entryId)
+      const wasOpen = el && el.style.display !== 'none'
+      closeRxPickers()
+      if (el && !wasOpen) el.style.display = 'flex'
+    }
+    function closeRxPickers() {
+      document.querySelectorAll('.rx-picker').forEach(p => { p.style.display = 'none' })
+    }
+
+    function renderEntryViews() {
+      renderPartnerToday(); renderMemories(); renderHistory()
+    }
+
+    async function setReaction(entryId, emoji) {
+      const e = entries.find(x => x.id === entryId)
+      if (!e || e.user_id === myId) return   // 自分の日記には押せない
+      const mine = reactions.find(r => r.entry_id === entryId && r.user_id === myId)
+      closeRxPickers()
+
+      // 同じスタンプをもう一度 → 解除
+      if (mine && mine.emoji === emoji) {
+        const { error } = await _sb.from('diary_reactions').delete().eq('entry_id', entryId).eq('user_id', myId)
+        if (error) { showToast('うまくいかなかった'); console.error(error); return }
+        reactions = reactions.filter(r => !(r.entry_id === entryId && r.user_id === myId))
+        renderEntryViews()
+        showToast('スタンプを外したよ')
+        return
+      }
+
+      const { data, error } = await _sb.from('diary_reactions')
+        .upsert({ entry_id: entryId, user_id: myId, emoji }, { onConflict: 'entry_id,user_id' })
+        .select().single()
+      if (error) { showToast('うまくいかなかった'); console.error(error); return }
+      reactions = reactions.filter(r => !(r.entry_id === entryId && r.user_id === myId))
+      reactions.push(data)
+      renderEntryViews()
+      showToast(`${emoji} を送ったよ`)
+
+      notify({
+        title: `${emoji} 日記にスタンプがついたよ`,
+        body: `${myProfile?.emoji || ''} が ${fmtShort(e.date_str)} の日記に ${emoji} をくれたよ`,
+        url: '/diary.html', kind: 'diary', recipient: e.user_id,
+      })
     }
 
     function renderMemories() {
@@ -373,6 +476,7 @@
       const { error } = await _sb.from('diary_entries').delete().eq('id', entryId)
       if (error) { showToast('削除に失敗しました'); console.error(error); return }
       entries = entries.filter(x => x.id !== entryId)
+      reactions = reactions.filter(r => r.entry_id !== entryId)   // DB 側は ON DELETE CASCADE
       if (editingEntryId === entryId) editingEntryId = null
       renderMemories(); renderHistory(); renderStreaks()
       showToast('削除したよ')

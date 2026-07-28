@@ -4,7 +4,7 @@
 > 実装が変わる度にここも更新すること。
 > Claude が「notre」「imaimaha」等の呼称で参照する時は、まずこのファイルを読む。
 
-**最終更新**: 2026-07-23（ふたりの日記 追加）
+**最終更新**: 2026-07-29（日記スタンプ / ビンゴのつづきから / 予定の対象者 追加）
 
 > 📌 **重要**: 機能追加・ルール変更時は必ず以下を同時に更新すること:
 > - この SPEC.md（正式仕様）
@@ -87,7 +87,8 @@
 ### 4.1 トップ (`index.html` — Notre Endroit)
 
 - Hero: ふたりのプロフィール絵文字、記念日カウンター（**JST 朝2時境界**でロールオーバー）
-- **記念日直下**に「📍 今ここにいるよ」ボタン（トップからワンタップでチェックイン）
+- **記念日直下**に「📍 今ここにいるよ」ボタン（トップからワンタップでチェックイン）+ その下に「🗺 ふたりの地図をみる ›」リンク（`location.html` へ。2026-07-29〜）
+- **当日のデートカード** (2026-07-29〜): 今のきもち と カウントダウン の間に、**その日に `status='planned'` のデートがある日だけ**出るピンクのカード（タイトル・場所・フォトミッション進捗）。タップで `dates.html?date=<id>` へ直行。重複を避けるためカウントダウンカード側のデートは翌日以降のみ表示
 - セクション順: 今日の帰宅 → ゲージ → クイズ（未回答時強調） → タイムカプセル → ビンゴ → カラーハント → ガチャ → 予定 → やりたいこと → 1on1
 - タイムカプセル届き通知（開封時刻を過ぎた自分宛の未開封）
 - 右上絵文字ボタン（共通ヘッダー）→ タップで**設定シート**（プッシュ通知状態・ルール確認・ログアウト）
@@ -100,6 +101,7 @@
 - 「行っていい？」ボタン → **Push通知（3択ボタン付き）**
   - 選択肢: いいよ ✅ / きびしい 🚫 / 仕事の進み次第 🤔
 - 「🏃 会社出た」「🏠 帰宅」「⏰ 遅れそう」ボタン → **Push通知**（2026-07: LINE無料枠節約のためLINEから変更）
+- **メモ欄** (2026-07-29〜): 1行 input(40字) から **textarea(300字・文字数カウンタ付き)** に変更。`.form-row input` に `min-width:0` が無く input の既定幅がカードから突き抜けていたのも修正（flex 内の input は `min-width:0` を忘れないこと）
 
 ### 4.3 One Step Closer (`closer.html`) — ホーム/ナビでは短く「Gravity」表記
 
@@ -158,6 +160,7 @@
 - **沖縄は週間・ランダム対象外**（カテゴリ別ビンゴのみ）
 - グリッドサイズ 3×3 / 4×4 / 5×5
 - カード**永続化**: 全モードで同じカードが返る（再生成ボタンで新規）
+- **つづきから** (2026-07-29〜): 前回開いていたカードを localStorage の復帰ポインタ (`bingo_<uid>_resume`: mode/label/cat/diff/size) に記録し、**次回ページを開くとそのカードを直接開く**（チェック状態は Supabase から読み直すので別端末の進捗も反映）。モード選択画面には「▶️ つづきから」カードも出る。週間ビンゴは週が変わったら復帰対象外。**サイズ違いの扱い**: ユーザーがサイズボタンを押していないセッションでは、既存カードのサイズに自動追従する（以前は 3×3 で作ったカードが再訪時の既定5×5と食い違い、進捗ごと捨てて新規生成されていた）
 - 履歴閲覧: 2人のチェック付きカードを閲覧（読み込み専用）
   - ビンゴライン数（🎯 ビンゴN本）・コンプリート状態（🏆）を各カードに表示
   - コンプリートは金色の左ボーダー
@@ -241,6 +244,8 @@
 - ふたりの予定を月表示
 - 予定追加 → 相手にPush通知 (kind: `calendar`)
 - **予定の編集** (2026-07-18〜): 予定リストの各項目に ✎(編集)/✕(削除)。✎ でモーダルが編集モードで開き、タイトル/開始日/終了日/メモを更新 → 相手に「📅 予定を変更したよ」Push。記念日行は id が無いため編集/削除ボタンは出ない
+- **だれの予定か** (2026-07-29〜): モーダルの「だれの予定？」で **👫 ふたり / 🦊 nickのみ / 🦔 hedgehogのみ** を選ぶ。`events.owner_id`（NULL = ふたりの予定、既定）。個人の予定はカレンダーのマスと一覧に本人の絵文字バッジが付く。**2026-07-29 時点の既存13件はすべて owner_id NULL = ふたりの予定**
+- **デートからの登録** (2026-07-29〜): `dates.html` のデート詳細の「📅 カレンダーに登録」で、そのデートを**ふたりの予定**として events に追加（メモは場所＋デートのメモ）。同じ日付・同じタイトルの予定が既にあれば二重登録せず「📅 カレンダー登録済み」表示になる
 - 記念日マーク（11/22）自動表示、今年/来年分挿入
 
 ### 4.11 やりたいこと (`wishlist.html`)
@@ -382,6 +387,7 @@
 - **相手の今日の日記**: 自分のカードの下に読み取り専用で表示。未記入なら「まだ書いてないみたい」
 - **✨この日の思い出**: 今日と同じ月日(月日部分が一致)の**過去の年**の日記を年ごとにグルーピングして表示（ほぼ日の5年日記のような「n年前の今日」機能）。該当がなければセクション自体非表示
 - **📖 これまでの日記**: 今日以外の全日記を新しい順にフィード表示（自分の分は✎編集可、相手の分は閲覧のみ）。直近120件表示
+- **スタンプ反応** (2026-07-29〜): 相手の日記カードの「＋ スタンプ」から 10種(💖🥰👏🙏🫂😆🥲✨💪😴) を1つ押せる。**1人1エントリ1つ・同じスタンプを再度押すと解除・別のスタンプを押すと差し替え**。自分の日記には相手がくれたスタンプが表示される（自分の日記には押せない）。押すと相手へPush (kind: `diary`)。ポイントは付かない。テーブル `diary_reactions`(PK entry_id+user_id, entry_id は diary_entries へ FK cascade)
 - **ポイント**: 新規記入(その日初回のみ) +2pt。編集では再付与されない
 - **連続記入ボーナス**: 自分の連続記入日数(streak)が 3/7/14/30/60/100/200/365日 の節目に達すると追加ボーナス(+3〜+300pt)。`diary_streak_awards`(user_id,milestone主キー)への`INSERT`で一度きり付与を保証。ホーム上部に🦊🦔それぞれの現在のstreakを表示
 - **通知**: 初回記入時・連続記入ボーナス達成時に相手へPush (kind: `diary`)
@@ -579,7 +585,7 @@
 | `profiles` | id, name, emoji, line_user_id, workout_level | 2人のプロフィール（workout_levelは筋トレのお題回数スケーリング用、デフォ1.0） |
 | `closer_gauge` | user_id PK, gauge, updated_at | ゲージ値（24h線形減衰） |
 | `status` | user_id, finish_time, note | 退勤予定（朝6時DELETE） |
-| `events` | date, title, memo, user_id | カレンダーイベント |
+| `events` | date, date_end, title, memo, user_id, owner_id | カレンダーイベント（owner_id: NULL=ふたりの予定 / user_id=その人だけの予定） |
 | `memories` | (未使用) | — |
 | `photos` | path, memo, user_id | 思い出アルバム写真 |
 | `wishes` | genre, title, done, user_id | Wishlist |
@@ -613,6 +619,7 @@
 | `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
 | `diary_entries` | id, user_id, date_str, mood, body, created_at, updated_at / UNIQUE(user_id,date_str) | ふたりの日記（1人1日1件、upsertで編集） |
 | `diary_streak_awards` | user_id, milestone / PK(user_id,milestone) | 日記の連続記入ボーナスの一度きり付与ガード |
+| `diary_reactions` | entry_id(fk cascade), user_id, emoji / PK(entry_id,user_id) | 相手の日記へのスタンプ反応（1人1エントリ1つ） |
 
 ### 7.2 RLS ポリシーの原則
 
@@ -627,6 +634,7 @@
 - `goals`/`goal_steps`: authenticated 全員 SELECT（相手の目標を見るため）/ 自分の分のみ INSERT・UPDATE・DELETE
 - `goal_praises`: authenticated 全員 SELECT / **INSERT は `auth.uid() = from_user_id`**（なりすまし防止。自分の目標への自演褒めを防ぐサーバ側チェックはせず、UIで相手の目標にしかボタンを出さない運用で対応）。`step_id`/`goal_id`(step_id NULL時)のpartial unique indexで1step/1goalにつき一度きり
 - `diary_entries`: authenticated 全員 SELECT（お互いに見える共有日記）/ 自分の分のみ INSERT・UPDATE（`UNIQUE(user_id,date_str)`への`upsert`で編集）
+- `diary_reactions`: authenticated 全員 SELECT / **自分の分のみ INSERT・UPDATE・DELETE**（`auth.uid() = user_id`）
 - `diary_streak_awards`: authenticated 全員 SELECT / 自分の分のみ INSERT（`PRIMARY KEY(user_id,milestone)`への`INSERT`で一度きり付与を保証）
 - `time_capsules`:
   - `sender_view`: 送信者は全部見える
