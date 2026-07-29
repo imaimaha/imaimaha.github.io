@@ -46,25 +46,53 @@ test('bingo: リロード後もカテゴリを選ぶと前回のカードが続�
   expect(errors).toEqual([])
 })
 
-test('bingo: 3×3 で作ったカードは再訪(既定5×5)でも捨てられない', async ({ page }) => {
+// カードの identity は「カテゴリ + サイズ」。同じサイズのカードが無い時だけ直近サイズに追従する
+test('bingo: そのサイズのカードが無ければ直近サイズのカードに追従する', async ({ page }) => {
   await page.goto('/bingo.html')
   await page.waitForTimeout(2000)
 
+  // 沖縄はこのアカウントで未プレイ (他サイズの行が無い) なので追従の検証に使える
   await page.evaluate(() => { setGridSize(3, true); showScreen('category') })
-  await page.evaluate(() => selectCategory('food'))
+  await page.evaluate(() => selectCategory('okinawa'))
   await page.waitForTimeout(2500)
   const first = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
   expect(first.length).toBe(9)
 
-  // 同じカテゴリを、サイズを触らずに選び直す (リロードで state.gridSize は既定の5に戻っている)
+  // サイズを触らずに選び直す (リロードで state.gridSize は既定の5に戻っている)
   await page.reload()
   await page.waitForTimeout(2000)
   await page.evaluate(() => showScreen('category'))
-  await page.evaluate(() => selectCategory('food'))
+  await page.evaluate(() => selectCategory('okinawa'))
   await page.waitForTimeout(2500)
 
   const second = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
-  expect(second).toEqual(first)   // 3×3 のカードがそのまま返る
+  expect(second).toEqual(first)   // 3×3 のカードがそのまま返る (捨てて新規生成しない)
+  expect(await page.evaluate(() => state.gridSize)).toBe(3)
+})
+
+test('bingo: カテゴリは「最後に触ったカード」を返す (created_at順ではない)', async ({ page }) => {
+  const errors = watchErrors(page)
+  await page.goto('/bingo.html')
+  await page.waitForTimeout(2500)
+
+  // 同じカテゴリ・同じサイズの行が複数あるとき、updated_at が最新のものが期待値
+  const expected = await page.evaluate(async () => {
+    const { data } = await _sb.from('bingo_sessions').select('*')
+      .eq('user_id', state.userId).eq('mode', 'category').eq('label', '🍚 ごはん')
+      .order('updated_at', { ascending: false, nullsFirst: false }).limit(20)
+    const rows = (data || []).filter(r => Array.isArray(r.items) && r.items.length)
+    const m = rows.find(r => Math.round(Math.sqrt(r.items.length)) === 5)
+    return { rowCount: rows.length, items: m ? m.items.map(i => i.text) : null }
+  })
+  test.skip(!expected.items, '5×5 のごはんカードがまだ無い環境ではスキップ')
+
+  await page.evaluate(() => { setGridSize(5, true); showScreen('category') })
+  await page.evaluate(() => selectCategory('food'))
+  await page.waitForTimeout(2500)
+
+  const shown = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
+  expect(shown).toEqual(expected.items)
+  expect(errors).toEqual([])
 })
 
 test('status: メモ欄がカードからはみ出さない / 300字まで', async ({ page }) => {

@@ -1140,7 +1140,7 @@
         .eq('user_id', state.userId)
         .eq('mode', 'weekly')
         .eq('date_str', weekKey)
-        .order('created_at', { ascending: false })
+        .order('updated_at', { ascending: false, nullsFirst: false })   // 最後に触ったカード
         .limit(1)
         .maybeSingle();   // 0件は正常なので single() の 406 にしない
       if (!error && data && Array.isArray(data.items) && data.items.length > 0) return data;
@@ -1149,7 +1149,11 @@
     return lsLoad(lsKey(`weekly_${weekKey}_${state.gridSize}`));
   }
 
-  // カテゴリ/難易度モード用: 最新の同モード同ラベル同サイズのカードを取得
+  // カテゴリ/難易度モード用: そのカテゴリで「最後に触ったカード」を返して続きから再開する
+  //
+  // ⚠️ 並び順は updated_at (最後に触った順)。created_at だと、再生成や過去のサイズ違いで
+  // 増えた空カードの行が「新しい」と判定され、進捗のあるカードを追い越してしまう
+  // (実例: hedgehog の「❤️ 二人限定」5×5 で、10マス進んだカードが後から作られた空カードに負けていた)
   async function loadModeCard(mode, label) {
     if (!state.userId) return null;
 
@@ -1159,17 +1163,23 @@
         .eq('user_id', state.userId)
         .eq('mode', mode)
         .eq('label', label)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();   // 未プレイのカテゴリは0件が正常 (single() だと 406 が出る)
-      if (!error && data) {
-        const sz = Math.round(Math.sqrt((data.items || []).length));
-        if (sz === state.gridSize) return data;
-        // サイズ違い: ユーザーが自分でサイズを選んでいなければ前回カードのサイズに合わせる
+        .order('updated_at', { ascending: false, nullsFirst: false })
+        .limit(20);
+      const rows = (!error && Array.isArray(data))
+        ? data.filter(r => Array.isArray(r.items) && r.items.length > 0) : [];
+      if (rows.length) {
+        const sizeOf = r => Math.round(Math.sqrt(r.items.length));
+        // 今のサイズと同じカードのうち、最後に触ったもの
+        const sameSize = rows.find(r => sizeOf(r) === state.gridSize);
+        if (sameSize) return sameSize;
+        // サイズ違いしか無い場合、ユーザーが自分でサイズを選んでいなければ直近カードのサイズに合わせる
         // （こうしないと 3×3 で作った進捗が、再訪時のデフォルト5×5と食い違って捨てられる）
-        if (!state.sizeExplicit && sz >= 3) { setGridSize(sz); return data; }
+        if (!state.sizeExplicit) {
+          const sz = sizeOf(rows[0]);
+          if (sz >= 3) { setGridSize(sz); return rows[0]; }
+        }
       }
-    } catch {}
+    } catch (e) { console.error('[bingo] loadModeCard 失敗:', e); }
 
     return lsLoad(lsKey(`${mode}_${label}_${state.gridSize}`));
   }
