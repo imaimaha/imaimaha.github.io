@@ -163,13 +163,6 @@
 
     .mode-card.daily .mode-card-title { color: #ffd97d; }
 
-    /* つづきから: 前回のカードに戻る導線 */
-    .mode-card.resume {
-      background: linear-gradient(135deg, rgba(120,240,180,0.14) 0%, rgba(80,200,255,0.10) 100%);
-      border-color: rgba(120,240,180,0.42);
-    }
-    .mode-card.resume .mode-card-title { color: #a8f5cc; }
-
     /* ── Category / Difficulty Select ── */
     #screen-category, #screen-difficulty {
       padding: 20px 20px 40px;
@@ -664,15 +657,6 @@
     </div>
 
     <div class="mode-cards">
-      <div class="mode-card resume" id="resume-card" style="display:none" onclick="resumeCard()">
-        <div class="mode-card-icon">▶️</div>
-        <div class="mode-card-body">
-          <div class="mode-card-title">つづきから</div>
-          <div class="mode-card-desc" id="resume-desc">前回のカードにもどる</div>
-        </div>
-        <div class="mode-card-arrow">→</div>
-      </div>
-
       <div class="mode-card daily" onclick="selectMode('weekly')">
         <div class="mode-card-icon">🌟</div>
         <div class="mode-card-body">
@@ -1077,58 +1061,6 @@
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
   }
 
-  // ─────────────────────────────────────────
-  // 前回開いていたカードへの復帰ポインタ
-  // カード本体ではなく「どのカードを開いていたか」だけを保存し、
-  // 復帰時は Supabase から最新のチェック状態を読み直す（別端末での進捗も反映される）
-  // ─────────────────────────────────────────
-  function saveResume() {
-    if (!state.userId || !state.card || state.readonly) return;
-    const size = Math.round(Math.sqrt(state.card.items.length));
-    lsSave(lsKey('resume'), {
-      mode: state.card.mode,
-      label: state.card.label,
-      date_str: state.card.date_str || null,
-      size,
-      cat: state.lastPick?.cat || null,
-      diff: state.lastPick?.diff || null,
-      checked: state.card.checks.length,
-      total: size * size,
-    });
-  }
-
-  function loadResume() {
-    const r = lsLoad(lsKey('resume'));
-    if (!r || !r.mode) return null;
-    // 週間は週が変わったら復帰対象外（先週のカードに戻さない）
-    if (r.mode === 'weekly' && r.date_str !== getWeekStr()) return null;
-    if (r.mode === 'category' && !r.cat) return null;
-    if (r.mode === 'random' && !r.diff) return null;
-    return r;
-  }
-
-  // モード選択画面の「つづきから」カード
-  function renderResumeCard() {
-    const el = document.getElementById('resume-card');
-    if (!el) return;
-    const r = loadResume();
-    if (!r) { el.style.display = 'none'; return; }
-    const sz = r.size || 5;
-    document.getElementById('resume-desc').innerHTML =
-      `${r.label}<br>${r.checked || 0} / ${r.total || sz * sz} チェック済み ・ ${sz}×${sz}`;
-    el.style.display = '';
-  }
-
-  async function resumeCard() {
-    const r = loadResume();
-    if (!r) { showToast('前回のカードが見つかりませんでした'); return; }
-    if (r.size >= 3) setGridSize(r.size);
-    state.readonly = false;
-    if (r.mode === 'weekly') await selectMode('weekly');
-    else if (r.mode === 'category') await selectCategory(r.cat);
-    else if (r.mode === 'random') await selectDifficulty(r.diff);
-  }
-
   async function saveCard() {
     if (!state.userId || !state.card) return;
 
@@ -1140,7 +1072,6 @@
       lsSave(lsKey(`${state.card.mode}_${state.card.label}_${sz}`), state.card);
     }
     lsSave(lsKey('current'), state.card);
-    saveResume();
 
     // Supabase はテーブルがあれば保存（なければ黙って無視）
     try {
@@ -1550,7 +1481,6 @@
       backBtn.textContent = '← ホーム';
       backBtn.onclick = () => location.href = '/';
       document.getElementById('top-title').textContent = 'お散歩ビンゴ';
-      renderResumeCard();
     } else if (name === 'category' || name === 'difficulty' || name === 'history') {
       backBtn.textContent = '← 戻る';
       backBtn.onclick = () => showScreen('mode');
@@ -1572,7 +1502,6 @@
   // ─────────────────────────────────────────
   async function selectMode(mode) {
     state.readonly = false;
-    state.lastPick = {};
     if (mode === 'weekly') {
       showToast('📅 今週のビンゴを準備中…');
 
@@ -1610,7 +1539,6 @@
 
   async function selectCategory(cat) {
     state.readonly = false;
-    state.lastPick = { cat };
     const labels = {
       everyday: '🌿 日常',
       feelings: '😊 気持ち',
@@ -1651,7 +1579,6 @@
 
   async function selectDifficulty(diff) {
     state.readonly = false;
-    state.lastPick = { diff };
     const stars = ['', '★', '★★', '★★★'];
     const n = state.gridSize * state.gridSize;
     const label = `ランダム ${stars[diff]}`;
@@ -1699,7 +1626,6 @@
       gridActions.classList.toggle('two-col', visible <= 2);
     }
     renderGrid();
-    saveResume();
     showScreen('grid');
   }
 
@@ -2074,18 +2000,6 @@
       `毎週月曜に新しいカードが生まれる<br>${seasonEmoji[season]} ${fmt(monday)}〜${fmt(sunday)} の特別版`;
 
     showScreen('mode');
-
-    // 前回開いていたカードがあれば、そのまま続きから開く
-    // （戻るボタンでモード選択に戻れる。モード選択には「つづきから」カードも出る）
-    const r = loadResume();
-    if (r) {
-      try {
-        await resumeCard();
-      } catch (e) {
-        console.error('[bingo] resume failed', e);
-        showScreen('mode');
-      }
-    }
   }
 
   init();

@@ -15,7 +15,7 @@ function watchErrors(page) {
   return errors
 }
 
-test('bingo: カテゴリのカードを開いたあと再訪すると続きから開く', async ({ page }) => {
+test('bingo: リロード後もカテゴリを選ぶと前回のカードが続く / つづからカードは無い', async ({ page }) => {
   const errors = watchErrors(page)
 
   await page.goto('/bingo.html')
@@ -29,27 +29,19 @@ test('bingo: カテゴリのカードを開いたあと再訪すると続きか�
   const first = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
   expect(first.length).toBeGreaterThan(0)
 
-  // 復帰ポインタが保存されている
-  const resume = await page.evaluate(() => {
-    const k = Object.keys(localStorage).find(k => k.endsWith('_resume'))
-    return k ? JSON.parse(localStorage.getItem(k)) : null
-  })
-  expect(resume).toBeTruthy()
-  expect(resume.mode).toBe('category')
-  expect(resume.cat).toBe('reading')
-
-  // リロード → モード選択ではなくカードが開く
+  // リロード後はモード選択から始まる（自動復帰も「つづきから」カードも無い）
   await page.reload()
-  await page.waitForTimeout(3000)
-  await expect(page.locator('#screen-grid')).toHaveClass(/active/)
+  await page.waitForTimeout(2500)
+  await expect(page.locator('#screen-mode')).toHaveClass(/active/)
+  expect(await page.locator('#resume-card').count()).toBe(0)
+
+  // 同じカテゴリを選ぶと前回のカードが返る
+  await page.evaluate(() => showScreen('category'))
+  await page.evaluate(() => selectCategory('reading'))
+  await page.waitForTimeout(2500)
   const second = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
   expect(second).toEqual(first)
-  await page.screenshot({ path: 'tests/screenshots/0729-bingo-resume.png', fullPage: true })
-
-  // 戻るとモード選択に「つづきから」カードが出る
-  await page.evaluate(() => showScreen('mode'))
-  await page.waitForTimeout(300)
-  await expect(page.locator('#resume-card')).toBeVisible()
+  await page.screenshot({ path: 'tests/screenshots/0729-bingo-category-continue.png', fullPage: true })
 
   expect(errors).toEqual([])
 })
@@ -64,10 +56,7 @@ test('bingo: 3×3 で作ったカードは再訪(既定5×5)でも捨てられ�
   const first = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
   expect(first.length).toBe(9)
 
-  // 同じカテゴリを、サイズを触らずに選び直す (state.gridSize は既定の5に戻っている)
-  await page.reload()
-  await page.waitForTimeout(1500)
-  await page.evaluate(() => { localStorage.removeItem(Object.keys(localStorage).find(k => k.endsWith('_resume'))) })
+  // 同じカテゴリを、サイズを触らずに選び直す (リロードで state.gridSize は既定の5に戻っている)
   await page.reload()
   await page.waitForTimeout(2000)
   await page.evaluate(() => showScreen('category'))
@@ -122,7 +111,9 @@ test('status: メモ欄がカードからはみ出さない / 300字まで', asy
 test('diary: 相手の日記にスタンプ導線が出る (押さない)', async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto('/diary.html')
-  await page.waitForTimeout(3000)
+  // init() の profiles + entries + reactions 取得が終わるまで待つ
+  await page.waitForFunction(() => typeof entries !== 'undefined' && entries.length > 0, { timeout: 15000 })
+  await page.waitForTimeout(800)
 
   const hasPartnerEntry = await page.evaluate(() =>
     entries.some(e => e.user_id !== myId))
@@ -162,9 +153,11 @@ test('calendar: 予定の対象者チップが出る / 既存の予定はふた�
   await page.goto('/calendar.html')
   await page.waitForTimeout(3000)
 
-  // 既存の予定は全部 owner_id なし = ふたりの予定
-  const owned = await page.evaluate(() => events.filter(e => e.owner_id).length)
-  expect(owned).toBe(0)
+  // owner_id は「NULL=ふたり」か「実在するプロフィールのid」のどちらかであること
+  // (実データを assert しない: ユーザーが個人の予定を登録していても通る)
+  const bad = await page.evaluate(() =>
+    events.filter(e => e.owner_id && !profById[e.owner_id]).map(e => e.title))
+  expect(bad).toEqual([])
 
   await page.evaluate(() => openModal('2030-01-01'))
   await page.waitForTimeout(400)
