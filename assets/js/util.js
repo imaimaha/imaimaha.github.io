@@ -1,6 +1,34 @@
 // 共通ユーティリティ (全ページで header.js 等と一緒に読み込む)
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
+// このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
+const APP_VERSION = '202607311750'
+
+// ── デプロイ検知して自動リロード ──
+// GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
+// HTML/JS を表示し続ける。HTML と JS の版がずれると機能が無反応になることもある。
+// version.json を no-store で読み、このファイルの APP_VERSION と違えば1回だけリロードする
+// (リロードは HTTP キャッシュを検証し直すので、新しい HTML → 新しい ?v= → 新しい JS になる)
+;(function () {
+  const FLAG = 'app_reloaded_for'
+  async function check() {
+    try {
+      const res = await fetch('/version.json', { cache: 'no-store' })
+      if (!res.ok) return
+      const { version } = await res.json()
+      if (!version || version === APP_VERSION) return
+      if (sessionStorage.getItem(FLAG) === version) return   // 同じ版で繰り返さない
+      sessionStorage.setItem(FLAG, version)
+      console.info(`[update] 新しいバージョン ${version} を検知 (現在 ${APP_VERSION})。再読み込みします`)
+      location.reload()
+    } catch (_) {}
+  }
+  check()
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check()
+  })
+})()
+
 // HTML エスケープ。textContent で済む場所では DOM API を優先すること
 function escHtml(s) {
   return String(s ?? '')
@@ -131,8 +159,10 @@ function buildIcs({ uid, title, date, dateEnd, description, url }) {
 // iOS Safari は text/calendar の URL を開くと「カレンダーに追加」ダイアログを直接出せる
 // (共有シート経由のファイル受け渡しだと "保存 → ファイルアプリでタップ" の2手間になる)
 // バケットは非公開の memories を使い、署名付きURL(1時間)なので予定の内容は外に漏れない
+// targetWindow: タップ直後に window.open('', '_blank') で開いておいた窓を渡す。
+//   await の後に window.open するとユーザー操作の文脈が切れて iOS/Safari にブロックされるため
 // 戻り値: 'opened' | 'failed'
-async function openIcsInCalendar(event) {
+async function openIcsInCalendar(event, targetWindow) {
   try {
     const { data: { session } } = await _sb.auth.getSession()
     if (!session) return 'failed'
@@ -148,9 +178,9 @@ async function openIcsInCalendar(event) {
     const { data, error } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
     if (error || !data?.signedUrl) { console.error('[ics] 署名付きURL失敗:', error?.message); return 'failed' }
 
-    // PWA では新規タブが塞がれることがあるので、その場合は同じタブで開く
-    const w = window.open(data.signedUrl, '_blank')
-    if (!w) location.href = data.signedUrl
+    // 先に開いておいた窓があればそこへ、無ければ同じタブで開く
+    if (targetWindow && !targetWindow.closed) targetWindow.location.href = data.signedUrl
+    else location.href = data.signedUrl
     return 'opened'
   } catch (e) {
     console.error('[ics] カレンダーで開けませんでした:', e)

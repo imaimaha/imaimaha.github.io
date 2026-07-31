@@ -1,22 +1,18 @@
 // Bottom tab nav (auto-injected on every page)
-// 5 tabs: ホーム / ふたり / 遊ぶ / ショップ / もっと
-// 「遊ぶ」→ ゲーム4種のサブシート、「もっと」→ 全機能グリッド
+// 6 tabs: ホーム / ふたり / ビンゴ / カラー / ショップ / もっと
+// ビンゴとカラーハントは独立タブ (2026-08-01〜。以前は「遊ぶ」シート内だった)
+// 「もっと」→ 全機能グリッド
 (function () {
   if (document.getElementById('bottom-nav')) return
 
   const TABS = [
-    { key:'home',  label:'ホーム',   icon:'🌙', href:'/',            match:p => p === '/' || p === '/index.html' },
-    { key:'us',    label:'ふたり',   icon:'💗', href:'/closer.html', match:p => ['/closer.html','/thanks.html','/one_on_one.html','/time_capsule.html','/status.html','/dates.html','/one_song.html','/workout.html','/goals.html','/diary.html'].includes(p) },
-    { key:'play',  label:'遊ぶ',     icon:'🎯', href:'#play',        match:p => ['/bingo.html','/color_hunting.html'].includes(p), sheet:'play' },
+    { key:'home',  label:'ホーム',   icon:'🌙', href:'/',                   match:p => p === '/' || p === '/index.html' },
+    { key:'us',    label:'ふたり',   icon:'💗', href:'/closer.html',        match:p => ['/closer.html','/thanks.html','/one_on_one.html','/time_capsule.html','/status.html','/dates.html','/one_song.html','/workout.html','/goals.html','/diary.html'].includes(p) },
+    { key:'bingo', label:'ビンゴ',   icon:'🎯', href:'/bingo.html',         match:p => p === '/bingo.html' },
+    { key:'color', label:'カラー',   icon:'🎨', href:'/color_hunting.html', match:p => p === '/color_hunting.html' },
     // ガチャはポイントを使う機能なのでショップ側 (2026-08-01〜)
-    { key:'shop',  label:'ショップ', icon:'🛍', href:'/shop.html',   match:p => ['/shop.html','/points.html','/gacha.html'].includes(p) },
-    { key:'more',  label:'もっと',   icon:'☰',  href:'#more',        match:() => false, sheet:'more' },
-  ]
-
-  // 「遊ぶ」はビンゴとカラーハントの2つだけ (クイズはホームのタイル / ガチャはショップ側)
-  const PLAY_LINKS = [
-    { icon:'🎯', label:'お散歩ビンゴ',   href:'/bingo.html',         desc:'今週の25マス' },
-    { icon:'🎨', label:'カラーハント',   href:'/color_hunting.html', desc:'色を写真で集める' },
+    { key:'shop',  label:'ショップ', icon:'🛍', href:'/shop.html',          match:p => ['/shop.html','/points.html','/gacha.html'].includes(p) },
+    { key:'more',  label:'もっと',   icon:'☰',  href:'#more',               match:() => false, sheet:'more' },
   ]
 
   // セクション分けして見やすく
@@ -126,57 +122,6 @@
       #more-sheet .more-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
-    /* Play sheet - richer tiles with descriptions */
-    #play-sheet .play-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    #play-sheet .play-item {
-      display: flex; flex-direction: column;
-      gap: 4px;
-      padding: 18px 16px;
-      background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(150,200,255,0.18);
-      border-radius: 16px;
-      color: #e8f4fd;
-      text-decoration: none;
-      position: relative;
-      overflow: hidden;
-      transition: background 0.18s, transform 0.14s, border-color 0.18s;
-    }
-    #play-sheet .play-item:active { transform: scale(0.96); }
-    #play-sheet .play-item::before {
-      content: '';
-      position: absolute;
-      right: -20px; top: -20px;
-      width: 70px; height: 70px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,215,100,0.35), transparent 70%);
-      filter: blur(18px);
-      opacity: 0.7;
-      pointer-events: none;
-    }
-    #play-sheet .play-item[data-key="bingo"]::before { background: radial-gradient(circle, rgba(100,180,255,0.5), transparent 70%); }
-    #play-sheet .play-item[data-key="color"]::before { background: radial-gradient(circle, rgba(255,150,200,0.5), transparent 70%); }
-    #play-sheet .play-item[data-key="quiz"]::before  { background: radial-gradient(circle, rgba(200,120,255,0.5), transparent 70%); }
-    #play-sheet .play-item[data-key="gacha"]::before { background: radial-gradient(circle, rgba(255,215,100,0.6), transparent 70%); }
-    #play-sheet .play-icon {
-      font-size: 2rem;
-      line-height: 1;
-      filter: drop-shadow(0 0 8px rgba(200,230,255,0.3));
-    }
-    #play-sheet .play-title {
-      font-family: 'Zen Kurenaido', sans-serif;
-      font-size: 1.05rem;
-      color: #f0f6ff;
-      margin-top: 6px;
-    }
-    #play-sheet .play-desc {
-      font-size: 0.75rem;
-      color: #98bedd;
-      margin-top: 2px;
-    }
   `
   document.head.appendChild(style)
 
@@ -219,26 +164,7 @@
   `
   document.body.appendChild(moreSheet)
 
-  // "遊ぶ" sheet
-  const playSheet = document.createElement('div')
-  playSheet.className = 'nav-sheet'
-  playSheet.id = 'play-sheet'
-  const playKeys = ['bingo','color','quiz','gacha']
-  playSheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    <h3>🎯 遊ぶ</h3>
-    <div class="play-grid">
-      ${PLAY_LINKS.map((l, i) => `
-        <a href="${l.href}" class="play-item" data-key="${playKeys[i]}">
-          <span class="play-icon">${l.icon}</span>
-          <span class="play-title">${l.label}</span>
-          <span class="play-desc">${l.desc}</span>
-        </a>`).join('')}
-    </div>
-  `
-  document.body.appendChild(playSheet)
-
-  const sheets = { more: moreSheet, play: playSheet }
+  const sheets = { more: moreSheet }
 
   function openSheet(name, e) {
     if (e) e.preventDefault()
