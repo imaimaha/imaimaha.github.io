@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202607311750'
+const APP_VERSION = '202607312350'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い

@@ -40,6 +40,22 @@
 
 **共通の確認**: 復帰した画面から「戻る」で通常の入口に戻れること / 新規作成（再生成・色を指定）が今まで通りできること。
 
+## 2026-08-01 速度改善: 写真の圧縮・サムネ・URLキャッシュ（push済み / photo_perf 7件green）
+
+体感「写真が重い」の対応。診断と設計は `docs/PLAN_PERFORMANCE.md`（原因: 無圧縮327MB + サムネ無し + 署名URL毎回再発行でキャッシュ無効。サーバー・機能数はシロ）。
+※ コード本体は並行セッションの docs コミット `41bf96a` に巻き込まれて入っている（util.js + 5ページ分）。
+
+- **util.js に写真ヘルパー新設**: `compressImage`(長辺1600/q0.82) / `uploadPhoto`(圧縮+thumbs/生成+cacheControl 1年) / `signedPhotoUrl`(7日期限をlocalStorageキャッシュ `su_<path>`、thumb未生成の旧写真は原寸フォールバック) / `removeStoredPhoto`。**`removePhoto` の名前は color_hunting.html のページ内関数と衝突するので使用禁止**
+- **5ページ改修**: bingo / dates / color_hunting / memories / one_on_one のアップロードを `uploadPhoto` に、表示を `signedPhotoUrl`(一覧は `{thumb:true}`) に置換。`loading="lazy"` 付与
+- **memories.html**: 全件一気読み→50件ページング(もっと見る)。ライトボックスはサムネ即出し→原寸差し替え
+- **テスト**: `tests/photo_perf.spec.js` 7件 green（5ページのJSエラー検知 / 圧縮の実効 / URLキャッシュ・thumbフォールバックの実DB往復。`_rehearsal/` 配下で完結し実データは触らない）
+- **SPEC.md §3 に「写真の取り扱い原則」を追記**（今後は必ずヘルパー経由）
+
+**残タスク**
+- **④バックフィル未実行**: `scripts/recompress_photos.js`（リハーサル済・thumbs有無で再実行安全・実行前に `~/notre_photo_backup_<日付>/` へ退避）。**classifier が node 実行をブロックするためユーザーの `!` コマンド実行待ち**。実行後、合計サイズ 327MB→~35MB を確認すること
+- バックフィル後、実機で カラーハント / デート思い出 / ビンゴ写真 の表示速度を体感確認
+- 署名URLキャッシュは端末ごと(localStorage)。相手の端末で初回だけ再発行が走るのは正常。CDN edge に旧原寸が最長1h残り得るが署名URL経由は DYNAMIC なので実質影響なし
+
 ## 2026-08-01 追記3: フッター6タブ / デプロイ自動リロード / ics無反応の修正
 
 - **フッターを6タブに**: ホーム / ふたり / **ビンゴ** / **カラー** / ショップ / もっと。「遊ぶ」シートは完全撤去（PLAY_LINKS・`#play-sheet` の CSS ごと削除）。6つ入るよう `.bottom-nav a` を `font-size:0.64rem` / `min-width:0` / アイコン 1.3rem に調整。390px 幅で収まることをスクショ確認
