@@ -80,6 +80,22 @@
 - ref: `qivnfiqyjfajlzbdqodd`
 - 秘密情報は `.env` に格納（`.gitignore` 済）。Claude memory / CLAUDE.md / コミットには**絶対に書かない**
 
+### 写真の取り扱い原則（2026-08-01〜 / 経緯は `docs/PLAN_PERFORMANCE.md`）
+
+カメラ原寸 (平均2.5MB) の無圧縮アップロード + 毎回変わる署名URLでキャッシュが効かない構成が
+「重い」の主因だったため、写真は必ず `util.js` のヘルパー経由で扱う:
+
+| 用途 | 使う関数 | 中身 |
+|------|---------|------|
+| アップロード | `uploadPhoto(path, file, {upsert})` | 長辺1600px/JPEG q0.82 に圧縮 + `thumbs/<path>` にサムネ(長辺400px)を同時生成。`cacheControl: 1年` |
+| 表示 | `signedPhotoUrl(path, {thumb})` | 署名URLを**7日期限**で発行し localStorage にキャッシュ (キー `su_<path>`)。URL が変わらないのでブラウザ HTTP キャッシュが効く。`thumb: true` で一覧用サムネ、未生成の旧写真は自動で原寸にフォールバック |
+| 削除 | `removeStoredPhoto(path)` | 本体 + サムネ + URLキャッシュをまとめて削除 |
+
+- **一覧・グリッドはサムネ、タップ（ライトボックス等）で原寸**が原則。`<img>` には `loading="lazy"` を付ける
+- `_sb.storage.from('memories').upload / createSignedUrl` を直接呼ばない（.ics 等の写真以外は除く）
+- 既存写真の一括再圧縮スクリプト: `scripts/recompress_photos.js`（再実行安全・実行前に `~/notre_photo_backup_<日付>/` へ退避）
+- ※ `removePhoto` という関数名は `color_hunting.html` のページ内関数と衝突するため util.js では使わない
+
 ---
 
 ## 4. ページ機能仕様
