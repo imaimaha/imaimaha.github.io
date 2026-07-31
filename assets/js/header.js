@@ -110,16 +110,52 @@
     }
   }
 
+  // ベルのバッジ用「最後にお知らせセンターを開いた時刻」。
+  // 各通知の既読 (notifications_log.read_at) とは別概念:
+  //   ベル   = 前回ベルを開いてから届いた数 → 開いた時点で0になる
+  //   未読   = その通知を実際に開いたか (一覧の青ドット・「すべて既読」で管理)
+  // 保存先は profiles.notifications_seen_at (端末をまたいで一貫)。
+  // profile 行が無いアカウント(テスト用)は localStorage にフォールバック
+  function lsSeenKey(uid) { return `notif_seen_at_${uid}` }
+
+  async function getNotifySeenAt(uid) {
+    try {
+      const { data } = await _sb.from('profiles').select('notifications_seen_at').eq('id', uid).maybeSingle()
+      if (data) return data.notifications_seen_at || null
+    } catch (_) {}
+    try { return localStorage.getItem(lsSeenKey(uid)) || null } catch (_) { return null }
+  }
+
+  // お知らせセンターを開いた時に呼ぶ (notifications.html から使用)
+  async function markNotifySeen() {
+    try {
+      if (typeof _sb === 'undefined') return
+      const { data: { session } } = await _sb.auth.getSession()
+      if (!session) return
+      const nowIso = new Date().toISOString()
+      try { localStorage.setItem(lsSeenKey(session.user.id), nowIso) } catch (_) {}
+      const { error } = await _sb.from('profiles')
+        .update({ notifications_seen_at: nowIso }).eq('id', session.user.id)
+      if (error) console.debug('[header] notify seen 保存できず (localStorageのみ):', error.message)
+      updateNotifyBadge()
+    } catch (e) {
+      console.error('[header] markNotifySeen 失敗:', e)
+    }
+  }
+
   async function updateNotifyBadge() {
     try {
       if (typeof _sb === 'undefined') return
       const { data: { session } } = await _sb.auth.getSession()
       if (!session) return
-      const { count } = await _sb
+      const seenAt = await getNotifySeenAt(session.user.id)
+      let q = _sb
         .from('notifications_log')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', session.user.id)
-        .is('read_at', null)
+      // 一度もベルを開いていない間は従来どおり未読件数を出す (初回に大量の数字が出ないように)
+      q = seenAt ? q.gt('created_at', seenAt) : q.is('read_at', null)
+      const { count } = await q
       const badge = document.getElementById('notify-bell-badge')
       if (!badge) return
       if (count && count > 0) {
@@ -133,6 +169,7 @@
     }
   }
   window.__updateNotifyBadge = updateNotifyBadge
+  window.__markNotifySeen = markNotifySeen
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)

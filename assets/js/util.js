@@ -63,3 +63,31 @@ async function getPointSummary(userId) {
 function jstDateStr(date = new Date()) {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
 }
+
+// ── リンク (デート / やりたいこと / カレンダーの予定に貼る URL) ──
+
+// 入力された URL を保存できる形に整える。スキーム省略時は https:// を補う。
+// http(s) 以外 (javascript: など) は null を返して弾く
+// 戻り値: 正規化した URL / 空・不正なら null
+function safeUrl(raw) {
+  const s = String(raw ?? '').trim()
+  if (!s) return null
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? s : 'https://' + s
+  try {
+    const u = new URL(withScheme)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null
+    return u.href
+  } catch (_) { return null }
+}
+
+// リンクの表示ラベル: ドメインだけの短い見た目 (長い URL でレイアウトが崩れないように)
+function urlLabel(href) {
+  try { return new URL(href).hostname.replace(/^www\./, '') } catch (_) { return String(href ?? '') }
+}
+
+// リンクチップの共通 HTML。href は safeUrl を通した値を渡すこと。
+// カードごとタップできる UI の中でも使えるよう、クリックは伝播させない
+function linkChipHtml(href, label) {
+  if (!href) return ''
+  return `<a class="link-chip" href="${escHtml(href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 ${escHtml(label || urlLabel(href))}</a>`
+}

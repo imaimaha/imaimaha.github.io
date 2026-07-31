@@ -294,6 +294,18 @@ main {
 }
 .bento-wide { grid-column: 1 / -1; }
 
+/* リンクチップ (デート / やりたいこと / 予定に貼った URL。util.js の linkChipHtml が出力) */
+.link-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  max-width: 100%; padding: 5px 11px;
+  border-radius: var(--r-pill);
+  background: rgba(120,180,255,0.14);
+  border: 1px solid rgba(140,190,255,0.4);
+  color: #cfe4ff; font-size: 0.78rem; text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.link-chip:active { transform: scale(0.97); }
+
 .tile {
   position: relative;
   display: flex; flex-direction: column;
