@@ -127,7 +127,38 @@ function buildIcs({ uid, title, date, dateEnd, description, url }) {
   ].filter(Boolean).join('\r\n')
 }
 
-// .ics を端末に渡す。共有シートが使えれば共有、無ければファイル保存にフォールバック
+// .ics を Storage に置いて署名付きURLで直接開く。
+// iOS Safari は text/calendar の URL を開くと「カレンダーに追加」ダイアログを直接出せる
+// (共有シート経由のファイル受け渡しだと "保存 → ファイルアプリでタップ" の2手間になる)
+// バケットは非公開の memories を使い、署名付きURL(1時間)なので予定の内容は外に漏れない
+// 戻り値: 'opened' | 'failed'
+async function openIcsInCalendar(event) {
+  try {
+    const { data: { session } } = await _sb.auth.getSession()
+    if (!session) return 'failed'
+    const ics = buildIcs(event)
+    const safeName = String(event.uid || 'event').replace(/[^\w.-]/g, '_')
+    const path = `ics/${session.user.id}/${safeName}.ics`
+    const blob = new Blob([ics], { type: 'text/calendar' })
+
+    const { error: upErr } = await _sb.storage.from('memories')
+      .upload(path, blob, { contentType: 'text/calendar', upsert: true })
+    if (upErr) { console.error('[ics] アップロード失敗:', upErr.message); return 'failed' }
+
+    const { data, error } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
+    if (error || !data?.signedUrl) { console.error('[ics] 署名付きURL失敗:', error?.message); return 'failed' }
+
+    // PWA では新規タブが塞がれることがあるので、その場合は同じタブで開く
+    const w = window.open(data.signedUrl, '_blank')
+    if (!w) location.href = data.signedUrl
+    return 'opened'
+  } catch (e) {
+    console.error('[ics] カレンダーで開けませんでした:', e)
+    return 'failed'
+  }
+}
+
+// .ics を端末に渡す (フォールバック用)。共有シートが使えれば共有、無ければファイル保存
 // 戻り値: 'shared' | 'downloaded' | 'cancelled' | 'failed'
 async function shareIcs(event) {
   try {

@@ -51,12 +51,33 @@
       border-radius:12px; padding:4px; margin-bottom:20px;
     }
     .tab-btn {
-      flex:1; padding:10px 8px;
+      flex:1; padding:10px 4px;
       background:none; border:none; color:#98bedd;
-      font-size:0.88rem; font-family:inherit;
+      font-size:0.78rem; font-family:inherit; white-space:nowrap;
       border-radius:9px; cursor:pointer; transition:all 0.2s;
     }
     .tab-btn.active { background:rgba(100,160,255,0.25); color:#e8f4fd; font-weight:bold; }
+    /* ガチャ (別ページへのリンクをタブの見た目で置く) */
+    .tab-btn.tab-link {
+      display:flex; align-items:center; justify-content:center;
+      text-decoration:none; color:#ffd97d;
+    }
+    .tab-btn.tab-link:active { background:rgba(255,215,100,0.18); }
+
+    /* リクエストの宛先チップ */
+    .req-target-row { display:flex; gap:8px; margin-bottom:12px; }
+    .req-target {
+      flex:1; padding:9px 6px; border-radius:10px; cursor:pointer;
+      background:rgba(255,255,255,0.06); border:1.5px solid rgba(100,180,255,0.22);
+      color:#98bedd; font-family:inherit; font-size:0.8rem; white-space:nowrap;
+    }
+    .req-target.active { background:rgba(100,160,255,0.24); border-color:rgba(140,200,255,0.6); color:#e8f4fd; font-weight:bold; }
+    .req-badge {
+      display:inline-block; padding:1px 8px; border-radius:999px;
+      font-size:0.72rem; border:1px solid rgba(255,255,255,0.2);
+    }
+    .req-badge.shop  { background:rgba(100,160,255,0.18); color:#cfe4ff; }
+    .req-badge.gacha { background:rgba(255,215,100,0.18); color:#ffe9a8; }
 
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
@@ -232,6 +253,8 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('buy')" id="tab-btn-buy">🛍 買う</button>
       <button class="tab-btn" onclick="switchTab('sell')" id="tab-btn-sell">💼 売る</button>
+      <!-- ガチャは別ページ。タブの見た目で並べて行き来しやすくする -->
+      <a class="tab-btn tab-link" href="/gacha.html">🎰 ガチャ</a>
       <button class="tab-btn" onclick="switchTab('requests')" id="tab-btn-requests">📝 希望</button>
       <button class="tab-btn" onclick="switchTab('purchases')" id="tab-btn-purchases">🎫 券</button>
     </div>
@@ -296,6 +319,12 @@
         <button onclick="toggleRequestForm()" style="background:rgba(100,200,180,0.2);border:1.5px solid rgba(100,220,180,0.5);color:#b0f0d5;padding:8px 16px;border-radius:14px;font-family:inherit;font-size:0.85rem;cursor:pointer;width:100%">➕ リクエストを送る</button>
       </div>
       <div id="request-form" style="display:none;background:rgba(255,255,255,0.05);border:1.5px solid rgba(100,180,255,0.2);border-radius:14px;padding:16px;margin-bottom:16px">
+        <!-- どこへのリクエストか (販売所に並べてほしい / ガチャの景品に入れてほしい) -->
+        <div style="font-size:0.8rem;color:#98bedd;margin-bottom:7px">どこに入れてほしい？</div>
+        <div class="req-target-row" id="req-target-row">
+          <button type="button" class="req-target active" data-target="shop" onclick="setReqTarget('shop')">🛍 販売所に出して</button>
+          <button type="button" class="req-target" data-target="gacha" onclick="setReqTarget('gacha')">🎰 ガチャの景品に</button>
+        </div>
         <input id="req-title" placeholder="何をお願いしたい？ (例: マッサージ券)" maxlength="50"
           style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(100,180,255,0.22);border-radius:10px;color:#e8f4fd;font-size:15px;font-family:inherit;margin-bottom:10px">
         <textarea id="req-desc" placeholder="詳細・メモ（任意）" rows="2" maxlength="200"
@@ -941,6 +970,19 @@
       f.style.display = f.style.display === 'none' ? 'block' : 'none'
     }
 
+    // リクエストの宛先: 'shop' = 販売所に出品してほしい / 'gacha' = ガチャの景品に入れてほしい
+    let reqTarget = 'shop'
+    function setReqTarget(t) {
+      reqTarget = t
+      document.querySelectorAll('#req-target-row .req-target')
+        .forEach(b => b.classList.toggle('active', b.dataset.target === t))
+    }
+    function reqTargetBadge(target) {
+      return target === 'gacha'
+        ? '<span class="req-badge gacha">🎰 ガチャ</span>'
+        : '<span class="req-badge shop">🛍 販売所</span>'
+    }
+
     async function loadRequests() {
       const hasTable = await checkRequestsTable()
       if (!hasTable) {
@@ -965,7 +1007,8 @@
           const card = document.createElement('div')
           card.style.cssText = 'background:rgba(255,255,255,0.06);border:1.5px solid rgba(100,180,255,0.2);border-radius:14px;padding:14px 16px;margin-bottom:10px'
           card.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+              ${reqTargetBadge(r.target)}
               <span style="font-size:1rem;color:#ffd97d;font-weight:bold">${escHtml(r.title)}</span>
               <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
             </div>
@@ -996,7 +1039,8 @@
           const card = document.createElement('div')
           card.style.cssText = 'background:rgba(255,255,255,0.05);border:1.5px solid rgba(100,180,255,0.15);border-radius:14px;padding:14px 16px;margin-bottom:10px'
           card.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+              ${reqTargetBadge(r.target)}
               <span style="font-size:1rem;color:#e8f4fd">${escHtml(r.title)}</span>
               <span style="margin-left:auto;color:#ffd700;font-size:0.9rem">💰 ${r.price}pt</span>
             </div>
@@ -1025,6 +1069,7 @@
       const { error } = await _sb.from('shop_requests').insert({
         requester_id: currentUser.id,
         title, price, description,
+        target: reqTarget,
         status: 'pending'
       })
 
@@ -1032,9 +1077,10 @@
 
       // 相手に通知
       if (partnerId) {
+        const where = reqTarget === 'gacha' ? '🎰 ガチャの景品に' : '🛍 販売所に'
         notify({
           title: '📝 リクエストが届きました',
-          body: `「${title}」(${price}pt)`,
+          body: `${where}「${title}」(${price}pt)`,
           url: '/shop.html',
           kind: 'shop',
           recipient: partnerId,

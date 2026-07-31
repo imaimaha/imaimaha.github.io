@@ -7,16 +7,16 @@
   const TABS = [
     { key:'home',  label:'ホーム',   icon:'🌙', href:'/',            match:p => p === '/' || p === '/index.html' },
     { key:'us',    label:'ふたり',   icon:'💗', href:'/closer.html', match:p => ['/closer.html','/thanks.html','/one_on_one.html','/time_capsule.html','/status.html','/dates.html','/one_song.html','/workout.html','/goals.html','/diary.html'].includes(p) },
-    { key:'play',  label:'遊ぶ',     icon:'🎯', href:'#play',        match:p => ['/quiz.html','/bingo.html','/color_hunting.html','/gacha.html'].includes(p), sheet:'play' },
-    { key:'shop',  label:'ショップ', icon:'🛍', href:'/shop.html',   match:p => ['/shop.html','/points.html'].includes(p) },
+    { key:'play',  label:'遊ぶ',     icon:'🎯', href:'#play',        match:p => ['/bingo.html','/color_hunting.html'].includes(p), sheet:'play' },
+    // ガチャはポイントを使う機能なのでショップ側 (2026-08-01〜)
+    { key:'shop',  label:'ショップ', icon:'🛍', href:'/shop.html',   match:p => ['/shop.html','/points.html','/gacha.html'].includes(p) },
     { key:'more',  label:'もっと',   icon:'☰',  href:'#more',        match:() => false, sheet:'more' },
   ]
 
+  // 「遊ぶ」はビンゴとカラーハントの2つだけ (クイズはホームのタイル / ガチャはショップ側)
   const PLAY_LINKS = [
     { icon:'🎯', label:'お散歩ビンゴ',   href:'/bingo.html',         desc:'今週の25マス' },
     { icon:'🎨', label:'カラーハント',   href:'/color_hunting.html', desc:'色を写真で集める' },
-    { icon:'💬', label:'今日のクイズ',   href:'/quiz.html',          desc:'日替わり質問' },
-    { icon:'🎰', label:'ガチャ',         href:'/gacha.html',         desc:'100pt / 10+1連' },
   ]
 
   // セクション分けして見やすく
@@ -39,9 +39,9 @@
       { icon:'💬', label:'クイズ',          href:'/quiz.html' },
       { icon:'🎯', label:'ビンゴ',          href:'/bingo.html' },
       { icon:'🎨', label:'カラーハント',    href:'/color_hunting.html' },
-      { icon:'🎰', label:'ガチャ',          href:'/gacha.html' },
     ]},
     { title:'ポイント', items:[
+      { icon:'🎰', label:'ガチャ',          href:'/gacha.html' },
       { icon:'🛍', label:'販売所',          href:'/shop.html' },
       { icon:'✨', label:'ポイント履歴',    href:'/points.html' },
       { icon:'⚔️', label:'賭け事',          href:'/bets.html' },
