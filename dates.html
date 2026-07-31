@@ -478,12 +478,14 @@
       const d = new Date(dateStr + 'T00:00:00')
       return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
     }
-    async function signUrl(path) {
+    // util.js の signedPhotoUrl (7日キャッシュ) に委譲。thumb: true で一覧用サムネ
+    async function signUrl(path, opts) {
       if (!path) return ''
-      if (signedCache[path]) return signedCache[path]
-      const { data } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
-      if (data?.signedUrl) signedCache[path] = data.signedUrl
-      return signedCache[path] || ''
+      const key = (opts?.thumb ? 't_' : '') + path
+      if (signedCache[key]) return signedCache[key]
+      const url = await signedPhotoUrl(path, opts)
+      if (url) signedCache[key] = url
+      return signedCache[key] || ''
     }
 
     // ====== 一覧の読み込み ======
@@ -522,7 +524,7 @@
         for (const d of done) {
           const ph = (photosByDate[d.id] || []).slice(0, 4)
           for (let i = 0; i < ph.length; i++) {
-            const url = await signUrl(ph[i].path)
+            const url = await signUrl(ph[i].path, { thumb: true })
             const img = document.querySelector(`#dc-${d.id} .dc-thumbs img[data-i="${i}"]`)
             if (img && url) img.src = url
           }
@@ -561,7 +563,7 @@
       let thumbsHtml = ''
       if (thumbs.length) {
         thumbsHtml = '<div class="dc-thumbs">' + thumbs.map((p, i) =>
-          `<img data-i="${i}" alt="">`).join('') +
+          `<img data-i="${i}" alt="" loading="lazy">`).join('') +
           (photos.length > 4 ? `<div class="more">+${photos.length - 4}</div>` : '') + '</div>'
       }
       let ratingHtml = ''
@@ -755,15 +757,15 @@
         const missionTag = p.mission ? `<div class="pc-mission">📸 ${escHtml(p.mission)}</div>` : ''
         const best = p.is_best ? '<span class="pc-best">⭐</span>' : ''
         return `<div class="photo-cell" data-path="${escAttr(p.path)}" onclick="openLightbox('${p.id}')">
-            <img data-path="${escAttr(p.path)}" alt="">
+            <img data-path="${escAttr(p.path)}" alt="" loading="lazy">
             <span class="pc-who">${who}</span>${best}${missionTag}
           </div>`
       }).join('')
       html += `<div class="add-photo-cell" onclick="pickPhoto(null)"><span class="plus">＋</span>写真を追加</div>`
       grid.innerHTML = html
-      // signed url 後入れ
+      // signed url 後入れ (グリッドはサムネ、タップのライトボックスで原寸)
       for (const p of dPhotos) {
-        const url = await signUrl(p.path)
+        const url = await signUrl(p.path, { thumb: true })
         const img = grid.querySelector(`img[data-path="${cssEsc(p.path)}"]`)
         if (img && url) img.src = url
       }
@@ -781,7 +783,7 @@
       showToast('アップロード中…')
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
       const path = `date_photos/${openDateId}/${myId}/${Date.now()}_${Math.floor(Math.random() * 1e6)}.${ext}`
-      const { error: upErr } = await _sb.storage.from('memories').upload(path, file, { upsert: true })
+      const { error: upErr } = await uploadPhoto(path, file, { upsert: true })
       if (upErr) { showToast('アップロード失敗'); console.error(upErr); return }
       const { data: ins, error } = await _sb.from('date_photos')
         .insert({ date_id: openDateId, user_id: myId, path, mission: pendingMission }).select('*').single()
@@ -832,7 +834,7 @@
     async function deletePhoto(photoId) {
       if (!confirm('この写真を削除する？')) return
       const p = dPhotos.find(x => x.id === photoId)
-      if (p?.path) await _sb.storage.from('memories').remove([p.path])
+      if (p?.path) await removeStoredPhoto(p.path)
       await _sb.from('date_photos').delete().eq('id', photoId)
       closeLightbox()
       showToast('削除しました')

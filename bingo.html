@@ -1251,10 +1251,10 @@
     photoArea.innerHTML = ''
     if (existing?.photo_path) {
       photoArea.innerHTML = '<div class="modal-photo-label">📷 写真</div><div id="modal-photo-loading" style="color:#5a8fb8;font-size:0.8rem;margin-bottom:6px">読み込み中...</div>'
-      _sb.storage.from('memories').createSignedUrl(existing.photo_path, 3600).then(({ data }) => {
-        if (data?.signedUrl) {
+      signedPhotoUrl(existing.photo_path).then(url => {
+        if (url) {
           document.getElementById('modal-photo-loading').outerHTML =
-            `<img src="${data.signedUrl}" class="modal-photo-preview" id="modal-photo-img">`
+            `<img src="${url}" class="modal-photo-preview" id="modal-photo-img" loading="lazy">`
         }
       })
       if (!state.readonly) {
@@ -1316,7 +1316,7 @@
     const btn = photoArea.querySelector('.modal-photo-btn')
     if (btn) { btn.disabled = true; btn.textContent = 'アップロード中...' }
 
-    const { error } = await _sb.storage.from('memories').upload(path, file, { upsert: true })
+    const { error } = await uploadPhoto(path, file, { upsert: true })
     if (error) { showToast('写真のアップロードに失敗しました', true); if (btn) { btn.disabled = false; btn.textContent = '📷 写真を追加' }; return }
 
     // checks に photo_path を保存
@@ -1330,11 +1330,11 @@
     renderGrid()
 
     // プレビュー更新
-    const { data } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
-    if (data?.signedUrl) {
+    const url = await signedPhotoUrl(path)
+    if (url) {
       photoArea.innerHTML =
         `<div class="modal-photo-label">📷 写真</div>
-         <img src="${data.signedUrl}" class="modal-photo-preview">
+         <img src="${url}" class="modal-photo-preview">
          <button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を変更</button>`
     }
     showToast('📷 写真を保存しました')

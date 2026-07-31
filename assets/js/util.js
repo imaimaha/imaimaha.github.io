@@ -222,3 +222,105 @@ function linkChipHtml(href, label) {
   if (!href) return ''
   return `<a class="link-chip" href="${escHtml(href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 ${escHtml(label || urlLabel(href))}</a>`
 }
+
+// ── 写真 (memories バケット) ──
+// カメラ原寸 (平均2.5MB) をそのまま上げ下げしていたのが「重い」の主因だったため、
+// 写真は必ずこのセクションのヘルパー経由で扱う (docs/PLAN_PERFORMANCE.md 参照):
+//   アップロード: uploadPhoto()  … 長辺1600pxに圧縮 + thumbs/ にサムネも同時アップ
+//   表示:        signedPhotoUrl() … 署名URLを7日期限で localStorage にキャッシュ
+//                (URL が変わらなければブラウザの HTTP キャッシュが効いて再DLゼロになる)
+
+// 画像ファイルを長辺 maxEdge px の JPEG に圧縮する。失敗時・縮小の意味がない時は元ファイルを返す
+async function compressImage(file, maxEdge = 1600, quality = 0.82) {
+  try {
+    if (!file || !/^image\//.test(file.type)) return file
+    let src, w, h
+    try {
+      // EXIF の回転を反映してデコード (iPhone 縦写真対策)
+      src = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      w = src.width; h = src.height
+    } catch (_) {
+      // createImageBitmap 非対応/失敗時は <img> でデコード
+      src = await new Promise((res, rej) => {
+        const img = new Image()
+        img.onload = () => res(img)
+        img.onerror = rej
+        img.src = URL.createObjectURL(file)
+      })
+      w = src.naturalWidth; h = src.naturalHeight
+    }
+    const scale = Math.min(1, maxEdge / Math.max(w, h))
+    const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = cw; canvas.height = ch
+    canvas.getContext('2d').drawImage(src, 0, 0, cw, ch)
+    if (src.close) src.close()
+    else if (src.src) URL.revokeObjectURL(src.src)
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality))
+    if (!blob) return file
+    if (scale === 1 && blob.size >= file.size) return file   // 元から小さい画像はそのまま
+    const name = String(file.name || 'photo').replace(/\.[^.]*$/, '') + '.jpg'
+    return new File([blob], name, { type: 'image/jpeg' })
+  } catch (e) {
+    console.warn('[photo] 圧縮に失敗したので元ファイルのまま上げます:', e)
+    return file
+  }
+}
+
+// 署名URLの localStorage キャッシュを消す (削除・上書きアップロード時に呼ぶ)
+function clearPhotoUrlCache(path) {
+  try {
+    localStorage.removeItem(`su_${path}`)
+    localStorage.removeItem(`su_thumbs/${path}`)
+  } catch (_) {}
+}
+
+// 写真アップロードの共通経路: 本体(圧縮済み) + thumbs/<path> (一覧用サムネ) を上げる
+// 戻り値は storage.upload と同じ { error } 形 (呼び出し側の変更を最小にするため)
+// サムネは best-effort — 失敗しても本体が上がっていれば成功扱い (表示側が原寸にフォールバックする)
+async function uploadPhoto(path, file, { upsert = false } = {}) {
+  const main = await compressImage(file)
+  const opts = { upsert, cacheControl: '31536000', contentType: main.type || 'image/jpeg' }
+  const { error } = await _sb.storage.from('memories').upload(path, main, opts)
+  if (error) return { error }
+  clearPhotoUrlCache(path)   // 同じ path への上書きで古い署名URLを掴まないように
+  try {
+    const thumb = await compressImage(main, 400, 0.75)
+    await _sb.storage.from('memories').upload(`thumbs/${path}`, thumb, { ...opts, upsert: true, contentType: 'image/jpeg' })
+  } catch (e) { console.warn('[photo] サムネ生成失敗 (本体は成功):', e) }
+  return { error: null }
+}
+
+// 写真の署名URL。7日期限で発行して localStorage に貯め、期限内は同じ URL を返す
+// (createSignedUrl はトークンが毎回変わる = ブラウザキャッシュが毎回外れるため)
+// thumb: true なら thumbs/ のサムネ URL。サムネが無い旧写真は自動で原寸にフォールバック
+// 戻り値: URL 文字列 / 失敗時 null
+const PHOTO_URL_TTL = 604800   // 7日
+async function signedPhotoUrl(path, { thumb = false } = {}) {
+  if (!path) return null
+  const target = thumb ? `thumbs/${path}` : path
+  const key = `su_${target}`
+  try {
+    const c = JSON.parse(localStorage.getItem(key) || 'null')
+    if (c && c.exp - 3600 > Date.now() / 1000) return c.url   // 残り1時間を切ったら発行し直す
+  } catch (_) {}
+  const { data, error } = await _sb.storage.from('memories').createSignedUrl(target, PHOTO_URL_TTL)
+  if (error || !data?.signedUrl) {
+    if (thumb) return signedPhotoUrl(path)   // サムネ未生成 (旧写真) → 原寸で
+    console.error('[photo] 署名URL失敗:', path, error?.message)
+    return null
+  }
+  try {
+    localStorage.setItem(key, JSON.stringify({ url: data.signedUrl, exp: Math.floor(Date.now() / 1000) + PHOTO_URL_TTL }))
+  } catch (_) {}
+  return data.signedUrl
+}
+
+// 写真の削除 (本体 + サムネ + URLキャッシュ)。戻り値: { error }
+// ※ removePhoto という名前はページ内関数と衝突するため使わない (color_hunting.html)
+async function removeStoredPhoto(path) {
+  const { error } = await _sb.storage.from('memories').remove([path])
+  await _sb.storage.from('memories').remove([`thumbs/${path}`]).catch(() => {})
+  clearPhotoUrlCache(path)
+  return { error }
+}
