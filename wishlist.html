@@ -424,6 +424,7 @@
     <h3>💫 追加する</h3>
     <div class="cat-pills" id="add-cat-pills"></div>
     <input type="text" id="add-input" class="sheet-input" placeholder="やりたいこと..." maxlength="120">
+    <input type="url" id="add-url" class="sheet-input" placeholder="リンク（任意）お店・商品ページのURL" maxlength="600" inputmode="url">
     <div class="sheet-actions">
       <button class="btn-secondary" onclick="closeAllSheets()">キャンセル</button>
       <button class="btn-primary" onclick="submitAdd()">＋ 追加</button>
@@ -435,6 +436,7 @@
     <div class="sheet-handle"></div>
     <h3>✏️ 編集</h3>
     <input type="text" id="edit-input" class="sheet-input" maxlength="120">
+    <input type="url" id="edit-url" class="sheet-input" placeholder="リンク（任意）" maxlength="600" inputmode="url">
     <div class="sheet-actions">
       <button class="btn-secondary" onclick="closeAllSheets()">キャンセル</button>
       <button class="btn-primary" onclick="submitEdit()">💾 保存</button>
@@ -578,6 +580,7 @@
       it.innerHTML = `
         <button class="check" data-action="toggle" aria-label="チェック"></button>
         <span class="title" data-action="edit">${escHtml(w.title)}</span>
+        ${w.url ? linkChipHtml(w.url) : ''}
         <button class="icon-btn" data-action="edit" aria-label="編集">✏️</button>
         <button class="icon-btn del" data-action="delete" aria-label="削除">🗑</button>
       `
@@ -616,6 +619,7 @@
       if (prefillCategory) addCategory = prefillCategory
       renderAddPills()
       document.getElementById('add-input').value = ''
+      document.getElementById('add-url').value = ''
       openSheet('add-sheet')
       setTimeout(() => document.getElementById('add-input').focus(), 260)
     }
@@ -636,8 +640,11 @@
       const input = document.getElementById('add-input')
       const title = input.value.trim()
       if (!title) { showToast('内容を入力してください'); return }
+      const urlRaw = document.getElementById('add-url').value.trim()
+      const url = safeUrl(urlRaw)
+      if (urlRaw && !url) { showToast('リンクのURLを確認してください'); return }
       const { data, error } = await _sb.from('wishes').insert({
-        title, category: addCategory, done: false
+        title, category: addCategory, done: false, url
       }).select().single()
       if (error) { showToast('追加失敗'); return }
       allWishes.push(data)
@@ -655,8 +662,9 @@
 
     // -------- Edit --------
     function openEditSheet(w) {
-      editTarget = { id: w.id, currentTitle: w.title }
+      editTarget = { id: w.id, currentTitle: w.title, currentUrl: w.url || '' }
       document.getElementById('edit-input').value = w.title
+      document.getElementById('edit-url').value = w.url || ''
       openSheet('edit-sheet')
       setTimeout(() => document.getElementById('edit-input').focus(), 260)
     }
@@ -665,11 +673,14 @@
       if (!editTarget) return
       const newTitle = document.getElementById('edit-input').value.trim()
       if (!newTitle) { showToast('内容を入力してください'); return }
-      if (newTitle === editTarget.currentTitle) { closeAllSheets(); return }
-      const { error } = await _sb.from('wishes').update({ title: newTitle }).eq('id', editTarget.id)
+      const urlRaw = document.getElementById('edit-url').value.trim()
+      const newUrl = safeUrl(urlRaw)
+      if (urlRaw && !newUrl) { showToast('リンクのURLを確認してください'); return }
+      if (newTitle === editTarget.currentTitle && (newUrl || '') === editTarget.currentUrl) { closeAllSheets(); return }
+      const { error } = await _sb.from('wishes').update({ title: newTitle, url: newUrl }).eq('id', editTarget.id)
       if (error) { showToast('編集失敗'); return }
       const w = allWishes.find(x => x.id === editTarget.id)
-      if (w) w.title = newTitle
+      if (w) { w.title = newTitle; w.url = newUrl }
       editTarget = null
       closeAllSheets()
       render()

@@ -300,6 +300,7 @@
         <div class="genre-row" id="genre-row"></div>
       </div>
       <div class="field"><label>どこで（任意）</label><input type="text" id="f-place" maxlength="60" placeholder="例: しながわ水族館"></div>
+      <div class="field"><label>リンク（任意）</label><input type="url" id="f-url" maxlength="600" inputmode="url" placeholder="お店・映画・イベントのURL"></div>
       <div class="field"><label>メモ（任意）</label><textarea id="f-memo" maxlength="300" placeholder="集合時間・持ち物・やりたいこと など"></textarea></div>
       <div id="mission-note" class="field" style="font-size:0.78rem;color:#cf9fe0;line-height:1.6;">📸 フォトミッションが3つ届くよ。ジャンルを選ぶと「そのジャンル+季節+定番」のお題に！</div>
       <div class="modal-actions">
@@ -644,6 +645,7 @@
             ${d.place ? `<span>📍 ${escHtml(d.place)}</span>` : ''}
             ${d.genre && MISSION_GENRES[d.genre] ? `<span class="genre-badge">${MISSION_GENRES[d.genre].emoji} ${MISSION_GENRES[d.genre].label}</span>` : ''}
           </div>
+          ${d.url ? `<div style="margin-top:8px">${linkChipHtml(d.url)}</div>` : ''}
           ${d.memo ? `<div class="detail-memo">📝 ${escHtml(d.memo)}</div>` : ''}
           ${statusBtn}
         </div>
@@ -923,6 +925,7 @@
 
     // ====== 作成 / 編集 / 状態変更 ======
     let selGenre = null   // 選択中ジャンル key (null = 指定なし)
+    let fromEventId = null   // カレンダーの予定から取り込んだ場合の元 events.id
     function renderGenreRow() {
       const row = document.getElementById('genre-row')
       let html = `<span class="genre-chip ${selGenre === null ? 'sel' : ''}" onclick="setGenre(null)">✨ おまかせ</span>`
@@ -936,6 +939,7 @@
     function openCreate() {
       editingId = null
       selGenre = null
+      fromEventId = null   // カレンダーの予定からの取り込み元 (startFromEvent で設定)
       document.getElementById('modal-title').textContent = 'デートを計画する'
       document.getElementById('modal-ok').textContent = '計画する'
       document.getElementById('mission-note').style.display = 'block'
@@ -943,6 +947,7 @@
       document.getElementById('f-title').value = ''
       document.getElementById('f-date').value = jstDateStr()
       document.getElementById('f-place').value = ''
+      document.getElementById('f-url').value = ''
       document.getElementById('f-memo').value = ''
       renderGenreRow()
       document.getElementById('modal-back').classList.add('open')
@@ -959,6 +964,7 @@
       document.getElementById('f-title').value = d.title
       document.getElementById('f-date').value = d.date_str
       document.getElementById('f-place').value = d.place || ''
+      document.getElementById('f-url').value = d.url || ''
       document.getElementById('f-memo').value = d.memo || ''
       document.getElementById('modal-back').classList.add('open')
     }
@@ -969,22 +975,25 @@
       const date_str = document.getElementById('f-date').value
       const place = document.getElementById('f-place').value.trim() || null
       const memo = document.getElementById('f-memo').value.trim() || null
+      const urlRaw = document.getElementById('f-url').value.trim()
+      const url = safeUrl(urlRaw)
       if (!title) { showToast('タイトルを入れてね'); return }
       if (!date_str) { showToast('日付を選んでね'); return }
+      if (urlRaw && !url) { showToast('リンクのURLを確認してね'); return }
       const okBtn = document.getElementById('modal-ok'); okBtn.disabled = true
 
       if (editingId) {
-        const { error } = await _sb.from('dates').update({ title, date_str, place, memo }).eq('id', editingId)
+        const { error } = await _sb.from('dates').update({ title, date_str, place, memo, url }).eq('id', editingId)
         okBtn.disabled = false
         if (error) { showToast('保存失敗'); console.error(error); return }
         closeModal()
         showToast('保存したよ')
-        if (openDateId === editingId) { const d = dates.find(x => x.id === editingId); Object.assign(d, { title, date_str, place, memo }); await openDetail(editingId) }
+        if (openDateId === editingId) { const d = dates.find(x => x.id === editingId); Object.assign(d, { title, date_str, place, memo, url }); await openDetail(editingId) }
         else loadDates()
       } else {
         const missions = pickMissions(selGenre, date_str)
         const { data: ins, error } = await _sb.from('dates')
-          .insert({ title, date_str, place, memo, status: 'planned', missions, genre: selGenre, created_by: myId }).select('*').single()
+          .insert({ title, date_str, place, memo, url, status: 'planned', missions, genre: selGenre, created_by: myId, from_event_id: fromEventId }).select('*').single()
         okBtn.disabled = false
         if (error) { showToast('作成失敗'); console.error(error); return }
         await addPoints(myId, 2, 'date_create')
@@ -1052,7 +1061,31 @@
       await loadDates()
       const params = new URLSearchParams(location.search)
       const openId = params.get('date')
-      if (openId && dates.find(d => d.id === openId)) openDetail(openId)
+      if (openId && dates.find(d => d.id === openId)) { openDetail(openId); return }
+      // カレンダーの予定からエクスポート (?from_event=<id>)
+      const fromEvent = params.get('from_event')
+      if (fromEvent) await startFromEvent(fromEvent)
+    }
+
+    // カレンダーの予定を元に計画モーダルを開く。
+    // ミッションは通常の作成フローで生成されるので、ジャンルもここで選べる
+    async function startFromEvent(eventId) {
+      try {
+        const { data: ev, error } = await _sb.from('events').select('*').eq('id', eventId).maybeSingle()
+        if (error || !ev) { showToast('元の予定が見つかりませんでした'); return }
+        const dup = dates.find(d => String(d.from_event_id) === String(ev.id))
+        if (dup) { showToast('この予定はもうデートになってるよ'); openDetail(dup.id); return }
+        openCreate()
+        fromEventId = ev.id
+        document.getElementById('f-title').value = ev.title || ''
+        document.getElementById('f-date').value = ev.date || jstDateStr()
+        document.getElementById('f-url').value = ev.url || ''
+        document.getElementById('f-memo').value = ev.memo || ''
+        showToast('📅 予定から取り込んだよ')
+      } catch (e) {
+        console.error('[dates] startFromEvent 失敗:', e)
+        showToast('取り込みに失敗しました')
+      }
     }
     init()
   </script>

@@ -275,6 +275,10 @@
 
       allNotis = data ?? []
       render()
+
+      // お知らせセンターを開いた = ベルのバッジはここで0にする
+      // (各通知の既読/未読は別管理。一覧の青ドットはタップするか「すべて既読」まで残る)
+      window.__markNotifySeen?.()
     }
 
     function render() {
