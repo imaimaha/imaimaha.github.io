@@ -267,6 +267,22 @@
     .edit-event-btn:hover { color: #8ee6b0; }
     .event-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 
+    /* 予定の書き出し導線 (iPhoneのカレンダー / デート) */
+    .event-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    #modal-export-row { margin: 2px 0 16px; }
+    .ev-chip {
+      padding: 6px 11px; border-radius: 999px; cursor: pointer;
+      background: rgba(140,240,180,0.12);
+      border: 1px solid rgba(140,240,180,0.38);
+      color: #d6ffe4; font-family: inherit; font-size: 0.74rem; white-space: nowrap;
+    }
+    .ev-chip:active { transform: scale(0.96); }
+    .ev-chip.export-date-btn {
+      background: rgba(255,140,190,0.14);
+      border-color: rgba(255,150,190,0.42);
+      color: #ffd6e6;
+    }
+
     .empty { text-align: center; color: #7aadcc; padding: 32px 0; }
 
     /* モーダル */
@@ -455,6 +471,11 @@
       <input type="url" id="ev-url" placeholder="お店・イベントページのURL" maxlength="600" inputmode="url">
       <label>メモ（任意）</label>
       <textarea id="ev-memo" placeholder="集合場所・時間など"></textarea>
+      <!-- 書き出し導線は編集時のみ (追加前の予定は書き出せない・一覧に置くと誤タップするため) -->
+      <div class="event-chips" id="modal-export-row" style="display:none">
+        <button type="button" class="ev-chip export-ics-btn" onclick="exportToDeviceCalendar(editingId)">📤 iPhoneのカレンダーに追加</button>
+        <button type="button" class="ev-chip export-date-btn" onclick="exportToDate(editingId)">💕 デートにする</button>
+      </div>
       <div class="modal-btns">
         <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
         <button class="btn-save" id="ev-save-btn" onclick="saveEvent()">追加</button>
@@ -636,8 +657,6 @@
             ${ev.url ? `<div style="margin-top:5px">${linkChipHtml(ev.url)}</div>` : ''}
           </div>
           ${ev.id ? `<div class="event-actions">
-            <button class="export-ics-btn" data-ics-id="${ev.id}" aria-label="iPhoneのカレンダーに追加" title="iPhoneのカレンダーに追加">📤</button>
-            <button class="export-date-btn" data-export-id="${ev.id}" aria-label="デートにする" title="デートにする">💕</button>
             <button class="edit-event-btn" data-edit-id="${ev.id}" aria-label="編集">✎</button>
             <button class="delete-event-btn" data-id="${ev.id}" aria-label="削除">✕</button>
           </div>` : ''}
@@ -647,12 +666,6 @@
     }
 
     document.getElementById('event-list').addEventListener('click', async e => {
-      const icsBtn = e.target.closest('.export-ics-btn')
-      if (icsBtn) { exportToDeviceCalendar(icsBtn.dataset.icsId); return }
-
-      const expBtn = e.target.closest('.export-date-btn')
-      if (expBtn) { exportToDate(expBtn.dataset.exportId); return }
-
       const editBtn = e.target.closest('.edit-event-btn')
       if (editBtn) { openEditModal(editBtn.dataset.editId); return }
 
@@ -666,73 +679,20 @@
       await _sb.from('events').delete().eq('id', id)
     })
 
-    // ── 端末のカレンダー (iPhone のカレンダー等) へ書き出し ──
-    // .ics (iCalendar) を作って共有シート or ダウンロードで渡す。
-    // iOS は共有シートから「カレンダー」に追加できる。非対応環境はファイル保存にフォールバック
-    function icsEscape(s) {
-      return String(s ?? '')
-        .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,')
-        .replace(/\r?\n/g, '\\n')
-    }
-    function icsDate(dateStr, addDays = 0) {
-      const d = new Date(dateStr + 'T00:00:00')
-      d.setDate(d.getDate() + addDays)
-      return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
-    }
-    function buildIcs(ev) {
-      // 時刻を持たない予定なので終日イベント。DTEND は「翌日」を指定する (iCalendar の仕様)
-      const start = icsDate(ev.date)
-      const end = icsDate(ev.date_end && ev.date_end !== ev.date ? ev.date_end : ev.date, 1)
-      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-      const whose = ev.owner_id ? `${profById[ev.owner_id]?.name || ''}の予定` : 'ふたりの予定'
-      const desc = [ev.memo || '', ev.url || '', `（Notre Endroit / ${whose}）`].filter(Boolean).join('\n')
-      return [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Notre Endroit//Calendar//JA',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-        'BEGIN:VEVENT',
-        `UID:notre-event-${ev.id}@imaimaha.github.io`,
-        `DTSTAMP:${stamp}`,
-        `DTSTART;VALUE=DATE:${start}`,
-        `DTEND;VALUE=DATE:${end}`,
-        `SUMMARY:${icsEscape(ev.title)}`,
-        `DESCRIPTION:${icsEscape(desc)}`,
-        ev.url ? `URL:${icsEscape(ev.url)}` : '',
-        'END:VEVENT',
-        'END:VCALENDAR',
-      ].filter(Boolean).join('\r\n')
-    }
-
+    // 端末のカレンダー (iPhone のカレンダー等) へ書き出し。生成処理は util.js の shareIcs
     async function exportToDeviceCalendar(id) {
       const ev = events.find(e => String(e.id) === String(id))
       if (!ev) return
-      try {
-        const ics = buildIcs(ev)
-        const fileName = `${(ev.title || 'event').replace(/[\\/:*?"<>|]/g, '_')}.ics`
-        const file = new File([ics], fileName, { type: 'text/calendar' })
-
-        // iOS: 共有シート → 「カレンダー」で追加できる
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: ev.title })
-          return
-        }
-        // フォールバック: ファイルとして保存 (保存後にタップするとカレンダーに追加できる)
-        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = fileName
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        setTimeout(() => URL.revokeObjectURL(url), 4000)
-      } catch (e) {
-        if (e && e.name === 'AbortError') return   // 共有シートを閉じただけ
-        console.error('[calendar] ics export 失敗:', e)
-        alert('カレンダーへの書き出しに失敗しました')
-      }
+      const whose = ev.owner_id ? `${profById[ev.owner_id]?.name || ''}の予定` : 'ふたりの予定'
+      const result = await shareIcs({
+        uid: `notre-event-${ev.id}`,
+        title: ev.title,
+        date: ev.date,
+        dateEnd: ev.date_end,
+        description: [ev.memo || '', ev.url || '', `（Notre Endroit / ${whose}）`].filter(Boolean).join('\n'),
+        url: ev.url,
+      })
+      if (result === 'failed') alert('カレンダーへの書き出しに失敗しました')
     }
 
     // 予定 → デートへエクスポート。
@@ -776,6 +736,7 @@
       document.getElementById('ev-memo').value = ''
       selOwner = null   // 既定は「ふたりの予定」
       renderOwnerChips()
+      document.getElementById('modal-export-row').style.display = 'none'
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
@@ -793,6 +754,7 @@
       document.getElementById('ev-memo').value = ev.memo || ''
       selOwner = ev.owner_id || null
       renderOwnerChips()
+      document.getElementById('modal-export-row').style.display = 'flex'
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
