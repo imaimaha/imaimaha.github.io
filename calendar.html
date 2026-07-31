@@ -679,19 +679,23 @@
       await _sb.from('events').delete().eq('id', id)
     })
 
-    // 端末のカレンダー (iPhone のカレンダー等) へ書き出し。生成処理は util.js の shareIcs
+    // 端末のカレンダー (iPhone のカレンダー等) へ書き出し。
+    // まず Storage の署名付きURL で .ics を直接開く (Safari が「カレンダーに追加」を出す)。
+    // 失敗した時だけ共有シート/ダウンロードにフォールバック
     async function exportToDeviceCalendar(id) {
       const ev = events.find(e => String(e.id) === String(id))
       if (!ev) return
       const whose = ev.owner_id ? `${profById[ev.owner_id]?.name || ''}の予定` : 'ふたりの予定'
-      const result = await shareIcs({
+      const payload = {
         uid: `notre-event-${ev.id}`,
         title: ev.title,
         date: ev.date,
         dateEnd: ev.date_end,
         description: [ev.memo || '', ev.url || '', `（Notre Endroit / ${whose}）`].filter(Boolean).join('\n'),
         url: ev.url,
-      })
+      }
+      if (await openIcsInCalendar(payload) === 'opened') return
+      const result = await shareIcs(payload)
       if (result === 'failed') alert('カレンダーへの書き出しに失敗しました')
     }
 
