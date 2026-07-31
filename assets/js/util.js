@@ -85,6 +85,76 @@ function urlLabel(href) {
   try { return new URL(href).hostname.replace(/^www\./, '') } catch (_) { return String(href ?? '') }
 }
 
+// ── 端末のカレンダー (iPhone のカレンダー等) への書き出し ──
+// .ics (iCalendar) を作り、共有シート or ダウンロードで端末に渡す。
+// iOS は共有シートから「カレンダー」を選ぶと追加できる
+
+function icsEscape(s) {
+  return String(s ?? '')
+    .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n')
+}
+
+// YYYY-MM-DD → YYYYMMDD (addDays 日ずらせる)
+function icsDate(dateStr, addDays = 0) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + addDays)
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+}
+
+// 終日イベントの .ics を組み立てる (このアプリの予定・デートは時刻を持たないため)
+// { uid, title, date, dateEnd, description, url }
+function buildIcs({ uid, title, date, dateEnd, description, url }) {
+  const start = icsDate(date)
+  const end = icsDate(dateEnd && dateEnd !== date ? dateEnd : date, 1)   // DTEND は翌日 (iCalendar 仕様)
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Notre Endroit//Calendar//JA',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${icsEscape(uid)}@imaimaha.github.io`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${start}`,
+    `DTEND;VALUE=DATE:${end}`,
+    `SUMMARY:${icsEscape(title)}`,
+    `DESCRIPTION:${icsEscape(description || '')}`,
+    url ? `URL:${icsEscape(url)}` : '',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n')
+}
+
+// .ics を端末に渡す。共有シートが使えれば共有、無ければファイル保存にフォールバック
+// 戻り値: 'shared' | 'downloaded' | 'cancelled' | 'failed'
+async function shareIcs(event) {
+  try {
+    const ics = buildIcs(event)
+    const fileName = `${String(event.title || 'event').replace(/[\\/:*?"<>|]/g, '_')}.ics`
+    const file = new File([ics], fileName, { type: 'text/calendar' })
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: event.title })
+      return 'shared'
+    }
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+    const href = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = href
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(href), 4000)
+    return 'downloaded'
+  } catch (e) {
+    if (e && e.name === 'AbortError') return 'cancelled'   // 共有シートを閉じただけ
+    console.error('[ics] 書き出し失敗:', e)
+    return 'failed'
+  }
+}
+
 // リンクチップの共通 HTML。href は safeUrl を通した値を渡すこと。
 // カードごとタップできる UI の中でも使えるよう、クリックは伝播させない
 function linkChipHtml(href, label) {
