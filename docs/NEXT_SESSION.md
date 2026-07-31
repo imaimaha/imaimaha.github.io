@@ -1,5 +1,52 @@
 # 次回セッション用: TODO と背景
 
+## 🔜 次にやる2件（2026-08-01 ユーザーからの持ち越し。作業中のためメモのみ）
+
+### A. カレンダーの「📤 iPhoneのカレンダーに追加」が about:blank になる（バグ）
+
+**症状**: 予定の編集モーダル → 📤 を押すと、開いた先が `about:blank` のまま止まる（`0aef751` 適用後）。
+
+**現在の実装** (`util.js: openIcsInCalendar` + `calendar.html: exportToDeviceCalendar`)
+タップ直後に `window.open('', '_blank')` で空の窓を開く → `.ics` を `memories` バケットの `ics/<uid>/` に upsert → 署名付きURL(1h)を取得 → `w.location.href = signedUrl`。
+
+**疑わしい原因（上から順に確認する）**
+1. **署名付きURLの Content-Type**。Supabase Storage が `text/calendar` ではなく `application/octet-stream` を返していると、iOS は「カレンダーに追加」を出さない。
+   確認: service_role で署名付きURLを作って `curl -sI` → `content-type` を見る。違えば upload 時の `contentType` 指定が効いていないので、`fileOptions` を見直すか Edge Function で配信する
+2. **iOS の popup 制限**。standalone PWA では `about:blank` の子窓に対する後からの `location.href` 代入が無視されることがある（今回の症状と一致）
+3. アップロード or 署名付きURL取得が失敗して `'failed'` を返し、窓を閉じ損ねている（この場合コンソールに `[ics] ...` のエラーが出る。実機で Safari の Web Inspector を繋いで確認）
+
+**推す直し方（案3: 事前生成 + 素のリンク）**
+- **編集モーダルを開いた時点で**バックグラウンドで .ics を作って署名付きURLまで取得しておく
+- ボタンを `<a href="<signedUrl>" target="_blank" rel="noopener">📤 iPhoneのカレンダーに追加</a>` に差し替える（**タップ時に非同期処理をしない** = iOS から見て普通のリンクタップになる）
+- URL 取得前にタップされた場合に備えて、取得できるまでは disabled + 「準備中…」表示
+- それでも駄目なら: 同じタブで `location.href = signedUrl`（PWA から Safari に出るが確実）→ さらに駄目なら共有シート方式に戻す
+- 副作用の掃除: `ics/<uid>/` に .ics が溜まり続ける。実害は小さいが、古いものを消すなら Edge Function か手動で
+
+### B. ビンゴ / カラーハントをフッターから開いたら「前回の続き」の画面にしたい
+
+**要望**: 6タブのフッターから 🎯ビンゴ / 🎨カラー を開いた時、**初期表示をいきなり前回のカードにする**。
+**「つづきから」ボタンのような UI は不要**（2026-07-30 に一度入れて撤去済み。同じ物を復活させないこと）。変えるのは初期表示だけ。
+
+**ビンゴ (`bingo.html`)**
+- 撤去した復帰ロジックの考え方は再利用できる（git log `0f226f1` に削除差分あり）が、**UI は足さない**
+- 実装案: `init()` の最後で「最後に触ったカード」を DB から1件引いて、あれば `openGridScreen` まで進める。
+  `bingo_sessions` を `user_id` で `updated_at DESC` 1件取得 → mode/label/size から `state.card` を組んで開くだけ（`loadModeCard` は既に updated_at 順なのでロジックを流用できる）
+- 週間カードは週が変わっていたら対象外。戻るボタンでモード選択に戻れることは維持
+- 注意: 履歴から開いた readonly カードを「最後に触った」と誤認しないこと（readonly では保存しない）
+
+**カラーハント (`color_hunting.html`)**
+- 単発モードは既に localStorage の active hunt を持っている（SPEC 4.7）。これを起動時に復元して、あれば最初からそのハントを開く
+- 週テーマのハントが進行中ならそちらを開く、という優先順位も検討（実装前に軽く整理する）
+
+**共通の確認**: 復帰した画面から「戻る」で通常の入口に戻れること / 新規作成（再生成・色を指定）が今まで通りできること。
+
+## 2026-08-01 追記3: フッター6タブ / デプロイ自動リロード / ics無反応の修正
+
+- **フッターを6タブに**: ホーム / ふたり / **ビンゴ** / **カラー** / ショップ / もっと。「遊ぶ」シートは完全撤去（PLAY_LINKS・`#play-sheet` の CSS ごと削除）。6つ入るよう `.bottom-nav a` を `font-size:0.64rem` / `min-width:0` / アイコン 1.3rem に調整。390px 幅で収まることをスクショ確認
+- **キャッシュ対策 (重要)**: `version.json` + `util.js` の `APP_VERSION` を比較して、新しいデプロイを検知したらセッション内で1回だけ自動リロード（起動時 + visibilitychange）。全 HTML の `assets/**` 参照に `?v=<version>` を付与。**更新は `bash scripts/bump_version.sh` を push 前に実行するだけ**（SPEC §9.2 に明記）
+  - 背景: GitHub Pages の `max-age=600` で古い表示が残るというユーザー体感の問題に加え、**新しい HTML × 古い util.js の組み合わせで機能が無反応になる**事故が実際に起きた
+- **iPhoneカレンダー書き出しの無反応**: `await` 後の `window.open` が iOS にブロックされていたため、タップ直後に窓を開いてから `location.href` を差し替える方式に変更。`openIcsInCalendar` 未定義（古いJS）でも共有シート方式に落ちるよう関数存在チェックを追加。→ **その後 about:blank になる別症状が報告されたので上の「🔜 A」を参照**
+
 ## 2026-08-01 追記2: 筋トレstep3の動画化 / ナビ再編 / ショップにガチャ / リクエストの宛先
 
 - **筋トレ STEP3 は全部「動画を一緒にやる」お題に**（ユーザー方針）。18ジャンル×2種類の時間で36日分（きんに君/ヨガ/ダンス/ピラティス/シャドーボクシング/HIIT/K-POP/ストレッチ/バレエ/ラジオ体操/ズンバ/フラダンス/太極拳/下半身/二の腕/腹筋/寝る前/朝ヨガ）。全て `fixed:true`。step2 が動画の日は別ジャンルになるよう配置。**プール冒頭にルールとして明記**

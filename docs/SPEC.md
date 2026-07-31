@@ -687,6 +687,11 @@ GRANT USAGE, SELECT ON SEQUENCE <table>_id_seq TO authenticated;
 
 ### 9.2 デプロイ
 
+- **push の前に必ず `bash scripts/bump_version.sh` を実行する**（2026-08-01〜）
+  - GitHub Pages は `Cache-Control: max-age=600` を返すため、push 後10分ほど端末が古い HTML/JS を掴む。
+    さらに **新しい HTML が古い共通JS を掴むと機能が無反応になる事故**が実際に起きた（iPhoneカレンダー書き出し）
+  - スクリプトがやること: `version.json` の更新 / `assets/js/util.js` の `APP_VERSION` 更新 / 全 HTML の `assets/**` 参照へ `?v=<version>` 付与
+  - util.js は起動時と復帰時に `version.json` を `no-store` で読み、`APP_VERSION` と違えば**セッション内で1回だけ自動リロード**する
 - `git push` → GitHub Pages が自動デプロイ（1〜2分）
 - たまに GitHub 側で `Deployment failed, try again later` が出る（既知の一時エラー）。**auto-retry コミットで再試行**
 

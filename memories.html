@@ -295,6 +295,7 @@
 
     <h2 class="gallery-title">📷 思い出</h2>
     <div class="gallery" id="gallery"></div>
+    <button id="load-more-btn" class="btn" style="display:none;margin:16px auto" onclick="loadPhotos(false)">もっと見る</button>
   </div>
 
   <div class="lightbox" id="lightbox">
@@ -309,8 +310,10 @@
 
   <script>
     let selectedFiles = []
-    let photoUrls = []
+    let photoPaths = []              // ライトボックス用 (原寸はタップ時に取得)
     let currentPhotoIndex = 0
+    let galleryOffset = 0            // ページング (50件ずつ)
+    const GALLERY_PAGE = 50
     let profiles = []
 
     async function loadProfile() {
@@ -372,7 +375,7 @@
         const memo = memoInputs[i]?.value.trim() || ''
         const ext = file.name.split('.').pop()
         const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`
-        const { error } = await _sb.storage.from('memories').upload(path, file)
+        const { error } = await uploadPhoto(path, file)
         if (error) { console.error('upload error:', error); continue }
         await _sb.from('photos').insert({ path, memo })
         done++
@@ -398,26 +401,30 @@
       loadPhotos()
     }
 
-    async function loadPhotos() {
+    // 50件ずつページング。一覧はサムネ (thumbs/)、タップのライトボックスで原寸を取得する
+    async function loadPhotos(reset = true) {
       const gallery = document.getElementById('gallery')
-      gallery.innerHTML = ''
+      const moreBtn = document.getElementById('load-more-btn')
+      if (reset) { gallery.innerHTML = ''; photoPaths = []; galleryOffset = 0 }
 
-      const { data } = await _sb.from('photos').select('*').order('created_at', { ascending: false })
-      if (!data || data.length === 0) {
+      const { data } = await _sb.from('photos').select('*')
+        .order('created_at', { ascending: false })
+        .range(galleryOffset, galleryOffset + GALLERY_PAGE - 1)
+      if (reset && (!data || data.length === 0)) {
         gallery.innerHTML = '<div class="empty">まだ写真がありません ✨</div>'
+        moreBtn.style.display = 'none'
         return
       }
+      const rows = data || []
+      galleryOffset += rows.length
+      moreBtn.style.display = rows.length === GALLERY_PAGE ? 'block' : 'none'
 
-      photoUrls = []
-      const urlResults = await Promise.all(
-        data.map(photo => _sb.storage.from('memories').createSignedUrl(photo.path, 3600))
-      )
+      const urls = await Promise.all(rows.map(photo => signedPhotoUrl(photo.path, { thumb: true })))
 
-      data.forEach((photo, i) => {
-        const urlData = urlResults[i]?.data
-        if (!urlData) return
-        const url = urlData.signedUrl
-        photoUrls.push(url)
+      rows.forEach((photo, i) => {
+        const url = urls[i]
+        if (!url) return
+        photoPaths.push(photo.path)
 
         const uploaderId = photo.path.split('/')[0]
         const uploader = profiles.find(p => p.id === uploaderId)
@@ -426,9 +433,9 @@
         const card = document.createElement('div')
         card.className = 'photo-card'
         const date = new Date(photo.created_at).toLocaleDateString('ja-JP')
-        const idx = photoUrls.length - 1
+        const idx = photoPaths.length - 1
         card.innerHTML = `
-          <img src="${url}" alt="${escHtml(photo.memo || '')}" onclick="openLightbox(${idx})">
+          <img src="${url}" alt="${escHtml(photo.memo || '')}" loading="lazy" onclick="openLightbox(${idx})">
           <div class="photo-info">
             ${photo.memo ? `<div class="photo-memo">${escHtml(photo.memo)}</div>` : ''}
             <div class="photo-top-row">
@@ -448,7 +455,7 @@
       if (!confirm('この写真を削除しますか？')) return
       const id = btn.dataset.id
       const path = btn.dataset.path
-      await _sb.storage.from('memories').remove([path])
+      await removeStoredPhoto(path)
       await _sb.from('photos').delete().eq('id', id)
       loadPhotos()
     })
@@ -459,16 +466,23 @@
       document.getElementById('lightbox').classList.add('open')
     }
 
-    function updateLightbox() {
-      document.getElementById('lightbox-img').src = photoUrls[currentPhotoIndex]
-      document.getElementById('lb-counter').textContent = `${currentPhotoIndex + 1} / ${photoUrls.length}`
+    async function updateLightbox() {
+      const img = document.getElementById('lightbox-img')
+      const path = photoPaths[currentPhotoIndex]
+      // まずサムネ(キャッシュ済み)を即出しして、原寸が来たら差し替える
+      const thumbUrl = await signedPhotoUrl(path, { thumb: true })
+      if (thumbUrl) img.src = thumbUrl
+      signedPhotoUrl(path).then(url => {
+        if (url && photoPaths[currentPhotoIndex] === path) img.src = url
+      })
+      document.getElementById('lb-counter').textContent = `${currentPhotoIndex + 1} / ${photoPaths.length}`
       document.getElementById('lb-prev').disabled = currentPhotoIndex === 0
-      document.getElementById('lb-next').disabled = currentPhotoIndex === photoUrls.length - 1
+      document.getElementById('lb-next').disabled = currentPhotoIndex === photoPaths.length - 1
     }
 
     function lbNav(dir) {
       const next = currentPhotoIndex + dir
-      if (next >= 0 && next < photoUrls.length) { currentPhotoIndex = next; updateLightbox() }
+      if (next >= 0 && next < photoPaths.length) { currentPhotoIndex = next; updateLightbox() }
     }
 
     function closeLightbox() {

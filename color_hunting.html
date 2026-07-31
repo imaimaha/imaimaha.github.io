@@ -486,15 +486,14 @@
       const photos = Array.isArray(h.photos) ? h.photos : [];
       const board = document.getElementById('hunt-board');
 
-      // 全photosの signed URL を一括取得
+      // 全photosの signed URL を一括取得 (マスは小さいのでサムネで十分。7日キャッシュ付き)
       const urlMap = {};
       if (photos.length > 0) {
         const signed = await Promise.all(
-          photos.map(p => _sb.storage.from('memories').createSignedUrl(p.path, 3600))
+          photos.map(p => signedPhotoUrl(p.path, { thumb: true }))
         );
         photos.forEach((p, idx) => {
-          const su = signed[idx]?.data?.signedUrl;
-          if (su) urlMap[p.path] = su;
+          if (signed[idx]) urlMap[p.path] = signed[idx];
         });
       }
 
@@ -517,7 +516,7 @@
             cell.classList.add('filled');
             const url = urlMap[photo.path];
             if (url) {
-              cell.innerHTML = `<img src="${url}" alt="">`;
+              cell.innerHTML = `<img src="${url}" alt="" loading="lazy">`;
             } else {
               cell.textContent = '⚠︎';
             }
@@ -594,7 +593,7 @@
         showToast('アップロード中…');
         const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
         const path = `color_hunts/${state.userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
-        const { error: upErr } = await _sb.storage.from('memories').upload(path, file);
+        const { error: upErr } = await uploadPhoto(path, file);
         if (upErr) { showToast('アップロード失敗: ' + upErr.message, true); return; }
 
         const awarded = ensureAwarded();   // ★ photos 更新前に付与済み状態を確定

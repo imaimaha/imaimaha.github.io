@@ -333,9 +333,9 @@
         FIELDS.forEach(f => { document.getElementById(f.id).value = record[f.key] || '' })
         // 既存写真プレビュー
         if (record.photo_path) {
-          _sb.storage.from('memories').createSignedUrl(record.photo_path, 3600).then(({ data }) => {
-            if (data?.signedUrl) {
-              preview.src = data.signedUrl
+          signedPhotoUrl(record.photo_path).then(url => {
+            if (url) {
+              preview.src = url
               preview.style.display = 'block'
               document.getElementById('photo-placeholder').style.display = 'none'
             }
@@ -396,7 +396,7 @@
       if (pendingPhotoFile && recordId) {
         const ext = pendingPhotoFile.name.split('.').pop()
         const path = `1on1/${recordId}.${ext}`
-        const { error: upErr } = await _sb.storage.from('memories').upload(path, pendingPhotoFile, { upsert: true })
+        const { error: upErr } = await uploadPhoto(path, pendingPhotoFile, { upsert: true })
         if (!upErr) {
           await _sb.from('one_on_ones').update({ photo_path: path }).eq('id', recordId)
         }
@@ -438,12 +438,12 @@
       const bodyId = 'body-' + r.id
       const chevId = 'chev-' + r.id
 
-      // 写真 signed URL
+      // 写真 signed URL (一覧カードはサムネで十分。7日キャッシュ付き)
       let photoHtml = ''
       if (r.photo_path) {
-        const { data: urlData } = await _sb.storage.from('memories').createSignedUrl(r.photo_path, 3600)
-        if (urlData?.signedUrl) {
-          photoHtml = `<img class="record-photo" src="${urlData.signedUrl}" alt="1on1写真">`
+        const url = await signedPhotoUrl(r.photo_path, { thumb: true })
+        if (url) {
+          photoHtml = `<img class="record-photo" src="${url}" alt="1on1写真" loading="lazy">`
         }
       }
 
@@ -496,7 +496,7 @@
       if (!confirm('この記録を削除しますか？')) return
       const { data } = await _sb.from('one_on_ones').select('photo_path').eq('id', id).single()
       if (data?.photo_path) {
-        await _sb.storage.from('memories').remove([data.photo_path])
+        await removeStoredPhoto(data.photo_path)
       }
       const { error } = await _sb.from('one_on_ones').delete().eq('id', id)
       if (error) { showToast('削除失敗'); return }
