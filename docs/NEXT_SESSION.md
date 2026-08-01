@@ -1,6 +1,24 @@
 # 次回セッション用: TODO と背景
 
-## 🔜 次にやる2件（2026-08-01 ユーザーからの持ち越し。作業中のためメモのみ）
+## ✅ 2026-08-01 解決済み: 持ち越し2件（`709eb22` / ユーザー実機確認OK）
+
+**A. 📤 が about:blank になる → 修正**
+- 切り分け: 署名付きURLは `text/calendar` で正常に返っていた（原因①はシロ。service_role で curl して確認）。真因は **iOS が await のあとの遷移を無視する**こと（`about:blank` の子窓に後から location を入れる手も standalone PWA では効かない）
+- 修正: **編集モーダルを開いた時点で .ics をアップロードして署名付きURLを用意し、ボタンを素の `<a href>` にする**。タップ時に非同期処理をしないので iOS からはただのリンクタップになる。準備中は「📤 準備中…」、URL を作れなければ共有シート方式にフォールバック
+- util.js: `openIcsInCalendar` → **`createIcsUrl`**（URLを返すだけ）に変更。`shareIcs` はフォールバックとして残す
+- テスト: `tests/ics_link.spec.js`（モーダルを開くとリンクに署名付きURLが入り、そのURLが `text/calendar` で `BEGIN:VCALENDAR` を返す）
+
+**B. ビンゴ / カラーハントは開いた直後に前回の続き → 実装**
+- `bingo.html: openLastCard()` / `color_hunting.html: openLastHunt()` を init の最後で呼ぶ。**ボタンUIは足していない**
+- 週間ビンゴ・週テーマは今週のものだけ復帰（先週には戻さない）。戻るで通常の入口に戻れる
+- **途中で見つけた実機バグも修正**: 読み込み中にタップすると、後から返ってきた自動オープンがその操作を上書きしてしまう。`state.userTouched`（pointerdown で立てる）+ 画面/カードの状態チェックで、ユーザー操作を常に優先する
+- テスト: `tests/last_card_open.spec.js`。既存のビンゴ系テストは「モード選択から始まる」前提だったので `showScreen('mode')` を挟む形に更新（`bingo_categories` / `bingo_weekly` / `session_20260729`）
+
+**残っている小さな宿題**: `ics/<uid>/` に .ics が溜まり続ける（1予定1ファイルで upsert なので増え方は緩やか。実害が出たら掃除を検討）
+
+<details>
+<summary>当時の調査メモ（対応済み・参考用）</summary>
+
 
 ### A. カレンダーの「📤 iPhoneのカレンダーに追加」が about:blank になる（バグ）
 
@@ -39,6 +57,8 @@
 - 週テーマのハントが進行中ならそちらを開く、という優先順位も検討（実装前に軽く整理する）
 
 **共通の確認**: 復帰した画面から「戻る」で通常の入口に戻れること / 新規作成（再生成・色を指定）が今まで通りできること。
+
+</details>
 
 ## 2026-08-01 速度改善: 写真の圧縮・サムネ・URLキャッシュ（push済み / photo_perf 7件green）
 
