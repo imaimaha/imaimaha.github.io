@@ -9,7 +9,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608010105">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608011625">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -779,11 +779,11 @@
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202608010105"></script>
-  <script src="assets/js/push.js?v=202608010105"></script>
-  <script src="assets/js/util.js?v=202608010105"></script>
-  <script src="assets/js/header.js?v=202608010105"></script>
-  <script src="assets/js/nav.js?v=202608010105"></script>
+  <script src="assets/js/stars.js?v=202608011625"></script>
+  <script src="assets/js/push.js?v=202608011625"></script>
+  <script src="assets/js/util.js?v=202608011625"></script>
+  <script src="assets/js/header.js?v=202608011625"></script>
+  <script src="assets/js/nav.js?v=202608011625"></script>
 
   <!-- TOP BAR -->
   <div class="top-bar">
@@ -920,8 +920,9 @@
       <div class="result-desc" id="result-desc"></div>
       <div class="result-bonus" id="result-bonus" style="display:none"></div>
       <div class="result-card-actions">
-        <button class="receive-btn" id="receive-btn" onclick="receivePrize()">受け取る</button>
-        <button class="replay-btn" id="replay-btn" onclick="receiveAndReplay()">✨ 受け取って もう1回</button>
+        <!-- 消費と景品の確定は回した瞬間に済んでいるので、ここは閉じるだけ -->
+        <button class="receive-btn" id="receive-btn" onclick="receivePrize()">とじる</button>
+        <button class="replay-btn" id="replay-btn" onclick="receiveAndReplay()">✨ もう1回まわす</button>
       </div>
     </div>
   </div>
@@ -1305,6 +1306,11 @@
       document.getElementById('point-display').textContent = currentPoints + 'pt'
       const btn = document.getElementById('gacha-btn')
       const sub = document.getElementById('gacha-btn-sub')
+      if (spinning) {   // 演出中は回せない
+        btn.disabled = true
+        document.getElementById('gacha10-btn').disabled = true
+        return
+      }
       if (currentPoints >= 100) {
         btn.disabled = false
         sub.textContent = '消費: 100pt'
@@ -1375,7 +1381,17 @@
       if (pointErr) { showToast('エラー: ' + pointErr.message, true); b1.disabled = false; b10.disabled = false; return }
 
       const { error: insErr } = await _sb.from('gacha_results').insert(inserts)
-      if (insErr) { showToast('エラー: ' + insErr.message, true) }
+      if (insErr) {
+        // 景品を記録できなかったら 1000pt を返す (引けていないのに消費だけ残さない)
+        console.error('[gacha] 10連の景品記録に失敗、返金します:', insErr)
+        await addPoints(currentUser.id, 1000, 'gacha10_refund')
+        showToast('エラーが発生したのでポイントを戻しました', true)
+        ball.classList.remove('spinning'); globe.classList.remove('charging')
+        await loadPoints()
+        return
+      }
+
+      spinning = true   // 演出中は二重に回せないように
 
       // Peek at the best rarity for flash color
       const bestRarity = prizes.some(p => p.rarity === 'SR') ? 'SR' : prizes.some(p => p.rarity === 'R') ? 'R' : 'N'
@@ -1426,6 +1442,8 @@
 
     function closeResult10() {
       document.getElementById('result10-overlay').classList.remove('open')
+      spinning = false
+      updatePointDisplay()
     }
 
     // SR演出: 金色オーバーレイ + パーティクル降り + オーロラリング + 画面シェイク
@@ -1522,7 +1540,13 @@
     }
 
     // ===================== GACHA START =====================
-    function startGacha() {
+    // ⚠️ 消費と景品の確定は「回した瞬間」に行う (2026-08-02〜)。
+    //   以前は「受け取る」を押した時に記録していたため、結果を見てからアプリを閉じれば
+    //   ノーコストで引き直せた (リセマラ)。演出の前に DB を確定させることで防ぐ
+    let spinning = false   // 演出中フラグ (二重に回すのを防ぐ)
+
+    async function startGacha() {
+      if (spinning) return
       if (currentPoints < 100) {
         showToast('ポイントが足りません (100pt必要)', true)
         return
@@ -1531,6 +1555,30 @@
       const btn = document.getElementById('gacha-btn')
       btn.disabled = true
 
+      // 消費直前に実残高を再確認（表示が古くてもマイナスまで引けないように）
+      const balance = await getBalance(currentUser.id)
+      if (balance === null) {
+        showToast('残高を確認できませんでした。もう一度お試しください。', true)
+        btn.disabled = false
+        return
+      }
+      if (balance < 100) {
+        currentPoints = balance
+        updatePointDisplay()
+        showToast('ポイントが足りません (100pt必要)', true)
+        return
+      }
+
+      const prize = drawPrize()
+      const committed = await commitDraw(prize)
+      if (!committed) { currentPoints = balance; updatePointDisplay(); return }
+      pendingPrize = prize
+
+      // 演出中は二重に回せないようにボタンを止めておく
+      spinning = true
+      currentPoints = balance - 100
+      updatePointDisplay()
+
       const globe = document.getElementById('machine-globe')
       const ball = document.getElementById('capsule-ball')
       ball.classList.remove('spinning')
@@ -1538,8 +1586,6 @@
       ball.classList.add('spinning')
       globe.classList.add('charging')
       if (navigator.vibrate) navigator.vibrate(15)
-
-      pendingPrize = drawPrize()
 
       // Charging particles
       spawnChargeParticles()
@@ -1551,6 +1597,46 @@
         flashReveal(pendingPrize.rarity)
         setTimeout(() => showResult(pendingPrize), 240)
       }, 950)
+    }
+
+    // 景品の記録と 100pt 消費をまとめて確定する。成功したら true
+    // 途中で失敗した時に「景品だけ残る / 消費だけされる」が起きないよう巻き戻す
+    async function commitDraw(prize) {
+      try {
+        const insertData = {
+          user_id:       currentUser.id,
+          reward_name:   prize.name,
+          reward_emoji:  prize.emoji,
+          reward_desc:   prize.desc || prize.description || null,
+          rarity:        prize.rarity,
+          used:          false,
+          bonus_points:  prize.bonus_points || null,   // ボーナスptは券を使った時に付与
+        }
+        if (prize.isCustom) {
+          insertData.custom_prize_id = prize.id
+          insertData.reward_id = null
+        } else {
+          insertData.reward_id = prize.id
+        }
+        const { data: row, error: resErr } = await _sb.from('gacha_results').insert(insertData).select('id').single()
+        if (resErr) throw resErr
+
+        const { error: ptErr } = await _sb.from('points').insert({
+          user_id: currentUser.id,
+          amount:  -100,
+          reason:  'gacha',
+        })
+        if (ptErr) {
+          // 消費に失敗したら景品も取り消す (タダ引きにしない)
+          if (row?.id) await _sb.from('gacha_results').delete().eq('id', row.id)
+          throw ptErr
+        }
+        return true
+      } catch (err) {
+        console.error('[gacha] 抽選の確定に失敗:', err)
+        showToast('エラーが発生しました。もう一度お試しください。', true)
+        return false
+      }
     }
 
     // ===================== SHOW RESULT =====================
@@ -1574,7 +1660,8 @@
       const receiveBtn = document.getElementById('receive-btn')
       receiveBtn.disabled = false
       const replayBtn = document.getElementById('replay-btn')
-      if (replayBtn) replayBtn.disabled = (currentPoints < 200)  // need 100 more after this draw
+      // この回の -100 は確定済みなので、残り 100pt あればもう1回まわせる
+      if (replayBtn) replayBtn.disabled = (currentPoints < 100)
 
       document.getElementById('result-overlay').classList.add('open')
 
@@ -1591,7 +1678,7 @@
       else if (prize.rarity === 'R') triggerREffect()
     }
 
-    // ===================== RECEIVE AND REPLAY =====================
+    // ===================== CLOSE AND REPLAY =====================
     async function receiveAndReplay() {
       const replayBtn = document.getElementById('replay-btn')
       if (replayBtn) replayBtn.disabled = true
@@ -1603,67 +1690,17 @@
       }, 260)
     }
 
-    // ===================== RECEIVE PRIZE =====================
+    // ===================== CLOSE RESULT =====================
+    // 消費と景品の記録は startGacha の時点で確定済みなので、ここは表示を閉じるだけ
+    // (閉じずにアプリを落としても券はちゃんと残る)
     async function receivePrize() {
-      if (!pendingPrize || !currentUser) return
       const prize = pendingPrize
       pendingPrize = null
-
-      const receiveBtn = document.getElementById('receive-btn')
-      receiveBtn.disabled = true
-
-      try {
-        // 消費直前に実残高を再確認（表示が古くてもマイナスまで引けないように）
-        const balance = await getBalance(currentUser.id)
-        if (balance === null) throw new Error('残高の確認に失敗')
-        currentPoints = balance
-        if (balance < 100) {
-          document.getElementById('result-overlay').classList.remove('open')
-          updatePointDisplay()
-          showToast('ポイントが足りません (100pt必要)', true)
-          return
-        }
-
-        // Insert gacha result (bonus_points は使用時に付与するのでここでは記録のみ)
-        const insertData = {
-          user_id:       currentUser.id,
-          reward_name:   prize.name,
-          reward_emoji:  prize.emoji,
-          reward_desc:   prize.desc || prize.description || null,
-          rarity:        prize.rarity,
-          used:          false,
-          bonus_points:  prize.bonus_points || null,
-        }
-        if (prize.isCustom) {
-          insertData.custom_prize_id = prize.id
-          insertData.reward_id = null
-        } else {
-          insertData.reward_id = prize.id
-        }
-        const { error: resErr } = await _sb.from('gacha_results').insert(insertData)
-        if (resErr) throw resErr
-
-        // Deduct 100pt
-        const { error: ptErr } = await _sb.from('points').insert({
-          user_id: currentUser.id,
-          amount:  -100,
-          reason:  'gacha',
-        })
-        if (ptErr) throw ptErr
-
-        // Update UI
-        await loadPoints()
-        await loadTickets()
-
-        document.getElementById('result-overlay').classList.remove('open')
-        showToast(prize.emoji + ' ' + prize.name + ' を獲得！')
-
-      } catch (err) {
-        console.error('receive error:', err)
-        showToast('エラーが発生しました。もう一度お試しください。', true)
-        receiveBtn.disabled = false
-        pendingPrize = prize
-      }
+      spinning = false
+      document.getElementById('result-overlay').classList.remove('open')
+      await loadPoints()
+      await loadTickets()
+      if (prize) showToast(prize.emoji + ' ' + prize.name + ' を獲得！')
     }
 
     // ===================== TICKETS =====================
