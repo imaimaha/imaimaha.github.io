@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="assets/css/style.css?v=202608011647">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608011655">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -209,10 +209,10 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/push.js?v=202608011647"></script>
-  <script src="assets/js/util.js?v=202608011647"></script>
-  <script src="assets/js/header.js?v=202608011647"></script>
-  <script src="assets/js/nav.js?v=202608011647"></script>
+  <script src="assets/js/push.js?v=202608011655"></script>
+  <script src="assets/js/util.js?v=202608011655"></script>
+  <script src="assets/js/header.js?v=202608011655"></script>
+  <script src="assets/js/nav.js?v=202608011655"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
     <!-- 右上ボタンぶんの幅があるので短くする (長いと2行に折り返す) -->
@@ -341,6 +341,7 @@
 
       const { data: profs } = await _sb.from('profiles').select('*')
       if (profs) {
+        allProfiles = profs
         myProfile = profs.find(p => p.id === myId)
         partnerProfile = profs.find(p => p.id !== myId)
         partnerId = partnerProfile?.id
@@ -354,6 +355,33 @@
 
     // ===== いま どこ？ / 記録 / 街コレクション =====
     let allCheckins = []
+    let allProfiles = []
+
+    // その住所で「ふたりとも今ここした日」の数
+    // (会社で同じ日に居ただけ、は一緒とは限らないので拠点=おうちだけを数える)
+    function bothHereDays(rows, placeName) {
+      const byDay = {}
+      rows.filter(c => c.place_name === placeName).forEach(c => {
+        const d = new Date(c.created_at).toLocaleDateString('sv-SE')
+        ;(byDay[d] ||= new Set()).add(c.user_id)
+      })
+      return Object.values(byDay).filter(s => s.has(myId) && s.has(partnerId)).length
+    }
+
+    // 「町の数 / 🦊のおうちで一緒 / 🦔のおうちで一緒」の3つ
+    function statBoxesHtml(rows) {
+      const places = new Set(rows.map(c => c.place_name).filter(Boolean))
+      const homes = Object.entries(BASES)
+        .filter(([, b]) => b.kind === 'home')
+        .map(([place, b]) => {
+          const prof = allProfiles.find(p => p.name === b.owner)
+          return `<div class="stat-box">
+            <div class="sv">${bothHereDays(rows, place)}</div>
+            <div class="sl">${prof?.emoji || '🏠'}のおうちで一緒</div>
+          </div>`
+        }).join('')
+      return `<div class="stat-box"><div class="sv">${places.size}</div><div class="sl">町の数</div></div>${homes}`
+    }
 
     async function loadOverview() {
       const { data, error } = await _sb.from('location_checkins')
@@ -389,21 +417,7 @@
 
       const rows = allCheckins.filter(c => inMonth(c.created_at, statsMonth))
       const places = new Set(rows.map(c => c.place_name).filter(Boolean))
-
-      // ふたりが同じ町にいた日
-      const byDay = {}
-      rows.forEach(c => { (byDay[new Date(c.created_at).toLocaleDateString('sv-SE')] ||= []).push(c) })
-      const togetherDays = Object.values(byDay).filter(list => {
-        const mine = list.filter(c => c.user_id === myId).map(c => c.place_name)
-        const theirs = list.filter(c => c.user_id === partnerId).map(c => c.place_name)
-        return mine.some(p => p && theirs.includes(p))
-      }).length
-
-      document.getElementById('month-stat-row').innerHTML = `
-        <div class="stat-box"><div class="sv">${rows.length}</div><div class="sl">チェックイン</div></div>
-        <div class="stat-box"><div class="sv">${places.size}</div><div class="sl">町の数</div></div>
-        <div class="stat-box"><div class="sv">${togetherDays}</div><div class="sl">おなじ町にいた日</div></div>
-      `
+      document.getElementById('month-stat-row').innerHTML = statBoxesHtml(rows)
 
       const counts = {}
       rows.forEach(c => { if (c.place_name) counts[c.place_name] = (counts[c.place_name] || 0) + 1 })
@@ -497,27 +511,7 @@
     }
 
     function renderStats() {
-      const weekAgo = Date.now() - 7 * 86400000
-      const thisWeek = allCheckins.filter(c => new Date(c.created_at).getTime() >= weekAgo)
-
-      // ふたりが同じ町にいた日 (同じ日・同じ町名)
-      const byDay = {}
-      allCheckins.forEach(c => {
-        const d = new Date(c.created_at).toLocaleDateString('sv-SE')
-        ;(byDay[d] ||= []).push(c)
-      })
-      const togetherDays = Object.values(byDay).filter(list => {
-        const mine = list.filter(c => c.user_id === myId).map(c => c.place_name)
-        const theirs = list.filter(c => c.user_id === partnerId).map(c => c.place_name)
-        return mine.some(p => p && theirs.includes(p))
-      }).length
-
-      const places = new Set(allCheckins.map(c => c.place_name).filter(Boolean))
-      document.getElementById('stat-row').innerHTML = `
-        <div class="stat-box"><div class="sv">${thisWeek.length}</div><div class="sl">今週のチェックイン</div></div>
-        <div class="stat-box"><div class="sv">${places.size}</div><div class="sl">いった町</div></div>
-        <div class="stat-box"><div class="sv">${togetherDays}</div><div class="sl">おなじ町にいた日</div></div>
-      `
+      document.getElementById('stat-row').innerHTML = statBoxesHtml(allCheckins)
 
       const counts = {}
       allCheckins.forEach(c => { if (c.place_name) counts[c.place_name] = (counts[c.place_name] || 0) + 1 })
