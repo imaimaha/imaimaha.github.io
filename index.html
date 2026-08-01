@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608011625">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608011647">
   <style>
     /* Page-scoped tweaks */
     .home-hero { padding: 40px 20px 12px; }
@@ -311,11 +311,11 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
 
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202608011625"></script>
-  <script src="assets/js/push.js?v=202608011625"></script>
-  <script src="assets/js/util.js?v=202608011625"></script>
-  <script src="assets/js/header.js?v=202608011625"></script>
-  <script src="assets/js/nav.js?v=202608011625"></script>
+  <script src="assets/js/stars.js?v=202608011647"></script>
+  <script src="assets/js/push.js?v=202608011647"></script>
+  <script src="assets/js/util.js?v=202608011647"></script>
+  <script src="assets/js/header.js?v=202608011647"></script>
+  <script src="assets/js/nav.js?v=202608011647"></script>
 
   <header class="hero home-hero">
     <div class="hero-inner">
@@ -906,13 +906,19 @@
             return
           }
 
+          // はじめて来た町ならお祝い (今ここの町コレクションが増える)
+          const firstVisit = await awardFirstVisit(_locMyId, place_name)
+
           if (_locPartnerId && _locMyProfile) {
             const body = `${_locMyProfile.emoji} ${_locMyProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}`
-            notify({ title: '📍 今ここにいるよ', body, url: '/location.html', kind: 'location', recipient: _locPartnerId })
+            notify({
+              title: firstVisit ? '🆕 はじめての町にいるよ' : '📍 今ここにいるよ',
+              body, url: '/location.html', kind: 'location', recipient: _locPartnerId,
+            })
           }
 
           if (navigator.vibrate) navigator.vibrate(20)
-          statusEl.textContent = '✅ 送りました！' + (place_name ? '（' + place_name + '）' : '')
+          statusEl.textContent = (firstVisit ? '🆕 はじめての町！' : '✅ 送りました！') + (place_name ? '（' + place_name + '）' : '')
           setTimeout(() => { statusEl.textContent = ''; btn.disabled = false }, 4000)
         },
         (err) => {

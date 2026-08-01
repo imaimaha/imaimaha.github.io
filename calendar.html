@@ -9,7 +9,7 @@
   <title>ふたりの予定 | Notre Endroit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608011625">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608011647">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -424,10 +424,10 @@
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202608011625"></script>
-  <script src="assets/js/util.js?v=202608011625"></script>
-  <script src="assets/js/header.js?v=202608011625"></script>
-  <script src="assets/js/nav.js?v=202608011625"></script>
+  <script src="assets/js/stars.js?v=202608011647"></script>
+  <script src="assets/js/util.js?v=202608011647"></script>
+  <script src="assets/js/header.js?v=202608011647"></script>
+  <script src="assets/js/nav.js?v=202608011647"></script>
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>ふたりの予定</h1>
@@ -476,8 +476,12 @@
       <!-- 書き出し導線は編集時のみ (追加前の予定は書き出せない・一覧に置くと誤タップするため) -->
       <div class="event-chips" id="modal-export-row" style="display:none">
         <!-- href はモーダルを開いた時に用意する (タップ時に非同期処理をすると iOS が遷移を無視する) -->
-        <a class="ev-chip export-ics-btn" id="modal-ics-link" target="_blank" rel="noopener" onclick="onIcsLinkClick(event)">📤 iPhoneのカレンダーに追加</a>
+        <!-- target="_blank" だと iOS は新規タブで .ics を表示できず真っ白になる。
+             同じタブで開くと Safari が「カレンダーに追加」シートを出す (2026-08-02 修正) -->
+        <a class="ev-chip export-ics-btn" id="modal-ics-link" onclick="onIcsLinkClick(event)">📤 iPhoneのカレンダーに追加</a>
         <button type="button" class="ev-chip export-date-btn" onclick="exportToDate(editingId)">💕 デートにする</button>
+        <!-- 端末やOSによって上のリンクで開けないことがあるので、ファイルで受け取る道も残す -->
+        <button type="button" class="ev-chip" style="opacity:0.75" onclick="shareIcsFallback()">…ファイルで受け取る</button>
       </div>
       <div class="modal-btns">
         <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
@@ -710,6 +714,14 @@
       if (a.dataset.eventId !== String(ev.id)) return
       if (url) { a.href = url; a.dataset.state = 'ready' } else { a.dataset.state = 'fallback' }
       a.textContent = '📤 iPhoneのカレンダーに追加'
+    }
+
+    // 上のリンクで開けなかった時に、共有シート/ダウンロードで .ics を受け取る
+    async function shareIcsFallback() {
+      const ev = events.find(x => String(x.id) === String(editingId))
+      if (!ev) return
+      const result = await shareIcs(icsPayloadFor(ev))
+      if (result === 'failed') alert('書き出しに失敗しました。時間をおいて試してね')
     }
 
     // 準備できていない時のフォールバック (共有シート or ダウンロード)

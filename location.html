@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="assets/css/style.css?v=202608011625">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608011647">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -89,6 +89,77 @@
     }
 
     /* 地図 */
+    /* いま どこ？ */
+    .now-card {
+      background: linear-gradient(135deg, rgba(100,160,255,0.14), rgba(150,120,255,0.12));
+      border: 1.5px solid rgba(140,180,255,0.35);
+      border-radius: 16px; padding: 14px 16px; margin-bottom: 14px;
+    }
+    .now-row { display: flex; flex-direction: column; gap: 10px; }
+    .now-person { display: flex; align-items: center; gap: 10px; }
+    .now-person .np-emoji { font-size: 1.7rem; line-height: 1; flex-shrink: 0; }
+    .now-person .np-body { flex: 1; min-width: 0; }
+    .now-person .np-where { font-size: 1rem; color: #eaf2ff; }
+    .now-person .np-when { font-size: 0.72rem; color: #7aa8cc; margin-top: 2px; }
+    .now-person .np-tag {
+      flex-shrink: 0; font-size: 0.72rem; padding: 3px 9px; border-radius: 999px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(150,200,255,0.28); color: #cfe4ff;
+    }
+    .now-distance {
+      margin-top: 12px; padding-top: 10px; text-align: center;
+      border-top: 1px solid rgba(150,200,255,0.16);
+      font-size: 0.85rem; color: #bcd8f5;
+    }
+    .now-distance b { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.15rem; color: #fff0f6; }
+    .now-distance.together { color: #ffd0e2; }
+
+    /* 月のふりかえり */
+    .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .month-label { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.1rem; color: #f0f6ff; }
+    .month-map-btn {
+      width: 100%; margin-top: 12px; padding: 10px; border-radius: 12px; cursor: pointer;
+      background: rgba(100,160,255,0.16); border: 1.5px solid rgba(100,160,255,0.4);
+      color: #cfe4ff; font-family: inherit; font-size: 0.85rem;
+    }
+    .month-map-btn:active { transform: scale(0.98); }
+    .month-new-title { font-size: 0.78rem; color: #ffd0e2; margin: 12px 0 6px; }
+
+    /* 記録 / コレクション */
+    .stats-card, .collection-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(150,200,255,0.18);
+      border-radius: 16px; padding: 14px 16px; margin-top: 14px;
+    }
+    .section-head { font-size: 0.9rem; color: #e8f4fd; margin-bottom: 10px; }
+    .coll-count { font-size: 0.78rem; color: #98bedd; }
+    .coll-sub { font-size: 0.72rem; color: #6f9ec2; margin: -4px 0 10px; }
+    .stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stat-box {
+      flex: 1; text-align: center; padding: 10px 6px; border-radius: 12px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(150,200,255,0.16);
+    }
+    .stat-box .sv { font-family: 'Zen Kurenaido', sans-serif; font-size: 1.35rem; color: #f0f6ff; line-height: 1; }
+    .stat-box .sl { font-size: 0.68rem; color: #98bedd; margin-top: 4px; }
+    .top-places { display: flex; flex-direction: column; gap: 6px; }
+    .top-place { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #cfe4ff; }
+    .top-place .tp-rank { width: 20px; text-align: center; }
+    .top-place .tp-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .top-place .tp-fill { height: 100%; background: linear-gradient(90deg, #6aa9ff, #b98cff); }
+    .top-place .tp-n { font-size: 0.75rem; color: #98bedd; width: 32px; text-align: right; }
+
+    .coll-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .coll-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 11px; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(150,200,255,0.2);
+      color: #dceafb; font-size: 0.8rem; font-family: inherit;
+    }
+    .coll-chip:active { transform: scale(0.96); }
+    .coll-chip .cc-n { font-size: 0.68rem; color: #8fb6d8; }
+    .coll-chip.home { background: rgba(255,200,100,0.12); border-color: rgba(255,200,100,0.4); color: #ffe6b8; }
+    .coll-chip.office { background: rgba(140,240,180,0.12); border-color: rgba(140,240,180,0.4); color: #d6ffe4; }
+    .coll-chip.new { background: rgba(255,140,190,0.16); border-color: rgba(255,150,190,0.5); color: #ffd6e6; }
+
     #map {
       width: 100%; height: 300px;
       border-radius: 16px; overflow: hidden;
@@ -138,16 +209,23 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/push.js?v=202608011625"></script>
-  <script src="assets/js/util.js?v=202608011625"></script>
-  <script src="assets/js/header.js?v=202608011625"></script>
-  <script src="assets/js/nav.js?v=202608011625"></script>
+  <script src="assets/js/push.js?v=202608011647"></script>
+  <script src="assets/js/util.js?v=202608011647"></script>
+  <script src="assets/js/header.js?v=202608011647"></script>
+  <script src="assets/js/nav.js?v=202608011647"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
-    <h1>📍 今ここにいるよ</h1>
+    <!-- 右上ボタンぶんの幅があるので短くする (長いと2行に折り返す) -->
+    <h1>📍 今ここ</h1>
   </div>
 
   <div class="content">
+    <!-- いま どこ？ (ふたりの現在地と距離) -->
+    <div class="now-card" id="now-card" style="display:none">
+      <div class="now-row" id="now-rows"></div>
+      <div class="now-distance" id="now-distance"></div>
+    </div>
+
     <!-- チェックインボタン -->
     <div class="checkin-area">
       <button class="checkin-btn" id="checkin-btn" onclick="doCheckin()">
@@ -171,6 +249,33 @@
     <div class="checkin-list" id="checkin-list">
       <div class="empty-state">読み込み中...</div>
     </div>
+
+    <!-- 月のふりかえり -->
+    <div class="stats-card" id="month-card" style="display:none">
+      <div class="month-nav">
+        <button class="date-nav-btn" onclick="changeMonth(-1)">◀</button>
+        <div class="month-label" id="month-label"></div>
+        <button class="date-nav-btn" id="month-next" onclick="changeMonth(1)">▶</button>
+      </div>
+      <div class="stat-row" id="month-stat-row"></div>
+      <div class="top-places" id="month-top"></div>
+      <div id="month-new"></div>
+      <button class="month-map-btn" onclick="showMonthOnMap()">🗺 この月の足あとを地図で見る</button>
+    </div>
+
+    <!-- ふたりの記録 (ぜんぶ) -->
+    <div class="stats-card" id="stats-card" style="display:none">
+      <div class="section-head">📊 ふたりの記録（ぜんぶ）</div>
+      <div class="stat-row" id="stat-row"></div>
+      <div class="top-places" id="top-places"></div>
+    </div>
+
+    <!-- 街コレクション -->
+    <div class="collection-card" id="collection-card" style="display:none">
+      <div class="section-head">🗺 いった町コレクション <span class="coll-count" id="coll-count"></span></div>
+      <div class="coll-sub">タップで地図がその町に飛ぶよ</div>
+      <div class="coll-grid" id="coll-grid"></div>
+    </div>
   </div>
 
   <div id="toast"></div>
@@ -191,6 +296,44 @@
       return toDateStr(currentDate) === toDateStr(new Date())
     }
 
+    // ふたりの拠点。ここに載っている町は「おうち」「会社」として扱う
+    // (町名は Nominatim が返す suburb 名。増えたらここに足す)
+    const BASES = {
+      '本町一丁目':   { kind: 'home',   emoji: '🏠', owner: 'nick',     label: 'nickのおうち' },
+      '西新宿五丁目': { kind: 'home',   emoji: '🏠', owner: 'hedgehog', label: 'hedgehogのおうち' },
+      '西新宿二丁目': { kind: 'office', emoji: '🏢', owner: null,       label: '会社' },
+    }
+
+    // その人にとってその町がどこか (自分の家なら「おうち」と呼ぶ)
+    function placeLabelFor(placeName, profileName) {
+      if (!placeName) return { emoji: '📍', text: 'どこかな？' }
+      const base = BASES[placeName]
+      if (!base) return { emoji: '🗺', text: placeName, out: true }
+      if (base.kind === 'office') return { emoji: '🏢', text: '会社' }
+      if (base.owner && profileName && base.owner === profileName) return { emoji: '🏠', text: 'おうち' }
+      return { emoji: base.emoji, text: base.label }
+    }
+
+    function relTime(iso) {
+      const diff = Date.now() - new Date(iso).getTime()
+      const m = Math.floor(diff / 60000)
+      if (m < 1) return 'たった今'
+      if (m < 60) return `${m}分前`
+      const h = Math.floor(m / 60)
+      if (h < 24) return `${h}時間前`
+      const d = Math.floor(h / 24)
+      return `${d}日前`
+    }
+
+    // 2点間の距離 (km)
+    function distanceKm(a, b) {
+      const R = 6371, toRad = x => x * Math.PI / 180
+      const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng)
+      const s = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2
+      return 2 * R * Math.asin(Math.sqrt(s))
+    }
+
     async function init() {
       const { data: { session } } = await _sb.auth.getSession()
       if (!session) return
@@ -206,6 +349,222 @@
       initMap()
       updateDateLabel()
       await loadCheckins()
+      await loadOverview()
+    }
+
+    // ===== いま どこ？ / 記録 / 街コレクション =====
+    let allCheckins = []
+
+    async function loadOverview() {
+      const { data, error } = await _sb.from('location_checkins')
+        .select('*').order('created_at', { ascending: false }).limit(1000)
+      if (error) { console.error('[location] 集計の取得に失敗:', error.message); return }
+      allCheckins = data || []
+      renderNow()
+      renderMonth()
+      renderStats()
+      renderCollection()
+    }
+
+    // ===== 月のふりかえり =====
+    let statsMonth = new Date()
+
+    function changeMonth(delta) {
+      statsMonth = new Date(statsMonth.getFullYear(), statsMonth.getMonth() + delta, 1)
+      renderMonth()
+    }
+
+    function inMonth(iso, d) {
+      const t = new Date(iso)
+      return t.getFullYear() === d.getFullYear() && t.getMonth() === d.getMonth()
+    }
+
+    function renderMonth() {
+      const y = statsMonth.getFullYear(), m = statsMonth.getMonth()
+      document.getElementById('month-label').textContent = `${y}年 ${m + 1}月のふりかえり`
+      const now = new Date()
+      // 未来の月には進めない
+      document.getElementById('month-next').disabled =
+        (y > now.getFullYear() || (y === now.getFullYear() && m >= now.getMonth()))
+
+      const rows = allCheckins.filter(c => inMonth(c.created_at, statsMonth))
+      const places = new Set(rows.map(c => c.place_name).filter(Boolean))
+
+      // ふたりが同じ町にいた日
+      const byDay = {}
+      rows.forEach(c => { (byDay[new Date(c.created_at).toLocaleDateString('sv-SE')] ||= []).push(c) })
+      const togetherDays = Object.values(byDay).filter(list => {
+        const mine = list.filter(c => c.user_id === myId).map(c => c.place_name)
+        const theirs = list.filter(c => c.user_id === partnerId).map(c => c.place_name)
+        return mine.some(p => p && theirs.includes(p))
+      }).length
+
+      document.getElementById('month-stat-row').innerHTML = `
+        <div class="stat-box"><div class="sv">${rows.length}</div><div class="sl">チェックイン</div></div>
+        <div class="stat-box"><div class="sv">${places.size}</div><div class="sl">町の数</div></div>
+        <div class="stat-box"><div class="sv">${togetherDays}</div><div class="sl">おなじ町にいた日</div></div>
+      `
+
+      const counts = {}
+      rows.forEach(c => { if (c.place_name) counts[c.place_name] = (counts[c.place_name] || 0) + 1 })
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+      const max = top[0]?.[1] || 1
+      document.getElementById('month-top').innerHTML = top.length
+        ? top.map(([name, n], i) => `
+          <div class="top-place">
+            <span class="tp-rank">${i + 1}</span>
+            <span>${escHtml(name)}</span>
+            <span class="tp-bar"><span class="tp-fill" style="width:${Math.round(n / max * 100)}%"></span></span>
+            <span class="tp-n">${n}回</span>
+          </div>`).join('')
+        : '<div class="coll-sub">この月のチェックインはまだないよ</div>'
+
+      // この月がはじめてだった町 (それ以前に記録が無い町)
+      const before = new Set(allCheckins
+        .filter(c => new Date(c.created_at) < new Date(y, m, 1))
+        .map(c => c.place_name).filter(Boolean))
+      const newOnes = [...places].filter(p => !before.has(p))
+      document.getElementById('month-new').innerHTML = newOnes.length
+        ? `<div class="month-new-title">🆕 この月にはじめて行った町</div>
+           <div class="coll-grid">${newOnes.map(p => `<span class="coll-chip new">🆕 ${escHtml(p)}</span>`).join('')}</div>`
+        : ''
+
+      document.getElementById('month-card').style.display = 'block'
+    }
+
+    // その月の足あとを地図にまとめて出す
+    function showMonthOnMap() {
+      if (!map) return
+      const rows = allCheckins.filter(c => inMonth(c.created_at, statsMonth))
+      if (!rows.length) { showToast('この月の記録はまだないよ'); return }
+      markers.forEach(mk => map.removeLayer(mk))
+      markers = []
+      const pts = []
+      rows.forEach(c => {
+        const prof = c.user_id === myId ? myProfile : partnerProfile
+        const mk = L.marker([c.lat, c.lng], {
+          icon: L.divIcon({
+            className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+            html: `<div style="font-size:18px;line-height:26px;text-align:center;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))">${prof?.emoji || '📍'}</div>`,
+          }),
+        }).addTo(map)
+        const when = new Date(c.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        mk.bindPopup(`${prof?.emoji || ''} ${escHtml(c.place_name || '')}<br><small>${when}</small>`)
+        markers.push(mk)
+        pts.push([c.lat, c.lng])
+      })
+      map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 })
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' })
+      showToast(`🗺 ${statsMonth.getMonth() + 1}月の足あと ${rows.length}件`)
+    }
+
+    function renderNow() {
+      const people = [myProfile, partnerProfile].filter(Boolean)
+      if (!people.length) return
+      const latest = {}
+      allCheckins.forEach(c => { if (!latest[c.user_id]) latest[c.user_id] = c })
+
+      document.getElementById('now-rows').innerHTML = people.map(p => {
+        const c = latest[p.id]
+        if (!c) return `
+          <div class="now-person"><span class="np-emoji">${p.emoji}</span>
+            <div class="np-body"><div class="np-where">まだチェックインしてないよ</div></div>
+          </div>`
+        const w = placeLabelFor(c.place_name, p.name)
+        return `
+          <div class="now-person">
+            <span class="np-emoji">${p.emoji}</span>
+            <div class="np-body">
+              <div class="np-where">${w.emoji} ${escHtml(w.text)}</div>
+              <div class="np-when">${relTime(c.created_at)}${c.note ? ' ・「' + escHtml(c.note) + '」' : ''}</div>
+            </div>
+            ${w.out ? '<span class="np-tag">おでかけ中</span>' : ''}
+          </div>`
+      }).join('')
+
+      // ふたりの距離
+      const el = document.getElementById('now-distance')
+      const a = myProfile && latest[myProfile.id], b = partnerProfile && latest[partnerProfile.id]
+      if (a && b) {
+        const km = distanceKm(a, b)
+        const same = a.place_name && a.place_name === b.place_name
+        el.className = 'now-distance' + (same || km < 0.3 ? ' together' : '')
+        el.innerHTML = same || km < 0.3
+          ? `💞 いま おなじところにいるみたい`
+          : `ふたりの距離 <b>${km < 1 ? Math.round(km * 1000) + ' m' : km.toFixed(1) + ' km'}</b>`
+      } else { el.textContent = '' }
+      document.getElementById('now-card').style.display = 'block'
+    }
+
+    function renderStats() {
+      const weekAgo = Date.now() - 7 * 86400000
+      const thisWeek = allCheckins.filter(c => new Date(c.created_at).getTime() >= weekAgo)
+
+      // ふたりが同じ町にいた日 (同じ日・同じ町名)
+      const byDay = {}
+      allCheckins.forEach(c => {
+        const d = new Date(c.created_at).toLocaleDateString('sv-SE')
+        ;(byDay[d] ||= []).push(c)
+      })
+      const togetherDays = Object.values(byDay).filter(list => {
+        const mine = list.filter(c => c.user_id === myId).map(c => c.place_name)
+        const theirs = list.filter(c => c.user_id === partnerId).map(c => c.place_name)
+        return mine.some(p => p && theirs.includes(p))
+      }).length
+
+      const places = new Set(allCheckins.map(c => c.place_name).filter(Boolean))
+      document.getElementById('stat-row').innerHTML = `
+        <div class="stat-box"><div class="sv">${thisWeek.length}</div><div class="sl">今週のチェックイン</div></div>
+        <div class="stat-box"><div class="sv">${places.size}</div><div class="sl">いった町</div></div>
+        <div class="stat-box"><div class="sv">${togetherDays}</div><div class="sl">おなじ町にいた日</div></div>
+      `
+
+      const counts = {}
+      allCheckins.forEach(c => { if (c.place_name) counts[c.place_name] = (counts[c.place_name] || 0) + 1 })
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3)
+      const max = top[0]?.[1] || 1
+      const medals = ['🥇', '🥈', '🥉']
+      document.getElementById('top-places').innerHTML = top.map(([name, n], i) => `
+        <div class="top-place">
+          <span class="tp-rank">${medals[i]}</span>
+          <span>${escHtml(name)}</span>
+          <span class="tp-bar"><span class="tp-fill" style="width:${Math.round(n / max * 100)}%"></span></span>
+          <span class="tp-n">${n}回</span>
+        </div>`).join('')
+      document.getElementById('stats-card').style.display = 'block'
+    }
+
+    function renderCollection() {
+      // 町ごとに 回数 / 最後にいつ / 代表座標
+      const byPlace = {}
+      allCheckins.forEach(c => {
+        if (!c.place_name) return
+        const e = (byPlace[c.place_name] ||= { n: 0, lat: c.lat, lng: c.lng, last: c.created_at })
+        e.n++
+        if (new Date(c.created_at) > new Date(e.last)) { e.last = c.created_at; e.lat = c.lat; e.lng = c.lng }
+      })
+      const entries = Object.entries(byPlace).sort((a, b) => b[1].n - a[1].n)
+      const weekAgo = Date.now() - 7 * 86400000
+
+      document.getElementById('coll-count').textContent = `${entries.length} か所`
+      document.getElementById('coll-grid').innerHTML = entries.map(([name, e]) => {
+        const base = BASES[name]
+        const isNew = e.n === 1 && new Date(e.last).getTime() >= weekAgo
+        const cls = base?.kind === 'home' ? 'home' : base?.kind === 'office' ? 'office' : (isNew ? 'new' : '')
+        const emoji = base?.emoji || (isNew ? '🆕' : '📍')
+        return `<button class="coll-chip ${cls}" onclick="focusPlace(${e.lat},${e.lng},'${escAttr(name)}')">
+          ${emoji} ${escHtml(name)} <span class="cc-n">×${e.n}</span></button>`
+      }).join('')
+      document.getElementById('collection-card').style.display = 'block'
+    }
+
+    function escAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;') }
+
+    function focusPlace(lat, lng, name) {
+      if (!map) return
+      map.setView([lat, lng], 15)
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' })
+      showToast(`🗺 ${name}`)
     }
 
     function initMap() {
@@ -350,14 +709,21 @@
             return
           }
 
+          // はじめて来た町ならお祝い (町コレクションが増える)
+          const firstVisit = await awardFirstVisit(myId, place_name)
+
           // 相手にプッシュ通知
           if (partnerId && myProfile) {
             const body = `${myProfile.emoji} ${myProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}${note ? '「' + note + '」' : ''}`
-            notify({ title: '📍 今ここにいるよ', body, url: '/location.html', kind: 'location', recipient: partnerId })
+            notify({
+              title: firstVisit ? '🆕 はじめての町にいるよ' : '📍 今ここにいるよ',
+              body, url: '/location.html', kind: 'location', recipient: partnerId,
+            })
           }
 
           document.getElementById('note-input').value = ''
           status.textContent = '✅ 送りました！' + (place_name ? '（' + place_name + '）' : '')
+          if (firstVisit) showToast(`🆕 はじめての町！ ${place_name}`)
           setTimeout(() => { status.textContent = ''; btn.disabled = false }, 3000)
 
           // 今日表示中なら再読込
@@ -366,6 +732,7 @@
             updateDateLabel()
             await loadCheckins()
           }
+          await loadOverview()
         },
         (err) => {
           const msgs = { 1: '位置情報の許可が必要です', 2: '位置情報を取得できません', 3: 'タイムアウトしました' }
