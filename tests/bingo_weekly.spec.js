@@ -14,6 +14,9 @@ test('weekly bingo: mode select shows updated text', async ({ page }) => {
 
   await page.goto('/bingo.html')
   await page.waitForTimeout(2000)
+  // 2026-08-01〜 開くと「最後に触ったカード」が初期表示になるので、モード選択に戻す
+  await page.evaluate(() => showScreen('mode'))
+  await page.waitForTimeout(300)
 
   // 「今週のビンゴ」ボタンが表示
   const weeklyTitle = await page.locator('.mode-card.daily .mode-card-title').textContent()

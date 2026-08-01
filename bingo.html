@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202607312350">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608010105">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -632,10 +632,10 @@
 
   <div id="confetti-container"></div>
 
-  <script src="assets/js/util.js?v=202607312350"></script>
+  <script src="assets/js/util.js?v=202608010105"></script>
 
-  <script src="assets/js/header.js?v=202607312350"></script>
-  <script src="assets/js/nav.js?v=202607312350"></script>
+  <script src="assets/js/header.js?v=202608010105"></script>
+  <script src="assets/js/nav.js?v=202608010105"></script>
   <!-- Top Bar -->
   <div class="top-bar">
     <button class="back-btn" id="back-btn" onclick="handleBack()">← ホーム</button>
@@ -827,12 +827,12 @@
   <!-- ── Toast ── -->
   <div class="toast" id="toast"></div>
 
-  <script src="assets/data/bingo_pools.js?v=202607312350"></script>
+  <script src="assets/data/bingo_pools.js?v=202608010105"></script>
   <script>
   // ─────────────────────────────────────────
   // Item Pools
   // ─────────────────────────────────────────
-  // POOLS は assets/data/bingo_pools.js?v=202607312350
+  // POOLS は assets/data/bingo_pools.js?v=202608010105
 
   // ─────────────────────────────────────────
   // Bingo Line Counter
@@ -862,6 +862,7 @@
     bingoLines: [],
     celebrationShown: false,
     readonly: false, // 履歴から開いた読み込み専用モード
+    userTouched: false, // 起動直後にユーザーが操作したか (自動オープンの抑止用)
     sizeExplicit: false, // このセッションでユーザーが自分でサイズを選んだか
   };
 
@@ -2010,6 +2011,53 @@
       `毎週月曜に新しいカードが生まれる<br>${seasonEmoji[season]} ${fmt(monday)}〜${fmt(sunday)} の特別版`;
 
     showScreen('mode');
+
+    // 初期表示は「最後に触ったカード」。戻るでモード選択に戻れる
+    // (「つづきから」のようなボタンは置かない。ユーザー方針: 初期表示だけ変える)
+    await openLastCard();
+  }
+
+  // 最後に触ったカードをそのまま開く。無ければ何もしない (モード選択のまま)
+  // 読み込み中にユーザーが触ったら自動オープンはしない
+  document.addEventListener('pointerdown', () => { state.userTouched = true }, { capture: true, once: true });
+
+  async function openLastCard() {
+    if (!state.userId || state.userTouched) return false;
+    try {
+      const { data, error } = await _sb.from('bingo_sessions')
+        .select('*')
+        .eq('user_id', state.userId)
+        .order('updated_at', { ascending: false, nullsFirst: false })
+        .limit(20);
+      if (error) return false;
+      const rows = (data || []).filter(r => Array.isArray(r.items) && r.items.length > 0);
+      // 週間は今週のものだけ (先週のカードには戻さない)
+      const row = rows.find(r => r.mode !== 'weekly' || r.date_str === getWeekStr());
+      if (!row) return false;
+
+      // 取得を待っている間にユーザーが操作していたら、そちらを優先する
+      // (読み込み中のタップが後から自動オープンに上書きされるのを防ぐ)
+      if (state.userTouched || state.card) return false;
+      if (!document.getElementById('screen-mode')?.classList.contains('active')) return false;
+
+      const size = Math.round(Math.sqrt(row.items.length));
+      if (size >= 3) setGridSize(size);
+      state.readonly = false;
+      state.card = {
+        id: row.id,
+        mode: row.mode,
+        label: row.label,
+        date_str: row.date_str || null,
+        items: row.items,
+        checks: row.checks || [],
+        awarded: row.awarded || null,
+      };
+      openGridScreen(row.label || 'ビンゴ');
+      return true;
+    } catch (e) {
+      console.error('[bingo] 前回のカードを開けませんでした:', e);
+      return false;
+    }
   }
 
   init();

@@ -15,11 +15,12 @@ function watchErrors(page) {
   return errors
 }
 
-test('bingo: リロード後もカテゴリを選ぶと前回のカードが続く / つづからカードは無い', async ({ page }) => {
+test('bingo: カテゴリを選び直すと前回のカードが続く / つづきからカードは無い', async ({ page }) => {
   const errors = watchErrors(page)
 
   await page.goto('/bingo.html')
-  await page.waitForTimeout(2000)
+  await page.waitForTimeout(2500)
+  await page.evaluate(() => showScreen('mode'))   // 初期表示は「最後に触ったカード」
 
   await page.evaluate(() => showScreen('category'))
   await page.evaluate(() => selectCategory('reading'))
@@ -29,13 +30,11 @@ test('bingo: リロード後もカテゴリを選ぶと前回のカードが続�
   const first = await page.$$eval('#bingo-grid .bingo-cell .cell-text', els => els.map(e => e.textContent))
   expect(first.length).toBeGreaterThan(0)
 
-  // リロード後はモード選択から始まる（自動復帰も「つづきから」カードも無い）
+  // リロード後、モード選択に戻して同じカテゴリを選ぶと前回のカードが返る
   await page.reload()
-  await page.waitForTimeout(2500)
-  await expect(page.locator('#screen-mode')).toHaveClass(/active/)
-  expect(await page.locator('#resume-card').count()).toBe(0)
-
-  // 同じカテゴリを選ぶと前回のカードが返る
+  await page.waitForTimeout(3000)
+  expect(await page.locator('#resume-card').count()).toBe(0)   // 「つづきから」ボタンUIは足さない方針
+  await page.evaluate(() => showScreen('mode'))
   await page.evaluate(() => showScreen('category'))
   await page.evaluate(() => selectCategory('reading'))
   await page.waitForTimeout(2500)
