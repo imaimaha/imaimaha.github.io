@@ -87,10 +87,12 @@
 
 | 用途 | 使う関数 | 中身 |
 |------|---------|------|
-| アップロード | `uploadPhoto(path, file, {upsert})` | 長辺1600px/JPEG q0.82 に圧縮 + `thumbs/<path>` にサムネ(長辺400px)を同時生成。`cacheControl: 1年` |
+| アップロード | `uploadPhoto(path, file, {upsert})` | 長辺**2400px**/JPEG q0.82 に圧縮 + `thumbs/<path>` にサムネ(長辺400px)を同時生成。`cacheControl: 1年` |
 | 表示 | `signedPhotoUrl(path, {thumb})` | 署名URLを**7日期限**で発行し localStorage にキャッシュ (キー `su_<path>`)。URL が変わらないのでブラウザ HTTP キャッシュが効く。`thumb: true` で一覧用サムネ、未生成の旧写真は自動で原寸にフォールバック |
 | 削除 | `removeStoredPhoto(path)` | 本体 + サムネ + URLキャッシュをまとめて削除 |
 
+- **圧縮版が唯一のコピー**: アプリの「写真を撮る」経由の写真は iOS のカメラロールに残らない。2400px はユーザー決定 (2026-08-01) — 2L〜A4印刷に耐える画質と Free プラン 1GB 枠の両立点（月150枚ペースで残り~8ヶ月。枠が近づいたら古い写真の原寸退避スクリプトを作って延命する）
+- 過去127枚 (2026-08-01 以前) の原寸はユーザーPCの `~/notre_photo_backup_2026-08-01/` にのみ存在。**絶対に消さない**（バックフィルは長辺1600pxで実施済み。2400pxに上げ直したければこの退避から再生成可能）
 - **一覧・グリッドはサムネ、タップ（ライトボックス等）で原寸**が原則。`<img>` には `loading="lazy"` を付ける
 - `_sb.storage.from('memories').upload / createSignedUrl` を直接呼ばない（.ics 等の写真以外は除く）
 - 既存写真の一括再圧縮スクリプト: `scripts/recompress_photos.js`（再実行安全・実行前に `~/notre_photo_backup_<日付>/` へ退避）
