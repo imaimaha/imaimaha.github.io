@@ -14,7 +14,10 @@ for (const { key, label, jp } of CATS) {
     page.on('console', m => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()) })
 
     await page.goto('/bingo.html', { waitUntil: 'networkidle' })
-    await page.waitForTimeout(1500)
+    await page.waitForTimeout(2000)
+    // 2026-08-01〜 開くと「最後に触ったカード」が初期表示になるので、モード選択に戻してから始める
+    await page.evaluate(() => showScreen('mode'))
+    await page.waitForTimeout(300)
 
     // 「カテゴリーから選ぶ」モードカードをクリック → カテゴリ選択画面へ
     await page.click('.mode-card:has-text("カテゴリー")')

@@ -9,7 +9,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202607312350">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608010105">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -165,10 +165,10 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/push.js?v=202607312350"></script>
-  <script src="assets/js/util.js?v=202607312350"></script>
-  <script src="assets/js/header.js?v=202607312350"></script>
-  <script src="assets/js/nav.js?v=202607312350"></script>
+  <script src="assets/js/push.js?v=202608010105"></script>
+  <script src="assets/js/util.js?v=202608010105"></script>
+  <script src="assets/js/header.js?v=202608010105"></script>
+  <script src="assets/js/nav.js?v=202608010105"></script>
 
   <div class="top-bar">
     <a href="/">← ホーム</a>
@@ -348,7 +348,42 @@
       (profs || []).forEach(p => { state.profiles[p.id] = p; });
 
       renderPalette();
-      // 自動リダイレクトはしない。単発ボタンを押した時に復元する
+
+      // 初期表示は「最後に触ったハント」。戻るでモード選択に戻れる
+      // (「つづきから」のようなボタンは置かない。ユーザー方針: 初期表示だけ変える)
+      await openLastHunt();
+    }
+
+    // 読み込み中にユーザーが触ったら自動オープンはしない
+    document.addEventListener('pointerdown', () => { state.userTouched = true }, { capture: true, once: true });
+
+    // 最後に触った自分のハントをそのまま開く。無ければモード選択のまま
+    async function openLastHunt() {
+      if (!state.userId || state.userTouched) return false;
+      try {
+        const { data, error } = await _sb.from('color_hunts')
+          .select('*')
+          .eq('user_id', state.userId)
+          .order('updated_at', { ascending: false, nullsFirst: false })
+          .limit(20);
+        if (error) return false;
+        // 週テーマは今週のものだけ (先週のハントには戻さない)。単発はいつのものでも復帰する
+        const row = (data || []).find(h => h.mode !== 'weekly' || h.week_key === getWeekStr());
+        if (!row) return false;
+
+        // 待っている間にユーザーが操作していたら、そちらを優先する
+        if (state.userTouched || state.currentHunt) return false;
+        if (!document.getElementById('screen-mode')?.classList.contains('active')) return false;
+
+        state.currentHunt = row;
+        state.viewingHistory = false;
+        if (row.mode === 'single') setActiveSingle(row.id);
+        await openHuntBoard(row.mode);
+        return true;
+      } catch (e) {
+        console.error('[color] 前回のハントを開けませんでした:', e);
+        return false;
+      }
     }
 
     // 単発モードカードのクリックハンドラ: 前回のセッションあれば復元、無ければサブ画面

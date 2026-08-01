@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202607312350'
+const APP_VERSION = '202608010105'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -158,14 +158,19 @@ function buildIcs({ uid, title, date, dateEnd, description, url }) {
 // .ics を Storage に置いて署名付きURLで直接開く。
 // iOS Safari は text/calendar の URL を開くと「カレンダーに追加」ダイアログを直接出せる
 // (共有シート経由のファイル受け渡しだと "保存 → ファイルアプリでタップ" の2手間になる)
-// バケットは非公開の memories を使い、署名付きURL(1時間)なので予定の内容は外に漏れない
-// targetWindow: タップ直後に window.open('', '_blank') で開いておいた窓を渡す。
-//   await の後に window.open するとユーザー操作の文脈が切れて iOS/Safari にブロックされるため
-// 戻り値: 'opened' | 'failed'
-async function openIcsInCalendar(event, targetWindow) {
+// バケットは非公開の memories を使い、署名付きURL(1時間)なので予定の内容は外に漏れない。
+// Content-Type が text/calendar で返ることは確認済み (Safari が「カレンダーに追加」を出せる)
+//
+// ⚠️ タップされた瞬間にこの関数を呼んではいけない。
+//   iOS はユーザー操作の直後でない window.open / 遷移を無視する。
+//   about:blank の子窓を先に開いて後から location を差し替える手も standalone PWA では効かず、
+//   about:blank のまま残った (2026-08-01 実機で発生)。
+//   → 画面を開いた時点でここで URL を用意し、素の <a href> にしてタップさせること
+// 戻り値: 署名付きURL / 失敗したら null
+async function createIcsUrl(event) {
   try {
     const { data: { session } } = await _sb.auth.getSession()
-    if (!session) return 'failed'
+    if (!session) return null
     const ics = buildIcs(event)
     const safeName = String(event.uid || 'event').replace(/[^\w.-]/g, '_')
     const path = `ics/${session.user.id}/${safeName}.ics`
@@ -173,18 +178,14 @@ async function openIcsInCalendar(event, targetWindow) {
 
     const { error: upErr } = await _sb.storage.from('memories')
       .upload(path, blob, { contentType: 'text/calendar', upsert: true })
-    if (upErr) { console.error('[ics] アップロード失敗:', upErr.message); return 'failed' }
+    if (upErr) { console.error('[ics] アップロード失敗:', upErr.message); return null }
 
     const { data, error } = await _sb.storage.from('memories').createSignedUrl(path, 3600)
-    if (error || !data?.signedUrl) { console.error('[ics] 署名付きURL失敗:', error?.message); return 'failed' }
-
-    // 先に開いておいた窓があればそこへ、無ければ同じタブで開く
-    if (targetWindow && !targetWindow.closed) targetWindow.location.href = data.signedUrl
-    else location.href = data.signedUrl
-    return 'opened'
+    if (error || !data?.signedUrl) { console.error('[ics] 署名付きURL失敗:', error?.message); return null }
+    return data.signedUrl
   } catch (e) {
-    console.error('[ics] カレンダーで開けませんでした:', e)
-    return 'failed'
+    console.error('[ics] URL を作れませんでした:', e)
+    return null
   }
 }
 
@@ -226,12 +227,14 @@ function linkChipHtml(href, label) {
 // ── 写真 (memories バケット) ──
 // カメラ原寸 (平均2.5MB) をそのまま上げ下げしていたのが「重い」の主因だったため、
 // 写真は必ずこのセクションのヘルパー経由で扱う (docs/PLAN_PERFORMANCE.md 参照):
-//   アップロード: uploadPhoto()  … 長辺1600pxに圧縮 + thumbs/ にサムネも同時アップ
+//   アップロード: uploadPhoto()  … 長辺2400pxに圧縮 + thumbs/ にサムネも同時アップ
 //   表示:        signedPhotoUrl() … 署名URLを7日期限で localStorage にキャッシュ
 //                (URL が変わらなければブラウザの HTTP キャッシュが効いて再DLゼロになる)
 
 // 画像ファイルを長辺 maxEdge px の JPEG に圧縮する。失敗時・縮小の意味がない時は元ファイルを返す
-async function compressImage(file, maxEdge = 1600, quality = 0.82) {
+// 既定 2400px はユーザー決定 (2026-08-01): アプリの「写真を撮る」経由はカメラロールに残らず
+// この圧縮版が唯一のコピーになるため、2L〜A4 印刷に耐える画質と容量(残容量~8ヶ月)を両立させる値
+async function compressImage(file, maxEdge = 2400, quality = 0.82) {
   try {
     if (!file || !/^image\//.test(file.type)) return file
     let src, w, h

@@ -9,7 +9,7 @@
   <title>ふたりの予定 | Notre Endroit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202607312350">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608010105">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -277,6 +277,8 @@
       color: #d6ffe4; font-family: inherit; font-size: 0.74rem; white-space: nowrap;
     }
     .ev-chip:active { transform: scale(0.96); }
+    a.ev-chip { display:inline-flex; align-items:center; text-decoration:none; cursor:pointer; }
+    a.ev-chip[data-state="preparing"] { opacity:0.6; }
     .ev-chip.export-date-btn {
       background: rgba(255,140,190,0.14);
       border-color: rgba(255,150,190,0.42);
@@ -422,10 +424,10 @@
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202607312350"></script>
-  <script src="assets/js/util.js?v=202607312350"></script>
-  <script src="assets/js/header.js?v=202607312350"></script>
-  <script src="assets/js/nav.js?v=202607312350"></script>
+  <script src="assets/js/stars.js?v=202608010105"></script>
+  <script src="assets/js/util.js?v=202608010105"></script>
+  <script src="assets/js/header.js?v=202608010105"></script>
+  <script src="assets/js/nav.js?v=202608010105"></script>
   <div class="top-bar">
     <a href="/">← もどる</a>
     <h1>ふたりの予定</h1>
@@ -473,7 +475,8 @@
       <textarea id="ev-memo" placeholder="集合場所・時間など"></textarea>
       <!-- 書き出し導線は編集時のみ (追加前の予定は書き出せない・一覧に置くと誤タップするため) -->
       <div class="event-chips" id="modal-export-row" style="display:none">
-        <button type="button" class="ev-chip export-ics-btn" onclick="exportToDeviceCalendar(editingId)">📤 iPhoneのカレンダーに追加</button>
+        <!-- href はモーダルを開いた時に用意する (タップ時に非同期処理をすると iOS が遷移を無視する) -->
+        <a class="ev-chip export-ics-btn" id="modal-ics-link" target="_blank" rel="noopener" onclick="onIcsLinkClick(event)">📤 iPhoneのカレンダーに追加</a>
         <button type="button" class="ev-chip export-date-btn" onclick="exportToDate(editingId)">💕 デートにする</button>
       </div>
       <div class="modal-btns">
@@ -679,14 +682,13 @@
       await _sb.from('events').delete().eq('id', id)
     })
 
-    // 端末のカレンダー (iPhone のカレンダー等) へ書き出し。
-    // まず Storage の署名付きURL で .ics を直接開く (Safari が「カレンダーに追加」を出す)。
-    // 失敗した時だけ共有シート/ダウンロードにフォールバック
-    async function exportToDeviceCalendar(id) {
-      const ev = events.find(e => String(e.id) === String(id))
-      if (!ev) return
+    // ── 端末のカレンダー (iPhone のカレンダー等) へ書き出し ──
+    // 編集モーダルを開いた時点で .ics の署名付きURLを用意し、リンクに入れておく。
+    // タップ時に非同期処理をすると iOS が遷移を無視して about:blank のまま残るため
+    // (2026-08-01 実機で発生)。準備できていない場合だけ共有シート方式にフォールバック
+    function icsPayloadFor(ev) {
       const whose = ev.owner_id ? `${profById[ev.owner_id]?.name || ''}の予定` : 'ふたりの予定'
-      const payload = {
+      return {
         uid: `notre-event-${ev.id}`,
         title: ev.title,
         date: ev.date,
@@ -694,14 +696,31 @@
         description: [ev.memo || '', ev.url || '', `（Notre Endroit / ${whose}）`].filter(Boolean).join('\n'),
         url: ev.url,
       }
-      // タップ直後に窓を開いておく (await の後だと iOS でブロックされる)
-      const w = typeof openIcsInCalendar === 'function' ? window.open('', '_blank') : null
-      if (typeof openIcsInCalendar === 'function') {
-        if (await openIcsInCalendar(payload, w) === 'opened') return
-      }
-      if (w && !w.closed) { try { w.close() } catch (_) {} }
+    }
 
-      const result = await shareIcs(payload)
+    async function prepareIcsLink(ev) {
+      const a = document.getElementById('modal-ics-link')
+      if (!a) return
+      a.dataset.state = 'preparing'
+      a.removeAttribute('href')
+      a.textContent = '📤 準備中…'
+      if (typeof createIcsUrl !== 'function') { a.dataset.state = 'fallback'; a.textContent = '📤 iPhoneのカレンダーに追加'; return }
+      const url = await createIcsUrl(icsPayloadFor(ev))
+      // 準備中に別の予定を開いた場合は捨てる
+      if (a.dataset.eventId !== String(ev.id)) return
+      if (url) { a.href = url; a.dataset.state = 'ready' } else { a.dataset.state = 'fallback' }
+      a.textContent = '📤 iPhoneのカレンダーに追加'
+    }
+
+    // 準備できていない時のフォールバック (共有シート or ダウンロード)
+    async function onIcsLinkClick(e) {
+      const a = document.getElementById('modal-ics-link')
+      if (!a || a.dataset.state === 'ready') return   // 素のリンクとして遷移させる
+      e.preventDefault()
+      if (a.dataset.state === 'preparing') { alert('準備中です。少し待ってからもう一度どうぞ'); return }
+      const ev = events.find(x => String(x.id) === String(editingId))
+      if (!ev) return
+      const result = await shareIcs(icsPayloadFor(ev))
       if (result === 'failed') alert('カレンダーへの書き出しに失敗しました。時間をおいて試してね')
     }
 
@@ -765,6 +784,9 @@
       selOwner = ev.owner_id || null
       renderOwnerChips()
       document.getElementById('modal-export-row').style.display = 'flex'
+      const icsLink = document.getElementById('modal-ics-link')
+      if (icsLink) icsLink.dataset.eventId = String(ev.id)
+      prepareIcsLink(ev)
       document.getElementById('modal').classList.add('open')
       setTimeout(() => document.getElementById('ev-title').focus(), 50)
     }
