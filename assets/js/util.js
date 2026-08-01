@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202608011625'
+const APP_VERSION = '202608011647'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -90,6 +90,21 @@ async function getPointSummary(userId) {
 // JST の今日 (YYYY-MM-DD)
 function jstDateStr(date = new Date()) {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+}
+
+// ── 今ここ (チェックイン) ──
+
+// その町が自分にとって初めてなら +5pt して true を返す。
+// ⚠️ チェックインを insert した「あと」に呼ぶこと (今回の1件を含めて数えるため)
+async function awardFirstVisit(userId, placeName) {
+  if (!placeName) return false
+  const { count, error } = await _sb.from('location_checkins')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId).eq('place_name', placeName)
+  if (error) { console.error('[location] 初訪問の判定に失敗:', error.message); return false }
+  if ((count ?? 0) !== 1) return false
+  await addPoints(userId, 5, 'location_first_visit')
+  return true
 }
 
 // ── リンク (デート / やりたいこと / カレンダーの予定に貼る URL) ──
