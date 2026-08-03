@@ -10,7 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608011655">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608031439">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -128,6 +128,29 @@
     .rx-chip:active { transform: scale(0.94); }
     .rx-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
+    /* 書き漏れた日を書く */
+    .backfill {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(220,180,240,0.18);
+      border-radius: 16px; padding: 12px 14px;
+    }
+    .backfill summary { font-size: 0.88rem; color: #e8d0ec; cursor: pointer; }
+    .backfill-body { margin-top: 12px; }
+    .backfill-note { font-size: 0.76rem; color: #b89ac0; line-height: 1.6; margin-bottom: 10px; }
+    .backfill-row { display: flex; gap: 8px; align-items: center; }
+    .backfill-row input[type="date"] {
+      flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px;
+      background: rgba(0,0,0,0.22); border: 1.5px solid rgba(220,180,240,0.25);
+      color: #f3ecf3; font-size: 16px; font-family: inherit;
+    }
+    .bf-btn {
+      flex-shrink: 0; padding: 10px 14px; border-radius: 10px; cursor: pointer;
+      background: rgba(226,140,106,0.18); border: 1.5px solid rgba(226,140,106,0.5);
+      color: #ffd8c0; font-family: inherit; font-size: 0.82rem;
+    }
+    .bf-btn:active { transform: scale(0.97); }
+    #bf-form { margin-top: 12px; }
+
     .memory-year-label { font-size: 0.78rem; color: #e2a878; font-weight: 700; margin: 14px 4px 6px; }
     .memory-year-label:first-child { margin-top: 0; }
 
@@ -142,9 +165,9 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/util.js?v=202608011655"></script>
-  <script src="assets/js/header.js?v=202608011655"></script>
-  <script src="assets/js/nav.js?v=202608011655"></script>
+  <script src="assets/js/util.js?v=202608031439"></script>
+  <script src="assets/js/header.js?v=202608031439"></script>
+  <script src="assets/js/nav.js?v=202608031439"></script>
 
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
@@ -164,6 +187,25 @@
       <div id="partner-today"></div>
     </div>
 
+    <!-- 書き漏れた日をあとから書く (ポイント消費) -->
+    <div class="section">
+      <details class="backfill">
+        <summary>📝 書き漏れた日を書く</summary>
+        <div class="backfill-body">
+          <div class="backfill-note" id="backfill-note"></div>
+          <div class="backfill-row">
+            <input type="date" id="bf-date">
+            <button class="bf-btn" onclick="prepareBackfill()">この日を書く</button>
+          </div>
+          <div id="bf-form" style="display:none">
+            <div class="mood-row" id="bf-mood-row"></div>
+            <textarea class="diary-textarea" id="bf-body" maxlength="2000" placeholder="その日はどんな一日だった？"></textarea>
+            <button class="diary-save-btn" onclick="saveBackfill()" id="bf-save"></button>
+          </div>
+        </div>
+      </details>
+    </div>
+
     <div class="section" id="memory-section" style="display:none">
       <div class="section-label">✨ この日の思い出</div>
       <div id="memory-list"></div>
@@ -178,6 +220,11 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    // 日付の変わり目は JST 2:00 (深夜に書いても「その日」の日記になる)
+    const DIARY_TODAY = () => jstDateStrAt(2)
+    // 書き漏れた日をあとから書くときの消費ポイント
+    const BACKFILL_COST = 20
+
     const MOODS = ['☀️', '🌤️', '☁️', '🌧️', '⛈️', '❄️', '🌈', '🥰', '😊', '😴', '😢', '😤']
     // 相手の日記に押せるスタンプ
     const STAMPS = ['💖', '🥰', '👏', '🙏', '🫂', '😆', '🥲', '✨', '💪', '😴']
@@ -209,7 +256,7 @@
       myProfile = profById[myId] || null
       partnerProfile = (profiles || []).find(p => p.id !== myId) || null
 
-      today = jstDateStr()
+      today = DIARY_TODAY()
       document.getElementById('today-date').textContent = fmtDate(today)
       renderMoodRow()
 
@@ -227,22 +274,16 @@
       renderMemories()
       renderHistory()
       renderStreaks()
+      initBackfillUI()
     }
 
     // ── 連続記入ストリーク ──
     const STREAK_BONUS = { 3: 3, 7: 10, 14: 15, 30: 30, 60: 50, 100: 100, 200: 150, 365: 300 }
 
+    // 1日の抜けはセーフ、2日続けて抜けたら途切れる (util.js の countStreak)
     function streakFor(userId) {
       const mySet = new Set(entries.filter(e => e.user_id === userId).map(e => e.date_str))
-      let streak = 0
-      let cur = new Date(today + 'T00:00:00+09:00')
-      // 今日がまだなら昨日から数える
-      if (!mySet.has(today)) cur.setDate(cur.getDate() - 1)
-      while (true) {
-        const ds = cur.toLocaleDateString('sv-SE')
-        if (mySet.has(ds)) { streak++; cur.setDate(cur.getDate() - 1) } else break
-      }
-      return streak
+      return countStreak(ds => mySet.has(ds), today).days
     }
 
     function renderStreaks() {
@@ -250,6 +291,8 @@
       const chips = []
       if (myProfile) chips.push(`<div class="streak-chip">${myProfile.emoji} <b>🔥${streakFor(myId)}</b>日</div>`)
       if (partnerProfile) chips.push(`<div class="streak-chip">${partnerProfile.emoji} <b>🔥${streakFor(partnerProfile.id)}</b>日</div>`)
+      // 1日あいてもセーフというルールが伝わるように添える
+      chips.push('<div class="streak-chip" style="flex:0 0 auto;font-size:0.7rem;color:#c9a6d8;background:rgba(200,160,220,0.08);border-color:rgba(200,160,220,0.2)">1日あいてもセーフ</div>')
       row.innerHTML = chips.join('')
     }
 
@@ -439,6 +482,94 @@
         await checkStreakBonus()
       }
       renderHistory()
+    }
+
+    // ── 書き漏れた日をあとから書く (ポイント消費) ──
+    let bfDate = null, bfMood = null
+
+    function initBackfillUI() {
+      const input = document.getElementById('bf-date')
+      const y = new Date(today + 'T00:00:00+09:00')
+      y.setDate(y.getDate() - 1)
+      input.max = y.toLocaleDateString('sv-SE')   // 今日は上のカードで書く
+      input.value = input.max
+      document.getElementById('backfill-note').innerHTML =
+        `あとから書くと ${BACKFILL_COST}pt 消費するよ（連続記入もつながる）。<br>今日のぶんは上のカードから無料で書けるよ`
+      document.getElementById('bf-save').textContent = `📝 この日の日記を書く（${BACKFILL_COST}pt）`
+      renderBfMoodRow()
+    }
+
+    function renderBfMoodRow() {
+      document.getElementById('bf-mood-row').innerHTML = MOODS.map(m =>
+        `<span class="mood-chip ${m === bfMood ? 'sel' : ''}" onclick="setBfMood('${m}')">${m}</span>`
+      ).join('')
+    }
+    function setBfMood(m) { bfMood = (bfMood === m) ? null : m; renderBfMoodRow() }
+
+    function prepareBackfill() {
+      const d = document.getElementById('bf-date').value
+      if (!d) { showToast('日付を選んでね'); return }
+      if (d >= today) { showToast('今日のぶんは上のカードから書けるよ'); return }
+      if (entries.some(e => e.user_id === myId && e.date_str === d)) {
+        showToast('その日はもう書いてあるよ'); return
+      }
+      bfDate = d
+      bfMood = null
+      renderBfMoodRow()
+      document.getElementById('bf-body').value = ''
+      document.getElementById('bf-form').style.display = 'block'
+      showToast(`${fmtShort(d)} の日記を書こう`)
+    }
+
+    async function saveBackfill() {
+      if (!bfDate) { showToast('日付を選んでね'); return }
+      const body = document.getElementById('bf-body').value.trim()
+      if (!body) { showToast('本文を入れてね'); return }
+      const btn = document.getElementById('bf-save')
+      btn.disabled = true
+
+      try {
+        // 消費直前に実残高を確認 (表示が古くてもマイナスにしない)
+        const balance = await getBalance(myId)
+        if (balance === null) { showToast('ポイントを確認できませんでした'); return }
+        if (balance < BACKFILL_COST) { showToast(`ポイントが足りないよ（${BACKFILL_COST}pt必要）`); return }
+        if (entries.some(e => e.user_id === myId && e.date_str === bfDate)) {
+          showToast('その日はもう書いてあるよ'); return
+        }
+
+        const { data, error } = await _sb.from('diary_entries')
+          .upsert({ user_id: myId, date_str: bfDate, mood: bfMood, body, updated_at: new Date().toISOString() },
+                  { onConflict: 'user_id,date_str' })
+          .select().single()
+        if (error) { showToast('保存に失敗しました'); console.error(error); return }
+
+        const paid = await addPoints(myId, -BACKFILL_COST, 'diary_backfill')
+        if (!paid) {
+          // 消費できなかったら日記も取り消す (タダ書きにしない)
+          await _sb.from('diary_entries').delete().eq('id', data.id)
+          showToast('ポイントの処理に失敗しました')
+          return
+        }
+
+        entries = entries.filter(e => !(e.user_id === myId && e.date_str === bfDate))
+        entries.unshift(data)
+        entries.sort((a, b) => b.date_str.localeCompare(a.date_str))
+        document.getElementById('bf-form').style.display = 'none'
+        showToast(`${fmtShort(bfDate)} の日記を書いたよ 📝`)
+        renderStreaks(); renderMemories(); renderHistory()
+        await checkStreakBonus()
+
+        if (partnerProfile) {
+          notify({
+            title: '📔 書き漏れた日の日記',
+            body: `${myProfile?.emoji || ''} が ${fmtShort(bfDate)} の日記をあとから書いたよ`,
+            url: '/diary.html', kind: 'diary', recipient: partnerProfile.id,
+          })
+        }
+        bfDate = null
+      } finally {
+        btn.disabled = false
+      }
     }
 
     function editEntry(entryId) {
