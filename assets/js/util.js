@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202608011655'
+const APP_VERSION = '202608031439'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -90,6 +90,39 @@ async function getPointSummary(userId) {
 // JST の今日 (YYYY-MM-DD)
 function jstDateStr(date = new Date()) {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+}
+
+// 日付の変わり目を JST の指定時刻にした「今日」(YYYY-MM-DD)。
+// 日記・筋トレは深夜まで起きている前提で 2:00 区切り (2026-08-03〜)。
+// 例: 8/3 の 01:30 は「8/2」扱いになる
+function jstDateStrAt(rolloverHour = 2, date = new Date()) {
+  return new Date(date.getTime() - rolloverHour * 3600000)
+    .toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+}
+
+// 連続日数を数える。**1日の抜けはセーフ、2日続けて抜けたら途切れる**（救済ルール 2026-08-03〜）
+//   hasDay(dateStr) … その日を達成しているか
+//   todayStr        … 起点の日付 (2:00区切りの「今日」)
+// 戻り値: { days, usedGrace } days=連続日数 / usedGrace=「おやすみ」を使った回数
+function countStreak(hasDay, todayStr) {
+  const cur = new Date(todayStr + 'T00:00:00+09:00')
+  const at = () => cur.toLocaleDateString('sv-SE')
+  // 今日がまだなら昨日から数える (今日の未達成で途切れさせない)
+  if (!hasDay(at())) cur.setDate(cur.getDate() - 1)
+  let days = 0, usedGrace = 0
+  while (true) {
+    if (hasDay(at())) { days++; cur.setDate(cur.getDate() - 1); continue }
+    // 抜けた日: その前日が達成なら「1日おやすみ」として継続する
+    const probe = new Date(cur)
+    probe.setDate(probe.getDate() - 1)
+    if (days > 0 && hasDay(probe.toLocaleDateString('sv-SE'))) {
+      usedGrace++
+      cur.setDate(cur.getDate() - 1)
+      continue
+    }
+    break
+  }
+  return { days, usedGrace }
 }
 
 // ── 今ここ (チェックイン) ──
