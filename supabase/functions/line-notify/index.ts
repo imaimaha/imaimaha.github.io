@@ -19,8 +19,19 @@ Deno.serve(async (req) => {
   let to: string | null = null
   let partnerUserId: string | null = null
 
-  if (target === 'partner') {
-    if (!sender_id) return json({ error: 'sender_id required for partner target' }, 400)
+  // ⚠️ LINE 通知は「ふたり + bot の3人グループ」に一元化する (2026-08-04〜 ユーザー方針)。
+  //   呼び出し側が target:'partner' を渡しても個人トークには送らずグループへ送る。
+  //   グループID (settings.line_group_id) が未設定のときだけ個人トークにフォールバック
+  const { data: groupSetting } = await sb
+    .from('settings')
+    .select('value')
+    .eq('key', 'line_group_id')
+    .maybeSingle()
+
+  if (groupSetting?.value) {
+    to = groupSetting.value
+  } else if (sender_id) {
+    console.warn('[line-notify] line_group_id が未設定のため個人トークに送信します')
     const { data: partner } = await sb
       .from('profiles')
       .select('id, line_user_id')
@@ -30,25 +41,7 @@ Deno.serve(async (req) => {
     to = partner.line_user_id
     partnerUserId = partner.id
   } else {
-    const { data: groupSetting } = await sb
-      .from('settings')
-      .select('value')
-      .eq('key', 'line_group_id')
-      .single()
-    if (groupSetting?.value) {
-      to = groupSetting.value
-    } else if (sender_id) {
-      const { data: partner } = await sb
-        .from('profiles')
-        .select('id, line_user_id')
-        .neq('id', sender_id)
-        .single()
-      if (!partner?.line_user_id) return json({ error: 'partner LINE User ID not registered' }, 404)
-      to = partner.line_user_id
-      partnerUserId = partner.id
-    } else {
-      return json({ error: 'no group configured and no sender_id' }, 400)
-    }
+    return json({ error: 'no group configured and no sender_id' }, 400)
   }
 
   const lineMessage: Record<string, unknown> = { type: 'text', text: message }
@@ -84,7 +77,9 @@ Deno.serve(async (req) => {
     body: message,
     replier_id: sender_id ?? null,
   }
-  if (target === 'partner' && partnerUserId) {
+  // グループ送信時は partnerUserId が無い。sender_user_id を渡すと
+  // send-push 側が「送信者以外」に配るので、結果は相手に届く形になる
+  if (partnerUserId) {
     pushPayload.recipient_user_id = partnerUserId
   } else {
     pushPayload.sender_user_id = sender_id ?? null
