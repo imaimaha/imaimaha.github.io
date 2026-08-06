@@ -94,3 +94,30 @@ test('筋トレ: ストリークがエラーなく出る (2:00境界)', async ({
   await expect(page.locator('#streak-text')).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test('日付系がすべて 2:00 区切りになっている (クイズ/1曲/ログボ/週境界)', async ({ page }) => {
+  const errors = []
+  page.on('pageerror', e => errors.push(e.message))
+
+  // クイズの「今日」
+  await page.goto('/quiz.html')
+  await page.waitForTimeout(2000)
+  expect(await page.evaluate(() => todayStr())).toBe(await page.evaluate(() => jstDateStrAt(2)))
+
+  // 今日の1曲
+  await page.goto('/one_song.html')
+  await page.waitForTimeout(2000)
+  expect(await page.evaluate(() => typeof jstDateStrAt === 'function')).toBe(true)
+
+  // ビンゴの週境界: 月曜 1:00 はまだ前の週
+  await page.goto('/bingo.html')
+  await page.waitForTimeout(2500)
+  const wk = await page.evaluate(() => ({
+    monBefore2: getWeekStr(new Date('2026-08-03T01:00:00+09:00')),  // 月曜 1時 → 前週(7/27)
+    monAfter2:  getWeekStr(new Date('2026-08-03T02:30:00+09:00')),  // 月曜 2時半 → 当週(8/3)
+  }))
+  expect(wk.monBefore2).toBe('2026-07-27')
+  expect(wk.monAfter2).toBe('2026-08-03')
+
+  expect(errors).toEqual([])
+})

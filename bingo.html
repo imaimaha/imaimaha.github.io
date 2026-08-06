@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608031532">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608061558">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -632,10 +632,10 @@
 
   <div id="confetti-container"></div>
 
-  <script src="assets/js/util.js?v=202608031532"></script>
+  <script src="assets/js/util.js?v=202608061558"></script>
 
-  <script src="assets/js/header.js?v=202608031532"></script>
-  <script src="assets/js/nav.js?v=202608031532"></script>
+  <script src="assets/js/header.js?v=202608061558"></script>
+  <script src="assets/js/nav.js?v=202608061558"></script>
   <!-- Top Bar -->
   <div class="top-bar">
     <button class="back-btn" id="back-btn" onclick="handleBack()">← ホーム</button>
@@ -827,12 +827,12 @@
   <!-- ── Toast ── -->
   <div class="toast" id="toast"></div>
 
-  <script src="assets/data/bingo_pools.js?v=202608031532"></script>
+  <script src="assets/data/bingo_pools.js?v=202608061558"></script>
   <script>
   // ─────────────────────────────────────────
   // Item Pools
   // ─────────────────────────────────────────
-  // POOLS は assets/data/bingo_pools.js?v=202608031532
+  // POOLS は assets/data/bingo_pools.js?v=202608061558
 
   // ─────────────────────────────────────────
   // Bingo Line Counter
@@ -952,9 +952,9 @@
     return d === 0 || d === 6;
   }
 
-  // JST基準の月曜日(YYYY-MM-DD)を返す
+  // JST基準の月曜日(YYYY-MM-DD)を返す。週の切り替わりも 月曜 2:00 に合わせる
   function getWeekStr(date = new Date()) {
-    const d = new Date(date.getTime());
+    const d = new Date(date.getTime() - 2 * 3600000);
     d.setHours(0, 0, 0, 0);
     const dow = d.getDay();                // 0=日, 1=月, ..., 6=土
     const daysSinceMonday = (dow + 6) % 7; // Mon=0, Sun=6

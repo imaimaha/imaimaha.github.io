@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202608031532">
+  <link rel="stylesheet" href="assets/css/style.css?v=202608061558">
   <style>
     /* Page-scoped tweaks */
     .home-hero { padding: 40px 20px 12px; }
@@ -311,11 +311,11 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
 
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202608031532"></script>
-  <script src="assets/js/push.js?v=202608031532"></script>
-  <script src="assets/js/util.js?v=202608031532"></script>
-  <script src="assets/js/header.js?v=202608031532"></script>
-  <script src="assets/js/nav.js?v=202608031532"></script>
+  <script src="assets/js/stars.js?v=202608061558"></script>
+  <script src="assets/js/push.js?v=202608061558"></script>
+  <script src="assets/js/util.js?v=202608061558"></script>
+  <script src="assets/js/header.js?v=202608061558"></script>
+  <script src="assets/js/nav.js?v=202608061558"></script>
 
   <header class="hero home-hero">
     <div class="hero-inner">
@@ -674,7 +674,7 @@
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
         const myId = session.user.id
-        const dateStr = new Date().toLocaleDateString('sv-SE')
+        const dateStr = jstDateStrAt(2)   // 日付の変わり目は JST 2:00
 
         const { data: existing } = await _sb.from('notifications_sent')
           .select('id').eq('user_id', myId).eq('kind', 'login_bonus').eq('date_str', dateStr).maybeSingle()
@@ -700,7 +700,7 @@
       try {
         const { data: { session } } = await _sb.auth.getSession()
         if (!session) return
-        const dateStr = new Date().toLocaleDateString('sv-SE')
+        const dateStr = jstDateStrAt(2)   // クイズと同じ 2:00 区切り
         const { data } = await _sb.from('quiz_answers')
           .select('id')
           .eq('user_id', session.user.id)
