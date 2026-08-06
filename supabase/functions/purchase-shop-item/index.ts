@@ -35,9 +35,13 @@ Deno.serve(async (req) => {
   if (item.buyer_id !== buyerUid) return json({ error: 'あなた宛の商品ではありません' }, 403)
   if (item.stock !== null && item.stock <= 0) return json({ error: 'sold out' }, 400)
 
-  // 買い手の残高チェック
-  const { data: pts } = await sb.from('points').select('amount').eq('user_id', buyerUid)
-  const balance = (pts || []).reduce((s: number, r: { amount: number }) => s + r.amount, 0)
+  // 買い手の残高チェック。
+  // ⚠️ 全行 select → reduce だと PostgREST の 1000行上限で古い履歴を取りこぼし、
+  //    残高が実際より少なく出て「ポイント不足」になる。必ず RPC (DB側 SUM) を使う
+  const { data: balance, error: balErr } = await sb.rpc('point_balance', { uid: buyerUid })
+  if (balErr || balance === null) {
+    return json({ error: '残高を確認できませんでした: ' + (balErr?.message ?? 'unknown') }, 500)
+  }
   if (balance < item.price) return json({ error: `ポイント不足 (残高 ${balance}pt / 必要 ${item.price}pt)` }, 400)
 
   // 在庫を先に減らす (nullなら無限なのでスキップ)

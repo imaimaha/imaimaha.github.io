@@ -469,7 +469,9 @@
 
 **残高計算**: 必ず RPC `point_balance(uid)`（= `SUM(amount)` を DB 側で実行）経由で取得する。クライアントは `util.js` の `getBalance(userId)` / 獲得・消費の内訳は `getPointSummary(userId)`（RPC `point_summary`）を使う。
 
-> ⚠️ **原則: クライアント側で points の全行を取得して合計してはいけない。** PostgREST の select はデフォルト最大1000行のため、履歴が1000行を超えると取りこぼして残高がズレる（2026-07-26 に nick 1018行で発覚。表示残高が実際より多く出てマイナスまで消費できた）。定義: `supabase/migrations/20260726000000_point_balance_rpc.sql`
+> ⚠️ **原則: points の全行を取得して合計してはいけない（クライアントも Edge Function も）。** PostgREST の select はデフォルト最大1000行のため、履歴が1000行を超えると取りこぼして残高がズレる（2026-07-26 に nick 1018行で発覚。表示残高が実際より多く出てマイナスまで消費できた）。定義: `supabase/migrations/20260726000000_point_balance_rpc.sql`
+>
+> 2026-08-07: `purchase-shop-item` (Edge Function) の残高チェックだけ全行 select → reduce のまま残っており、hedgehog の points が1452行になった結果 **実残高212pt に対して先頭1000行の合計が −43pt** と出て、券が買えなくなっていた。RPC に統一して解消
 
 **消費直前の再確認ガード**: ガチャ（単発は受け取り時 / 10連は開始時）とありがとうのギフト送信は、消費レコードを INSERT する直前に `getBalance` で DB の実残高を再確認し、不足なら中止する（画面表示が古くてもマイナスまで引けないための二重ガード）。
 
