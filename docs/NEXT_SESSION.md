@@ -18,6 +18,30 @@
 - 教訓: **cron の migration ファイルにキーを書かない**。プレースホルダにして適用時に差し込む（既存2ファイルはプレースホルダ化済み）
 
 
+## 🔜 2026-09-12 Cloudflare 移行（進行中・ドメイン購入待ちで一時停止）
+
+ユーザー要望「Notre も Cloudflare に移す。ホストもちゃんとしたい」。**独自ドメイン購入 + 移行後にリポジトリ非公開化**の方針で合意済み → **ドメイン購入は「一旦やらない」でユーザー保留中**。
+
+**済んだこと**:
+- Cloudflare アカウント確認（GitHub ログインの redemarrage22 / Account ID `7058f4327b2fb0ceed93abf488a6f6f1`）。wrangler login 済み（このPC）
+- **Worker「notre」に並行デプロイ済み**: https://notre.redemarrage22.workers.dev （本番 GitHub Pages は無停止で並行稼働中）
+- `wrangler.jsonc`（静的アセット配信）+ `.assetsignore`（docs/tests/supabase 等を配信除外。GitHub Pages では全公開だったのを改善）
+- デプロイ方法: `nvm use 22 && npx wrangler@4 deploy`（Node 22 必須。システムの node 18 では wrangler 4 が動かない）
+- 6月の残骸: Worker「imaimaha」+ 未マージ PR #1（Cloudflare 自動生成）が残っている。移行完了時に掃除する
+
+**残り（ドメイン購入後に再開）**:
+1. ダッシュボード Domains → Register Domain で購入（ユーザー操作・カード必要）
+2. Worker「notre」にカスタムドメイン接続 + workers.dev URL 無効化
+3. push で Cloudflare 自動デプロイ（Workers Builds の Git 連携）← 今は手動 wrangler deploy で GitHub Pages と二重更新中
+4. Supabase Auth の Site URL / redirect 確認、切り替え日にふたりのスマホで PWA 入れ直し + push 再購読
+5. 旧 imaimaha.github.io は新URLへの転送ページ化 → リポジトリ非公開化（ユーザー合意済み）
+
+## 2026-09-12 設定にパスワード変更を追加（両ホストデプロイ済み）
+
+- settings.html「🔑 パスワードを変更する」折りたたみ → 新パスワード2回入力(8文字以上) → `auth.updateUser`
+- API経路は実検証済み（変更→新PWログイン→復元）。UIテスト `tests/password_change.spec.js` green
+- ⚠️ パスワード変更テストをすると **Playwright の保存済みログイン状態が無効化される** → `PW_EMAIL=claude@example.com PW_PASSWORD=claude npx playwright test --project=setup` で再生成
+
 ## 2026-09-12 今ここ: 「途中で離脱すると登録されない」を修正（Edge Function 化）
 
 ユーザー報告「今ここを押した後に別の操作をすると登録されない。一回押したら最後まで走ってほしい」。
