@@ -1,0 +1,20 @@
+# サイト配信に不要なもの (GitHub Pages 時代は全部公開されていた。Workers では配信しない)
+docs/
+tests/
+scripts/
+supabase/
+node_modules/
+test-results/
+playwright-report/
+.git/
+.github/
+CLAUDE.md
+README.md
+package.json
+package-lock.json
+playwright.config.js
+wrangler.jsonc
+.env
+.env.example
+.gitignore
+.assetsignore

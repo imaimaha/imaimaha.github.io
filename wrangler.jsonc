@@ -1,0 +1,11 @@
+// Cloudflare Workers (static assets) の設定 — 2026-09-12 GitHub Pages から移行
+// デプロイ: nvm use 22 && npx wrangler@4 deploy
+// 配信対象外のファイルは .assetsignore で管理
+{
+  "name": "notre",
+  "compatibility_date": "2026-09-12",
+  "assets": {
+    "directory": ".",
+    "html_handling": "auto-trailing-slash"
+  }
+}
