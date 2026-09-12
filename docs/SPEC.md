@@ -451,6 +451,7 @@
 
 - 全ページ右上の 👤 アイコン(header.js、歯車バッジ付き) から遷移。「もっと」シートの「⚙️ 設定」からも。
 - **アカウント**: 自分の絵文字・名前を表示
+- **パスワード変更** (2026-09-12〜): 折りたたみ「🔑 パスワードを変更する」→ 新パスワード2回入力(8文字以上)で `auth.updateUser`。他の端末のログイン状態は残る(次回ログインから新パスワード)
 - **プッシュ通知**: この端末の許可状態と有効化ボタン (push.js の `_diagnose`/`requestPush` を再利用)
 - **受け取るプッシュ通知 (アカウント別)**: 14種の kind (closer/mood/status/quiz/thanks/capsule/bingo/color/gacha/shop/expense/bet/calendar/location) を iOS 風トグルで個別 ON/OFF。`notification_prefs` に保存 (opt-out: 行が無ければ受け取る)。「すべてオン/オフ」一括ボタンあり
 - **ルール**: 通知・ポイントのルールを折りたたみで表示 (旧 header.js のボトムシートから移設)
