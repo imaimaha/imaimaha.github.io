@@ -77,13 +77,13 @@ npx playwright test tests/refactor_smoke.spec.js
 4. push 前に `bash scripts/bump_version.sh`
 5. セッション終了時に `NEXT_SESSION.md` を更新
 
-## 7. ホスティングの現状 (2026-09-12 時点・移行中)
+## 7. ホスティングの現状 (2026-09-12 時点)
 
-- **本番 = GitHub Pages** (https://imaimaha.github.io)。`git push` するだけで自動デプロイされる。
-  **普段の開発はこれだけ知っていれば OK**
-- 並行して Cloudflare Workers への移行が進行中 (仮URL: notre.redemarrage22.workers.dev)。
-  Cloudflare へのデプロイは持ち主の Cloudflare ログインが必要なので、当面は既存PC側で実施する。
-  移行が完了したら本番が Cloudflare に切り替わる (docs/NEXT_SESSION.md の移行メモ参照)
+- **本番 = GitHub Pages** (https://imaimaha.github.io)。`git push` するだけで自動デプロイされる
+- **並行して Cloudflare Workers にも自動デプロイされる** (仮URL: notre.redemarrage22.workers.dev)。
+  Git連携 (Workers Builds) 設定済みなので、**push するだけで両方更新される。Cloudflare のログインや
+  wrangler のセットアップは不要**（このPCでもあのPCでも同じ）
+- 独自ドメイン取得 → Cloudflare 一本化 → リポジトリ非公開化、は今後の計画（現時点は保留中）
 
 ## 8. 注意: このPCにしか無いもの
 

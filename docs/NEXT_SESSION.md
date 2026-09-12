@@ -29,12 +29,16 @@
 - デプロイ方法: `nvm use 22 && npx wrangler@4 deploy`（Node 22 必須。システムの node 18 では wrangler 4 が動かない）
 - 6月の残骸: Worker「imaimaha」+ 未マージ PR #1（Cloudflare 自動生成）が残っている。移行完了時に掃除する
 
-**残り（ドメイン購入後に再開）**:
+**✅ 2026-09-12 追加で完了**: **Cloudflare Workers Builds (Git連携) 設定済み**。Worker「notre」の Settings → Build で
+`imaimaha/imaimaha.github.io` の `main` ブランチを接続 (Deploy command: `npx wrangler deploy`, Build command: 空欄)。
+**以後は誰が `git push` しても GitHub Pages + Cloudflare の両方が自動デプロイされる**（彼女のPCも wrangler 不要、push するだけでOK）。
+動作確認済み: push → 自動ビルドが `deployments list` に記録されるのを確認 (2026-09-12T15:35)。手動 `wrangler deploy` はもう不要。
+
+**残り（ドメイン購入後に再開。ユーザー判断で保留中）**:
 1. ダッシュボード Domains → Register Domain で購入（ユーザー操作・カード必要）
 2. Worker「notre」にカスタムドメイン接続 + workers.dev URL 無効化
-3. push で Cloudflare 自動デプロイ（Workers Builds の Git 連携）← 今は手動 wrangler deploy で GitHub Pages と二重更新中
-4. Supabase Auth の Site URL / redirect 確認、切り替え日にふたりのスマホで PWA 入れ直し + push 再購読
-5. 旧 imaimaha.github.io は新URLへの転送ページ化 → リポジトリ非公開化（ユーザー合意済み）
+3. Supabase Auth の Site URL / redirect 確認、切り替え日にふたりのスマホで PWA 入れ直し + push 再購読
+4. 旧 imaimaha.github.io は新URLへの転送ページ化 → リポジトリ非公開化（ユーザー合意済み）
 
 ## 2026-09-12 設定にパスワード変更を追加（両ホストデプロイ済み）
 
