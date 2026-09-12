@@ -44,16 +44,25 @@ test('今ここ: 概要カードが実データで出る', async ({ page }) => {
 })
 
 test('placeLabelFor: 自分の家は「おうち」/ 相手の家は名前つき / 会社は会社', async ({ page }) => {
+  // 町名はテストに書かない (公開リポジトリ)。DB から読み込まれた BASES を使う
   await page.goto('/location.html')
-  await page.waitForTimeout(2500)
-  const r = await page.evaluate(() => ({
-    ownHome:     placeLabelFor('拠点A', 'nick'),
-    partnerHome: placeLabelFor('拠点A', 'hedgehog'),
-    office:      placeLabelFor('拠点C', 'nick'),
-    outside:     placeLabelFor('神宮前一丁目', 'nick'),
-  }))
+  await page.waitForFunction(() => typeof BASES !== 'undefined' && Object.keys(BASES).length > 0, { timeout: 20000 })
+  const r = await page.evaluate(() => {
+    const towns = Object.keys(BASES)
+    const home   = towns.find(t => BASES[t].kind === 'home' && BASES[t].owner)
+    const office = towns.find(t => BASES[t].kind === 'office')
+    const owner  = BASES[home].owner
+    const other  = owner === 'nick' ? 'hedgehog' : 'nick'
+    return {
+      owner,
+      ownHome:     placeLabelFor(home, owner),
+      partnerHome: placeLabelFor(home, other),
+      office:      placeLabelFor(office, owner),
+      outside:     placeLabelFor('存在しない町テスト', owner),
+    }
+  })
   expect(r.ownHome.text).toBe('おうち')
-  expect(r.partnerHome.text).toContain('nick')
+  expect(r.partnerHome.text).toContain(r.owner)
   expect(r.office.text).toBe('会社')
   expect(r.outside.out).toBe(true)
 })

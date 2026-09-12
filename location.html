@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="assets/css/style.css?v=202608062323">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609120505">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -209,10 +209,10 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/push.js?v=202608062323"></script>
-  <script src="assets/js/util.js?v=202608062323"></script>
-  <script src="assets/js/header.js?v=202608062323"></script>
-  <script src="assets/js/nav.js?v=202608062323"></script>
+  <script src="assets/js/push.js?v=202609120505"></script>
+  <script src="assets/js/util.js?v=202609120505"></script>
+  <script src="assets/js/header.js?v=202609120505"></script>
+  <script src="assets/js/nav.js?v=202609120505"></script>
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
     <!-- 右上ボタンぶんの幅があるので短くする (長いと2行に折り返す) -->
@@ -298,11 +298,14 @@
     }
 
     // ふたりの拠点。ここに載っている町は「おうち」「会社」として扱う
-    // (町名は Nominatim が返す suburb 名。増えたらここに足す)
-    const BASES = {
-      '拠点A':   { kind: 'home',   emoji: '🏠', owner: 'nick',     label: 'nickのおうち' },
-      '拠点B': { kind: 'home',   emoji: '🏠', owner: 'hedgehog', label: 'hedgehogのおうち' },
-      '拠点C': { kind: 'office', emoji: '🏢', owner: null,       label: '会社' },
+    // (町名は Nominatim が返す suburb 名。増えたら bases テーブルに INSERT する)
+    // ⚠️ 町名はコードに書かない: リポジトリは公開 + GitHub Pages は HTML を認証なしで
+    //    配信するため、ここに書くと外部から見える。DB (RLS: authenticated のみ) から読む
+    let BASES = {}
+    async function loadBases() {
+      const { data } = await _sb.from('bases').select('*')
+      BASES = Object.fromEntries((data || []).map(b =>
+        [b.town, { kind: b.kind, emoji: b.emoji, owner: b.owner, label: b.label }]))
     }
 
     // その人にとってその町がどこか (自分の家なら「おうち」と呼ぶ)
@@ -350,6 +353,7 @@
 
       initMap()
       updateDateLabel()
+      await loadBases()
       await loadCheckins()
       await loadOverview()
     }
