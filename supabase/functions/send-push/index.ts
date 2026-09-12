@@ -16,8 +16,8 @@ async function handle(req: Request) {
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
 
   const SB_URL = Deno.env.get('SUPABASE_URL')!
-  const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const SB_ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  const SB_KEY = (Deno.env.get('SB_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))!
+  const SB_ANON = Deno.env.get('SB_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!
   const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
   const _vapidRaw = Deno.env.get('VAPID_MAILTO') ?? 'admin@example.com'

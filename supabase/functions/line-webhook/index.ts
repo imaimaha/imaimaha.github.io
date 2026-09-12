@@ -4,7 +4,7 @@ import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts'
 const LINE_SECRET = Deno.env.get('LINE_CHANNEL_SECRET')!
 const LINE_TOKEN  = Deno.env.get('LINE_CHANNEL_TOKEN')!
 const SB_URL      = Deno.env.get('SUPABASE_URL')!
-const SB_KEY      = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const SB_KEY      = (Deno.env.get('SB_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))!
 
 function sendPush(payload: Record<string, unknown>) {
   fetch(`${SB_URL}/functions/v1/send-push`, {

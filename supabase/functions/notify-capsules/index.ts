@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SB_URL = Deno.env.get('SUPABASE_URL')!
-const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const SB_KEY = (Deno.env.get('SB_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))!
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return res(null, 204)
