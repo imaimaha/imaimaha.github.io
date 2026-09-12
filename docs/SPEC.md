@@ -29,7 +29,7 @@
 
 ## 1. プロダクト概要
 
-**Notre Endroit**（旧称 imaimaha HP）は、2人だけで使うプライベートポータル。彼氏（fox 🦊 / nick）と彼女（hed 🦔 / hedgehog）の共有スペース。
+**Notre Endroit**（旧称 imaimaha HP）は、2人だけで使うプライベートポータル。彼女（fox 🦊 / nick）と彼氏（hed 🦔 / hedgehog）の共有スペース。
 
 - **本番URL**: https://imaimaha.github.io
 - **リポジトリ**: `imaimaha/imaimaha.github.io` (GitHub)
