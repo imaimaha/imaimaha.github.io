@@ -79,6 +79,7 @@
 - URL: `https://qivnfiqyjfajlzbdqodd.supabase.co`
 - ref: `qivnfiqyjfajlzbdqodd`
 - 秘密情報は `.env` に格納（`.gitignore` 済）。Claude memory / CLAUDE.md / コミットには**絶対に書かない**
+- **API キーは新方式のみ** (2026-09-12〜): legacy キー (anon / service_role の JWT) は**無効化済み**。サーバ側は secret キー（Edge Functions は env `SB_SECRET_KEY`、pg_cron のヘッダも同キー）、クライアントは publishable キー。**キーを migration ファイルやコードにベタ書きしない**（プレースホルダにして適用時に差し込む。過去に service_role JWT のコミット漏洩事故あり → 経緯は NEXT_SESSION.md 2026-09-12）
 
 ### 写真の取り扱い原則（2026-08-01〜 / 経緯は `docs/PLAN_PERFORMANCE.md`）
 

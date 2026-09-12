@@ -1,5 +1,23 @@
 # 次回セッション用: TODO と背景
 
+## 2026-09-12 セキュリティ対応: service_role キー漏洩の後始末（完了・push済み）
+
+**発覚**: リポジトリは PUBLIC（GitHub Pages 無料プランの制約）で、migration 2ファイル（`20260723030000_diary_evening_cron.sql` / `status_arrival_cron.sql`）に **service_role JWT がベタ書きコミットされていた**（2026-07-23〜）。加えて `tests/auth.setup.js` に実名メールがフォールバック値で入っていた。
+
+**対応済み**:
+1. **キーローテーション**: 新方式 secret キー(sb_secret)に全面移行。cron ジョブ12件のヘッダー・Edge Functions 6個（`SB_SECRET_KEY` 優先 + legacy フォールバック、secrets に `SB_SECRET_KEY`/`SB_PUBLISHABLE_KEY` 登録済み）・`.env` を更新後、**legacy API キー(anon/service_role)を無効化**。旧キーで401になること・新キーで全系統が動くことを検証済み。クライアントは元から sb_publishable 使用のためセッション影響なし
+2. **履歴書き換え**: `git filter-branch` で全250コミットから JWT と実名メールを除去し force push。全リビジョン再スキャンで0件。古いローカル backup ブランチ/タグ/stash は削除（完全バックアップは `~/notre_backup_prerewrite_20260912.bundle`。**コミットhashが全部変わったので、このファイル内の過去の hash 参照は旧履歴のもの**）
+3. **ついでに実穴を発見・修正**: `closer_gauge` / `settings` が RLS 無効 + anon 権限付きで**未ログインでも読み書き可能だった** → migration `20260912000000_rls_closer_gauge_settings.sql`（RLS 有効化 + authenticated_all ポリシー + anon revoke、適用済み）
+4. **悪用形跡チェック**: auth.users は既知3件のみ / cron 13件・SECURITY DEFINER 関数・テーブル45個すべて既知 / bucket は private / GitHub fork 0・secret scanning アラート0。**ただし直近14日で31ユニークの clone（ボットのスクレイピングとみられる）があり、キーは収集済みと想定するのが安全**（無効化済みなので実害なし）。Supabase の無料プランはログ保持~1日のため、7/23〜の全期間の監査は不可
+
+**ユーザー決定**: リポジトリは**公開のまま維持**（GitHub Pro 課金も Cloudflare 移行もしない）。
+
+**残る露出（低リスク・要検討）**:
+- `location.html` の `BASES` に自宅の町名（拠点A/拠点B/会社）がベタ書き。リポジトリだけでなく **GitHub Pages は HTML を認証なしで配信する**ので、リポジトリを非公開にしても隠れない。隠すなら BASES を DB テーブル化（ログイン後に取得）が正解
+- force push 後も GitHub のキャッシュに旧コミットが SHA 直打ちで残り得る（キー失効済みなので実害なし）
+- 教訓: **cron の migration ファイルにキーを書かない**。プレースホルダにして適用時に差し込む（既存2ファイルはプレースホルダ化済み）
+
+
 ## ✅ 2026-08-01 解決済み: 持ち越し2件（`709eb22` / ユーザー実機確認OK）
 
 **A. 📤 が about:blank になる → 修正**
