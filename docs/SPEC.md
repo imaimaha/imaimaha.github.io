@@ -279,6 +279,8 @@
 
 チェックイン（`location_checkins`: lat/lng/place_name/note）を集めて楽しむページ。地名は Nominatim の reverse geocoding（suburb 等）。
 
+- **チェックインの送信は Edge Function `checkin` に一本化**（2026-09-12〜）: クライアント（ホーム/今ここページ）は位置座標を `util.js: submitCheckin()` で **keepalive fetch** 1発投げるだけ。町名の逆引き・`location_checkins` INSERT・初訪問 +5pt・相手への Push はすべてサーバー側で完結する。**送信後にページを離れても登録される**（以前はページ内 JS が順にやっていて、途中で別ページに移ると登録されなかった）。位置取得は `enableHighAccuracy:false / maximumAge:60s` で即応答優先（町名レベルには十分）
+
 - **拠点の自動ラベル** (`bases` テーブル / 2026-09-12 に定数からDBへ移動): ふたりのおうち2件 + 会社1件を登録済み。**町名はリポジトリ・コードに書かない**（公開リポジトリ + Pages は HTML を認証なしで配信するため）。拠点の追加は `bases` に INSERT。
   **本人の家なら「🏠 おうち」、相手の家なら「🏠 nickのおうち」、それ以外は「🗺 町名 + おでかけ中」**と出し分ける。拠点が増えたら `BASES` に足す
 - **いま どこ？カード**: ふたりの最新チェックインを上記ラベル＋経過時間（「20分前」）で表示

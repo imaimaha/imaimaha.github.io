@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202609120505'
+const APP_VERSION = '202609120526'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -138,6 +138,32 @@ async function awardFirstVisit(userId, placeName) {
   if ((count ?? 0) !== 1) return false
   await addPoints(userId, 5, 'location_first_visit')
   return true
+}
+
+// チェックインの本送信 (2026-09-12〜)。Edge Function `checkin` が
+// 町名の逆引き → 登録 → 初訪問pt → 相手への通知 までサーバー側で完結させる。
+// keepalive 付きなので、送信した直後にページを離れても最後まで走る
+// (以前はページ内で順にやっていて、途中で別ページに移ると登録されなかった)。
+// 戻り値: { ok:true, place_name, first_visit } / 失敗: { ok:false, error }
+async function submitCheckin({ lat, lng, note = null }) {
+  const { data: { session } } = await _sb.auth.getSession()
+  if (!session) return { ok: false, error: 'ログインしていません' }
+  try {
+    const res = await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/checkin', {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ lat, lng, note }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, error: data.error || ('HTTP ' + res.status) }
+    return data
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
 }
 
 // ── リンク (デート / やりたいこと / カレンダーの予定に貼る URL) ──

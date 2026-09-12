@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609120505">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609120526">
   <style>
     /* Page-scoped tweaks */
     .home-hero { padding: 40px 20px 12px; }
@@ -311,11 +311,11 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
 
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202609120505"></script>
-  <script src="assets/js/push.js?v=202609120505"></script>
-  <script src="assets/js/util.js?v=202609120505"></script>
-  <script src="assets/js/header.js?v=202609120505"></script>
-  <script src="assets/js/nav.js?v=202609120505"></script>
+  <script src="assets/js/stars.js?v=202609120526"></script>
+  <script src="assets/js/push.js?v=202609120526"></script>
+  <script src="assets/js/util.js?v=202609120526"></script>
+  <script src="assets/js/header.js?v=202609120526"></script>
+  <script src="assets/js/nav.js?v=202609120526"></script>
 
   <header class="hero home-hero">
     <div class="hero-inner">
@@ -877,48 +877,19 @@
         return
       }
 
-      await _locEnsureProfile()
-
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const lat = pos.coords.latitude
-          const lng = pos.coords.longitude
-
-          let place_name = null
-          try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
-              { headers: { 'Accept-Language': 'ja' } }
-            )
-            const geo = await res.json()
-            const addr = geo.address
-            place_name = addr?.suburb || addr?.neighbourhood || addr?.quarter
-              || addr?.city_district || addr?.city || addr?.town || addr?.village || null
-          } catch (_) {}
-
-          const { error } = await _sb.from('location_checkins').insert({
-            user_id: _locMyId, lat, lng, place_name, note: null
-          })
-
-          if (error) {
+          // 送信はここで終わり: 逆引き・登録・pt・通知は Edge Function (checkin) が
+          // サーバー側で完結させる。keepalive なのでこの後ページを離れても登録される
+          statusEl.textContent = '📍 送信中...'
+          const r = await submitCheckin({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+          if (!r.ok) {
             statusEl.textContent = '❌ 保存失敗'
             btn.disabled = false
             return
           }
-
-          // はじめて来た町ならお祝い (今ここの町コレクションが増える)
-          const firstVisit = await awardFirstVisit(_locMyId, place_name)
-
-          if (_locPartnerId && _locMyProfile) {
-            const body = `${_locMyProfile.emoji} ${_locMyProfile.name} が今ここにいるよ${place_name ? '（' + place_name + '）' : ''}`
-            notify({
-              title: firstVisit ? '🆕 はじめての町にいるよ' : '📍 今ここにいるよ',
-              body, url: '/location.html', kind: 'location', recipient: _locPartnerId,
-            })
-          }
-
           if (navigator.vibrate) navigator.vibrate(20)
-          statusEl.textContent = (firstVisit ? '🆕 はじめての町！' : '✅ 送りました！') + (place_name ? '（' + place_name + '）' : '')
+          statusEl.textContent = (r.first_visit ? '🆕 はじめての町！' : '✅ 送りました！') + (r.place_name ? '（' + r.place_name + '）' : '')
           setTimeout(() => { statusEl.textContent = ''; btn.disabled = false }, 4000)
         },
         (err) => {
@@ -926,7 +897,9 @@
           statusEl.textContent = '❌ ' + (msgs[err.code] || err.message)
           btn.disabled = false
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        // 町名レベルの精度で十分なので、直近1分のキャッシュ位置を許可して即応答にする
+        // (位置取得が長いほど、ユーザーが待ちきれず離脱して未登録になる隙間が広がる)
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
       )
     }
 
