@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202609121534'
+const APP_VERSION = '202609261514'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -352,18 +352,43 @@ function clearPhotoUrlCache(path) {
   } catch (_) {}
 }
 
+// promise が ms 以内に終わらなければ諦める (電波が悪いと fetch がいつまでも応答を待ち続け
+// 「固まる」ように見えるため、一定時間で見切って retry に回す)
+function _withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
 // 写真アップロードの共通経路: 本体(圧縮済み) + thumbs/<path> (一覧用サムネ) を上げる
 // 戻り値は storage.upload と同じ { error } 形 (呼び出し側の変更を最小にするため)
 // サムネは best-effort — 失敗しても本体が上がっていれば成功扱い (表示側が原寸にフォールバックする)
+// 電波が悪い環境向けに本体アップロードは最大3回、タイムアウト(12秒)+短いバックオフで自動リトライする。
+// 2回目以降は (直前の試行がタイムアウトしただけで実は成功していた場合に備え) 強制 upsert:true にする
 async function uploadPhoto(path, file, { upsert = false } = {}) {
   const main = await compressImage(file)
-  const opts = { upsert, cacheControl: '31536000', contentType: main.type || 'image/jpeg' }
-  const { error } = await _sb.storage.from('memories').upload(path, main, opts)
+  const baseOpts = { cacheControl: '31536000', contentType: main.type || 'image/jpeg' }
+
+  let error = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const opts = { ...baseOpts, upsert: attempt === 0 ? upsert : true }
+    try {
+      const res = await _withTimeout(_sb.storage.from('memories').upload(path, main, opts), 12000)
+      error = res.error
+    } catch (e) {
+      error = e
+    }
+    if (!error) break
+    console.warn(`[photo] アップロード失敗 (試行${attempt + 1}/3):`, error.message)
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+  }
   if (error) return { error }
+
   clearPhotoUrlCache(path)   // 同じ path への上書きで古い署名URLを掴まないように
   try {
     const thumb = await compressImage(main, 400, 0.75)
-    await _sb.storage.from('memories').upload(`thumbs/${path}`, thumb, { ...opts, upsert: true, contentType: 'image/jpeg' })
+    await _sb.storage.from('memories').upload(`thumbs/${path}`, thumb, { ...baseOpts, upsert: true, contentType: 'image/jpeg' })
   } catch (e) { console.warn('[photo] サムネ生成失敗 (本体は成功):', e) }
   return { error: null }
 }
