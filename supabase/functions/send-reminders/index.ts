@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     let title = 'Notre Endroit'
     let body = ''
     let url = '/'
+    let gaugeLowEff: number | null = null
 
     if (kind === 'status_1719' || kind === 'status_1901') {
       // 今日の status が未登録なら通知
@@ -112,6 +113,7 @@ Deno.serve(async (req) => {
           shouldNotify = true
           body = `✨ ゲージが ${eff}% まで下がってるよ`
           url = '/closer.html'
+          gaugeLowEff = eff
         }
       }
 
@@ -231,6 +233,18 @@ Deno.serve(async (req) => {
         await sb.from('notifications_sent').insert({
           user_id: p.id, kind, date_str: today,
         })
+        if (kind === 'gauge_low' && gaugeLowEff !== null) {
+          fetch(`${SB_URL}/functions/v1/line-notify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SB_KEY}`,
+            },
+            body: JSON.stringify({
+              message: `✨ ${p.emoji} のゲージが ${gaugeLowEff}% まで下がってるよ`,
+            }),
+          }).catch(() => {})
+        }
       }
     } else {
       skipped++
