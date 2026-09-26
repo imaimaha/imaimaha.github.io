@@ -1,6 +1,66 @@
 // SW 更新をすばやく反映させる
-self.addEventListener('install', event => { self.skipWaiting() })
-self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()) })
+const SHELL_CACHE = 'shell-v1'
+// 電波が悪い/固まる対策: HTMLページと共通CSS/JSは stale-while-revalidate でキャッシュし、
+// 表示はキャッシュから即座に返しつつバックグラウンドで最新化する。写真等のSupabaseリクエストは対象外。
+const SHELL_PRECACHE = [
+  '/assets/css/style.css',
+  '/assets/js/util.js',
+  '/assets/js/header.js',
+  '/assets/js/nav.js',
+  '/assets/js/stars.js',
+  '/assets/js/push.js',
+  '/manifest.json',
+]
+
+self.addEventListener('install', event => {
+  self.skipWaiting()
+  event.waitUntil(
+    caches.open(SHELL_CACHE)
+      .then(cache => Promise.all(SHELL_PRECACHE.map(p => cache.add(p).catch(() => {}))))
+  )
+})
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    // 古いバージョンの ?v= 付きアセットだけ間引く(HTMLはpathが変わらないので都度上書きされる)
+    try {
+      const res = await fetch('/version.json', { cache: 'no-store' })
+      const { version } = await res.json()
+      const cache = await caches.open(SHELL_CACHE)
+      const keys = await cache.keys()
+      await Promise.all(keys.map(req => {
+        const v = new URL(req.url).searchParams.get('v')
+        return (v && v !== version) ? cache.delete(req) : null
+      }))
+    } catch { /* version.json 取得失敗時は放置(次回activateで再試行) */ }
+    await self.clients.claim()
+  })())
+})
+
+self.addEventListener('fetch', event => {
+  const req = event.request
+  if (req.method !== 'GET') return
+
+  const url = new URL(req.url)
+  if (url.origin !== self.location.origin) return
+  if (url.pathname === '/version.json') return // 更新検知は常に最新を見る必要がある
+
+  const isNavigation = req.mode === 'navigate' || req.destination === 'document'
+  const isShellAsset = url.pathname.startsWith('/assets/') || url.pathname === '/manifest.json'
+  if (!isNavigation && !isShellAsset) return
+
+  event.respondWith(staleWhileRevalidate(req))
+})
+
+async function staleWhileRevalidate(req) {
+  const cache = await caches.open(SHELL_CACHE)
+  const cached = await cache.match(req)
+  const network = fetch(req).then(res => {
+    if (res && res.ok) cache.put(req, res.clone())
+    return res
+  }).catch(() => null)
+  return cached || (await network) || Response.error()
+}
 
 const EMOJIS = ['❤️', '😊', '💨', '😫', '👍']
 const ASK_ACTIONS = [

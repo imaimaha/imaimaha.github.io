@@ -610,6 +610,15 @@
 
 **タップで自動既読化**: send-push は `notifications_log` insert で得た `id` を push payload の `notif_id` に載せる。sw.js は通知タップ時に `?notif_id=<id>` を URL に付与し、header.js が起動時に該当行を `read_at=now()` で更新して URL からクエリを剥がす。
 
+### 6.4.1 アプリシェルのオフラインキャッシュ（2026-09-27追加）
+
+電波が悪いと画面遷移が固まる/白くなる問題への対策。sw.js に `fetch` ハンドラを追加し、HTMLページ + `assets/**` + `manifest.json` を stale-while-revalidate でキャッシュする（写真等のSupabaseリクエストは対象外、従来どおり localStorage 署名URLキャッシュのみ）。
+
+- キャッシュ済みなら即座に返し、裏で最新を取りに行って次回用に更新する。回線切断でも直前に開いたページは再表示できる
+- `install` 時に共通CSS/JS(`style.css`/`util.js`/`header.js`/`nav.js`/`stars.js`/`push.js`)を先読み。HTMLページは初回訪問時にキャッシュされる
+- `version.json` は常に no-store で見る (既存の自動リロード判定と非干渉)。`activate` 時に `?v=` 付きの古いバージョンのアセットだけ間引く
+- 検証: Playwright で「一度開いたページはオフラインでも再読み込みできる」ことを確認済み
+
 ### 6.5 通知アーキテクチャ
 
 ```
