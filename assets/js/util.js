@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202609270119'
+const APP_VERSION = '202609270954'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -140,29 +140,55 @@ async function awardFirstVisit(userId, placeName) {
   return true
 }
 
-// チェックインの本送信 (2026-09-12〜)。Edge Function `checkin` が
-// 町名の逆引き → 登録 → 初訪問pt → 相手への通知 までサーバー側で完結させる。
-// keepalive 付きなので、送信した直後にページを離れても最後まで走る
-// (以前はページ内で順にやっていて、途中で別ページに移ると登録されなかった)。
+// チェックインの本送信 (2026-09-12〜、2026-09-27に2段階方式へ変更)。
+// ① Edge Function `checkin` に座標だけ投げて即座に登録 (keepalive 付きなので、送信した
+//    直後にページを離れても最後まで残る。以前はページ内で順にやっていて、途中で別ページに
+//    移ると登録されなかった)
+// ② 町名の逆引きはクライアント側 (実ユーザーのIP) で行う。Supabase Edge Function の
+//    IPから Nominatim を呼ぶと "Access Denied" で常に弾かれるようになったため
+//    (2026-09頃〜)、サーバー側での逆引きはやめてクライアントに戻した。②は①より後に
+//    走るベストエフォートで、途中で離脱しても①(チェックイン自体)は残る
+//    (町名なし・初訪問pt/通知なしになるだけ)
 // 戻り値: { ok:true, place_name, first_visit } / 失敗: { ok:false, error }
 async function submitCheckin({ lat, lng, note = null }) {
   const { data: { session } } = await _sb.auth.getSession()
   if (!session) return { ok: false, error: 'ログインしていません' }
+  const CHECKIN_URL = 'https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/checkin'
+  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }
+
+  let data
   try {
-    const res = await fetch('https://qivnfiqyjfajlzbdqodd.supabase.co/functions/v1/checkin', {
-      method: 'POST',
-      keepalive: true,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
+    const res = await fetch(CHECKIN_URL, {
+      method: 'POST', keepalive: true, headers,
       body: JSON.stringify({ lat, lng, note }),
     })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) return { ok: false, error: data.error || ('HTTP ' + res.status) }
-    return data
+    data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || ('HTTP ' + res.status) }
   } catch (e) {
     return { ok: false, error: String(e) }
+  }
+
+  try {
+    const ac = new AbortController()
+    const t = setTimeout(() => ac.abort(), 4000)
+    const geoRes = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
+      { headers: { 'Accept-Language': 'ja' }, signal: ac.signal },
+    )
+    clearTimeout(t)
+    const addr = (await geoRes.json())?.address
+    const place_name = addr?.suburb || addr?.neighbourhood || addr?.quarter
+      || addr?.city_district || addr?.city || addr?.town || addr?.village || null
+    if (!place_name) return data
+
+    const res2 = await fetch(CHECKIN_URL, {
+      method: 'POST', keepalive: true, headers,
+      body: JSON.stringify({ id: data.id, place_name }),
+    })
+    const data2 = await res2.json().catch(() => ({}))
+    return data2?.ok ? data2 : data
+  } catch (_) {
+    return data   // 逆引き失敗。チェックイン自体は既に完了している
   }
 }
 

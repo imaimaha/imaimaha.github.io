@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609270119">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609270954">
   <style>
     /* Page-scoped tweaks */
     .home-hero { padding: 40px 20px 12px; }
@@ -311,11 +311,11 @@
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
 
   <div class="clouds"></div>
-  <script src="assets/js/stars.js?v=202609270119"></script>
-  <script src="assets/js/push.js?v=202609270119"></script>
-  <script src="assets/js/util.js?v=202609270119"></script>
-  <script src="assets/js/header.js?v=202609270119"></script>
-  <script src="assets/js/nav.js?v=202609270119"></script>
+  <script src="assets/js/stars.js?v=202609270954"></script>
+  <script src="assets/js/push.js?v=202609270954"></script>
+  <script src="assets/js/util.js?v=202609270954"></script>
+  <script src="assets/js/header.js?v=202609270954"></script>
+  <script src="assets/js/nav.js?v=202609270954"></script>
 
   <header class="hero home-hero">
     <div class="hero-inner">
@@ -879,8 +879,9 @@
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          // 送信はここで終わり: 逆引き・登録・pt・通知は Edge Function (checkin) が
-          // サーバー側で完結させる。keepalive なのでこの後ページを離れても登録される
+          // ①座標だけ即登録(keepaliveでこの後ページを離れても残る) → ②クライアント側で
+          // 町名を逆引きして書き足す(2026-09-27〜。Edge Function からの逆引きは
+          // Nominatimに拒否されるため)。②は submitCheckin 内でawait済み
           statusEl.textContent = '📍 送信中...'
           const r = await submitCheckin({ lat: pos.coords.latitude, lng: pos.coords.longitude })
           if (!r.ok) {

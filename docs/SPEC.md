@@ -279,7 +279,10 @@
 
 チェックイン（`location_checkins`: lat/lng/place_name/note）を集めて楽しむページ。地名は Nominatim の reverse geocoding（suburb 等）。
 
-- **チェックインの送信は Edge Function `checkin` に一本化**（2026-09-12〜）: クライアント（ホーム/今ここページ）は位置座標を `util.js: submitCheckin()` で **keepalive fetch** 1発投げるだけ。町名の逆引き・`location_checkins` INSERT・初訪問 +5pt・相手への Push はすべてサーバー側で完結する。**送信後にページを離れても登録される**（以前はページ内 JS が順にやっていて、途中で別ページに移ると登録されなかった）。位置取得は `enableHighAccuracy:false / maximumAge:60s` で即応答優先（町名レベルには十分）
+- **チェックインの送信は Edge Function `checkin` に一本化**（2026-09-12〜）: クライアント（ホーム/今ここページ）は位置座標を `util.js: submitCheckin()` で **keepalive fetch** 1発投げるだけ。`location_checkins` INSERT・初訪問 +5pt・相手への Push はすべてサーバー側で完結する。**送信後にページを離れても登録される**（以前はページ内 JS が順にやっていて、途中で別ページに移ると登録されなかった）。位置取得は `enableHighAccuracy:false / maximumAge:60s` で即応答優先（町名レベルには十分）
+- **町名の逆引きは2段階方式**（2026-09-27〜）: ① 座標だけを即 `checkin` に投げて `place_name=null` で登録（①のみ必ず残る）→ ② `util.js: submitCheckin()` が**クライアント側**で Nominatim reverse geocoding を行い、解決できたら `checkin` に `{id, place_name}` で書き足しリクエストを送る（この時に初訪問pt・Push 通知も行う）。②はベストエフォートなので途中で離脱すると町名なし・通知なしになるだけで①は失われない。
+  - 経緯: 逆引きは元々 Edge Function 側(サーバー)でやっていたが、2026-09頃から **Supabase Edge Function (Deno Deploy) の共有IPからのリクエストが Nominatim に "Access Denied" で拒否される**ようになり(おそらく他利用者の乱用で共有IP帯がブロックされた)、チェックインの町名が実質常に空になっていた。クライアント(実ユーザーのIP)からは問題なく通るため、逆引きだけクライアントに戻した
+  - 代替のジオコーディングAPI(BigDataCloud等)も検討したが、`bases`テーブルの町名マッチングが Nominatim の suburb/丁目レベルの粒度(例:「西新宿二丁目」)に依存しており、区市町村レベルしか返せない代替APIでは「おうち」「会社」判定が壊れるため不採用
 
 - **拠点の自動ラベル** (`bases` テーブル / 2026-09-12 に定数からDBへ移動): ふたりのおうち2件 + 会社1件を登録済み。**町名はリポジトリ・コードに書かない**（公開リポジトリ + Pages は HTML を認証なしで配信するため）。拠点の追加は `bases` に INSERT。
   **本人の家なら「🏠 おうち」、相手の家なら「🏠 nickのおうち」、それ以外は「🗺 町名 + おでかけ中」**と出し分ける。拠点が増えたら `BASES` に足す
