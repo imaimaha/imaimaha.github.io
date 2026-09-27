@@ -9,7 +9,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609261514">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609270119">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -165,10 +165,10 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/push.js?v=202609261514"></script>
-  <script src="assets/js/util.js?v=202609261514"></script>
-  <script src="assets/js/header.js?v=202609261514"></script>
-  <script src="assets/js/nav.js?v=202609261514"></script>
+  <script src="assets/js/push.js?v=202609270119"></script>
+  <script src="assets/js/util.js?v=202609270119"></script>
+  <script src="assets/js/header.js?v=202609270119"></script>
+  <script src="assets/js/nav.js?v=202609270119"></script>
 
   <div class="top-bar">
     <a href="/">← ホーム</a>
@@ -344,6 +344,13 @@
       const { data: { session } } = await _sb.auth.getSession();
       if (!session) return;
       state.userId = session.user.id;
+
+      // 電波が悪くて送れなかった写真があれば送り直す (util.js: uploadPhoto が保留していたもの)
+      const retryColorPhotos = () => retryPendingPhotos(async (path, meta) => {
+        if (meta?.kind === 'color') await finishColorPhoto(meta.huntId, meta.position, path)
+      })
+      retryColorPhotos()
+      window.addEventListener('online', retryColorPhotos)
 
       const { data: profs } = await _sb.from('profiles').select('*');
       (profs || []).forEach(p => { state.profiles[p.id] = p; });
@@ -604,20 +611,57 @@
       document.getElementById('upload-input').click();
     }
 
-    // 付与済み記録 (写真の削除→再アップでの二重付与防止)。
-    // 無ければ「現在の写真状態 = 付与済み」として初期化 (既存ハントの後方互換)
-    function ensureAwarded() {
-      const h = state.currentHunt;
-      if (!h) return null;
-      if (!h.awarded || !Array.isArray(h.awarded.positions)) {
-        const photos = Array.isArray(h.photos) ? h.photos : [];
-        h.awarded = {
-          positions: photos.map(p => p.position),
-          complete: photos.length >= 8,
-          half: photos.length >= 4,
-        };
+    // 写真アップロード成功後の完了処理 (通常フロー・保留写真の後追い送信の両方から呼ぶ)。
+    // ページ再読み込み後など state.currentHunt が別ハントのこともあるため、対象ハントはDBから取り直す
+    async function finishColorPhoto(huntId, position, path) {
+      const { data: hunt, error: fetchErr } = await _sb.from('color_hunts').select('*').eq('id', huntId).single();
+      if (fetchErr || !hunt) return;
+
+      const photos = Array.isArray(hunt.photos) ? [...hunt.photos] : [];
+      let awarded = hunt.awarded;
+      if (!awarded || !Array.isArray(awarded.positions)) {
+        awarded = { positions: photos.map(p => p.position), complete: photos.length >= 8, half: photos.length >= 4 };
       }
-      return h.awarded;
+      const existingIdx = photos.findIndex(p => p.position === position);
+      const entry = { position, path, uploaded_at: new Date().toISOString(), user_id: hunt.user_id };
+      if (existingIdx >= 0) photos[existingIdx] = entry;
+      else photos.push(entry);
+
+      // ポイント付与: 同じスロットは削除→再アップしても一度きり (awarded.positions で管理)
+      let gotPhoto = false, gotComplete = false, gotHalf = false;
+      if (!awarded.positions.includes(position)) { gotPhoto = true; awarded.positions.push(position); }
+      if (!awarded.complete && photos.length >= 8) { gotComplete = true; awarded.complete = true; }
+      if (!awarded.half && photos.length >= 4) { gotHalf = true; awarded.half = true; }
+
+      const { error: updErr } = await _sb.from('color_hunts')
+        .update({ photos, awarded, updated_at: new Date().toISOString() })
+        .eq('id', huntId);
+      if (updErr) { console.error('[color] 保留写真の保存失敗:', updErr.message); return; }
+
+      if (state.currentHunt && state.currentHunt.id === huntId) {
+        state.currentHunt.photos = photos;
+        state.currentHunt.awarded = awarded;
+        await renderBoard();
+      }
+
+      if (gotPhoto) addPoints(hunt.user_id, 2, 'color_photo');
+
+      // 相手に push (新規達成のみ。撮り直しでは送らない)
+      const doPush = (msg) => notify({
+        title: '🎨 カラーハント',
+        body: msg,
+        url: '/color_hunting.html',
+        kind: 'color',
+        sender: hunt.user_id,
+      });
+      if (gotComplete) {
+        addPoints(hunt.user_id, 15, 'color_complete');
+        doPush('🎨 全8枚コンプリート！');
+        showToast('🎨 全8枚コンプリート！');
+        return;
+      }
+      if (gotHalf) doPush('半分の4枚まで集めたよ');
+      showToast(gotPhoto ? '📶 電波が戻ったので写真を送りました' : '📶 電波が戻ったので写真を送りました(差し替え)');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -629,63 +673,14 @@
         showToast('アップロード中…');
         const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
         const path = `color_hunts/${state.userId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
-        const { error: upErr } = await uploadPhoto(path, file);
-        if (upErr) { showToast('アップロード失敗: ' + upErr.message, true); return; }
-
-        const awarded = ensureAwarded();   // ★ photos 更新前に付与済み状態を確定
-        const photos = Array.isArray(state.currentHunt.photos) ? [...state.currentHunt.photos] : [];
-        // 同じposに既に写真があれば置換
-        const existingIdx = photos.findIndex(p => p.position === state.selectingIndex);
-        const entry = {
-          position: state.selectingIndex,
-          path,
-          uploaded_at: new Date().toISOString(),
-          user_id: state.userId
-        };
-        if (existingIdx >= 0) photos[existingIdx] = entry;
-        else photos.push(entry);
-
-        // ポイント付与: 同じスロットは削除→再アップしても一度きり (awarded.positions で管理)
-        let gotPhoto = false, gotComplete = false, gotHalf = false;
-        if (awarded && !awarded.positions.includes(state.selectingIndex)) {
-          gotPhoto = true;
-          awarded.positions.push(state.selectingIndex);
-        }
-        if (awarded && !awarded.complete && photos.length >= 8) {
-          gotComplete = true;
-          awarded.complete = true;
-        }
-        if (awarded && !awarded.half && photos.length >= 4) {
-          gotHalf = true;
-          awarded.half = true;
-        }
-
-        const { error: updErr } = await _sb.from('color_hunts')
-          .update({ photos, awarded: state.currentHunt.awarded, updated_at: new Date().toISOString() })
-          .eq('id', state.currentHunt.id);
-        if (updErr) { showToast('保存失敗: ' + updErr.message, true); return; }
-
-        state.currentHunt.photos = photos;
-        await renderBoard();
-
-        if (gotPhoto) addPoints(state.userId, 2, 'color_photo');
-
-        // 相手に push (新規達成のみ。撮り直しでは送らない)
-        const doPush = (msg) => notify({
-          title: '🎨 カラーハント',
-          body: msg,
-          url: '/color_hunting.html',
-          kind: 'color',
-          sender: state.userId,
-        });
-        if (gotComplete) {
-          addPoints(state.userId, 15, 'color_complete');
-          doPush('🎨 全8枚コンプリート！');
-          showToast('🎨 全8枚コンプリート！');
+        const huntId = state.currentHunt.id;
+        const position = state.selectingIndex;
+        const { error: upErr, pending } = await uploadPhoto(path, file, { meta: { kind: 'color', huntId, position } });
+        if (upErr) {
+          showToast(pending ? '📶 電波が悪いので保存しておいたよ。回復したら自動で送るね' : ('アップロード失敗: ' + upErr.message), true);
           return;
         }
-        if (gotHalf) doPush('半分の4枚まで集めたよ');
-        showToast(gotPhoto ? '✅ 追加しました' : '📷 差し替えました');
+        await finishColorPhoto(huntId, position, path);
       });
     });
 

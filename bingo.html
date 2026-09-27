@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609261514">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609270119">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -632,10 +632,10 @@
 
   <div id="confetti-container"></div>
 
-  <script src="assets/js/util.js?v=202609261514"></script>
+  <script src="assets/js/util.js?v=202609270119"></script>
 
-  <script src="assets/js/header.js?v=202609261514"></script>
-  <script src="assets/js/nav.js?v=202609261514"></script>
+  <script src="assets/js/header.js?v=202609270119"></script>
+  <script src="assets/js/nav.js?v=202609270119"></script>
   <!-- Top Bar -->
   <div class="top-bar">
     <button class="back-btn" id="back-btn" onclick="handleBack()">← ホーム</button>
@@ -827,12 +827,12 @@
   <!-- ── Toast ── -->
   <div class="toast" id="toast"></div>
 
-  <script src="assets/data/bingo_pools.js?v=202609261514"></script>
+  <script src="assets/data/bingo_pools.js?v=202609270119"></script>
   <script>
   // ─────────────────────────────────────────
   // Item Pools
   // ─────────────────────────────────────────
-  // POOLS は assets/data/bingo_pools.js?v=202609261514
+  // POOLS は assets/data/bingo_pools.js?v=202609270119
 
   // ─────────────────────────────────────────
   // Bingo Line Counter
@@ -1312,13 +1312,18 @@
   async function uploadCellPhoto(cellIndex, file) {
     if (!file || !state.card?.id) return
     const ext = file.name.split('.').pop() || 'jpg'
-    const path = `bingo/${state.card.id}/${cellIndex}.${ext}`
+    const cardId = state.card.id
+    const path = `bingo/${cardId}/${cellIndex}.${ext}`
     const photoArea = document.getElementById('modal-photo-area')
     const btn = photoArea.querySelector('.modal-photo-btn')
     if (btn) { btn.disabled = true; btn.textContent = 'アップロード中...' }
 
-    const { error } = await uploadPhoto(path, file, { upsert: true })
-    if (error) { showToast('写真のアップロードに失敗しました', true); if (btn) { btn.disabled = false; btn.textContent = '📷 写真を追加' }; return }
+    const { error, pending } = await uploadPhoto(path, file, { upsert: true, meta: { kind: 'bingo', cardId, cellIndex } })
+    if (error) {
+      showToast(pending ? '📶 電波が悪いので保存しておいたよ。回復したら自動で送るね' : '写真のアップロードに失敗しました', true)
+      if (btn) { btn.disabled = false; btn.textContent = '📷 写真を追加' }
+      return
+    }
 
     // checks に photo_path を保存
     const existing = state.card.checks.findIndex(c => c.index === cellIndex)
@@ -1339,6 +1344,35 @@
          <button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を変更</button>`
     }
     showToast('📷 写真を保存しました')
+  }
+
+  // 電波が悪くて uploadPhoto が保留していた写真が、あとで(自動)送信できた時の後処理。
+  // ページ再読み込み後など state.card が別カードのこともあるため、対象カードはDBから取り直す
+  async function finishBingoPhoto(cardId, cellIndex, path) {
+    const { data: card, error } = await _sb.from('bingo_sessions').select('*').eq('id', cardId).single()
+    if (error || !card) return
+    const checks = Array.isArray(card.checks) ? [...card.checks] : []
+    const idx = checks.findIndex(c => c.index === cellIndex)
+    if (idx >= 0) checks[idx] = { ...checks[idx], photo_path: path }
+    else checks.push({ index: cellIndex, memo: '', checked_at: new Date().toISOString(), photo_path: path })
+
+    await _sb.from('bingo_sessions').update({ checks, updated_at: new Date().toISOString() }).eq('id', cardId)
+
+    if (state.card && state.card.id === cardId) {
+      state.card.checks = checks
+      renderGrid()
+      if (state.modalCell === cellIndex) {
+        const url = await signedPhotoUrl(path)
+        const photoArea = document.getElementById('modal-photo-area')
+        if (url && photoArea) {
+          photoArea.innerHTML =
+            `<div class="modal-photo-label">📷 写真</div>
+             <img src="${url}" class="modal-photo-preview">
+             <button class="modal-photo-btn" onclick="triggerPhotoUpload(${cellIndex})">📷 写真を変更</button>`
+        }
+      }
+    }
+    showToast('📶 電波が戻ったので写真を送りました')
   }
 
   // 付与済み記録 (再チェック・記録し直しでの二重付与防止)。
@@ -1997,6 +2031,13 @@
     const { data: { session } } = await _sb.auth.getSession();
     if (!session) return;
     state.userId = session.user.id;
+
+    // 電波が悪くて送れなかった写真があれば送り直す (util.js: uploadPhoto が保留していたもの)
+    const retryBingoPhotos = () => retryPendingPhotos(async (path, meta) => {
+      if (meta?.kind === 'bingo') await finishBingoPhoto(meta.cardId, meta.cellIndex, path)
+    })
+    retryBingoPhotos()
+    window.addEventListener('online', retryBingoPhotos)
 
     const season = getSeason();
     const seasonEmoji = { spring: '🌸', summer: '🌻', autumn: '🍂', winter: '❄️' };

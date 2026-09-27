@@ -58,6 +58,8 @@
 
 **✅ 2026-09-27追加実装**: 案Bの考え方を**写真ではなくアプリシェル(HTML/CSS/JS)**に先に適用。sw.js に stale-while-revalidate の fetch ハンドラを追加し、画面遷移の固まり対策とした（詳細は SPEC.md §6.4.1）。写真自体のオフラインキャッシュ(案B本来の対象)は引き続き未着手
 
+**✅ 2026-09-27追加実装2**: 「電波が悪いとアップロードできない」への対策。`uploadPhoto()` に12秒タイムアウト+3回リトライを追加した上で、それでも失敗する完全な圏外向けに **IndexedDB(`notre_pending_photos`)へ本体Blobを退避**する仕組みを追加(localStorageは容量5〜10MB・文字列専用で写真Blobには不向きなため)。bingo.html / color_hunting.html の写真アップロードは失敗すると保留され、次回起動時 or `online` イベントで自動的に送り直し、成功したらチェック・ポイント付与まで通常フローと同じように完了する(`finishBingoPhoto` / `finishColorPhoto`)。dates/memories/one_on_one は今回は対象外(自動リトライのみ、保留の永続化はしていない)
+
 ### ④ 既存327MBの一括再圧縮（バックフィル）
 
 - Node スクリプト `scripts/recompress_photos.js`（rasterize_icon.js と同じく Playwright chromium の canvas で圧縮）

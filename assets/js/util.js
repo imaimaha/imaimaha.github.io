@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202609261514'
+const APP_VERSION = '202609270119'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -361,12 +361,94 @@ function _withTimeout(promise, ms) {
   ])
 }
 
+// ── 保留写真 (電波が完全に無くて自動リトライも尽きた分の退避) ──
+// localStorage は文字列専用・容量5〜10MBで写真Blobには不向きなため、Blobをそのまま
+// 非同期で置ける IndexedDB を使う。ページ起動時 (と online 復帰時) に retryPendingPhotos() で
+// 送り直し、成功したら呼び出し側の completion 処理 (チェック・ポイント付与等) を onSuccess で呼ぶ
+const PENDING_PHOTO_DB = 'notre_pending_photos'
+const PENDING_PHOTO_STORE = 'pending'
+
+function _openPendingPhotoDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PENDING_PHOTO_DB, 1)
+    req.onupgradeneeded = () => req.result.createObjectStore(PENDING_PHOTO_STORE, { keyPath: 'path' })
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function _stashPendingPhoto(path, blob, meta) {
+  try {
+    const db = await _openPendingPhotoDB()
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(PENDING_PHOTO_STORE, 'readwrite')
+      tx.objectStore(PENDING_PHOTO_STORE).put({ path, blob, meta: meta ?? null, ts: Date.now() })
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+  } catch (e) { console.warn('[photo] 保留写真の保存に失敗 (このまま諦めます):', e) }
+}
+
+async function _removePendingPhoto(path) {
+  try {
+    const db = await _openPendingPhotoDB()
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(PENDING_PHOTO_STORE, 'readwrite')
+      tx.objectStore(PENDING_PHOTO_STORE).delete(path)
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+  } catch (_) {}
+}
+
+// ページ起動時 / online 復帰時に呼ぶ。保留中の写真を1回ずつ送り直し、
+// 成功したものだけ onSuccess(path, meta) を呼んで呼び出し側の状態に反映させる。
+// 失敗したものは何もせず次回に持ち越す (エラーにしない)
+async function retryPendingPhotos(onSuccess) {
+  let rows
+  try {
+    const db = await _openPendingPhotoDB()
+    rows = await new Promise((resolve, reject) => {
+      const tx = db.transaction(PENDING_PHOTO_STORE, 'readonly')
+      const req = tx.objectStore(PENDING_PHOTO_STORE).getAll()
+      req.onsuccess = () => resolve(req.result || [])
+      req.onerror = () => reject(req.error)
+    })
+    db.close()
+  } catch (_) { return }
+
+  for (const row of rows) {
+    try {
+      const { error } = await _sb.storage.from('memories').upload(row.path, row.blob, {
+        upsert: true, cacheControl: '31536000', contentType: row.blob.type || 'image/jpeg',
+      })
+      if (error) continue   // まだ送れない。次回の呼び出しに持ち越す
+      clearPhotoUrlCache(row.path)
+      try {
+        const thumb = await compressImage(row.blob, 400, 0.75)
+        await _sb.storage.from('memories').upload(`thumbs/${row.path}`, thumb, {
+          upsert: true, cacheControl: '31536000', contentType: 'image/jpeg',
+        })
+      } catch (_) {}
+      await _removePendingPhoto(row.path)
+      await onSuccess?.(row.path, row.meta)
+    } catch (e) {
+      console.warn('[photo] 保留写真の再送信でエラー:', row.path, e)
+    }
+  }
+}
+
 // 写真アップロードの共通経路: 本体(圧縮済み) + thumbs/<path> (一覧用サムネ) を上げる
-// 戻り値は storage.upload と同じ { error } 形 (呼び出し側の変更を最小にするため)
+// 戻り値は storage.upload と同じ { error } 形 (呼び出し側の変更を最小にするため)。
+// 電波が完全に無くて3回とも失敗した場合は { error, pending: true } を返し、本体は
+// IndexedDB に退避する (retryPendingPhotos が後で自動的に送り直す)
 // サムネは best-effort — 失敗しても本体が上がっていれば成功扱い (表示側が原寸にフォールバックする)
 // 電波が悪い環境向けに本体アップロードは最大3回、タイムアウト(12秒)+短いバックオフで自動リトライする。
 // 2回目以降は (直前の試行がタイムアウトしただけで実は成功していた場合に備え) 強制 upsert:true にする
-async function uploadPhoto(path, file, { upsert = false } = {}) {
+// meta: 保留から復帰した時に呼び出し側の completion 処理を再現するための情報 (例: { kind, cardId, cellIndex })
+async function uploadPhoto(path, file, { upsert = false, meta = null } = {}) {
   const main = await compressImage(file)
   const baseOpts = { cacheControl: '31536000', contentType: main.type || 'image/jpeg' }
 
@@ -383,7 +465,10 @@ async function uploadPhoto(path, file, { upsert = false } = {}) {
     console.warn(`[photo] アップロード失敗 (試行${attempt + 1}/3):`, error.message)
     if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
   }
-  if (error) return { error }
+  if (error) {
+    await _stashPendingPhoto(path, main, meta)
+    return { error, pending: true }
+  }
 
   clearPhotoUrlCache(path)   // 同じ path への上書きで古い署名URLを掴まないように
   try {
