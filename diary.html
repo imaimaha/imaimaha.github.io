@@ -10,7 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609281337">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609281425">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -90,6 +90,19 @@
       background: rgba(120,200,255,0.08); border: 1px solid rgba(120,200,255,0.22);
       font-size: 0.82rem; color: #bfe6ff; line-height: 1.5;
     }
+    .diary-photo-btn {
+      display: inline-flex; align-items: center; gap: 6px; margin: 8px 0;
+      padding: 8px 14px; border-radius: 12px; font-size: 0.85rem; cursor: pointer;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,180,240,0.28); color: #dcc0e4; font-family: inherit;
+    }
+    .diary-photo-preview { position: relative; margin: 8px 0; max-width: 220px; }
+    .diary-photo-preview img { width: 100%; border-radius: 12px; display: block; }
+    .diary-photo-remove {
+      position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(20,10,25,0.75); color: #fff; border: none; font-size: 0.9rem; cursor: pointer;
+    }
+    .entry-photo { margin-top: 8px; max-width: 220px; }
+    .entry-photo img { width: 100%; border-radius: 12px; display: block; }
     .entry-edit-btn {
       flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer;
       background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,180,240,0.28); color: #dcc0e4; font-family: inherit;
@@ -132,6 +145,25 @@
     .rx-chip.sel { background: rgba(226,140,106,0.24); border-color: rgba(226,140,106,0.65); }
     .rx-chip:active { transform: scale(0.94); }
     .rx-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .comment-row {
+      display: flex; align-items: flex-start; gap: 6px; margin-top: 6px;
+      padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,0.04);
+      font-size: 0.82rem; color: #ead8ee; line-height: 1.5;
+    }
+    .comment-who { flex-shrink: 0; }
+    .comment-body { flex: 1; white-space: pre-wrap; word-break: break-word; }
+    .comment-del { flex-shrink: 0; background: none; border: none; color: #c9a6d8; font-size: 0.75rem; cursor: pointer; padding: 0; }
+    .comment-input-row { display: flex; gap: 6px; margin-top: 8px; }
+    .comment-input {
+      flex: 1; padding: 7px 11px; border-radius: 999px; font-size: 0.82rem;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(220,180,240,0.24);
+      color: #f0e0f0; font-family: inherit; min-width: 0;
+    }
+    .comment-send {
+      flex-shrink: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer;
+      background: rgba(226,140,106,0.2); border: 1.5px solid rgba(226,140,106,0.5);
+      color: #ffd9c2; font-family: inherit; font-size: 0.8rem;
+    }
 
     /* 書き漏れた日を書く */
     .backfill {
@@ -170,9 +202,9 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/util.js?v=202609281337"></script>
-  <script src="assets/js/header.js?v=202609281337"></script>
-  <script src="assets/js/nav.js?v=202609281337"></script>
+  <script src="assets/js/util.js?v=202609281425"></script>
+  <script src="assets/js/header.js?v=202609281425"></script>
+  <script src="assets/js/nav.js?v=202609281425"></script>
 
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
@@ -187,6 +219,8 @@
         <div class="today-date" id="today-date"></div>
         <div class="mood-row" id="mood-row"></div>
         <textarea class="diary-textarea" id="my-body" maxlength="2000" placeholder="今日はどんな一日だった？"></textarea>
+        <div id="my-photo-area"></div>
+        <input type="file" id="my-photo-input" accept="image/*" style="display:none" onchange="onPhotoSelected(this.files[0])">
         <button class="diary-save-btn" onclick="saveEntry()">📔 今日の日記を書く</button>
         <div id="my-ai-comment"></div>
       </div>
@@ -206,6 +240,8 @@
           <div id="bf-form" style="display:none">
             <div class="mood-row" id="bf-mood-row"></div>
             <textarea class="diary-textarea" id="bf-body" maxlength="2000" placeholder="その日はどんな一日だった？"></textarea>
+            <div id="bf-photo-area"><button type="button" class="diary-photo-btn" onclick="document.getElementById('bf-photo-input').click()">📷 写真を追加</button></div>
+            <input type="file" id="bf-photo-input" accept="image/*" style="display:none" onchange="onBfPhotoSelected(this.files[0])">
             <button class="diary-save-btn" onclick="saveBackfill()" id="bf-save"></button>
           </div>
         </div>
@@ -238,9 +274,12 @@
     let myId = null, myProfile = null, partnerProfile = null, profById = {}
     let entries = []
     let reactions = []
+    let comments = []
     let today = null
     let selMood = null
     let editingEntryId = null
+    let selectedPhotoFile = null   // 今日の日記に添付予定の写真 (保存時にアップロードする)
+    let removeMyPhoto = false      // 既存写真を消す予約
 
     function fmtDate(dateStr) {
       const d = new Date(dateStr + 'T00:00:00')
@@ -266,18 +305,21 @@
       document.getElementById('today-date').textContent = fmtDate(today)
       renderMoodRow()
 
-      const [{ data }, { data: rx }] = await Promise.all([
+      const [{ data }, { data: rx }, { data: cm }] = await Promise.all([
         _sb.from('diary_entries').select('*').order('date_str', { ascending: false }),
         _sb.from('diary_reactions').select('*'),
+        _sb.from('diary_comments').select('*'),
       ])
       entries = data || []
       reactions = rx || []
+      comments = cm || []
 
       const mine = entries.find(e => e.user_id === myId && e.date_str === today)
       if (mine) {
         document.getElementById('my-body').value = mine.body; selMood = mine.mood; renderMoodRow()
-        if (mine.ai_comment) document.getElementById('my-ai-comment').innerHTML = `<div class="ai-comment">🤖 ${escHtml(mine.ai_comment)}</div>`
+        if (mine.ai_comment) document.getElementById('my-ai-comment').innerHTML = `<div class="ai-comment">${escHtml(mine.ai_comment)}</div>`
       }
+      renderMyPhotoArea(mine?.photo_path)
 
       renderPartnerToday()
       renderMemories()
@@ -338,6 +380,7 @@
         return
       }
       el.innerHTML = entryCardHtml(p, false)
+      loadEntryPhotos([p])
     }
 
     function entryCardHtml(e, editable) {
@@ -369,9 +412,78 @@
             <button class="entry-edit-btn danger" onclick="deleteEntry('${e.id}')">🗑</button>` : ''}
           </div>
           <div class="entry-body">${escHtml(e.body)}</div>
-          ${e.ai_comment ? `<div class="ai-comment">🤖 ${escHtml(e.ai_comment)}</div>` : ''}
+          ${e.photo_path ? `<div class="entry-photo"><a href="#" onclick="openEntryPhoto('${e.id}','${e.photo_path.replace(/'/g, "\\'")}');return false"><img id="entry-photo-${e.id}" alt="" loading="lazy"></a></div>` : ''}
+          ${e.ai_comment ? `<div class="ai-comment">${escHtml(e.ai_comment)}</div>` : ''}
           ${reactionBarHtml(e)}
+          ${commentsHtml(e)}
         </div>`
+    }
+
+    // ── テキストコメント (相手の日記に一言。スタンプとは別・1人1エントリ1コメント) ──
+    function commentsHtml(e) {
+      const cs = comments.filter(c => c.entry_id === e.id)
+      const mine = cs.find(c => c.user_id === myId)
+      const rows = cs.map(c => `
+        <div class="comment-row">
+          <span class="comment-who">${profById[c.user_id]?.emoji || '👤'}</span>
+          <span class="comment-body">${escHtml(c.body)}</span>
+          ${c.user_id === myId ? `<button class="comment-del" onclick="deleteComment('${e.id}')">削除</button>` : ''}
+        </div>`).join('')
+
+      // 自分の日記にはコメント欄を出さない(相手からのコメントは表示するだけ)
+      if (e.user_id === myId) return rows
+
+      return rows + `
+        <div class="comment-input-row">
+          <input type="text" class="comment-input" id="comment-input-${e.id}" maxlength="200"
+                 placeholder="コメントする…" value="${escHtml(mine?.body || '')}">
+          <button class="comment-send" onclick="postComment('${e.id}')">送信</button>
+        </div>`
+    }
+
+    async function postComment(entryId) {
+      const input = document.getElementById('comment-input-' + entryId)
+      const body = (input?.value || '').trim()
+      if (!body) { showToast('コメントを入れてね'); return }
+      const { data, error } = await _sb.from('diary_comments')
+        .upsert({ entry_id: entryId, user_id: myId, body, updated_at: new Date().toISOString() }, { onConflict: 'entry_id,user_id' })
+        .select().single()
+      if (error) { showToast('コメントを送れなかった'); console.error(error); return }
+      comments = comments.filter(c => !(c.entry_id === entryId && c.user_id === myId))
+      comments.push(data)
+      renderEntryViews()
+      showToast('コメントしたよ')
+
+      const e = entries.find(x => x.id === entryId)
+      if (e && partnerProfile) {
+        notify({
+          title: '📔 ふたりの日記',
+          body: `${myProfile?.emoji || ''} が日記にコメントしたよ`,
+          url: '/diary.html', kind: 'diary', recipient: partnerProfile.id,
+        })
+      }
+    }
+
+    async function deleteComment(entryId) {
+      const { error } = await _sb.from('diary_comments').delete().eq('entry_id', entryId).eq('user_id', myId)
+      if (error) { showToast('削除できなかった'); console.error(error); return }
+      comments = comments.filter(c => !(c.entry_id === entryId && c.user_id === myId))
+      renderEntryViews()
+      showToast('コメントを消したよ')
+    }
+
+    // entryCardHtml は同期関数なので、写真の署名URLはHTML挿入後に非同期で埋める
+    function loadEntryPhotos(list) {
+      list.filter(e => e.photo_path).forEach(async e => {
+        const url = await signedPhotoUrl(e.photo_path, { thumb: true })
+        const img = document.getElementById(`entry-photo-${e.id}`)
+        if (img && url) img.src = url
+      })
+    }
+
+    async function openEntryPhoto(entryId, path) {
+      const url = await signedPhotoUrl(path)
+      if (url) window.open(url, '_blank')
     }
 
     // ── スタンプ反応 ──
@@ -459,19 +571,54 @@
         return `<div class="memory-year-label">${y}年 (${thisYear - y}年前)</div>` +
           rows.map(e => entryCardHtml(e, e.user_id === myId)).join('')
       }).join('')
+      loadEntryPhotos(past)
     }
 
     function renderHistory() {
       const el = document.getElementById('history-list')
       const past = entries.filter(e => e.date_str !== today)
       if (!past.length) { el.innerHTML = '<div class="empty-msg">まだ日記はないよ。今日から書いてみよう ✨</div>'; return }
-      el.innerHTML = past.slice(0, 120).map(e => entryCardHtml(e, e.user_id === myId)).join('')
+      const shown = past.slice(0, 120)
+      el.innerHTML = shown.map(e => entryCardHtml(e, e.user_id === myId)).join('')
+      loadEntryPhotos(shown)
+    }
+
+    // ── 今日の日記の写真 (保存時にまとめてアップロードする) ──
+    function renderMyPhotoArea(existingPath) {
+      const el = document.getElementById('my-photo-area')
+      if (selectedPhotoFile) {
+        el.innerHTML = `<div class="diary-photo-preview"><img src="${URL.createObjectURL(selectedPhotoFile)}"><button class="diary-photo-remove" onclick="clearMyPhoto()">✕</button></div>`
+        return
+      }
+      if (existingPath && !removeMyPhoto) {
+        el.innerHTML = `<div class="diary-photo-preview"><img id="my-photo-img" alt=""><button class="diary-photo-remove" onclick="clearMyPhoto()">✕</button></div>`
+        signedPhotoUrl(existingPath, { thumb: true }).then(url => {
+          const img = document.getElementById('my-photo-img')
+          if (img && url) img.src = url
+        })
+        return
+      }
+      el.innerHTML = `<button type="button" class="diary-photo-btn" onclick="document.getElementById('my-photo-input').click()">📷 写真を追加</button>`
+    }
+
+    function onPhotoSelected(file) {
+      if (!file) return
+      selectedPhotoFile = file
+      removeMyPhoto = false
+      renderMyPhotoArea()
+    }
+
+    function clearMyPhoto() {
+      selectedPhotoFile = null
+      removeMyPhoto = true
+      document.getElementById('my-photo-input').value = ''
+      renderMyPhotoArea()
     }
 
     // ローカルAI(自宅PCのOllama)への一言コメント依頼。ベストエフォート
     // (PCが起動してない時は静かに失敗する。最大45秒かかるので呼び出し元では await しない)
     async function requestAiComment(entryId, forMyToday) {
-      if (forMyToday) document.getElementById('my-ai-comment').innerHTML = '<div class="ai-comment">🤖 考え中…</div>'
+      if (forMyToday) document.getElementById('my-ai-comment').innerHTML = '<div class="ai-comment">🐾 考え中…</div>'
       try {
         const { data, error } = await _sb.functions.invoke('diary-ai-comment', { body: { entry_id: entryId } })
         if (error || !data?.ok) {
@@ -480,7 +627,7 @@
         }
         const idx = entries.findIndex(e => e.id === entryId)
         if (idx >= 0) entries[idx] = { ...entries[idx], ai_comment: data.comment }
-        if (forMyToday) document.getElementById('my-ai-comment').innerHTML = `<div class="ai-comment">🤖 ${escHtml(data.comment)}</div>`
+        if (forMyToday) document.getElementById('my-ai-comment').innerHTML = `<div class="ai-comment">${escHtml(data.comment)}</div>`
         renderPartnerToday(); renderHistory()
       } catch (_) {
         if (forMyToday) document.getElementById('my-ai-comment').innerHTML = ''
@@ -491,13 +638,30 @@
       const body = document.getElementById('my-body').value.trim()
       if (!body) { showToast('本文を入れてね'); return }
       const already = entries.find(e => e.user_id === myId && e.date_str === today)
+
+      const payload = { user_id: myId, date_str: today, mood: selMood, body, updated_at: new Date().toISOString() }
+      let photoFailed = false
+      if (selectedPhotoFile) {
+        showToast('写真をアップロード中…')
+        const ext = (selectedPhotoFile.name.split('.').pop() || 'jpg').toLowerCase()
+        const path = `diary/${myId}/${today}.${ext}`
+        const { error: upErr } = await uploadPhoto(path, selectedPhotoFile, { upsert: true })
+        if (upErr) photoFailed = true
+        else payload.photo_path = path
+      } else if (removeMyPhoto) {
+        payload.photo_path = null
+      }
+
       const { data, error } = await _sb.from('diary_entries')
-        .upsert({ user_id: myId, date_str: today, mood: selMood, body, updated_at: new Date().toISOString() }, { onConflict: 'user_id,date_str' })
+        .upsert(payload, { onConflict: 'user_id,date_str' })
         .select().single()
       if (error) { showToast('保存に失敗しました'); console.error(error); return }
       entries = entries.filter(e => !(e.user_id === myId && e.date_str === today))
       entries.unshift(data)
-      showToast(already ? '更新したよ' : '今日の日記を書いたよ 📔')
+      selectedPhotoFile = null
+      removeMyPhoto = false
+      renderMyPhotoArea(data.photo_path)
+      showToast(photoFailed ? '日記は保存したけど写真の送信には失敗しちゃった' : (already ? '更新したよ' : '今日の日記を書いたよ 📔'))
       renderStreaks()
       if (!already) {
         await addPoints(myId, 2, 'diary_entry')
@@ -515,7 +679,20 @@
     }
 
     // ── 書き漏れた日をあとから書く (ポイント消費) ──
-    let bfDate = null, bfMood = null
+    let bfDate = null, bfMood = null, bfPhotoFile = null
+
+    function onBfPhotoSelected(file) {
+      if (!file) return
+      bfPhotoFile = file
+      document.getElementById('bf-photo-area').innerHTML =
+        `<div class="diary-photo-preview"><img src="${URL.createObjectURL(file)}"><button class="diary-photo-remove" onclick="clearBfPhoto()">✕</button></div>`
+    }
+    function clearBfPhoto() {
+      bfPhotoFile = null
+      document.getElementById('bf-photo-input').value = ''
+      document.getElementById('bf-photo-area').innerHTML =
+        `<button type="button" class="diary-photo-btn" onclick="document.getElementById('bf-photo-input').click()">📷 写真を追加</button>`
+    }
 
     function initBackfillUI() {
       const input = document.getElementById('bf-date')
@@ -547,6 +724,7 @@
       bfMood = null
       renderBfMoodRow()
       document.getElementById('bf-body').value = ''
+      clearBfPhoto()
       document.getElementById('bf-form').style.display = 'block'
       showToast(`${fmtShort(d)} の日記を書こう`)
     }
@@ -567,9 +745,17 @@
           showToast('その日はもう書いてあるよ'); return
         }
 
+        const bfPayload = { user_id: myId, date_str: bfDate, mood: bfMood, body, updated_at: new Date().toISOString() }
+        if (bfPhotoFile) {
+          const ext = (bfPhotoFile.name.split('.').pop() || 'jpg').toLowerCase()
+          const path = `diary/${myId}/${bfDate}.${ext}`
+          const { error: upErr } = await uploadPhoto(path, bfPhotoFile, { upsert: true })
+          if (upErr) showToast('写真のアップロードには失敗したけど日記は保存するね')
+          else bfPayload.photo_path = path
+        }
+
         const { data, error } = await _sb.from('diary_entries')
-          .upsert({ user_id: myId, date_str: bfDate, mood: bfMood, body, updated_at: new Date().toISOString() },
-                  { onConflict: 'user_id,date_str' })
+          .upsert(bfPayload, { onConflict: 'user_id,date_str' })
           .select().single()
         if (error) { showToast('保存に失敗しました'); console.error(error); return }
 
@@ -597,6 +783,7 @@
           })
         }
         bfDate = null
+        bfPhotoFile = null
         requestAiComment(data.id, false)   // ベストエフォート。保存自体はここで完了済み
       } finally {
         btn.disabled = false
@@ -639,6 +826,7 @@
       if (error) { showToast('削除に失敗しました'); console.error(error); return }
       entries = entries.filter(x => x.id !== entryId)
       reactions = reactions.filter(r => r.entry_id !== entryId)   // DB 側は ON DELETE CASCADE
+      comments = comments.filter(c => c.entry_id !== entryId)     // DB 側は ON DELETE CASCADE
       if (editingEntryId === entryId) editingEntryId = null
       renderMemories(); renderHistory(); renderStreaks()
       showToast('削除したよ')
