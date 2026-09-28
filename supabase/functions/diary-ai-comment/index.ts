@@ -12,6 +12,20 @@ const cors = {
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
+// 日記コメントのキャラ (🦔🦊 はふたり本人の絵文字なので使わない)。毎回ランダムで1匹選ぶ
+const CHARACTERS = [
+  { emoji: '🐰', style: '元気いっぱいでテンション高め。語尾に「〜！」を付けがち' },
+  { emoji: '🐻', style: 'のんびり穏やかで包容力がある' },
+  { emoji: '🐱', style: 'ちょっとツンデレ。素直じゃないけど気にかけてる' },
+  { emoji: '🐶', style: '全力で褒める・応援する熱血タイプ' },
+  { emoji: '🐼', style: 'マイペースで飄々としてる。たまに毒舌' },
+  { emoji: '🐹', style: '小動物っぽい可愛らしいテンション、擬音多め' },
+  { emoji: '🦉', style: '物知り風で、ちょっと達観した一言を言う' },
+  { emoji: '🐧', style: 'おっちょこちょいで、ちょっと面白いことを言う' },
+  { emoji: '🐨', style: '眠そうだけど、たまに核心をついてくる' },
+  { emoji: '🦁', style: '自信満々で豪快に励ましてくる' },
+]
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
@@ -42,9 +56,17 @@ Deno.serve(async (req) => {
   const tunnelUrl = setting?.value
   if (!tunnelUrl || !PROXY_SECRET) return json({ ok: false, error: 'ローカルAI未設定' })
 
+  const character = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)]
+
   const prompt =
-    `あなたは優しい相棒AI。以下の日記への一言コメントを日本語で書いて。\n` +
-    `条件: 20〜40文字程度、共感的で温かいトーン、絵文字は最大1つまで、前置きや説明なしでコメント本文だけを返すこと。\n\n` +
+    `あなたは🦔と🦊のふたりの日記を見守ってる動物キャラ。性格: ${character.style}\n` +
+    `この性格になりきって、日記に一言コメントを日本語で書いて。\n` +
+    `条件:\n` +
+    `- 20〜40文字程度、フランクな話し言葉(敬語は使わない)\n` +
+    `- 楽しそうな内容なら、具体的な要素を1つだけ拾って「〜いいなー！」「〜最高じゃん」みたいにテンション高めに反応する\n` +
+    `- しんどそう/悲しそうな内容なら、共感するか、重くなりすぎない程度に軽くちゃかして元気づける\n` +
+    `- 絵文字を使っていい(0〜2個くらい)\n` +
+    `- 前置きや説明は書かず、コメント本文だけを返すこと\n\n` +
     `きもち: ${entry.mood || 'なし'}\n日記:\n${entry.body}`
 
   let comment: string
@@ -60,8 +82,11 @@ Deno.serve(async (req) => {
     clearTimeout(t)
     if (!res.ok) return json({ ok: false, error: `ollama proxy HTTP ${res.status}` })
     const data = await res.json()
-    comment = String(data.response || '').trim().slice(0, 200)
-    if (!comment) return json({ ok: false, error: 'empty response' })
+    const raw = String(data.response || '')
+      .replace(/^["'「」]+|["'「」]+$/g, '')
+      .trim()
+    if (!raw) return json({ ok: false, error: 'empty response' })
+    comment = `${character.emoji} ${raw}`.slice(0, 200)
   } catch (e) {
     return json({ ok: false, error: `ローカルPCに繋がらなかった: ${String(e)}` })
   }
