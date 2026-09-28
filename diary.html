@@ -10,7 +10,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📔</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=202609281425">
+  <link rel="stylesheet" href="assets/css/style.css?v=202609281429">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const _sb = window.supabase.createClient(
@@ -164,6 +164,11 @@
       background: rgba(226,140,106,0.2); border: 1.5px solid rgba(226,140,106,0.5);
       color: #ffd9c2; font-family: inherit; font-size: 0.8rem;
     }
+    .entry-places {
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;
+      padding: 5px 10px; border-radius: 999px; font-size: 0.76rem;
+      background: rgba(120,200,160,0.1); border: 1px solid rgba(120,200,160,0.28); color: #a8e0c0;
+    }
 
     /* 書き漏れた日を書く */
     .backfill {
@@ -202,9 +207,9 @@
   </style>
 </head>
 <body style="visibility:hidden" onload="document.body.style.visibility='visible'">
-  <script src="assets/js/util.js?v=202609281425"></script>
-  <script src="assets/js/header.js?v=202609281425"></script>
-  <script src="assets/js/nav.js?v=202609281425"></script>
+  <script src="assets/js/util.js?v=202609281429"></script>
+  <script src="assets/js/header.js?v=202609281429"></script>
+  <script src="assets/js/nav.js?v=202609281429"></script>
 
   <div class="top-bar">
     <a href="/index.html">← ホーム</a>
@@ -217,6 +222,7 @@
       <div class="streak-row" id="streak-row"></div>
       <div class="today-card">
         <div class="today-date" id="today-date"></div>
+        <div id="my-places-today"></div>
         <div class="mood-row" id="mood-row"></div>
         <textarea class="diary-textarea" id="my-body" maxlength="2000" placeholder="今日はどんな一日だった？"></textarea>
         <div id="my-photo-area"></div>
@@ -275,6 +281,7 @@
     let entries = []
     let reactions = []
     let comments = []
+    let checkins = []
     let today = null
     let selMood = null
     let editingEntryId = null
@@ -305,14 +312,16 @@
       document.getElementById('today-date').textContent = fmtDate(today)
       renderMoodRow()
 
-      const [{ data }, { data: rx }, { data: cm }] = await Promise.all([
+      const [{ data }, { data: rx }, { data: cm }, { data: ck }] = await Promise.all([
         _sb.from('diary_entries').select('*').order('date_str', { ascending: false }),
         _sb.from('diary_reactions').select('*'),
         _sb.from('diary_comments').select('*'),
+        _sb.from('location_checkins').select('user_id, place_name, created_at'),
       ])
       entries = data || []
       reactions = rx || []
       comments = cm || []
+      checkins = ck || []
 
       const mine = entries.find(e => e.user_id === myId && e.date_str === today)
       if (mine) {
@@ -320,6 +329,7 @@
         if (mine.ai_comment) document.getElementById('my-ai-comment').innerHTML = `<div class="ai-comment">${escHtml(mine.ai_comment)}</div>`
       }
       renderMyPhotoArea(mine?.photo_path)
+      document.getElementById('my-places-today').innerHTML = placesHtml({ user_id: myId, date_str: today })
 
       renderPartnerToday()
       renderMemories()
@@ -413,10 +423,29 @@
           </div>
           <div class="entry-body">${escHtml(e.body)}</div>
           ${e.photo_path ? `<div class="entry-photo"><a href="#" onclick="openEntryPhoto('${e.id}','${e.photo_path.replace(/'/g, "\\'")}');return false"><img id="entry-photo-${e.id}" alt="" loading="lazy"></a></div>` : ''}
+          ${placesHtml(e)}
           ${e.ai_comment ? `<div class="ai-comment">${escHtml(e.ai_comment)}</div>` : ''}
           ${reactionBarHtml(e)}
           ${commentsHtml(e)}
         </div>`
+    }
+
+    // ── 今ここ連動: その日記の日付にその人が「今ここ」でチェックインしてた場所を出す ──
+    // 日記の日付境界(JST 2:00)に合わせるため、checkinの created_at を jstDateStrAt(2) で丸めて比較する
+    function placesForEntry(e) {
+      const names = []
+      for (const c of checkins) {
+        if (c.user_id !== e.user_id || !c.place_name) continue
+        if (jstDateStrAt(2, new Date(c.created_at)) !== e.date_str) continue
+        if (!names.includes(c.place_name)) names.push(c.place_name)
+      }
+      return names
+    }
+
+    function placesHtml(e) {
+      const names = placesForEntry(e)
+      if (!names.length) return ''
+      return `<div class="entry-places">📍 ${names.map(escHtml).join(' → ')}</div>`
     }
 
     // ── テキストコメント (相手の日記に一言。スタンプとは別・1人1エントリ1コメント) ──
