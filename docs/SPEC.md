@@ -440,6 +440,7 @@
 - **通知**: 初回記入時・連続記入ボーナス達成時に相手へPush (kind: `diary`)
 - **1日の終わりのリマインダー**: JST 23:00にその日まだ書いていない人へPush（`send-reminders`の`diary_evening`、pg_cron `remind_diary_evening`）
 - **ポイント表記はサイレント**（`feedback_points_silent`方針）
+- **🤖 AIの一言コメント** (2026-09-28新設・実験機能): 日記を保存すると、ユーザー自宅PCのローカルLLM(Ollama)に本文を渡して短い一言コメントを生成してもらい、`diary_entries.ai_comment`に保存して日記カードの下に表示する。**自宅PCが起動していてトンネルが繋がっている時だけ動く**ベストエフォート機能(繋がらない時は静かに何も表示しない)。仕組みの詳細は `docs/PLAN_LOCAL_AI.md` 参照
 
 ### 4.17 お知らせセンター (`notifications.html`)
 
@@ -682,7 +683,7 @@
 | `goals` | id, user_id, title, period, status('active'\|'done'), done_at, awarded | 目標達成するよ～の個人目標（awardedは達成ptの一度きり付与ガード） |
 | `goal_steps` | id, goal_id(fk), user_id, title, done, done_at, sort_order, awarded | 目標のサブタスク（sort_orderで並び替え、awardedで達成ptの一度きり付与ガード） |
 | `goal_praises` | id, goal_id(fk), step_id(fk, nullable=目標そのものへの褒め), from_user_id | 「えらい！」の送信記録（1step/1goalにつき一度きり） |
-| `diary_entries` | id, user_id, date_str, mood, body, created_at, updated_at / UNIQUE(user_id,date_str) | ふたりの日記（1人1日1件、upsertで編集） |
+| `diary_entries` | id, user_id, date_str, mood, body, ai_comment, created_at, updated_at / UNIQUE(user_id,date_str) | ふたりの日記（1人1日1件、upsertで編集）。ai_commentはローカルAIの一言コメント(2026-09-28〜) |
 | `diary_streak_awards` | user_id, milestone / PK(user_id,milestone) | 日記の連続記入ボーナスの一度きり付与ガード |
 | `diary_reactions` | entry_id(fk cascade), user_id, emoji / PK(entry_id,user_id) | 相手の日記へのスタンプ反応（1人1エントリ1つ） |
 
