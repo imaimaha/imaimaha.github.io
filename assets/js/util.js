@@ -2,7 +2,7 @@
 // 依存: 各ページで定義されるグローバルの Supabase クライアント `_sb`
 
 // このファイルが属するデプロイのバージョン。`scripts/bump_version.sh` が書き換える
-const APP_VERSION = '202609281438'
+const APP_VERSION = '202609281441'
 
 // ── デプロイ検知して自動リロード ──
 // GitHub Pages は Cache-Control: max-age=600 を返すため、デプロイ後10分ほど端末が古い
@@ -20,6 +20,12 @@ const APP_VERSION = '202609281438'
       if (sessionStorage.getItem(FLAG) === version) return   // 同じ版で繰り返さない
       sessionStorage.setItem(FLAG, version)
       console.info(`[update] 新しいバージョン ${version} を検知 (現在 ${APP_VERSION})。再読み込みします`)
+      // sw.js の stale-while-revalidate キャッシュがまだ更新完了してないタイミングだと、
+      // リロードしても古いHTML/JSを再度掴んでしまうことがある (2026-09-28発覚)。
+      // リロード前にアプリシェルのキャッシュを消して、確実にネットワークから取り直す
+      if ('caches' in window) {
+        try { await caches.delete('shell-v1') } catch (_) {}
+      }
       location.reload()
     } catch (_) {}
   }
