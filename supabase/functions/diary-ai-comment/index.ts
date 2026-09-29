@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const res = await fetch(`${tunnelUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PROXY_SECRET}` },
-      body: JSON.stringify({ model: 'qwen2.5-coder:7b', prompt, stream: false }),
+      body: JSON.stringify({ model: 'qwen3:8b', prompt, stream: false, think: false }),
       signal: ac.signal,
     })
     clearTimeout(t)
