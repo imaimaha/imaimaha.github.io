@@ -1,6 +1,8 @@
-# ローカルAI連携 (実験機能・2026-09-28〜)
+# ローカルAI連携 (実験機能・2026-09-28〜、2026-10-01にUI一時停止)
 
 ユーザーの自宅PC(WSL/Linux, `hirotaka@imanishi`)でローカルLLM(Ollama)を動かし、Notreの日記機能に一言コメントさせる実験。
+
+**⏸️ 2026-10-01時点でUIを閉じている**: 無料のCloudflare quick tunnelが数十分〜1時間程度で頻繁に切れ、ユーザーが都度手動で再登録する運用に耐えられなくなったため、`diary.html`の`AI_COMMENT_ENABLED = false`でボタン・表示を非表示にした。バックエンド一式(Edge Function・DB列・JS関数)はそのまま残してあるので、**再開したくなったら`AI_COMMENT_ENABLED = true`に戻すだけ**(あとはトンネルが生きているか確認)。本格的に復活させるなら固定URL化(独自ドメイン+Named Tunnel、または下記のMac mini案)が前提
 
 ## 構成
 
