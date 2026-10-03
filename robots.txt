@@ -3,4 +3,7 @@ User-agent: *
 Allow: /app-ads.txt
 Allow: /jimidrive/
 Allow: /gekokujo/
+Allow: /hensokushogi/
+Allow: /madoshizuku/
+Allow: /gohan/
 Disallow: /
