@@ -36,12 +36,34 @@ for (const p of PAGES) {
   })
 }
 
-test('quiz: 278問ロード & escHtml が単一引用符もエスケープ', async ({ page }) => {
+test('quiz: 683問ロード & escHtml が単一引用符もエスケープ', async ({ page }) => {
   await page.goto('/quiz.html', { waitUntil: 'networkidle' })
   const res = await page.evaluate(() => ({
     count: typeof QUESTIONS !== 'undefined' ? QUESTIONS.length : -1,
     escaped: escHtml(`<a href='x'>&"</a>`),
   }))
-  expect(res.count).toBe(278)
+  expect(res.count).toBe(683)
   expect(res.escaped).toBe('&lt;a href=&#39;x&#39;&gt;&amp;&quot;&lt;/a&gt;')
+})
+
+test('quiz: 2026-10-04 以降は全問1周するまで重複しない / id 重複なし / 過去出題済みは後回し', async ({ page }) => {
+  await page.goto('/quiz.html', { waitUntil: 'networkidle' })
+  const res = await page.evaluate(() => {
+    const ids = QUESTIONS.map(q => q.id)
+    const start = Date.UTC(2026, 9, 4)
+    const seen = new Set(); let dup = 0; let legacyEarly = 0
+    const fresh = QUESTIONS.length - LEGACY_USED_IDS.size
+    for (let i = 0; i < QUESTIONS.length; i++) {
+      const d = new Date(start + i * 86400000).toISOString().slice(0, 10)
+      const q = getDailyQuestion(d)
+      if (seen.has(q.id)) dup++
+      seen.add(q.id)
+      if (i < fresh && LEGACY_USED_IDS.has(q.id)) legacyEarly++
+    }
+    return { uniqueIds: new Set(ids).size, total: ids.length, dup, legacyEarly, covered: seen.size, fresh }
+  })
+  expect(res.uniqueIds).toBe(res.total)
+  expect(res.dup).toBe(0)
+  expect(res.legacyEarly).toBe(0)
+  expect(res.covered).toBe(res.total)
 })
