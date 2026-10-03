@@ -2,4 +2,5 @@ User-agent: *
 # アプリのサポートページと、AdMob が読む app-ads.txt だけは公開する（Notre 本体は検索に出さない）
 Allow: /app-ads.txt
 Allow: /jimidrive/
+Allow: /gekokujo/
 Disallow: /
