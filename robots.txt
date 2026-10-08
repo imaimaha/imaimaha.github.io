@@ -7,4 +7,6 @@ Allow: /hensokushogi/
 Allow: /shogi/
 Allow: /madoshizuku/
 Allow: /gohan/
+Allow: /nattofilm/
+Allow: /yudetamago/
 Disallow: /
