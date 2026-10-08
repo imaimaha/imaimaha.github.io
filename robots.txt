@@ -4,6 +4,7 @@ Allow: /app-ads.txt
 Allow: /jimidrive/
 Allow: /gekokujo/
 Allow: /hensokushogi/
+Allow: /shogi/
 Allow: /madoshizuku/
 Allow: /gohan/
 Disallow: /

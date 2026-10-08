@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3a2618">
+<meta name="description" content="友だちと部屋のコードで対局できる、変則将棋のオンライン対戦。ごろごろ将棋・トランプ将棋・特殊効果将棋など14種類。">
+<meta property="og:title" content="変則将棋で対戦しよう">
+<meta property="og:description" content="招待リンクを開くと、すぐに友だちとオンライン対戦できます（アプリなしでOK）">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://imaimaha.github.io/hensokushogi/icon.png">
+<link rel="apple-touch-icon" href="/hensokushogi/icon.png">
+<title>変則将棋 オンライン対戦</title>
+<style>
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root { --wood1: #ecc993; --wood2: #d8a768; --wood3: #b9824a; --ink: #3a2618; --cream: #fff6e6; --accent: #e8743b; --green: #3e7a50; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; position: fixed; inset: 0;
+    touch-action: manipulation; overscroll-behavior: none;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    color: var(--cream);
+    background: radial-gradient(circle at 50% 0%, #5c3b23 0%, #3a2618 55%, #22150c 100%);
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+  .wood {
+    background:
+      repeating-linear-gradient(92deg, rgba(120, 70, 30, .10) 0 2px, transparent 2px 9px),
+      repeating-linear-gradient(88deg, rgba(255, 240, 210, .12) 0 1px, transparent 1px 23px),
+      linear-gradient(160deg, var(--wood1), var(--wood2) 60%, var(--wood3));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .45), inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -3px 0 rgba(0, 0, 0, .18);
+  }
+  .screen { position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y;
+    padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 24px); }
+  .inner { max-width: 480px; margin: 0 auto; }
+
+  /* ---------- タイトル ---------- */
+  .logo { text-align: center; margin: 18px 0 20px; }
+  .logo .koma { display: inline-flex; gap: 6px; margin-bottom: 8px; }
+  .logo .koma span { width: 38px; height: 44px; display: grid; place-items: center; padding-top: 8px; font-weight: 900; font-size: 20px; color: #2b1a0d;
+    background: linear-gradient(#f6dca7, #e5b96f); clip-path: polygon(50% 0, 88% 18%, 100% 100%, 0 100%, 12% 18%);
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .logo .koma span.r { color: #c4161c; }
+  .logo h1 { margin: 0; font-size: 38px; letter-spacing: .12em; font-weight: 900; font-family: "Hiragino Mincho ProN", "YuMincho", serif;
+    color: var(--cream); text-shadow: 0 3px 0 #1c1209, 0 0 20px rgba(255, 200, 120, .35); }
+  .logo p { margin: 8px 0 0; font-size: 13px; opacity: .8; }
+  .big { display: flex; flex-direction: column; gap: 14px; }
+  .bigcard { display: flex; align-items: center; gap: 14px; text-align: left; padding: 18px 16px; border-radius: 22px;
+    background: linear-gradient(150deg, #fff7e8, #f3dfbd); color: var(--ink); box-shadow: 0 6px 0 #a87545, 0 10px 22px rgba(0, 0, 0, .35); }
+  .bigcard:active { transform: translateY(4px); box-shadow: 0 2px 0 #a87545, 0 6px 14px rgba(0, 0, 0, .35); }
+  .bigcard .ico { font-size: 38px; width: 58px; text-align: center; }
+  .bigcard b { display: block; font-size: 21px; letter-spacing: .04em; }
+  .bigcard small { display: block; font-size: 13px; opacity: .72; margin-top: 2px; }
+  .bigcard em { display: block; font-style: normal; font-size: 12px; color: #b0662c; font-weight: 800; margin-top: 4px; }
+  .foot { text-align: center; font-size: 11px; opacity: .5; margin-top: 22px; line-height: 1.6; }
+
+  /* ---------- 一覧 ---------- */
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .head h2 { margin: 0; font-size: 22px; flex: 1; font-family: "Hiragino Mincho ProN", "YuMincho", serif; letter-spacing: .06em; }
+  .ib { width: 40px; height: 40px; border-radius: 20px; background: rgba(255, 240, 220, .14); font-size: 18px; display: grid; place-items: center; flex: none; }
+  .ib:disabled { opacity: .35; }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .vcard { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 12px 12px 10px; border-radius: 18px;
+    background: linear-gradient(150deg, #fff7e8, #f3dfbd); color: var(--ink); box-shadow: 0 5px 0 #a87545, 0 8px 18px rgba(0, 0, 0, .3); }
+  .vcard:active { transform: translateY(3px); box-shadow: 0 2px 0 #a87545; }
+  .vcard .ico { flex: none; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 26px;
+    background: linear-gradient(160deg, #e9c48d, #c8935a); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -2px 0 rgba(0,0,0,.15); }
+  .vcard .txt { flex: 1; min-width: 0; }
+  .vcard b { font-size: 17px; }
+  .vcard .tag { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 8px; margin-left: 6px; vertical-align: 2px;
+    background: #e8743b; color: #fff; }
+  .vcard .tag.t-定番 { background: #3e7a50; } .vcard .tag.t-変則 { background: #7a5ab8; } .vcard .tag.t-駒落ち { background: #5a6e8a; }
+  .vcard small { display: block; font-size: 12.5px; opacity: .75; margin-top: 2px; }
+  .vcard em { display: block; font-style: normal; font-size: 11.5px; color: #b0662c; font-weight: 700; margin-top: 2px; }
+  .sec { font-size: 13px; font-weight: 900; opacity: .85; margin: 18px 4px 8px; letter-spacing: .08em; }
+  button.sec { display: flex; width: 100%; align-items: center; gap: 8px; color: inherit; background: none; padding: 6px 4px; text-align: left; }
+  button.sec .arw { display: inline-block; width: 14px; transition: transform .15s; }
+  button.sec.closed .arw { transform: rotate(-90deg); }
+  button.sec .cnt { margin-left: auto; font-size: 12px; opacity: .8; letter-spacing: 0; }
+  .ttools { display: flex; gap: 8px; align-items: center; margin: 10px 2px 2px; }
+  .ttools .chip { padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; background: rgba(255, 240, 220, .12); color: rgba(255, 240, 220, .9); }
+  .ttools .chip.on { background: #fff3dc; color: var(--ink); }
+  .ttools .go { margin-left: auto; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 900; background: #e8743b; color: #fff; box-shadow: 0 3px 0 #a84f22; }
+  .ttools .go:disabled { opacity: .45; box-shadow: none; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; }
+  .pz { position: relative; text-align: left; padding: 10px 11px; border-radius: 15px; background: linear-gradient(150deg, #fff7e8, #f0dab4); color: var(--ink);
+    box-shadow: 0 4px 0 #a87545; }
+  .pz:active { transform: translateY(3px); box-shadow: 0 1px 0 #a87545; }
+  .pz b { font-size: 15px; display: block; }
+  .pz small { display: block; font-size: 11px; opacity: .7; margin-top: 1px; }
+  .pz .st { font-size: 11px; color: #d27b00; letter-spacing: 1px; margin-top: 3px; }
+  .pz .ok { position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: #3e7a50; color: #fff; font-size: 14px; display: grid; place-items: center; font-weight: 900; }
+  .pz.solved { background: linear-gradient(150deg, #eef8ea, #d6ecd0); }
+  .prog { font-size: 13px; opacity: .85; margin: -4px 4px 4px; }
+
+  /* ---------- シート ---------- */
+  .sheet { position: fixed; inset: 0; z-index: 40; background: rgba(15, 8, 3, .55); display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .sheet.on { opacity: 1; pointer-events: auto; }
+  .sheet .box { width: 100%; max-width: 480px; background: linear-gradient(170deg, #fff8ec, #f2deba); color: var(--ink);
+    border-radius: 26px 26px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); max-height: 92vh; overflow-y: auto;
+    transform: translateY(30px); transition: transform .25s cubic-bezier(.2,.9,.3,1.2); touch-action: pan-y; }
+  .sheet.on .box { transform: none; }
+  .box h3 { margin: 0 0 2px; font-size: 23px; display: flex; align-items: center; gap: 8px; }
+  .box h3 button { margin-left: auto; font-size: 22px; opacity: .5; width: 36px; height: 36px; }
+  .box .desc { margin: 0 0 10px; font-size: 13px; opacity: .75; }
+  .rules { font-size: 12.5px; line-height: 1.7; background: rgba(160, 100, 40, .1); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+  .lab { font-size: 12px; font-weight: 800; opacity: .65; margin: 12px 0 6px; }
+  .seg { display: flex; flex-wrap: wrap; background: rgba(120, 70, 30, .14); border-radius: 14px; padding: 3px; gap: 3px; }
+  .seg button { flex: 1 1 auto; min-width: 28%; padding: 9px 4px; border-radius: 11px; font-size: 13.5px; font-weight: 700; color: #7a5534; }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .btns { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .btn { display: block; width: 100%; padding: 15px; border-radius: 16px; font-size: 17px; font-weight: 800; letter-spacing: .04em;
+    background: linear-gradient(#f08a4f, #d9612a); color: #fff; box-shadow: 0 5px 0 #a7461a; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #a7461a; }
+  .btn.alt { background: linear-gradient(#5d9b6e, #3e7a50); box-shadow: 0 5px 0 #2b5a38; }
+  .btn.ghost { background: rgba(120, 70, 30, .14); color: var(--ink); box-shadow: none; }
+  .stats { font-size: 11.5px; opacity: .6; text-align: center; margin-top: 12px; }
+  #result .box { text-align: center; }
+  #r-title { font-size: 32px; font-weight: 900; margin: 6px 0 4px; }
+  #r-title.win { color: #d9612a; } #r-title.lose { color: #5a6e8a; } #r-title.draw { color: #7a5534; }
+  #r-text { font-size: 17px; font-weight: 800; }
+  #r-mode { font-size: 12px; opacity: .6; margin-top: 2px; }
+  .row { display: flex; gap: 10px; } .row .btn { flex: 1; }
+
+  /* ---------- 対局・詰将棋の画面 ---------- */
+  .play { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+    padding: calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 10px); }
+  .topbar { width: 100%; max-width: 480px; display: flex; align-items: center; gap: 8px; }
+  .ttl { flex: 1; text-align: center; min-width: 0; }
+  .ttl b { display: block; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ttl small { display: block; font-size: 11.5px; opacity: .7; }
+  .players { width: 100%; max-width: 480px; display: flex; gap: 8px; margin-top: 8px; }
+  .pl { flex: 1; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 14px; background: rgba(255, 240, 220, .1); border: 2px solid transparent; transition: .2s; }
+  .pl.turn { background: rgba(255, 220, 160, .22); border-color: #f0b064; }
+  .pl .ic { font-size: 18px; } .pl .nm { font-size: 13.5px; font-weight: 800; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pl .sc { font-size: 13px; font-weight: 800; opacity: .9; }
+  .status { min-height: 22px; font-size: 14px; font-weight: 700; margin: 8px 0 6px; text-align: center; }
+  .status.warn { color: #ffb08a; }
+  .boardhost { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .tools { display: flex; gap: 8px; width: 100%; max-width: 480px; justify-content: center; flex-wrap: wrap; }
+  .tb { padding: 10px 14px; border-radius: 14px; background: rgba(255, 240, 220, .16); font-size: 14px; font-weight: 800; }
+  .tb:active { transform: scale(.96); }
+  .tb:disabled { opacity: .35; }
+  .tb.main { background: linear-gradient(#f08a4f, #d9612a); color: #fff; }
+
+  /* 盤 */
+  .sg-wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .sg-wrap.flip { flex-direction: column-reverse; }
+  .sg-board { display: grid; padding: 6px; border-radius: 8px; position: relative; }
+  .sg-wrap.flip .sg-board { transform: rotate(180deg); }
+  .sg-sq { width: var(--c); height: calc(var(--c) * 1.08); border: 1px solid rgba(70, 35, 10, .7); margin: 0 -1px -1px 0; position: relative; display: grid; place-items: center; }
+  .sg-sq.dest::after { content: ''; position: absolute; inset: 0; background: rgba(60, 160, 90, .30); }
+  .sg-sq.dest:empty::before { content: ''; position: absolute; width: 24%; height: 24%; border-radius: 50%; background: rgba(40, 120, 60, .6); z-index: 2; }
+  .sg-sq.sel { background: rgba(255, 210, 90, .55); }
+  .sg-sq.last { background: rgba(255, 140, 60, .32); }
+  .sg-sq.from { background: rgba(255, 140, 60, .14); }
+  .sg-sq.hint { box-shadow: inset 0 0 0 3px #2f8de4; background: rgba(47, 141, 228, .22); animation: hintp .8s ease-in-out infinite alternate; }
+  @keyframes hintp { to { background: rgba(47, 141, 228, .45); } }
+  .sg-sq.check { background: rgba(230, 40, 40, .45); animation: chk .5s ease-in-out 3 alternate; }
+  .sg-sq.gone { background: rgba(230, 40, 40, .35); }
+  @keyframes chk { to { background: rgba(230, 40, 40, .15); } }
+  .sg-star { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(60, 30, 10, .85); z-index: 1; transform: translate(-50%, -50%); }
+  .sg-pc { width: 82%; height: 90%; display: grid; place-items: center; padding-top: 12%; font-family: "Hiragino Mincho ProN", "YuMincho", "Hiragino Sans", serif;
+    font-weight: 900; font-size: calc(var(--c) * .5); color: #2b1a0d; line-height: 1; position: relative; z-index: 3;
+    background: linear-gradient(#f8e2b2, #e2b469); clip-path: polygon(50% 0, 88% 16%, 100% 100%, 0 100%, 12% 16%);
+    filter: drop-shadow(0 2px 1px rgba(0,0,0,.35)); }
+  .sg-pc.prom { color: #c4161c; }
+  .sg-pc.king { font-size: calc(var(--c) * .54); }
+  .sg-pc.orig { background: linear-gradient(#e9f1ff, #a9c3ea); }
+  .sg-pc.orig.prom { background: linear-gradient(#ffe9ea, #e9aab0); }
+  .sg-pc.gote { transform: rotate(180deg); padding-top: 0; padding-bottom: 12%; }
+  .sg-pc.pop { animation: pcpop .25s ease-out; }
+  .sg-pc.gote.pop { animation: pcpopg .25s ease-out; }
+  @keyframes pcpop { from { transform: scale(1.3); } }
+  @keyframes pcpopg { from { transform: rotate(180deg) scale(1.3); } }
+  .sg-pc.stone { clip-path: none; border-radius: 50%; width: 80%; height: 80%; padding: 0; font-size: calc(var(--c) * .46); }
+  .sg-pc.stone.gote { padding: 0; transform: none; background: linear-gradient(#ffe0e0, #e7a3a3); }
+  .sg-pc.stone.gote.pop { animation: pcpop .25s ease-out; }
+  .sg-hand { min-height: 50px; display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 14px; background: rgba(255, 240, 220, .12); flex-wrap: wrap; }
+  .sg-hlab { font-size: 11.5px; opacity: .75; width: 58px; line-height: 1.25; }
+  .sg-none { font-size: 12px; opacity: .45; }
+  .sg-hp { position: relative; width: 38px; height: 42px; display: grid; place-items: center; border-radius: 8px; --c: 40px; }
+  .sg-hp .sg-pc { font-size: 18px; width: 32px; height: 38px; }
+  .sg-hp .sg-pc.gote { transform: none; padding-top: 12%; padding-bottom: 0; }
+  .sg-hp b { position: absolute; right: -3px; bottom: -3px; background: #3a2618; color: #fff; border-radius: 9px; font-size: 11px; min-width: 18px; height: 18px; display: grid; place-items: center; z-index: 4; }
+  .sg-hp.sel { background: rgba(255, 210, 90, .6); }
+  .sg-hp.hint { box-shadow: inset 0 0 0 3px #2f8de4; }
+  .sg-rest { font-size: 12px; opacity: .8; padding: 0 4px; }
+  .sg-ask { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(20, 10, 4, .45); }
+  .sg-askbox { background: #fff6e6; color: var(--ink); border-radius: 18px; padding: 16px; width: min(80vw, 320px); text-align: center; }
+  .sg-askbox p { margin: 0 0 10px; font-weight: 900; font-size: 17px; }
+  .sg-askbox div { display: flex; gap: 8px; }
+  .sg-askbox .btn { padding: 11px 6px; font-size: 15px; }
+  .cap { font-size: 12.5px; opacity: .85; }
+
+  .toast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 70px); transform: translate(-50%, -20px); z-index: 60;
+    background: rgba(30, 18, 8, .92); color: #fff; padding: 11px 18px; border-radius: 16px; font-size: 15px; font-weight: 800; opacity: 0; pointer-events: none;
+    transition: .25s; max-width: 86vw; text-align: center; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .solved-banner { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; pointer-events: none; }
+  .solved-banner span { font-size: 54px; font-weight: 900; color: #fff3c4; text-shadow: 0 4px 0 #a7461a, 0 0 30px rgba(255, 180, 60, .8);
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; animation: sb 1.6s ease-out forwards; }
+  @keyframes sb { 0% { transform: scale(.4); opacity: 0; } 25% { transform: scale(1.1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1); } }
+  /* トランプ将棋: 筋の番号・動かせる筋・カード */
+  .sg-files { display: grid; padding: 0 6px; font-size: 12px; font-weight: 800; opacity: .8; text-align: center; }
+  .sg-files span.on { color: #ffd27a; opacity: 1; }
+  .sg-sq.fileok { background: rgba(255, 214, 120, .22); }
+  .sg-borrow { position: absolute; right: 1px; bottom: 0; z-index: 4; font-size: calc(var(--c) * .24); font-weight: 900; color: #fff; background: #2f6fb8; border-radius: 4px; padding: 0 2px; line-height: 1.2;
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .sg-wrap.flip .sg-borrow { transform: rotate(180deg); left: 1px; right: auto; top: 0; bottom: auto; }
+  .cards { width: 100%; max-width: 480px; display: flex; align-items: center; gap: 8px; justify-content: center; margin: 6px 0 4px; flex-wrap: wrap; }
+  .cards[hidden] { display: none; }
+  .cd { width: 46px; height: 64px; border-radius: 8px; background: #fffaf0; color: #2b1a0d; border: 2px solid #c9a46a; display: grid; place-items: center; position: relative;
+    font-weight: 900; font-size: 22px; box-shadow: 0 3px 0 rgba(0,0,0,.25); font-family: "Hiragino Sans", sans-serif; }
+  .cd small { position: absolute; left: 4px; top: 2px; font-size: 11px; }
+  .cd i { position: absolute; right: 3px; bottom: 2px; font-style: normal; font-size: 10px; opacity: .7; }
+  .cd.red { color: #c4161c; }
+  .cd.joker { font-size: 12px; background: linear-gradient(#fff3d6, #ffd9e8); }
+  .cd.sel { border-color: #f08a4f; box-shadow: 0 0 0 3px #ffd27a, 0 3px 0 rgba(0,0,0,.25); transform: translateY(-4px); }
+  .cd.dim { opacity: .45; }
+  .cd.small { width: 30px; height: 42px; font-size: 14px; } .cd.small small, .cd.small i { display: none; }
+  .cards .who { font-size: 11.5px; opacity: .75; line-height: 1.25; }
+  .cards .deck { font-size: 11.5px; opacity: .7; }
+  body.touch .kbd { display: none; }
+  /* 詰将棋 */
+  #t-filter { background: rgba(255, 240, 220, .1); margin-top: 6px; }
+  #t-filter button { color: rgba(255, 240, 220, .8); min-width: 18%; }
+  #t-filter button.on { color: var(--ink); }
+  #p-tools .tb { padding: 9px 9px; font-size: 13px; }
+  .prule { font-size: 11.5px; opacity: .75; margin-top: 4px; text-align: center; max-width: 480px; }
+  .prule:empty { display: none; }
+  .pmoves { width: 100%; max-width: 480px; font-size: 13px; font-weight: 700; white-space: nowrap; overflow-x: auto; padding: 6px 4px; opacity: .9;
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; text-align: center; }
+  .tnote { font-size: 12px; opacity: .75; margin: 8px 2px 4px; line-height: 1.5; }
+  #pres .box { max-height: 86vh; overflow-y: auto; }
+  #pres-title { font-size: 34px; font-weight: 900; text-align: center; margin: 4px 0 6px; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  #pres-title.win { color: #d9612a; } #pres-title.lose { color: #5a6e8a; }
+  .vmsg { font-size: 15px; line-height: 1.6; margin: 6px 0; }
+  .vgood { font-size: 15px; line-height: 1.6; margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: rgba(93, 155, 110, .16); }
+  .vtip { font-size: 12.5px; opacity: .7; margin: 6px 0; }
+  .kl { display: flex; gap: 10px; margin-top: 10px; }
+  .kl > div { flex: 1; min-width: 0; background: rgba(120, 70, 30, .08); border-radius: 12px; padding: 8px 10px; }
+  .kl h4 { margin: 0 0 4px; font-size: 12.5px; opacity: .75; }
+  .kl ol { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .kl li.bad { color: #c4161c; font-weight: 900; }
+  .kl small { font-size: 11px; opacity: .65; }
+  /* 表示の設定（トグル） */
+  .tgs { display: flex; flex-direction: column; gap: 6px; }
+  .tg { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 12px; background: rgba(120, 70, 30, .1); }
+  .tg span { flex: 1; } .tg b { display: block; font-size: 14px; } .tg small { display: block; font-size: 11.5px; opacity: .65; }
+  .tg i { width: 44px; height: 26px; border-radius: 13px; background: rgba(90, 60, 30, .3); position: relative; flex: none; transition: .2s; }
+  .tg i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .tg.on i { background: #5d9b6e; } .tg.on i::after { left: 21px; }
+  .tgnote { font-size: 12px; font-weight: 800; opacity: .75; text-align: center; margin-top: 2px; }
+  /* 段の番号 */
+  .sg-rowwrap { display: flex; align-items: flex-start; gap: 2px; }
+  .sg-ranks { display: grid; padding-top: 6px; font-size: 12px; font-weight: 800; opacity: .8; align-items: center; width: 16px; text-align: center;
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .help { font-size: 12px; opacity: .7; text-align: center; margin-top: 6px; }
+  /* じぶんの問題 */
+  .mrow { margin-bottom: 4px; } .mrow .btn { font-size: 15px; padding: 13px 6px; }
+  .mcard { padding: 12px 12px 10px; border-radius: 16px; background: linear-gradient(150deg, #fff7e8, #f0dab4); color: var(--ink); box-shadow: 0 4px 0 #a87545; }
+  .mcard.solved { background: linear-gradient(150deg, #eef8ea, #d6ecc9); }
+  .mcard .mt b { font-size: 16px; display: block; } .mcard .mt small { font-size: 12px; opacity: .7; }
+  .mcard .mb { display: flex; gap: 6px; margin-top: 8px; }
+  .mcard .mb button { flex: 1; padding: 8px 4px; border-radius: 10px; background: rgba(120, 70, 30, .12); font-size: 13px; font-weight: 800; color: var(--ink); }
+  .mcard .mb button[data-a="play"] { background: #e8743b; color: #fff; }
+  .mcard .mb button[data-a="del"] { flex: 0 0 44px; }
+  /* 詰将棋をつくる */
+  .eseg { width: 100%; max-width: 480px; margin-top: 6px; background: rgba(255, 240, 220, .1); }
+  .eseg button { min-width: 0; padding: 7px 2px; font-size: 13px; color: rgba(255, 240, 220, .85); }
+  .eseg button.on { color: var(--ink); }
+  .epal { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 480px; margin-top: 6px; }
+  .epb { min-width: 38px; height: 42px; padding: 0 4px; border-radius: 10px; background: rgba(255, 240, 220, .14); display: grid; place-items: center; font-weight: 900; font-size: 14px; }
+  .epb.on { background: #fff3dc; color: var(--ink); box-shadow: 0 0 0 2px #e8743b; }
+  .epb .sg-pc { position: static; width: 28px; height: 32px; font-size: 18px; }
+  .epb.side { padding: 0 10px; background: #3e7a50; color: #fff; } .epb.side.gote { background: #5a6e8a; }
+  .ehand { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; justify-content: center; width: 100%; max-width: 480px; margin-top: 6px; font-size: 12px; }
+  .ehl { font-weight: 800; opacity: .8; margin-right: 2px; }
+  .ehc { display: inline-flex; align-items: stretch; border-radius: 10px; overflow: hidden; background: rgba(255, 240, 220, .1); }
+  .ehc.on { background: rgba(255, 240, 220, .25); }
+  .eha { padding: 6px 8px; font-size: 15px; font-weight: 900; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .eha b { font-family: -apple-system, sans-serif; font-size: 12px; margin-left: 2px; color: #ffd27a; }
+  .ehm { padding: 6px 7px; background: rgba(0, 0, 0, .2); font-weight: 900; }
+  .estate { font-size: 13px; font-weight: 800; margin: 6px 0; opacity: .85; text-align: center; }
+  .estate.good { color: #9be08a; opacity: 1; } .estate.bad { color: #ffb08a; opacity: 1; }
+  .etools .tb { padding: 9px 9px; font-size: 13px; } .etools .tb.on { background: linear-gradient(#f08a4f, #d9612a); color: #fff; }
+  #ev-title { font-size: 28px; font-weight: 900; text-align: center; margin: 4px 0 8px; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  #ev-title.win { color: #3e7a50; } #ev-title.lose { color: #c4161c; }
+  .evbar { height: 10px; border-radius: 6px; background: rgba(120, 70, 30, .15); overflow: hidden; margin: 14px 0 8px; }
+  .evbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #f0a35a, #d9612a); transition: width .15s; }
+  .evp { font-size: 13px; opacity: .75; text-align: center; }
+  .evl { list-style: none; padding: 0; margin: 6px 0 10px; }
+  .evl li { display: flex; gap: 8px; padding: 7px 4px; border-bottom: 1px solid rgba(120, 70, 30, .12); font-size: 14px; line-height: 1.5; }
+  .evl li span { flex: none; width: 20px; font-weight: 900; text-align: center; }
+  .evl li.ok span { color: #3e7a50; } .evl li.ng span { color: #c4161c; } .evl li.warn span { color: #d9862a; } .evl li.info span { color: #5a6e8a; }
+  .imp { width: 100%; box-sizing: border-box; border-radius: 12px; border: 1.5px solid rgba(120, 70, 30, .3); padding: 10px; font-size: 14px; font-family: ui-monospace, Menlo, monospace; background: #fffaf0; color: var(--ink); }
+  .imperr { color: #c4161c; font-size: 13px; font-weight: 700; min-height: 18px; margin: 6px 2px; }
+  .shimg { display: block; width: 100%; max-width: 300px; margin: 6px auto 8px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
+  .shtext { white-space: pre-wrap; word-break: break-all; font-size: 12px; background: rgba(120, 70, 30, .08); border-radius: 10px; padding: 8px 10px; margin: 0 0 10px; font-family: inherit; }
+
+  /* 検討モード・読みの練習・設定 */
+  .pstudy { width: 100%; max-width: 480px; font-size: 13px; line-height: 1.5; background: rgba(255, 240, 220, .1); border-radius: 14px; padding: 8px 10px; margin: 2px 0 6px; max-height: 30vh; overflow-y: auto; }
+  .pstudy .smsg { font-weight: 800; margin-bottom: 4px; }
+  .pstudy .smsg.ok { color: #9be0a8; } .pstudy .smsg.bad { color: #ffb0a0; }
+  .pstudy table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .pstudy th { text-align: left; font-size: 11.5px; opacity: .7; font-weight: 700; padding: 2px 4px; }
+  .pstudy td { padding: 5px 4px; border-top: 1px solid rgba(255, 240, 220, .12); font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .pstudy tr.row { cursor: pointer; } .pstudy tr.row:active { background: rgba(255, 240, 220, .12); }
+  .pstudy tr.best td { color: #ffd98a; font-weight: 900; }
+  .pstudy .sbtn { display: inline-block; margin: 4px 6px 0 0; padding: 6px 10px; border-radius: 10px; background: rgba(255, 240, 220, .18); font-weight: 800; font-size: 12.5px; }
+  .pstudy .vars { margin-top: 6px; font-size: 12px; opacity: .9; }
+  .pstudy .vars button { display: block; text-align: left; width: 100%; padding: 4px 6px; border-radius: 8px; background: rgba(255, 240, 220, .08); margin-top: 3px; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .pmoves .mv { display: inline-block; padding: 1px 5px; margin: 0 1px; border-radius: 6px; }
+  .pmoves .mv.cur { background: #fff3dc; color: var(--ink); }
+  .pmoves .mv.after { opacity: .45; }
+  .pmoves .mv.read { background: rgba(255, 240, 220, .16); }
+  #p-read .tb, #p-studytools .tb { padding: 9px 9px; font-size: 13px; }
+  .psec { font-size: 12.5px; font-weight: 900; opacity: .7; margin: 10px 2px 6px; }
+  #pd-mode button, #pd-def button { min-width: 48%; }
+  .sg-sq.ghost { box-shadow: inset 0 0 0 3px rgba(60, 120, 220, .55); }
+  .sg-sq.ghostfrom { box-shadow: inset 0 0 0 2px rgba(60, 120, 220, .3); }
+
+  /* トランプ将棋: 手札は動かさない。裏向き・のぞく */
+  .cd.sel { transform: none; }
+  .cd.back { background: repeating-linear-gradient(45deg, #b8463a 0 6px, #9c3328 6px 12px); border-color: #fff3dc; }
+  .cd.empty { background: none; border: 2px dashed rgba(255, 240, 220, .25); box-shadow: none; }
+  .cd.other { cursor: default; }
+  .cards { min-height: 72px; border-radius: 14px; padding: 2px 4px; border: 2px solid transparent; }
+  .cards.mover { border-color: rgba(240, 176, 100, .55); background: rgba(255, 220, 160, .08); }
+  .cards .peek { padding: 8px 10px; border-radius: 10px; background: #fff3dc; color: var(--ink); font-weight: 900; font-size: 13px; }
+  .handover { position: fixed; inset: 0; z-index: 90; background: #1f130b; display: grid; place-items: center; text-align: center; color: #fff3dc; padding: 24px; }
+  .handover p { font-size: 22px; font-weight: 900; margin: 0 0 6px; }
+  .handover small { display: block; opacity: .75; margin-bottom: 18px; }
+  /* 対局の記録・棋譜の見返し */
+  .recbtn { display: block; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: #fff3dc; color: var(--ink); font-weight: 900; font-size: 14px; text-align: left; }
+  .recbtn.ghost { background: rgba(255, 240, 220, .12); color: inherit; margin-top: 12px; text-align: center; }
+  .rpmoves { width: 100%; max-width: 480px; max-height: 18vh; overflow-y: auto; font-size: 13px; font-weight: 700; padding: 6px 4px; line-height: 1.9;
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .rpmoves .mv { display: inline-block; padding: 0 5px; margin: 0 2px; border-radius: 6px; cursor: pointer; }
+  .rpmoves .mv.cur { background: #fff3dc; color: var(--ink); }
+  .rpcards { width: 100%; max-width: 480px; font-size: 12px; }
+  .rpcards[hidden] { display: none; }
+  .rprow { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+  .rprow .who { min-width: 74px; opacity: .8; }
+  #replay .tools .tb { padding: 9px 10px; font-size: 13px; }
+  /* ---- 特殊効果将棋のカード ---- */
+  .fxbar { width: 100%; max-width: 480px; display: flex; align-items: stretch; gap: 6px; margin: 4px 0; min-height: 54px; padding: 3px 4px; border-radius: 14px; border: 2px solid transparent; flex-wrap: wrap; }
+  .fxbar[hidden] { display: none; }
+  .fxbar.mover { border-color: rgba(240, 176, 100, .55); background: rgba(255, 220, 160, .08); }
+  .fxbar .who { font-size: 11px; opacity: .8; min-width: 54px; align-self: center; line-height: 1.3; }
+  .fxc { flex: 1 1 120px; max-width: 190px; text-align: left; padding: 6px 9px; border-radius: 12px; background: linear-gradient(160deg, #fff6e4, #f0d6a8); color: #2b1a0d; border: 2px solid #c9a46a; }
+  .fxc b { display: block; font-size: 14px; } .fxc small { display: block; font-size: 10.5px; opacity: .72; line-height: 1.3; }
+  .fxc.ok { border-color: #f08a4f; box-shadow: 0 0 0 2px rgba(240, 138, 79, .35); }
+  .fxc.sel { background: linear-gradient(160deg, #ffd9b8, #f3a46c); }
+  .fxc.used { opacity: .4; filter: grayscale(.7); }
+  .fxc.back { background: repeating-linear-gradient(45deg, #7a3b1d, #7a3b1d 6px, #8c4626 6px, #8c4626 12px); color: #ffe7c2; border-color: #c9a46a; text-align: center; }
+  .fxbar .fxtag { font-size: 11px; font-weight: 800; color: #ffd28a; align-self: center; line-height: 1.35; }
+  .fxbar .peek { padding: 6px 10px; border-radius: 12px; background: #fff3dc; color: var(--ink); font-weight: 800; font-size: 13px; }
+  .sg-sq.mine::before { content: '💣'; position: absolute; right: 1px; top: 0; font-size: 10px; z-index: 3; opacity: .85; }
+  .sg-sq.fxt::after { content: ''; position: absolute; inset: 0; background: rgba(240, 138, 79, .32); box-shadow: inset 0 0 0 2px #f08a4f; }
+  .chooser { position: fixed; inset: 0; z-index: 95; background: rgba(15, 8, 3, .6); display: grid; place-items: center; padding: 20px; }
+  .chooser .box { width: 100%; max-width: 360px; background: linear-gradient(170deg, #fff8ec, #f2deba); color: var(--ink); border-radius: 22px; padding: 18px; text-align: center; }
+  .chooser p { font-weight: 900; font-size: 16px; margin: 0 0 12px; }
+  .chooser .opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; } .chooser .opts .btn { flex: 1 1 28%; padding: 12px 4px; }
+  /* ---- オンライン ---- */
+  .pl .sc.clk { font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 9px; background: rgba(0, 0, 0, .22); }
+  .pl .sc.low { background: #c4412a; color: #fff; animation: hintp .5s ease-in-out infinite alternate; }
+  .joinbox { margin: 14px 0; padding: 14px; border-radius: 18px; background: rgba(255, 240, 220, .12); }
+  .joinbox .row { margin-top: 6px; }
+  .joinbox input { flex: 1; min-width: 0; font-size: 22px; font-weight: 900; letter-spacing: .25em; text-transform: uppercase; text-align: center; padding: 10px; border-radius: 14px; border: 2px solid #c9a46a; background: #fffaf0; color: #2b1a0d; }
+  .joinbox .btn { flex: none; width: auto; padding: 12px 22px; }
+  .appbanner { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; background: #fff3dc; color: var(--ink); font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+  .appbanner[hidden] { display: none; } .appbanner span { flex: 1; }
+  .appbanner a { padding: 6px 10px; border-radius: 10px; background: #2f6fe4; color: #fff; text-decoration: none; } .appbanner a[hidden] { display: none; }
+  .appbanner button { opacity: .5; font-size: 16px; }
+  .webhead { display: none; text-align: center; margin: 8px 0 14px; } body.web .webhead { display: block; } .webhead h1 { margin: 0; font-size: 30px; font-family: "Hiragino Mincho ProN", "YuMincho", serif; letter-spacing: .08em; }
+  .webhead p { margin: 4px 0 0; font-size: 13px; opacity: .75; }
+  .webhead[hidden] { display: none; }
+  #room .box { text-align: center; }
+  .rmcode { font-size: 40px; font-weight: 900; letter-spacing: .22em; margin: 6px 0; font-variant-numeric: tabular-nums; }
+  #rm-qr { width: 180px; height: 180px; image-rendering: pixelated; border-radius: 10px; margin: 4px auto; display: block; }
+  .rmlink { font-size: 12px; word-break: break-all; opacity: .7; margin: 4px 0; }
+  .rmrule { font-size: 13px; font-weight: 800; margin: 6px 0; }
+  #rm-host[hidden] { display: none; }
+  #su-clock-wrap .seg { margin-bottom: 6px; } #su-clock-wrap .note { font-size: 12px; font-weight: 800; opacity: .7; }
+  body.web #go-play, body.web #go-tsume, body.web #go-mine { display: none; }
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<div class="screen" id="home"><div class="inner">
+  <div class="logo">
+    <div class="koma"><span>忍</span><span class="r">龍</span><span>砲</span><span>蛙</span></div>
+    <h1>変則将棋</h1>
+    <p>いつもの将棋を、ちょっとだけ変にした</p>
+  </div>
+  <div class="big">
+    <button class="bigcard" id="go-online"><span class="ico">🌐</span><span><b>オンライン対戦</b><small>部屋のコードや招待リンクで、友だちと対局（ブラウザの人とも）</small></span></button>
+    <button class="bigcard" id="go-play"><span class="ico">⚔️</span><span><b>対局する</b><small>CPU や、2人で1台で。ルールは10種類以上</small><em id="home-play"></em></span></button>
+    <button class="bigcard" id="go-tsume"><span class="ico">🧩</span><span><b>変則詰将棋</b><small>安南・安北・安東・安西の詰将棋。9×9 の本格派</small><em id="home-tsume"></em></span></button>
+    <button class="bigcard" id="go-mine"><span class="ico">✏️</span><span><b>詰将棋をつくる</b><small>自分で作って、本当に詰むか検証。コードで友だちと共有</small><em id="home-mine"></em></span></button>
+  </div>
+  <div class="foot">駒の動きは、対局の前の説明で見られます<br>変な駒（忍・砲・蛙）はこのアプリのオリジナルです</div>
+</div></div>
+
+<!-- オンライン対戦 -->
+<div class="screen" id="online" hidden><div class="inner">
+  <div class="head"><button class="ib" id="on-back">←</button><h2>オンライン対戦</h2><button class="ib mute">🔊</button></div>
+  <div class="webhead"><h1>変則将棋</h1><p>友だちと、部屋のコードで対局</p></div>
+  <div class="appbanner" id="on-appbanner" hidden><span>📱 iPhoneならアプリが遊びやすいよ</span><a id="on-appstore" href="#" target="_blank" hidden>App Store</a><button id="on-banner-x">✕</button></div>
+  <p class="tnote" id="on-msg"></p>
+  <button class="recbtn" id="on-resume" hidden></button>
+  <button class="bigcard" id="on-create"><span class="ico">🏠</span><span><b>部屋をつくる</b><small>ルールと持ち時間をえらんで、招待リンクを送る</small></span></button>
+  <div class="joinbox"><div class="lab">招待された人は、コードを入れて入る</div><div class="row"><input id="on-code" maxlength="6" placeholder="AB12CD" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="on-join">入る</button></div></div>
+  <p class="tnote">先手・後手は自動で決まります。iPhone のアプリとブラウザ（Android・パソコン）のあいだでも対局できます。通信が切れても、同じ部屋にもどれば続きから指せます。</p>
+</div></div>
+
+<!-- ルール一覧 -->
+<div class="screen" id="variants" hidden><div class="inner">
+  <div class="head"><button class="ib" id="v-back">←</button><h2 id="v-title">ルールをえらぶ</h2><button class="ib mute">🔊</button></div>
+  <button class="recbtn" id="v-records">📜 対局の記録（棋譜を見返す）</button>
+  <div class="list" id="v-list"></div>
+</div></div>
+
+<!-- 対局の記録 -->
+<div class="screen" id="records" hidden><div class="inner">
+  <div class="head"><button class="ib" id="rec-back">←</button><h2>対局の記録</h2><button class="ib mute">🔊</button></div>
+  <div class="list" id="rec-list"></div>
+  <button class="recbtn ghost" id="rec-clear">🗑 記録をぜんぶけす</button>
+</div></div>
+
+<!-- 詰将棋の一覧 -->
+<div class="screen" id="tsume" hidden><div class="inner">
+  <div class="head"><button class="ib" data-back="home">←</button><h2>変則詰将棋</h2><button class="ib mute">🔊</button></div>
+  <div class="prog" id="t-prog"></div>
+  <div class="seg" id="t-filter"></div>
+  <div class="ttools"><button class="chip" id="t-unsolved">未クリアだけ</button><button class="go" id="t-nextun">つぎの未クリア ›</button></div>
+  <p class="tnote" id="t-note"></p>
+  <div id="t-list"></div>
+</div></div>
+
+<!-- じぶんの問題（作った・読み込んだ） -->
+<div class="screen" id="mine" hidden><div class="inner">
+  <div class="head"><button class="ib" data-back="home">←</button><h2>じぶんの問題</h2><button class="ib mute">🔊</button></div>
+  <div class="row mrow"><button class="btn" id="m-new">＋ 新しくつくる</button><button class="btn alt" id="m-import">📥 コードで読み込む</button></div>
+  <p class="tnote">作った問題は「検証」で本当に詰むか確かめてから保存します。共有コードを送れば、友だちも同じ問題で遊べます。</p>
+  <div class="list" id="m-list"></div>
+</div></div>
+
+<!-- 詰将棋をつくる -->
+<div class="play" id="edit" hidden>
+  <div class="topbar"><button class="ib" id="e-back">←</button><div class="ttl"><b id="e-title"></b><small id="e-sub"></small></div><button class="ib mute">🔊</button></div>
+  <div class="seg eseg" id="e-rule"></div>
+  <div class="seg eseg" id="e-len"></div>
+  <div class="boardhost" id="e-board"></div>
+  <div class="epal" id="e-pal"></div>
+  <div class="ehand" id="e-hand"></div>
+  <div class="estate" id="e-state"></div>
+  <div class="tools etools"><button class="tb" id="e-clear">🧹 クリア</button><button class="tb" id="e-borrow"></button><button class="tb on" id="e-verify">🔍 検証</button><button class="tb" id="e-save">💾 保存して解く</button><button class="tb" id="e-share">📤 共有</button></div>
+</div>
+
+<!-- 対局 -->
+<div class="play" id="game" hidden>
+  <div class="topbar"><button class="ib" id="g-back">←</button><div class="ttl"><b id="g-title"></b><small id="g-sub"></small></div><button class="ib mute">🔊</button></div>
+  <div class="players"><div class="pl" id="pl0"><span class="ic"></span><span class="nm"></span><span class="sc"></span></div><div class="pl" id="pl1"><span class="ic"></span><span class="nm"></span><span class="sc"></span></div></div>
+  <div class="status" id="g-status"></div>
+  <div class="cards" id="g-opp" hidden></div>
+  <div class="fxbar" id="g-fxopp" hidden></div>
+  <div class="boardhost" id="g-board"></div>
+  <div class="cards" id="g-cards" hidden></div>
+  <div class="fxbar" id="g-fx" hidden></div>
+  <div class="tools"><button class="tb" id="g-undo">↶ 待った</button><button class="tb" id="g-resign">🏳 投了</button><button class="tb" id="g-again">↻ はじめから</button></div>
+</div>
+
+<!-- 棋譜の見返し -->
+<div class="play" id="replay" hidden>
+  <div class="topbar"><button class="ib" id="rp-back">←</button><div class="ttl"><b id="rp-title"></b><small id="rp-sub"></small></div><button class="ib mute">🔊</button></div>
+  <div class="status" id="rp-status"></div>
+  <div class="rpcards" id="rp-cards" hidden></div>
+  <div class="boardhost" id="rp-board"></div>
+  <div class="rpmoves" id="rp-moves"></div>
+  <div class="tools">
+    <button class="tb" id="rp-first">⏮</button><button class="tb" id="rp-prev">◀</button><button class="tb" id="rp-next">▶</button><button class="tb" id="rp-last">⏭</button>
+    <button class="tb" id="rp-auto">▶ 自動</button><button class="tb" id="rp-flip">⇅ 反転</button><button class="tb" id="rp-try">🔍 ここから指す</button>
+  </div>
+</div>
+
+<!-- 詰将棋を解く -->
+<div class="play" id="puzzle" hidden>
+  <div class="topbar"><button class="ib" id="p-back">←</button><div class="ttl"><b id="p-title"></b><small id="p-sub"></small></div><button class="ib mute">🔊</button></div>
+  <div class="prule" id="p-rule"></div>
+  <div class="status" id="p-status"></div>
+  <div class="boardhost" id="p-board"></div>
+  <div class="pmoves" id="p-moves"></div>
+  <div class="pstudy" id="p-study" hidden></div>
+  <div class="tools" id="p-tools">
+    <button class="tb" id="p-undo">↶ 戻す</button><button class="tb" id="p-hint">💡 ヒント</button><button class="tb" id="p-retry">↻ 最初から</button><button class="tb" id="p-answer">📖 答え</button><button class="tb" id="p-disp">⚙ 表示</button>
+  </div>
+  <div class="tools" id="p-play" hidden>
+    <button class="tb" id="p-prev">◀</button><button class="tb" id="p-step"></button><button class="tb" id="p-nextstep">▶</button><button class="tb" id="p-tostudy">🔍 検討</button><button class="tb" id="p-close">とじる</button>
+  </div>
+  <!-- 盤を動かさずに解く（読みの練習） -->
+  <div class="tools" id="p-read" hidden>
+    <button class="tb" id="r-del">↶ 1手けす</button><button class="tb" id="r-clear">✕ ぜんぶけす</button><button class="tb main" id="r-submit">✅ 解答する</button><button class="tb" id="r-answer">📖 答え</button><button class="tb" id="r-disp">⚙ 設定</button>
+  </div>
+  <!-- 検討モード -->
+  <div class="tools" id="p-studytools" hidden>
+    <button class="tb" id="s-first">⏮</button><button class="tb" id="s-prev">◀</button><button class="tb" id="s-next">▶</button><button class="tb" id="s-last">⏭</button><button class="tb" id="s-main">本手順へ</button><button class="tb" id="s-close">とじる</button>
+  </div>
+</div>
+
+<!-- 詰将棋の結果 -->
+<div class="sheet" id="pres"><div class="box">
+  <div id="pres-title"></div>
+  <div id="pres-body"></div>
+  <div class="btns">
+    <button class="btn" id="pres-next">次の問題へ ›</button>
+    <button class="btn alt" id="pres-retryhere">この局面からやり直す</button>
+    <button class="btn ghost" id="pres-replay">📖 正しい手順を1手ずつ見る</button>
+    <button class="btn ghost" id="pres-study">🔍 検討する（ほかの逃げ方・ほかの王手を試す）</button>
+    <div class="row"><button class="btn ghost" id="pres-again">もう一度</button><button class="btn ghost" id="pres-board">盤を見る</button></div>
+  </div>
+</div></div>
+
+<!-- 詰将棋の表示の設定 -->
+<div class="sheet" id="pdisp"><div class="box">
+  <h3><span>⚙</span><span>詰将棋の設定</span><button id="pd-close">✕</button></h3>
+  <div class="psec">解き方</div>
+  <div class="seg" id="pd-mode"></div>
+  <p class="desc" id="pd-modedesc"></p>
+  <div id="pd-defwrap"><div class="psec">玉方の応手</div><div class="seg" id="pd-def"></div><p class="desc" id="pd-defdesc"></p></div>
+  <div class="psec">表示</div>
+  <div class="tgs" id="pd-body"></div>
+  <p class="desc" style="margin-top:10px">上級者は表示を両方オフがおすすめ。どの駒がどう動けるかを、自分で読んで解きます。</p>
+</div></div>
+
+<!-- 対局の前の設定 -->
+<div class="sheet" id="setup"><div class="box">
+  <h3><span id="su-emoji"></span><span id="su-title"></span><button id="su-close">✕</button></h3>
+  <p class="desc" id="su-desc"></p>
+  <div class="rules" id="su-rules"></div>
+  <div id="su-hc-wrap"><div class="lab">駒落ち</div><div class="seg" id="su-hc"></div></div>
+  <div id="su-goal-wrap"><div class="lab">勝ち方</div><div class="seg" id="su-goal"></div></div>
+  <div class="lab">表示</div><div class="tgs" id="su-disp"></div>
+  <div class="lab">CPU の強さ</div><div class="seg" id="su-level"></div>
+  <div class="lab" id="su-first-lab">CPU 戦であなたが持つのは</div><div class="seg" id="su-first"></div>
+  <div id="su-clock-wrap" hidden><div class="lab">持ち時間</div><div class="seg" id="su-clock"></div><div class="seg" id="su-clock2"></div><div class="seg" id="su-clock3"></div><div class="note" id="su-clock-note"></div></div>
+  <div class="btns"><button class="btn" id="su-cpu">CPU と対局</button><button class="btn alt" id="su-local">2人で1台</button><button class="btn" id="su-room" hidden>🌐 この設定で部屋をつくる</button></div>
+  <div class="stats" id="su-stats"></div>
+</div></div>
+
+<!-- 結果 -->
+<div class="sheet" id="result"><div class="box">
+  <div id="r-title"></div><div id="r-text"></div><div id="r-mode"></div>
+  <div class="btns"><button class="btn" id="r-again">もう一度</button>
+    <div class="row"><button class="btn ghost" id="r-kifu">📜 棋譜を見返す</button><button class="btn ghost" id="r-copy">📋 棋譜をコピー</button></div>
+    <div class="row"><button class="btn ghost" id="r-board">盤を見る</button><button class="btn ghost" id="r-undo">待った</button></div>
+    <button class="btn ghost" id="r-menu">ルール一覧へ</button></div>
+</div></div>
+
+<!-- 検証の結果 -->
+<div class="sheet" id="everify"><div class="box">
+  <div id="ev-title"></div>
+  <div id="ev-body"></div>
+  <div class="btns" id="ev-btns">
+    <button class="btn" id="ev-save">💾 保存して解いてみる</button>
+    <button class="btn alt" id="ev-share">📤 共有する</button>
+    <button class="btn ghost" id="ev-close">とじる</button>
+  </div>
+</div></div>
+
+<!-- コードで読み込む -->
+<div class="sheet" id="import"><div class="box">
+  <h3><span>📥</span><span>コードで読み込む</span></h3>
+  <p class="desc">友だちから届いた「HS1.」で始まるコードを貼ってください（前後の文章ごと貼っても大丈夫）。</p>
+  <textarea id="imp-text" class="imp" rows="4" placeholder="HS1.…"></textarea>
+  <p class="imperr" id="imp-err"></p>
+  <div class="btns"><button class="btn" id="imp-go">読み込む</button><button class="btn ghost" id="imp-cancel">やめる</button></div>
+</div></div>
+
+<!-- 共有のプレビュー -->
+<div class="sheet" id="shareprev"><div class="box">
+  <h3><span>📤</span><span>問題を共有する</span></h3>
+  <img id="sh-img" class="shimg" alt="盤の画像">
+  <pre id="sh-text" class="shtext"></pre>
+  <div class="btns"><button class="btn" id="sh-go">共有する</button><div class="row"><button class="btn ghost" id="sh-copy">コードだけコピー</button><button class="btn ghost" id="sh-close">とじる</button></div></div>
+</div></div>
+
+<!-- 部屋（招待） -->
+<div class="sheet" id="room"><div class="box">
+  <h3><span>🌐</span><span id="rm-title">部屋をつくりました</span><button id="rm-close">✕</button></h3>
+  <div class="lab">部屋のコード</div>
+  <div class="rmcode" id="rm-code"></div>
+  <div id="rm-host">
+    <canvas id="rm-qr"></canvas>
+    <div class="rmlink" id="rm-link"></div>
+    <div class="rmrule" id="rm-rule"></div>
+  </div>
+  <div class="status" id="rm-status"></div>
+  <div class="btns"><button class="btn" id="rm-share">📤 招待を送る</button><div class="row"><button class="btn ghost" id="rm-copy">リンクをコピー</button><button class="btn ghost" id="rm-cancel">やめる</button></div></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>window.HS_WEB = true;</script>
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script src="net.js"></script>
+<script src="qr.js"></script>
+<script src="engine.js"></script>
+<script src="variants.js"></script>
+<script src="hasami.js"></script>
+<script src="trump.js"></script>
+<script src="effects.js"></script>
+<script src="puzzles.js"></script>
+<script src="tsumecode.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
