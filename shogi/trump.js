@@ -4,8 +4,9 @@
      H = 0: 自分の番のはじめに山から1枚めくり、その筋の駒を動かす（その筋に打ってもよい）
      H ≥ 1: 手札（おたがい見える）から1枚えらんで、その筋の駒を動かす。指したら1枚引いて H 枚にもどす
    例外（何をしてもいい）:
-     ・王手をかけられているとき … カードに関係なく、どの合法手でも指せる
-     ・カードの筋で指せる手が1つもないとき … どの合法手でも指せる
+     ・王手をかけられているとき … カードに関係なく、どの合法手でも指せる。このときカードは使わない
+       （手札は減らず、引きもしない。0枚モードでめくった札は使わずに残り、次に相手がその札をめくる）。手の card は -1
+     ・カードの筋で指せる手が1つもないとき … どの合法手でも指せる（このときはえらんだカードを使う＝今までどおり）
    それ以外は本将棋と同じ（二歩・打ち歩詰め・行き所のない駒・王手放置は禁止）。詰み＝王手で、指せる手が1つもない
    状態 s は将棋の局面（b, hand, turn, ply, last, check）に、山札 deck・捨て札 disc・手札 cards[2]・めくった札 cur を足したもの */
 (function (root) {
@@ -59,10 +60,12 @@
     var all = R.moves(V, s), opt = options(s), out = [], k, i;
     if (!all.length) return [];
     var check = R.inCheck(V, s, s.turn);
-    var per = opt.map(function (c) { return check ? [] : all.filter(function (m) { return onFile(V, m, cardFile(c)); }); });
+    // 王手のとき: カードを使わずに、どの合法手でも（同じ手を札の数だけ並べない）
+    if (check) { for (i = 0; i < all.length; i++) { var cm = withCard(all[i], -1, true); cm.chk = true; out.push(cm); } return out; }
+    var per = opt.map(function (c) { return all.filter(function (m) { return onFile(V, m, cardFile(c)); }); });
     var anyCard = per.some(function (l) { return l.length; });
     for (k = 0; k < opt.length; k++) {
-      if (check || !anyCard) {
+      if (!anyCard) {
         for (i = 0; i < all.length; i++) out.push(withCard(all[i], k, true));
       } else {
         for (i = 0; i < per[k].length; i++) out.push(withCard(per[k][i], k, false));
@@ -81,9 +84,11 @@
     n.H = s.H; n.deck = s.deck.slice(); n.disc = s.disc.slice(); n.cards = [s.cards[0].slice(), s.cards[1].slice()];
     if (typeof s.seed === 'number') n.seed = s.seed;
     var p = s.turn, used;
-    if (s.H === 0) { used = s.cur; n.disc.push(used); n.cur = draw(n); }
+    if (m.card === -1) {                       // 王手で自由に指した: カードは使わない・引かない
+      n.cur = s.H === 0 ? s.cur : null; used = null;
+    } else if (s.H === 0) { used = s.cur; n.disc.push(used); n.cur = draw(n); }
     else { used = n.cards[p].splice(m.card, 1)[0]; n.disc.push(used); n.cards[p].push(draw(n)); n.cur = null; }
-    n.usedCard = used; n.free = !!m.free;
+    n.usedCard = used; n.free = !!m.free; n.chk = m.card === -1;
     return n;
   }
   function over(V, s) { return R.over(V, s); }

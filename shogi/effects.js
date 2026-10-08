@@ -4,7 +4,9 @@
    使ったカードはなくなる（同じ番に2枚は使えない）。王手をかけられているあいだは、カードは使えない。
 
    カード（どれも1局に1回）
-     二手指し  この番は2手続けて指せる。ただし2手とも、王手になる手は指せない（2手目で王を取らないため）
+     二手指し  この番は2手続けて指せる。ただし ①2手は別々の駒で（同じ駒を2回は動かせない。打つのは別の駒あつかい）
+               ②2手とも、相手の駒を取る手は指せない ③2手とも、王手になる手は指せない。
+               こういう2手の組み合わせが1つもないときは、カードを使えない
      封印      相手は次の3回の番、持ち駒を打てない（王手をかけられているときだけは打ってよい）
      身代わり  相手の持ち駒から、もとは自分の駒だった1枚（どれでも）を自分の持ち駒にもどす
      入れ替え  自分の盤上の駒2枚（玉は除く）の位置を入れ替える
@@ -15,7 +17,8 @@
 
    盤を変えるカード（入れ替え・成り込み）は、使ったあとに「相手に王手がかかる」「自分に王手がかかる」「二歩」「行き所のない駒」になる使い方はできない。
    地雷: そこに入った駒が消えることで、入った側の玉に王手がかかってしまうときは、地雷は不発（そのまま残る）。
-   二手指し・鉄壁・封印で、指せる手が1つもなくなってしまうときは、その制限はなし（カードのせいで詰みにはしない）。
+   鉄壁・封印で、指せる手が1つもなくなってしまうときは、その制限はなし（カードのせいで詰みにはしない）。
+   二手指しは、2手の組み合わせがあるときだけ使えるので、とちゅうで指せなくなることはない。
 
    状態 s = 本将棋の局面 + fx: { cards[2][], used[2][], seal[2], mine[2], noCheck, nite, acted, seen[2] }, seed */
 (function (root) {
@@ -23,7 +26,7 @@
   var HS = root.HS, R = HS.rules, DEF = HS.DEF;
 
   var CARDS = {
-    nite:     { name: '二手指し', emoji: '⏩', desc: 'この番は2手続けて指せる（2手とも王手はかけられない）' },
+    nite:     { name: '二手指し', emoji: '⏩', desc: 'この番は2手続けて指せる。2手は別々の駒で、駒を取る手・王手になる手はだめ' },
     fuin:     { name: '封印', emoji: '🔒', desc: '相手は次の3回の番、持ち駒を打てない（王手のときは打てる）' },
     migawari: { name: '身代わり', emoji: '🪆', desc: '相手の持ち駒から、もとは自分の駒だった1枚を取りもどす' },
     irekae:   { name: '入れ替え', emoji: '🔁', desc: '自分の駒2枚（玉以外）の位置を入れ替える' },
@@ -50,12 +53,12 @@
     if (typeof seed === 'number') s.seed = seed | 0;
     var deck = ORDER.filter(function (c) { return c !== 'toushi' || !show; });
     for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(rnd(s) * (i + 1)), t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
-    s.fx = { cards: [deck.slice(0, n), deck.slice(n, 2 * n)], used: [[], []], seal: [0, 0], mine: [-1, -1], noCheck: -1, nite: 0, acted: false, show: show, seen: [false, false], n: n, log: null };
+    s.fx = { cards: [deck.slice(0, n), deck.slice(n, 2 * n)], used: [[], []], seal: [0, 0], mine: [-1, -1], noCheck: -1, nite: 0, niteSq: -1, acted: false, show: show, seen: [false, false], n: n, log: null };
     return s;
   }
   function cloneFx(fx) {
     return { cards: [fx.cards[0].slice(), fx.cards[1].slice()], used: [fx.used[0].slice(), fx.used[1].slice()], seal: fx.seal.slice(), mine: fx.mine.slice(),
-      noCheck: fx.noCheck, nite: fx.nite, acted: fx.acted, show: fx.show, seen: fx.seen.slice(), n: fx.n, log: null };
+      noCheck: fx.noCheck, nite: fx.nite, niteSq: fx.niteSq === undefined ? -1 : fx.niteSq, acted: fx.acted, show: fx.show, seen: fx.seen.slice(), n: fx.n, log: null };
   }
   function clone(s) {
     var n = { b: s.b.slice(), hand: [s.hand[0].slice(), s.hand[1].slice()], turn: s.turn, last: s.last, ply: s.ply, check: s.check, fx: cloneFx(s.fx) };
@@ -64,6 +67,29 @@
   }
 
   function givesCheck(V, s, m) { var n = R.apply(V, s, m); return R.inCheck(V, n, n.turn); }
+
+  // ===================== 二手指し =====================
+  // 二手指しで指してよい1手: 駒を取らない・王手にならない（封印中は打てない）
+  function niteBase(V, s) {
+    var p = s.turn, inChk = R.inCheck(V, s, p), all = R.moves(V, s);
+    if (s.fx && s.fx.seal[p] > 0 && !inChk) all = all.filter(function (m) { return m.f >= 0; });
+    return all.filter(function (m) { return !m.cap && !givesCheck(V, s, m); });
+  }
+  // 1手目を指したあと（まだ同じ人の番）の局面
+  function afterFirst(s, V, m) {
+    var b = R.apply(V, s, m);
+    return { b: b.b, hand: b.hand, turn: s.turn, ply: b.ply, last: m, check: false, fx: s.fx };
+  }
+  // 2手目の候補: 1手目と別の駒（1手目で動かした駒は、いま to のマスにいる）
+  function niteSecond(V, s1, firstTo) { return niteBase(V, s1).filter(function (m) { return m.f !== firstTo; }); }
+  // 1手目の候補: そのあと2手目が1つでもあるもの。any=true なら1つ見つけた時点で終わる
+  function niteFirst(V, s, any) {
+    var out = [], base = niteBase(V, s);
+    for (var i = 0; i < base.length; i++) {
+      if (niteSecond(V, afterFirst(s, V, base[i]), base[i].t).length) { out.push(base[i]); if (any) break; }
+    }
+    return out;
+  }
 
   // ===================== 指せる手 =====================
   // ふつうの手（カードの効果で絞る。絞りすぎて0になるときは絞らない）
@@ -74,7 +100,9 @@
       var noDrop = out.filter(function (m) { return m.f >= 0; });
       if (noDrop.length) out = noDrop;
     }
-    if (fx.nite || fx.noCheck === p) {
+    if (fx.nite === 1) return niteFirst(V, s, false);
+    if (fx.nite === 2) return niteSecond(V, s, fx.niteSq === undefined ? -1 : fx.niteSq);
+    if (fx.noCheck === p) {
       var quiet = out.filter(function (m) { return !givesCheck(V, s, m); });
       if (quiet.length) out = quiet;
     }
@@ -105,7 +133,8 @@
     fx.cards[p].forEach(function (c) {
       if (fx.used[p].indexOf(c) >= 0) return;
       var i, j;
-      if (c === 'nite' || c === 'fuin' || c === 'teppeki') out.push({ fx: c });
+      if (c === 'nite') { if (niteFirst(V, s, true).length) out.push({ fx: c }); }
+      else if (c === 'fuin' || c === 'teppeki') out.push({ fx: c });
       else if (c === 'toushi') { if (!fx.show && !fx.seen[p]) out.push({ fx: c }); }
       else if (c === 'migawari') {
         // 相手の持ち駒は、ぜんぶ「もとは相手の駒を取った」か「自分の駒を取られた」かは区別しないので、相手の持ち駒ならどれでも
@@ -133,6 +162,17 @@
     return out;
   }
   function moves(V, s) { return boardMoves(V, s).concat(actions(V, s)); }
+  // カード c がいま使えない理由（使えるなら ''）
+  function whyNot(V, s, c) {
+    var p = s.turn, fx = s.fx;
+    if (fx.used[p].indexOf(c) >= 0) return '使った';
+    if (s.end) return '';
+    if (R.inCheck(V, s, p)) return '王手のあいだは使えない';
+    if (fx.acted || fx.nite) return 'この番はもう使った';
+    if (actions(V, s).some(function (a) { return a.fx === c; })) return '';
+    return c === 'nite' ? '二手指しできる2手の組み合わせがない' : c === 'migawari' ? '相手の持ち駒がない' : c === 'toushi' ? 'もう見ている' :
+      c === 'narikomi' ? '成らせられる駒がない' : c === 'irekae' ? '入れ替えられる組み合わせがない' : c === 'jirai' ? 'もうしかけてある' : 'いまは使えない';
+  }
   function sameMove(a, b) {
     if (a.fx || b.fx) return a.fx === b.fx && (a.d || 0) === (b.d || 0) && (a.sq === undefined ? -1 : a.sq) === (b.sq === undefined ? -1 : b.sq) &&
       (a.a === undefined ? -1 : a.a) === (b.a === undefined ? -1 : b.a) && (a.b === undefined ? -1 : a.b) === (b.b === undefined ? -1 : b.b);
@@ -173,9 +213,9 @@
       }
     }
     // 番の終わり（二手指しの1手目のあとは、まだ同じ人の番）
-    if (f.nite === 1) { f.nite = 2; n.turn = p; }
+    if (f.nite === 1) { f.nite = 2; f.niteSq = m.t; n.turn = p; }
     else {
-      f.nite = 0; f.acted = false;
+      f.nite = 0; f.niteSq = -1; f.acted = false;
       if (f.seal[p] > 0) f.seal[p]--;
       if (f.noCheck === p) f.noCheck = -1;
     }
@@ -254,6 +294,6 @@
     return best;
   }
 
-  HS.effects = { CARDS: CARDS, ORDER: ORDER, SEAL_TURNS: SEAL_TURNS, init: init, moves: moves, boardMoves: boardMoves, actions: actions, play: play, over: over,
+  HS.effects = { CARDS: CARDS, ORDER: ORDER, SEAL_TURNS: SEAL_TURNS, init: init, moves: moves, boardMoves: boardMoves, actions: actions, whyNot: whyNot, niteFirst: niteFirst, play: play, over: over,
     repetition: repetition, label: label, ai: ai, same: sameMove, rnd: rnd };
 })(this);
