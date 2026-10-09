@@ -6,7 +6,7 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#3a2618">
-<meta name="description" content="友だちと部屋のコードで対局できる、変則将棋のオンライン対戦。ごろごろ将棋・トランプ将棋・特殊効果将棋など14種類。">
+<meta name="description" content="友だちと部屋のコードで対局できる、変則将棋のオンライン対戦。安南将棋・トランプ将棋・特殊効果将棋・本将棋。">
 <meta property="og:title" content="変則将棋で対戦しよう">
 <meta property="og:description" content="招待リンクを開くと、すぐに友だちとオンライン対戦できます（アプリなしでOK）">
 <meta property="og:type" content="website">
@@ -44,6 +44,29 @@
     background: linear-gradient(#f6dca7, #e5b96f); clip-path: polygon(50% 0, 88% 18%, 100% 100%, 0 100%, 12% 18%);
     font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
   .logo .koma span.r { color: #c4161c; }
+  /* タイトルの方位磁針（東西南北） */
+  .logo .compass { position: relative; width: 168px; height: 168px; margin: 0 auto 10px; }
+  .logo .compass .ring { position: absolute; inset: 8px; border-radius: 50%; border: 3px solid rgba(255, 236, 200, .28);
+    background: radial-gradient(circle, rgba(255, 220, 160, .10), rgba(0, 0, 0, 0) 70%); }
+  .logo .compass .needle { position: absolute; left: 50%; top: 50%; width: 22px; height: 70px; margin-left: -11px;
+    background: rgba(255, 236, 200, .22); clip-path: polygon(50% 0, 100% 100%, 0 100%); transform-origin: 50% 100%; }
+  .logo .compass .needle.n { margin-top: -70px; background: #d7432b; }
+  .logo .compass .needle.s { margin-top: -70px; transform: rotate(180deg); }
+  .logo .compass .needle.e { margin-top: -70px; transform: rotate(90deg); }
+  .logo .compass .needle.w { margin-top: -70px; transform: rotate(-90deg); }
+  .logo .compass .d { position: absolute; font-family: "Hiragino Mincho ProN", "YuMincho", serif; font-weight: 900; font-size: 20px;
+    width: 30px; height: 30px; line-height: 30px; border-radius: 50%; text-align: center; color: #fff6e6; background: #b8321f;
+    box-shadow: 0 2px 0 #6e1d12; }
+  .logo .compass .dn { left: 69px; top: -6px; background: #e0a83a; color: #2b1a0d; box-shadow: 0 2px 0 #8a5e17; }
+  .logo .compass .ds { left: 69px; bottom: -6px; }
+  .logo .compass .de { right: -6px; top: 69px; }
+  .logo .compass .dw { left: -6px; top: 69px; }
+  .logo .compass .piece { position: absolute; left: 50%; top: 50%; width: 64px; height: 80px; margin: -40px 0 0 -32px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 10px; line-height: 1.05;
+    font-family: "Hiragino Mincho ProN", "YuMincho", serif; font-weight: 900; font-size: 25px; color: #2b1a0d;
+    background: linear-gradient(#f6dca7, #e5b96f); clip-path: polygon(50% 0, 88% 18%, 100% 100%, 0 100%, 12% 18%);
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .45)); }
+  .logo .tag { margin: 6px 0 0; font-size: 15px; font-weight: 800; opacity: 1; color: #ffd98a; }
   .logo h1 { margin: 0; font-size: 38px; letter-spacing: .12em; font-weight: 900; font-family: "Hiragino Mincho ProN", "YuMincho", serif;
     color: var(--cream); text-shadow: 0 3px 0 #1c1209, 0 0 20px rgba(255, 200, 120, .35); }
   .logo p { margin: 8px 0 0; font-size: 13px; opacity: .8; }
@@ -227,6 +250,10 @@
   .cards .deck { font-size: 11.5px; opacity: .7; }
   body.touch .kbd { display: none; }
   /* 詰将棋 */
+  #t-cat { margin-top: 8px; background: rgba(255, 240, 220, .16); }
+  #t-cat button { min-width: 40%; font-size: 15px; padding: 11px 4px; color: rgba(255, 240, 220, .85); }
+  #t-cat button.on { color: var(--ink); }
+  .catnote { font-size: 12.5px; font-weight: 700; text-align: center; margin: 5px 0 2px; opacity: .9; }
   #t-filter { background: rgba(255, 240, 220, .1); margin-top: 6px; }
   #t-filter button { color: rgba(255, 240, 220, .8); min-width: 18%; }
   #t-filter button.on { color: var(--ink); }
@@ -304,15 +331,25 @@
   .shtext { white-space: pre-wrap; word-break: break-all; font-size: 12px; background: rgba(120, 70, 30, .08); border-radius: 10px; padding: 8px 10px; margin: 0 0 10px; font-family: inherit; }
 
   /* 検討モード・読みの練習・設定 */
-  .pstudy { width: 100%; max-width: 480px; font-size: 13px; line-height: 1.5; background: rgba(255, 240, 220, .1); border-radius: 14px; padding: 8px 10px; margin: 2px 0 6px; max-height: 30vh; overflow-y: auto; }
+  .pstudy { width: 100%; max-width: 480px; font-size: 14px; line-height: 1.5; background: rgba(255, 240, 220, .1); border-radius: 14px; padding: 8px 10px; margin: 2px 0 6px; }
+  .pstudy .show { font-size: 11.5px; opacity: .7; margin-bottom: 4px; }
+  .pstudy .sturn { font-weight: 800; margin-bottom: 2px; }
+  .pstudy .sreveal { margin-top: 10px; padding-top: 8px; border-top: 2px dashed rgba(255, 240, 220, .25); }
+  .pstudy .srh { font-size: 12px; font-weight: 800; opacity: .75; margin-bottom: 2px; }
+  .pstudy .sreveal .sbtn { background: transparent; border: 1.5px solid rgba(255, 217, 138, .6); color: #ffd98a; }
+  .pstudy details.vars summary { cursor: pointer; font-weight: 800; padding: 6px 0; }
+  #p-studytools { gap: 6px; }
+  #p-studytools .tb { flex: 1 1 40%; padding: 12px 8px; font-size: 15px; }
+  #p-studytools .tb.sm { flex: 0 0 52px; }
+  #p-studytools .tb.big { flex: 1 1 30%; }
   .pstudy .smsg { font-weight: 800; margin-bottom: 4px; }
   .pstudy .smsg.ok { color: #9be0a8; } .pstudy .smsg.bad { color: #ffb0a0; }
   .pstudy table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .pstudy th { text-align: left; font-size: 11.5px; opacity: .7; font-weight: 700; padding: 2px 4px; }
-  .pstudy td { padding: 5px 4px; border-top: 1px solid rgba(255, 240, 220, .12); font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
+  .pstudy td { padding: 10px 6px; font-size: 15px; border-top: 1px solid rgba(255, 240, 220, .12); font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
   .pstudy tr.row { cursor: pointer; } .pstudy tr.row:active { background: rgba(255, 240, 220, .12); }
   .pstudy tr.best td { color: #ffd98a; font-weight: 900; }
-  .pstudy .sbtn { display: inline-block; margin: 4px 6px 0 0; padding: 6px 10px; border-radius: 10px; background: rgba(255, 240, 220, .18); font-weight: 800; font-size: 12.5px; }
+  .pstudy .sbtn { display: block; width: 100%; margin: 6px 0 0; padding: 11px 10px; border-radius: 12px; background: rgba(255, 240, 220, .18); font-weight: 800; font-size: 14px; text-align: center; }
   .pstudy .vars { margin-top: 6px; font-size: 12px; opacity: .9; }
   .pstudy .vars button { display: block; text-align: left; width: 100%; padding: 4px 6px; border-radius: 8px; background: rgba(255, 240, 220, .08); margin-top: 3px; font-family: "Hiragino Mincho ProN", "YuMincho", serif; }
   .pmoves .mv { display: inline-block; padding: 1px 5px; margin: 0 1px; border-radius: 6px; }
@@ -425,6 +462,56 @@
   #rm-host[hidden] { display: none; }
   #su-clock-wrap .seg { margin-bottom: 6px; } #su-clock-wrap .note { font-size: 12px; font-weight: 800; opacity: .7; }
   body.web #go-play, body.web #go-tsume, body.web #go-mine { display: none; }
+
+  /* ====== 盤を大きく取るレイアウト（2026-10） ======
+     盤は画面の幅いっぱい。名前・時計・トランプの手札・特殊効果カードは、盤の上下の「持ち駒の段」に1行でまとめる */
+  #game, #puzzle, #replay, #edit { padding-left: 4px; padding-right: 4px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  #game > *, #puzzle > *, #replay > *, #edit > * { flex-shrink: 0; }
+  #game .boardhost, #puzzle .boardhost, #replay .boardhost, #edit .boardhost { flex: 0 0 auto; overflow: visible; }
+  #game.hands .players { display: none; }
+  .gpark { display: none; }
+  .topbar { min-height: 44px; }
+  .status { margin: 3px 0 4px; font-size: 13px; line-height: 1.3; min-height: 18px; max-width: 480px; padding: 0 6px; }
+  .sg-wrap { gap: 4px; }
+  .sg-hand { height: 46px; min-height: 46px; padding: 2px 4px; gap: 4px; flex-wrap: nowrap; overflow: hidden; border: 2px solid transparent; box-sizing: border-box; max-width: 100%; }
+  .sg-hand.turn { border-color: rgba(240, 176, 100, .7); background: rgba(255, 220, 160, .14); }
+  .sg-hlab { width: 52px; flex-shrink: 0; display: flex; flex-direction: column; line-height: 1.15; font-size: 11px; opacity: .9; }
+  .sg-hlab b { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sg-hlab i { font-style: normal; font-size: 10.5px; opacity: .75; white-space: nowrap; }
+  .sg-hlab i.clk { opacity: 1; font-weight: 900; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .sg-hlab i.low { color: #ffb08a; animation: hintp .5s ease-in-out infinite alternate; }
+  .sg-hps { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 3px; overflow-x: auto; scrollbar-width: none; height: 100%; }
+  .sg-hps::-webkit-scrollbar { display: none; }
+  .sg-hx { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; max-width: 62%; }
+  .sg-hx:empty { display: none; }
+  .sg-hp { width: 32px; height: 38px; } .sg-hp .sg-pc { font-size: 16px; width: 28px; height: 34px; }
+  .sg-hand .sg-rest { font-size: 11px; }
+  /* トランプの手札（持ち駒の段の右に小さく） */
+  .sg-hx .cards { width: auto; max-width: none; min-height: 0; margin: 0; padding: 0 2px; gap: 3px; border: 0; background: none; flex-wrap: nowrap; justify-content: flex-end; }
+  .sg-hx .cards .who { display: none; }
+  .sg-hx .cards .deck { font-size: 9.5px; line-height: 1.2; max-width: 52px; }
+  .sg-hx .cd { width: 30px; height: 40px; font-size: 15px; border-radius: 6px; border-width: 2px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+  .sg-hx .cd small { font-size: 8px; left: 2px; top: 0; } .sg-hx .cd i { font-size: 7.5px; right: 2px; bottom: 0; }
+  .sg-hx .cd.joker { font-size: 7.5px; } .sg-hx .cd.joker i { display: none; }
+  .sg-hx .cd.sel { box-shadow: 0 0 0 2px #ffd27a, 0 2px 0 rgba(0,0,0,.25); }
+  .sg-hx .cards .peek { padding: 5px 7px; font-size: 11px; border-radius: 8px; }
+  .sg-hx .cards .freenote { display: none; }
+  /* 特殊効果カード（小さい札。説明は「使う」を押したときの確認に出る） */
+  .sg-hx .fxbar { width: auto; max-width: none; min-height: 0; margin: 0; padding: 0; gap: 3px; border: 0; background: none; flex-wrap: nowrap; align-items: center; }
+  .sg-hx .fxbar .who, .sg-hx .fxc small, .sg-hx .fxc .fxwhy, .sg-hx .fxc b em { display: none; }
+  .sg-hx .fxc { flex: 0 0 auto; max-width: 96px; padding: 2px 5px; border-radius: 9px; gap: 1px; align-items: stretch; }
+  .sg-hx .fxc b { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sg-hx .fxc .fxuse { min-height: 22px; margin: 0; padding: 1px 5px; font-size: 11px; border-radius: 7px; }
+  .sg-hx .fxbar .fxtag { font-size: 9.5px; max-width: 70px; }
+  .sg-hx .fxbar .peek { padding: 4px 6px; font-size: 11px; }
+  .sg-hx .fxc.back { padding: 6px 8px; } .sg-hx .fxc.back b { font-size: 13px; }
+  .tools { margin-top: 4px; gap: 6px; }
+  .tb { padding: 9px 12px; font-size: 13.5px; }
+  @media (max-height: 720px) {
+    .sg-hand { height: 44px; min-height: 44px; }
+    .sg-hp { width: 30px; height: 36px; } .sg-hp .sg-pc { font-size: 15px; width: 26px; height: 32px; }
+    .tb { padding: 8px 10px; font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -432,17 +519,22 @@
 <!-- タイトル -->
 <div class="screen" id="home"><div class="inner">
   <div class="logo">
-    <div class="koma"><span>忍</span><span class="r">龍</span><span>砲</span><span>蛙</span></div>
+    <div class="compass" aria-hidden="true">
+      <div class="ring"></div><div class="needle n"></div><div class="needle s"></div><div class="needle e"></div><div class="needle w"></div>
+      <span class="d dn">北</span><span class="d de">東</span><span class="d ds">南</span><span class="d dw">西</span>
+      <div class="piece"><span>将</span><span>棋</span></div>
+    </div>
     <h1>変則将棋</h1>
-    <p>いつもの将棋を、ちょっとだけ変にした</p>
+    <p class="tag">東・西・南・北、となりの駒の動きを借りる</p>
+    <p>安南・安北・安東・安西を、友だちとオンラインで</p>
   </div>
   <div class="big">
     <button class="bigcard" id="go-online"><span class="ico">🌐</span><span><b>オンライン対戦</b><small>部屋のコードや招待リンクで、友だちと対局（ブラウザの人とも）</small></span></button>
-    <button class="bigcard" id="go-play"><span class="ico">⚔️</span><span><b>対局する</b><small>CPU や、2人で1台で。ルールは10種類以上</small><em id="home-play"></em></span></button>
+    <button class="bigcard" id="go-play"><span class="ico">⚔️</span><span><b>対局する</b><small>CPU や、2人で1台で。安南・トランプ・特殊効果・本将棋</small><em id="home-play"></em></span></button>
     <button class="bigcard" id="go-tsume"><span class="ico">🧩</span><span><b>変則詰将棋</b><small>安南・安北・安東・安西の詰将棋。9×9 の本格派</small><em id="home-tsume"></em></span></button>
     <button class="bigcard" id="go-mine"><span class="ico">✏️</span><span><b>詰将棋をつくる</b><small>自分で作って、本当に詰むか検証。コードで友だちと共有</small><em id="home-mine"></em></span></button>
   </div>
-  <div class="foot">駒の動きは、対局の前の説明で見られます<br>変な駒（忍・砲・蛙）はこのアプリのオリジナルです</div>
+  <div class="foot">安南＝うしろ・安北＝まえ・安東＝みぎ・安西＝ひだり の駒の動きを借ります<br>ほかに トランプ将棋・特殊効果将棋・本将棋も遊べます</div>
 </div></div>
 
 <!-- オンライン対戦 -->
@@ -475,6 +567,8 @@
 <div class="screen" id="tsume" hidden><div class="inner">
   <div class="head"><button class="ib" data-back="home">←</button><h2>変則詰将棋</h2><button class="ib mute">🔊</button></div>
   <div class="prog" id="t-prog"></div>
+  <div class="seg" id="t-cat"></div>
+  <p class="catnote" id="t-catnote"></p>
   <div class="seg" id="t-filter"></div>
   <div class="ttools"><button class="chip" id="t-unsolved">未クリアだけ</button><button class="go" id="t-nextun">つぎの未クリア ›</button></div>
   <p class="tnote" id="t-note"></p>
@@ -512,6 +606,7 @@
   <div class="cards" id="g-cards" hidden></div>
   <div class="fxbar" id="g-fx" hidden></div>
   <div class="tools"><button class="tb" id="g-undo">↶ 待った</button><button class="tb" id="g-again">↻ はじめから</button></div>
+  <div id="g-park" class="gpark"></div>
 </div>
 
 <!-- 棋譜の見返し -->
@@ -547,7 +642,8 @@
   </div>
   <!-- 検討モード -->
   <div class="tools" id="p-studytools" hidden>
-    <button class="tb" id="s-first">⏮</button><button class="tb" id="s-prev">◀</button><button class="tb" id="s-next">▶</button><button class="tb" id="s-last">⏭</button><button class="tb" id="s-main">本手順へ</button><button class="tb" id="s-close">とじる</button>
+    <button class="tb sm" id="s-first" aria-label="最初の局面">⏮</button><button class="tb big" id="s-prev">◀ 1手戻る</button><button class="tb big" id="s-next">1手進む ▶</button><button class="tb sm" id="s-last" aria-label="最後の局面">⏭</button>
+    <button class="tb" id="s-main">↺ 本手順にもどす</button><button class="tb" id="s-close">✕ 検討をおわる</button>
   </div>
 </div>
 

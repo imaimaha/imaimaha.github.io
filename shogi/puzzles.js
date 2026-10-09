@@ -1,6 +1,7 @@
 /* 変則詰将棋の問題（安南・安北・安東・安西、すべて 9×9）。gen9.js で作って verify9.js でソルバー検証済み。手で書きかえないこと
    rows: 上（一段目・玉方の陣）から。左が9筋。v が玉方の駒。hand: 攻め方の持ち駒 {駒の番号: 枚数}。玉方の持ち駒は「残り全部」。
    line: 本筋（攻め方・玉方の順）。"f-t" は移動、"+" は成り、"dN@t" は駒 N を t に打つ。lastMulti: 最後の1手は別の詰め方もある。
+   cat: "tsume"＝詰将棋（本筋で攻め方の持ち駒が余らない・攻め方の手が毎回1つだけ＝最後の1手も）/ "jissen"＝実戦詰め（それ以外）。
    どの問題も、ふつうの本将棋のルールでは同じ手数で詰まない（借りた動きが必要） */
 (function (root) { root.HS = root.HS || {}; root.HS.PUZZLES = [
  {
@@ -24,6 +25,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a001",
+  "cat": "tsume",
   "no": 1
  },
  {
@@ -47,6 +49,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a002",
+  "cat": "tsume",
   "no": 2
  },
  {
@@ -70,6 +73,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a003",
+  "cat": "tsume",
   "no": 3
  },
  {
@@ -93,6 +97,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a004",
+  "cat": "tsume",
   "no": 4
  },
  {
@@ -116,6 +121,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a005",
+  "cat": "tsume",
   "no": 5
  },
  {
@@ -139,6 +145,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a006",
+  "cat": "jissen",
   "no": 6
  },
  {
@@ -162,6 +169,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a007",
+  "cat": "tsume",
   "no": 7
  },
  {
@@ -185,6 +193,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a008",
+  "cat": "tsume",
   "no": 8
  },
  {
@@ -208,6 +217,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a009",
+  "cat": "tsume",
   "no": 9
  },
  {
@@ -231,6 +241,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a010",
+  "cat": "tsume",
   "no": 10
  },
  {
@@ -254,6 +265,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a011",
+  "cat": "tsume",
   "no": 11
  },
  {
@@ -277,6 +289,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a012",
+  "cat": "tsume",
   "no": 12
  },
  {
@@ -300,6 +313,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a013",
+  "cat": "jissen",
   "no": 13
  },
  {
@@ -323,6 +337,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a014",
+  "cat": "tsume",
   "no": 14
  },
  {
@@ -346,6 +361,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a015",
+  "cat": "tsume",
   "no": 15
  },
  {
@@ -369,6 +385,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a016",
+  "cat": "jissen",
   "no": 16
  },
  {
@@ -392,6 +409,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a017",
+  "cat": "tsume",
   "no": 17
  },
  {
@@ -415,6 +433,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a018",
+  "cat": "jissen",
   "no": 18
  },
  {
@@ -438,6 +457,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a019",
+  "cat": "tsume",
   "no": 19
  },
  {
@@ -461,6 +481,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a020",
+  "cat": "tsume",
   "no": 20
  },
  {
@@ -486,6 +507,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a021",
+  "cat": "tsume",
   "no": 21
  },
  {
@@ -511,6 +533,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a022",
+  "cat": "jissen",
   "no": 22
  },
  {
@@ -538,6 +561,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a023",
+  "cat": "tsume",
   "no": 23
  },
  {
@@ -565,6 +589,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a024",
+  "cat": "jissen",
   "no": 24
  },
  {
@@ -592,6 +617,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a025",
+  "cat": "jissen",
   "no": 25
  },
  {
@@ -617,6 +643,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a026",
+  "cat": "jissen",
   "no": 26
  },
  {
@@ -642,6 +669,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a027",
+  "cat": "tsume",
   "no": 27
  },
  {
@@ -667,6 +695,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a028",
+  "cat": "jissen",
   "no": 28
  },
  {
@@ -692,6 +721,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a029",
+  "cat": "jissen",
   "no": 29
  },
  {
@@ -717,6 +747,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a030",
+  "cat": "tsume",
   "no": 30
  },
  {
@@ -742,6 +773,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a031",
+  "cat": "tsume",
   "no": 31
  },
  {
@@ -769,6 +801,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a032",
+  "cat": "jissen",
   "no": 32
  },
  {
@@ -794,6 +827,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a033",
+  "cat": "tsume",
   "no": 33
  },
  {
@@ -819,6 +853,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a034",
+  "cat": "jissen",
   "no": 34
  },
  {
@@ -846,6 +881,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a035",
+  "cat": "tsume",
   "no": 35
  },
  {
@@ -873,6 +909,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a036",
+  "cat": "jissen",
   "no": 36
  },
  {
@@ -900,6 +937,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a037",
+  "cat": "tsume",
   "no": 37
  },
  {
@@ -927,6 +965,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a038",
+  "cat": "jissen",
   "no": 38
  },
  {
@@ -954,6 +993,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a039",
+  "cat": "tsume",
   "no": 39
  },
  {
@@ -981,6 +1021,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a040",
+  "cat": "jissen",
   "no": 40
  },
  {
@@ -1008,6 +1049,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a041",
+  "cat": "tsume",
   "no": 41
  },
  {
@@ -1035,6 +1077,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a042",
+  "cat": "tsume",
   "no": 42
  },
  {
@@ -1060,6 +1103,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a043",
+  "cat": "jissen",
   "no": 43
  },
  {
@@ -1087,6 +1131,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a044",
+  "cat": "tsume",
   "no": 44
  },
  {
@@ -1116,6 +1161,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a045",
+  "cat": "tsume",
   "no": 45
  },
  {
@@ -1143,6 +1189,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a046",
+  "cat": "jissen",
   "no": 46
  },
  {
@@ -1170,6 +1217,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a047",
+  "cat": "tsume",
   "no": 47
  },
  {
@@ -1197,6 +1245,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a048",
+  "cat": "tsume",
   "no": 48
  },
  {
@@ -1227,6 +1276,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a049",
+  "cat": "jissen",
   "no": 49
  },
  {
@@ -1257,6 +1307,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a050",
+  "cat": "tsume",
   "no": 50
  },
  {
@@ -1284,6 +1335,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a051",
+  "cat": "tsume",
   "no": 51
  },
  {
@@ -1313,6 +1365,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a052",
+  "cat": "tsume",
   "no": 52
  },
  {
@@ -1342,6 +1395,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a053",
+  "cat": "jissen",
   "no": 53
  },
  {
@@ -1371,6 +1425,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a054",
+  "cat": "tsume",
   "no": 54
  },
  {
@@ -1400,6 +1455,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a055",
+  "cat": "jissen",
   "no": 55
  },
  {
@@ -1430,6 +1486,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a056",
+  "cat": "jissen",
   "no": 56
  },
  {
@@ -1459,6 +1516,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a057",
+  "cat": "jissen",
   "no": 57
  },
  {
@@ -1488,6 +1546,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a058",
+  "cat": "jissen",
   "no": 58
  },
  {
@@ -1517,6 +1576,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a059",
+  "cat": "tsume",
   "no": 59
  },
  {
@@ -1546,6 +1606,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a060",
+  "cat": "tsume",
   "no": 60
  },
  {
@@ -1575,6 +1636,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a061",
+  "cat": "tsume",
   "no": 61
  },
  {
@@ -1605,6 +1667,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a062",
+  "cat": "tsume",
   "no": 62
  },
  {
@@ -1634,6 +1697,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a063",
+  "cat": "tsume",
   "no": 63
  },
  {
@@ -1663,6 +1727,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a064",
+  "cat": "tsume",
   "no": 64
  },
  {
@@ -1692,6 +1757,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a065",
+  "cat": "tsume",
   "no": 65
  },
  {
@@ -1721,6 +1787,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a066",
+  "cat": "tsume",
   "no": 66
  },
  {
@@ -1748,6 +1815,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a067",
+  "cat": "tsume",
   "no": 67
  },
  {
@@ -1777,6 +1845,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a068",
+  "cat": "tsume",
   "no": 68
  },
  {
@@ -1809,6 +1878,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a069",
+  "cat": "tsume",
   "no": 69
  },
  {
@@ -1841,6 +1911,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a070",
+  "cat": "tsume",
   "no": 70
  },
  {
@@ -1873,6 +1944,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a071",
+  "cat": "tsume",
   "no": 71
  },
  {
@@ -1905,6 +1977,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a072",
+  "cat": "jissen",
   "no": 72
  },
  {
@@ -1938,6 +2011,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a073",
+  "cat": "tsume",
   "no": 73
  },
  {
@@ -1969,6 +2043,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a074",
+  "cat": "tsume",
   "no": 74
  },
  {
@@ -2000,6 +2075,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a075",
+  "cat": "tsume",
   "no": 75
  },
  {
@@ -2031,6 +2107,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a076",
+  "cat": "tsume",
   "no": 76
  },
  {
@@ -2062,6 +2139,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a077",
+  "cat": "tsume",
   "no": 77
  },
  {
@@ -2093,6 +2171,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a078",
+  "cat": "tsume",
   "no": 78
  },
  {
@@ -2122,6 +2201,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a079",
+  "cat": "tsume",
   "no": 79
  },
  {
@@ -2153,6 +2233,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a080",
+  "cat": "jissen",
   "no": 80
  },
  {
@@ -2185,6 +2266,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a081",
+  "cat": "jissen",
   "no": 81
  },
  {
@@ -2217,6 +2299,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a082",
+  "cat": "jissen",
   "no": 82
  },
  {
@@ -2248,6 +2331,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a083",
+  "cat": "tsume",
   "no": 83
  },
  {
@@ -2277,6 +2361,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a084",
+  "cat": "jissen",
   "no": 84
  },
  {
@@ -2306,6 +2391,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a085",
+  "cat": "jissen",
   "no": 85
  },
  {
@@ -2335,6 +2421,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a086",
+  "cat": "jissen",
   "no": 86
  },
  {
@@ -2367,6 +2454,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a087",
+  "cat": "jissen",
   "no": 87
  },
  {
@@ -2401,6 +2489,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a088",
+  "cat": "jissen",
   "no": 88
  },
  {
@@ -2435,6 +2524,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a089",
+  "cat": "jissen",
   "no": 89
  },
  {
@@ -2466,6 +2556,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a090",
+  "cat": "jissen",
   "no": 90
  },
  {
@@ -2497,6 +2588,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a091",
+  "cat": "jissen",
   "no": 91
  },
  {
@@ -2528,6 +2620,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a092",
+  "cat": "jissen",
   "no": 92
  },
  {
@@ -2551,6 +2644,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a093",
+  "cat": "jissen",
   "no": 93
  },
  {
@@ -2574,6 +2668,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a094",
+  "cat": "tsume",
   "no": 94
  },
  {
@@ -2597,6 +2692,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a095",
+  "cat": "tsume",
   "no": 95
  },
  {
@@ -2620,6 +2716,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a096",
+  "cat": "tsume",
   "no": 96
  },
  {
@@ -2643,6 +2740,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a097",
+  "cat": "jissen",
   "no": 97
  },
  {
@@ -2666,6 +2764,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a098",
+  "cat": "tsume",
   "no": 98
  },
  {
@@ -2689,6 +2788,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a099",
+  "cat": "tsume",
   "no": 99
  },
  {
@@ -2712,6 +2812,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a100",
+  "cat": "tsume",
   "no": 100
  },
  {
@@ -2735,6 +2836,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a101",
+  "cat": "tsume",
   "no": 101
  },
  {
@@ -2758,6 +2860,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a102",
+  "cat": "tsume",
   "no": 102
  },
  {
@@ -2781,6 +2884,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a103",
+  "cat": "tsume",
   "no": 103
  },
  {
@@ -2804,6 +2908,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a104",
+  "cat": "tsume",
   "no": 104
  },
  {
@@ -2827,6 +2932,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a105",
+  "cat": "tsume",
   "no": 105
  },
  {
@@ -2850,6 +2956,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a106",
+  "cat": "jissen",
   "no": 106
  },
  {
@@ -2873,6 +2980,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a107",
+  "cat": "tsume",
   "no": 107
  },
  {
@@ -2896,6 +3004,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a108",
+  "cat": "tsume",
   "no": 108
  },
  {
@@ -2919,6 +3028,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a109",
+  "cat": "tsume",
   "no": 109
  },
  {
@@ -2942,6 +3052,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a110",
+  "cat": "tsume",
   "no": 110
  },
  {
@@ -2965,6 +3076,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a111",
+  "cat": "tsume",
   "no": 111
  },
  {
@@ -2988,6 +3100,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a112",
+  "cat": "tsume",
   "no": 112
  },
  {
@@ -3011,6 +3124,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a113",
+  "cat": "jissen",
   "no": 113
  },
  {
@@ -3034,6 +3148,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a114",
+  "cat": "tsume",
   "no": 114
  },
  {
@@ -3057,6 +3172,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a115",
+  "cat": "tsume",
   "no": 115
  },
  {
@@ -3080,6 +3196,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a116",
+  "cat": "tsume",
   "no": 116
  },
  {
@@ -3103,6 +3220,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a117",
+  "cat": "tsume",
   "no": 117
  },
  {
@@ -3126,6 +3244,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a118",
+  "cat": "tsume",
   "no": 118
  },
  {
@@ -3149,6 +3268,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a119",
+  "cat": "tsume",
   "no": 119
  },
  {
@@ -3172,6 +3292,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a120",
+  "cat": "tsume",
   "no": 120
  },
  {
@@ -3195,6 +3316,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a121",
+  "cat": "tsume",
   "no": 121
  },
  {
@@ -3218,6 +3340,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a122",
+  "cat": "tsume",
   "no": 122
  },
  {
@@ -3241,6 +3364,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a123",
+  "cat": "jissen",
   "no": 123
  },
  {
@@ -3264,6 +3388,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a124",
+  "cat": "tsume",
   "no": 124
  },
  {
@@ -3287,6 +3412,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a125",
+  "cat": "tsume",
   "no": 125
  },
  {
@@ -3310,6 +3436,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a126",
+  "cat": "tsume",
   "no": 126
  },
  {
@@ -3333,6 +3460,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a127",
+  "cat": "tsume",
   "no": 127
  },
  {
@@ -3356,6 +3484,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a128",
+  "cat": "jissen",
   "no": 128
  },
  {
@@ -3379,6 +3508,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a129",
+  "cat": "tsume",
   "no": 129
  },
  {
@@ -3402,6 +3532,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a130",
+  "cat": "tsume",
   "no": 130
  },
  {
@@ -3425,6 +3556,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a131",
+  "cat": "tsume",
   "no": 131
  },
  {
@@ -3448,6 +3580,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a132",
+  "cat": "tsume",
   "no": 132
  },
  {
@@ -3471,6 +3604,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a133",
+  "cat": "tsume",
   "no": 133
  },
  {
@@ -3494,6 +3628,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a134",
+  "cat": "tsume",
   "no": 134
  },
  {
@@ -3517,6 +3652,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a135",
+  "cat": "tsume",
   "no": 135
  },
  {
@@ -3540,6 +3676,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a136",
+  "cat": "tsume",
   "no": 136
  },
  {
@@ -3563,6 +3700,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a137",
+  "cat": "jissen",
   "no": 137
  },
  {
@@ -3586,6 +3724,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a138",
+  "cat": "tsume",
   "no": 138
  },
  {
@@ -3609,6 +3748,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a139",
+  "cat": "tsume",
   "no": 139
  },
  {
@@ -3632,6 +3772,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a140",
+  "cat": "tsume",
   "no": 140
  },
  {
@@ -3655,6 +3796,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a141",
+  "cat": "tsume",
   "no": 141
  },
  {
@@ -3678,6 +3820,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a142",
+  "cat": "tsume",
   "no": 142
  },
  {
@@ -3701,6 +3844,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a143",
+  "cat": "tsume",
   "no": 143
  },
  {
@@ -3724,6 +3868,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a144",
+  "cat": "tsume",
   "no": 144
  },
  {
@@ -3747,6 +3892,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a145",
+  "cat": "tsume",
   "no": 145
  },
  {
@@ -3770,6 +3916,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a146",
+  "cat": "tsume",
   "no": 146
  },
  {
@@ -3793,6 +3940,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a147",
+  "cat": "tsume",
   "no": 147
  },
  {
@@ -3816,6 +3964,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a148",
+  "cat": "tsume",
   "no": 148
  },
  {
@@ -3839,6 +3988,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a149",
+  "cat": "tsume",
   "no": 149
  },
  {
@@ -3862,6 +4012,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a150",
+  "cat": "tsume",
   "no": 150
  },
  {
@@ -3885,6 +4036,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a151",
+  "cat": "jissen",
   "no": 151
  },
  {
@@ -3908,6 +4060,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a152",
+  "cat": "tsume",
   "no": 152
  },
  {
@@ -3931,6 +4084,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a153",
+  "cat": "jissen",
   "no": 153
  },
  {
@@ -3954,6 +4108,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a154",
+  "cat": "tsume",
   "no": 154
  },
  {
@@ -3977,6 +4132,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a155",
+  "cat": "jissen",
   "no": 155
  },
  {
@@ -4000,6 +4156,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a156",
+  "cat": "tsume",
   "no": 156
  },
  {
@@ -4023,6 +4180,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a157",
+  "cat": "tsume",
   "no": 157
  },
  {
@@ -4046,6 +4204,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a158",
+  "cat": "tsume",
   "no": 158
  },
  {
@@ -4069,6 +4228,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a159",
+  "cat": "tsume",
   "no": 159
  },
  {
@@ -4092,6 +4252,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a160",
+  "cat": "tsume",
   "no": 160
  },
  {
@@ -4115,6 +4276,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a161",
+  "cat": "tsume",
   "no": 161
  },
  {
@@ -4138,6 +4300,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a162",
+  "cat": "tsume",
   "no": 162
  },
  {
@@ -4161,6 +4324,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a163",
+  "cat": "jissen",
   "no": 163
  },
  {
@@ -4184,6 +4348,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a164",
+  "cat": "jissen",
   "no": 164
  },
  {
@@ -4207,6 +4372,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a165",
+  "cat": "tsume",
   "no": 165
  },
  {
@@ -4230,6 +4396,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a166",
+  "cat": "tsume",
   "no": 166
  },
  {
@@ -4253,6 +4420,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a167",
+  "cat": "tsume",
   "no": 167
  },
  {
@@ -4276,6 +4444,7 @@
   "lastMulti": false,
   "stars": 1,
   "id": "a168",
+  "cat": "jissen",
   "no": 168
  },
  {
@@ -4299,6 +4468,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a169",
+  "cat": "tsume",
   "no": 169
  },
  {
@@ -4322,6 +4492,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a170",
+  "cat": "tsume",
   "no": 170
  },
  {
@@ -4345,6 +4516,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a171",
+  "cat": "tsume",
   "no": 171
  },
  {
@@ -4368,6 +4540,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a172",
+  "cat": "tsume",
   "no": 172
  },
  {
@@ -4393,6 +4566,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a173",
+  "cat": "tsume",
   "no": 173
  },
  {
@@ -4418,6 +4592,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a174",
+  "cat": "tsume",
   "no": 174
  },
  {
@@ -4443,6 +4618,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a175",
+  "cat": "tsume",
   "no": 175
  },
  {
@@ -4468,6 +4644,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a176",
+  "cat": "jissen",
   "no": 176
  },
  {
@@ -4493,6 +4670,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a177",
+  "cat": "tsume",
   "no": 177
  },
  {
@@ -4518,6 +4696,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a178",
+  "cat": "tsume",
   "no": 178
  },
  {
@@ -4545,6 +4724,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a179",
+  "cat": "tsume",
   "no": 179
  },
  {
@@ -4572,6 +4752,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a180",
+  "cat": "tsume",
   "no": 180
  },
  {
@@ -4599,6 +4780,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a181",
+  "cat": "jissen",
   "no": 181
  },
  {
@@ -4624,6 +4806,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a182",
+  "cat": "tsume",
   "no": 182
  },
  {
@@ -4649,6 +4832,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a183",
+  "cat": "tsume",
   "no": 183
  },
  {
@@ -4674,6 +4858,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a184",
+  "cat": "tsume",
   "no": 184
  },
  {
@@ -4701,6 +4886,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a185",
+  "cat": "tsume",
   "no": 185
  },
  {
@@ -4728,6 +4914,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a186",
+  "cat": "tsume",
   "no": 186
  },
  {
@@ -4755,6 +4942,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a187",
+  "cat": "tsume",
   "no": 187
  },
  {
@@ -4782,6 +4970,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a188",
+  "cat": "jissen",
   "no": 188
  },
  {
@@ -4809,6 +4998,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a189",
+  "cat": "jissen",
   "no": 189
  },
  {
@@ -4836,6 +5026,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a190",
+  "cat": "tsume",
   "no": 190
  },
  {
@@ -4863,6 +5054,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a191",
+  "cat": "tsume",
   "no": 191
  },
  {
@@ -4890,6 +5082,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a192",
+  "cat": "tsume",
   "no": 192
  },
  {
@@ -4917,6 +5110,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a193",
+  "cat": "jissen",
   "no": 193
  },
  {
@@ -4942,6 +5136,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a194",
+  "cat": "tsume",
   "no": 194
  },
  {
@@ -4969,6 +5164,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a195",
+  "cat": "tsume",
   "no": 195
  },
  {
@@ -4994,6 +5190,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a196",
+  "cat": "jissen",
   "no": 196
  },
  {
@@ -5021,6 +5218,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a197",
+  "cat": "tsume",
   "no": 197
  },
  {
@@ -5046,6 +5244,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a198",
+  "cat": "jissen",
   "no": 198
  },
  {
@@ -5073,6 +5272,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a199",
+  "cat": "tsume",
   "no": 199
  },
  {
@@ -5098,6 +5298,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a200",
+  "cat": "jissen",
   "no": 200
  },
  {
@@ -5125,6 +5326,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a201",
+  "cat": "tsume",
   "no": 201
  },
  {
@@ -5150,6 +5352,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a202",
+  "cat": "tsume",
   "no": 202
  },
  {
@@ -5175,6 +5378,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a203",
+  "cat": "tsume",
   "no": 203
  },
  {
@@ -5202,6 +5406,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a204",
+  "cat": "tsume",
   "no": 204
  },
  {
@@ -5227,6 +5432,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a205",
+  "cat": "jissen",
   "no": 205
  },
  {
@@ -5252,6 +5458,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a206",
+  "cat": "tsume",
   "no": 206
  },
  {
@@ -5279,6 +5486,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a207",
+  "cat": "tsume",
   "no": 207
  },
  {
@@ -5306,6 +5514,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a208",
+  "cat": "jissen",
   "no": 208
  },
  {
@@ -5331,6 +5540,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a209",
+  "cat": "tsume",
   "no": 209
  },
  {
@@ -5358,6 +5568,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a210",
+  "cat": "tsume",
   "no": 210
  },
  {
@@ -5383,6 +5594,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a211",
+  "cat": "jissen",
   "no": 211
  },
  {
@@ -5410,6 +5622,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a212",
+  "cat": "tsume",
   "no": 212
  },
  {
@@ -5437,6 +5650,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a213",
+  "cat": "tsume",
   "no": 213
  },
  {
@@ -5462,6 +5676,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a214",
+  "cat": "tsume",
   "no": 214
  },
  {
@@ -5489,6 +5704,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a215",
+  "cat": "tsume",
   "no": 215
  },
  {
@@ -5516,6 +5732,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a216",
+  "cat": "tsume",
   "no": 216
  },
  {
@@ -5541,6 +5758,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a217",
+  "cat": "tsume",
   "no": 217
  },
  {
@@ -5568,6 +5786,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a218",
+  "cat": "jissen",
   "no": 218
  },
  {
@@ -5593,6 +5812,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a219",
+  "cat": "jissen",
   "no": 219
  },
  {
@@ -5618,6 +5838,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a220",
+  "cat": "jissen",
   "no": 220
  },
  {
@@ -5643,6 +5864,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a221",
+  "cat": "jissen",
   "no": 221
  },
  {
@@ -5668,6 +5890,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a222",
+  "cat": "jissen",
   "no": 222
  },
  {
@@ -5693,6 +5916,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a223",
+  "cat": "jissen",
   "no": 223
  },
  {
@@ -5720,6 +5944,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a224",
+  "cat": "jissen",
   "no": 224
  },
  {
@@ -5745,6 +5970,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a225",
+  "cat": "jissen",
   "no": 225
  },
  {
@@ -5772,6 +5998,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a226",
+  "cat": "tsume",
   "no": 226
  },
  {
@@ -5799,6 +6026,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a227",
+  "cat": "tsume",
   "no": 227
  },
  {
@@ -5824,6 +6052,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a228",
+  "cat": "jissen",
   "no": 228
  },
  {
@@ -5851,6 +6080,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a229",
+  "cat": "jissen",
   "no": 229
  },
  {
@@ -5876,6 +6106,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a230",
+  "cat": "tsume",
   "no": 230
  },
  {
@@ -5903,6 +6134,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a231",
+  "cat": "jissen",
   "no": 231
  },
  {
@@ -5930,6 +6162,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a232",
+  "cat": "jissen",
   "no": 232
  },
  {
@@ -5955,6 +6188,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a233",
+  "cat": "jissen",
   "no": 233
  },
  {
@@ -5980,6 +6214,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a234",
+  "cat": "tsume",
   "no": 234
  },
  {
@@ -6005,6 +6240,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a235",
+  "cat": "tsume",
   "no": 235
  },
  {
@@ -6030,6 +6266,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a236",
+  "cat": "tsume",
   "no": 236
  },
  {
@@ -6055,6 +6292,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a237",
+  "cat": "jissen",
   "no": 237
  },
  {
@@ -6080,6 +6318,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a238",
+  "cat": "tsume",
   "no": 238
  },
  {
@@ -6105,6 +6344,7 @@
   "lastMulti": false,
   "stars": 2,
   "id": "a239",
+  "cat": "jissen",
   "no": 239
  },
  {
@@ -6132,6 +6372,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a240",
+  "cat": "jissen",
   "no": 240
  },
  {
@@ -6157,6 +6398,7 @@
   "lastMulti": true,
   "stars": 2,
   "id": "a241",
+  "cat": "jissen",
   "no": 241
  },
  {
@@ -6185,6 +6427,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a242",
+  "cat": "jissen",
   "no": 242
  },
  {
@@ -6212,6 +6455,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a243",
+  "cat": "jissen",
   "no": 243
  },
  {
@@ -6239,6 +6483,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a244",
+  "cat": "tsume",
   "no": 244
  },
  {
@@ -6264,6 +6509,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a245",
+  "cat": "tsume",
   "no": 245
  },
  {
@@ -6289,6 +6535,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a246",
+  "cat": "jissen",
   "no": 246
  },
  {
@@ -6316,6 +6563,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a247",
+  "cat": "tsume",
   "no": 247
  },
  {
@@ -6343,6 +6591,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a248",
+  "cat": "jissen",
   "no": 248
  },
  {
@@ -6372,6 +6621,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a249",
+  "cat": "jissen",
   "no": 249
  },
  {
@@ -6401,6 +6651,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a250",
+  "cat": "tsume",
   "no": 250
  },
  {
@@ -6431,6 +6682,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a251",
+  "cat": "jissen",
   "no": 251
  },
  {
@@ -6458,6 +6710,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a252",
+  "cat": "jissen",
   "no": 252
  },
  {
@@ -6485,6 +6738,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a253",
+  "cat": "jissen",
   "no": 253
  },
  {
@@ -6512,6 +6766,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a254",
+  "cat": "jissen",
   "no": 254
  },
  {
@@ -6542,6 +6797,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a255",
+  "cat": "jissen",
   "no": 255
  },
  {
@@ -6571,6 +6827,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a256",
+  "cat": "tsume",
   "no": 256
  },
  {
@@ -6601,6 +6858,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a257",
+  "cat": "tsume",
   "no": 257
  },
  {
@@ -6630,6 +6888,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a258",
+  "cat": "jissen",
   "no": 258
  },
  {
@@ -6660,6 +6919,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a259",
+  "cat": "jissen",
   "no": 259
  },
  {
@@ -6691,6 +6951,7 @@
   "from": 3,
   "stars": 5,
   "id": "a260",
+  "cat": "jissen",
   "no": 260
  },
  {
@@ -6721,6 +6982,7 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a261",
+  "cat": "jissen",
   "no": 261
  },
  {
@@ -6748,6 +7010,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a262",
+  "cat": "tsume",
   "no": 262
  },
  {
@@ -6777,6 +7040,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a263",
+  "cat": "tsume",
   "no": 263
  },
  {
@@ -6806,6 +7070,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a264",
+  "cat": "tsume",
   "no": 264
  },
  {
@@ -6833,6 +7098,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a265",
+  "cat": "tsume",
   "no": 265
  },
  {
@@ -6862,6 +7128,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a266",
+  "cat": "tsume",
   "no": 266
  },
  {
@@ -6889,6 +7156,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a267",
+  "cat": "tsume",
   "no": 267
  },
  {
@@ -6916,6 +7184,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a268",
+  "cat": "jissen",
   "no": 268
  },
  {
@@ -6943,6 +7212,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a269",
+  "cat": "jissen",
   "no": 269
  },
  {
@@ -6970,6 +7240,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a270",
+  "cat": "jissen",
   "no": 270
  },
  {
@@ -6997,6 +7268,7 @@
   "lastMulti": true,
   "stars": 3,
   "id": "a271",
+  "cat": "jissen",
   "no": 271
  },
  {
@@ -7026,6 +7298,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a272",
+  "cat": "jissen",
   "no": 272
  },
  {
@@ -7056,6 +7329,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a273",
+  "cat": "tsume",
   "no": 273
  },
  {
@@ -7085,6 +7359,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a274",
+  "cat": "tsume",
   "no": 274
  },
  {
@@ -7114,6 +7389,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a275",
+  "cat": "jissen",
   "no": 275
  },
  {
@@ -7143,6 +7419,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a276",
+  "cat": "jissen",
   "no": 276
  },
  {
@@ -7172,6 +7449,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a277",
+  "cat": "tsume",
   "no": 277
  },
  {
@@ -7201,6 +7479,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a278",
+  "cat": "tsume",
   "no": 278
  },
  {
@@ -7228,6 +7507,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a279",
+  "cat": "tsume",
   "no": 279
  },
  {
@@ -7256,6 +7536,7 @@
   "from": 3,
   "stars": 3,
   "id": "a280",
+  "cat": "tsume",
   "no": 280
  },
  {
@@ -7286,6 +7567,7 @@
   "from": 3,
   "stars": 3,
   "id": "a281",
+  "cat": "jissen",
   "no": 281
  },
  {
@@ -7316,6 +7598,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a282",
+  "cat": "tsume",
   "no": 282
  },
  {
@@ -7343,6 +7626,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a283",
+  "cat": "tsume",
   "no": 283
  },
  {
@@ -7372,6 +7656,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a284",
+  "cat": "jissen",
   "no": 284
  },
  {
@@ -7399,6 +7684,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a285",
+  "cat": "jissen",
   "no": 285
  },
  {
@@ -7428,6 +7714,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a286",
+  "cat": "jissen",
   "no": 286
  },
  {
@@ -7455,6 +7742,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a287",
+  "cat": "jissen",
   "no": 287
  },
  {
@@ -7485,6 +7773,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a288",
+  "cat": "tsume",
   "no": 288
  },
  {
@@ -7514,6 +7803,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a289",
+  "cat": "jissen",
   "no": 289
  },
  {
@@ -7541,6 +7831,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a290",
+  "cat": "tsume",
   "no": 290
  },
  {
@@ -7570,6 +7861,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a291",
+  "cat": "jissen",
   "no": 291
  },
  {
@@ -7599,6 +7891,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a292",
+  "cat": "tsume",
   "no": 292
  },
  {
@@ -7628,6 +7921,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a293",
+  "cat": "jissen",
   "no": 293
  },
  {
@@ -7658,6 +7952,7 @@
   "from": 3,
   "stars": 3,
   "id": "a294",
+  "cat": "tsume",
   "no": 294
  },
  {
@@ -7685,6 +7980,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a295",
+  "cat": "jissen",
   "no": 295
  },
  {
@@ -7712,6 +8008,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a296",
+  "cat": "tsume",
   "no": 296
  },
  {
@@ -7739,6 +8036,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a297",
+  "cat": "tsume",
   "no": 297
  },
  {
@@ -7768,6 +8066,7 @@
   "lastMulti": false,
   "stars": 3,
   "id": "a298",
+  "cat": "jissen",
   "no": 298
  },
  {
@@ -7797,6 +8096,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a299",
+  "cat": "tsume",
   "no": 299
  },
  {
@@ -7826,6 +8126,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a300",
+  "cat": "jissen",
   "no": 300
  },
  {
@@ -7856,6 +8157,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a301",
+  "cat": "tsume",
   "no": 301
  },
  {
@@ -7885,6 +8187,7 @@
   "lastMulti": false,
   "stars": 4,
   "id": "a302",
+  "cat": "jissen",
   "no": 302
  },
  {
@@ -7915,6 +8218,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a303",
+  "cat": "jissen",
   "no": 303
  },
  {
@@ -7945,6 +8249,7 @@
   "lastMulti": true,
   "stars": 4,
   "id": "a304",
+  "cat": "jissen",
   "no": 304
  },
  {
@@ -7975,6 +8280,7 @@
   "lastMulti": false,
   "stars": 5,
   "id": "a305",
+  "cat": "tsume",
   "no": 305
  },
  {
@@ -8002,6 +8308,2911 @@
   "lastMulti": true,
   "stars": 5,
   "id": "a306",
+  "cat": "jissen",
   "no": 306
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . v飛 . . . . .",
+   ". 銀 金 . . . . . .",
+   ". v王 . . . . . . .",
+   ". . . . . . . . .",
+   "角 . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "36-20+",
+   "19-9",
+   "11-19"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a307",
+  "cat": "tsume",
+  "no": 307
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   "v角 . v杏 . . . . . .",
+   ". . . . . . . . .",
+   "v王 v歩 . . . . . . .",
+   "角 . . . . . . . .",
+   ". . 飛 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "d7@36",
+   "18-10",
+   "27-0+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a308",
+  "cat": "jissen",
+  "no": 308
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . v香 . 飛",
+   ". . . . . . . v飛 銀",
+   ". . . . . . 金 . v王",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "26-34+",
+   "44-53",
+   "d7@44"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a309",
+  "cat": "tsume",
+  "no": 309
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   "v角 v王 v桂 v桂 . . . . .",
+   ". . . . . . . . .",
+   "杏 v桂 . . . . . . .",
+   "飛 . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "18-9",
+   "1-11",
+   "d5@12"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a310",
+  "cat": "tsume",
+  "no": 310
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . 角 . v金 v王 v全 . .",
+   ". . 龍 . . 桂 . . .",
+   ". . . . 飛 . v角 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "11-13+",
+   "14-24",
+   "23-4+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a311",
+  "cat": "jissen",
+  "no": 311
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . 飛 . v飛",
+   ". . . . . . 銀 . .",
+   ". . . . . . v歩 . v王",
+   ". . . . . . v角 . v歩",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "6-16+",
+   "26-16",
+   "d5@25"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a312",
+  "cat": "tsume",
+  "no": 312
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". v飛 . 全 . . . . .",
+   "v王 角 . 龍 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   "歩 . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "3-1",
+   "9-1",
+   "d7@0"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a313",
+  "cat": "tsume",
+  "no": 313
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   "飛 . . . . . . . .",
+   ". . . v龍 . . . . .",
+   "角 . . . 歩 . . . .",
+   "v香 . v王 . 角 . . . .",
+   ". . . . . . . . .",
+   "v銀 . . . v金 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1
+  },
+  "line": [
+   "22-38+",
+   "29-20",
+   "d2@29"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a314",
+  "cat": "tsume",
+  "no": 314
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . 角 .",
+   ". . . . . 銀 . v王 .",
+   ". . . . . . v歩 . .",
+   ". . . . . . と . .",
+   ". . . . . . 角 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "33-17",
+   "16-25",
+   "42-26+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a315",
+  "cat": "tsume",
+  "no": 315
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". v王 . . . . . . .",
+   ". . . . . . . . .",
+   ". 角 v歩 . . . . . .",
+   ". 銀 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "d5@11",
+   "1-0",
+   "19-10+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a316",
+  "cat": "tsume",
+  "no": 316
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . v角 v角 .",
+   ". . . . . . v王 . .",
+   ". . . . 金 . . . .",
+   ". . . . 香 . v銀 . v金",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "d7@24",
+   "15-5",
+   "22-13"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a317",
+  "cat": "tsume",
+  "no": 317
+ },
+ {
+  "v": "an-S-9",
+  "n": 3,
+  "rows": [
+   ". . . . . 銀 . . v桂",
+   ". . . . . v銀 歩 v王 v角",
+   ". . . . . . . . .",
+   ". . . . . . . 金 龍",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "34-26",
+   "16-7",
+   "26-17"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a318",
+  "cat": "jissen",
+  "no": 318
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . . v歩 . . .",
+   ". . . . . . 角 v王 .",
+   ". . . . . 金 v金 . .",
+   ". . . . . 歩 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "32-24+",
+   "16-17",
+   "d5@25"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a319",
+  "cat": "tsume",
+  "no": 319
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   "v王 . v桂 . . . . . .",
+   ". . v角 飛 . . . . .",
+   "v角 . . 桂 . . . . .",
+   "香 金 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "21-19",
+   "11-19",
+   "d5@10"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a320",
+  "cat": "tsume",
+  "no": 320
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . v桂 v金 v歩 . . . .",
+   ". v桂 v王 . . . . . .",
+   ". . . . と . . . .",
+   ". . . . 飛 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "3": 1
+  },
+  "line": [
+   "31-21+",
+   "11-1",
+   "d3@18"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a321",
+  "cat": "tsume",
+  "no": 321
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . v飛 . . . . . .",
+   ". . . . . . . . .",
+   "v王 角 圭 . . . . . .",
+   ". . . . . . . . .",
+   ". 角 歩 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "46-38",
+   "d1@37",
+   "47-37"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a322",
+  "cat": "jissen",
+  "no": 322
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   "v金 全 . . . . . . .",
+   ". 桂 . 馬 . . . . .",
+   "v王 . . . . . . . .",
+   ". . . . . . . . .",
+   "v馬 飛 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "19-28+",
+   "27-36",
+   "21-45"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a323",
+  "cat": "jissen",
+  "no": 323
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . v銀 v角 . 圭 .",
+   ". . . . . v王 . . .",
+   ". . . v銀 v銀 . . . .",
+   ". . 角 . . 金 . . .",
+   ". . 全 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "38-22",
+   "14-15",
+   "d4@16"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a324",
+  "cat": "tsume",
+  "no": 324
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . . v香 . v王 .",
+   ". . . . . . 香 . .",
+   ". . . . . . . . 角",
+   ". . . . . . . . 歩",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "26-6+",
+   "7-8",
+   "15-16+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a325",
+  "cat": "tsume",
+  "no": 325
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . v王 . v桂 . . .",
+   ". 銀 v角 . . . . . .",
+   ". 桂 . v飛 v角 . . . .",
+   ". 飛 . . 香 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "28-11+",
+   "3-4",
+   "d6@14"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a326",
+  "cat": "tsume",
+  "no": 326
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . v銀 . v王 . v角",
+   ". . . . . . . 歩 角",
+   ". . . 金 . . . 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "17-7+",
+   "6-5",
+   "16-15+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a327",
+  "cat": "tsume",
+  "no": 327
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . v桂",
+   ". . . . . 角 . . v王",
+   ". . . . . 金 . . .",
+   ". . . . . 銀 . 金 .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1
+  },
+  "line": [
+   "d1@53",
+   "44-43",
+   "59-51"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a328",
+  "cat": "tsume",
+  "no": 328
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . . v歩 . . . . .",
+   ". . . . v王 . . . .",
+   ". . . . . 飛 . . .",
+   ". . . . . 桂 v飛 . .",
+   ". . . . . 銀 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "41-22+",
+   "13-4",
+   "23-14+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a329",
+  "cat": "tsume",
+  "no": 329
+ },
+ {
+  "v": "an-N-9",
+  "n": 3,
+  "rows": [
+   ". . 金 . . . . . .",
+   ". v王 . . . . . . .",
+   "v金 vと . . . . . . .",
+   ". . v金 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@11",
+   "10-9",
+   "11-1+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a330",
+  "cat": "tsume",
+  "no": 330
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". . v王 . . . . . .",
+   ". v歩 . v角 . . . . .",
+   ". . . . 飛 . . . .",
+   ". . . 角 桂 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "30-11+",
+   "2-11",
+   "31-12+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a331",
+  "cat": "jissen",
+  "no": 331
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   "v銀 . . . . . . . .",
+   "v王 . . . . . . . .",
+   ". 飛 . 金 . . . . .",
+   ". v香 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "21-20",
+   "9-1",
+   "19-11+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a332",
+  "cat": "tsume",
+  "no": 332
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   "v王 v桂 . . . . . . .",
+   ". 香 飛 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "d4@9",
+   "1-9",
+   "10-9+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a333",
+  "cat": "jissen",
+  "no": 333
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   "銀 . . . . . . . .",
+   "v王 v桂 . . . . . . .",
+   "v香 歩 v馬 . . . . . .",
+   ". 角 v歩 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "28-20+",
+   "9-0",
+   "19-10+"
+  ],
+  "lastMulti": true,
+  "stars": 2,
+  "id": "a334",
+  "cat": "jissen",
+  "no": 334
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". . . v王 . . . . .",
+   ". . v香 v桂 . v角 . . .",
+   ". . v飛 . . . . . .",
+   ". 桂 飛 . . 角 桂 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "32-13+",
+   "3-13",
+   "33-14+"
+  ],
+  "lastMulti": true,
+  "stars": 2,
+  "id": "a335",
+  "cat": "jissen",
+  "no": 335
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". v角 龍 . . . . . .",
+   "v王 . v銀 . . . . . .",
+   "v角 桂 香 . . . . . .",
+   ". 飛 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "19-10+",
+   "18-10",
+   "2-10"
+  ],
+  "lastMulti": true,
+  "stars": 2,
+  "id": "a336",
+  "cat": "jissen",
+  "no": 336
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". 角 金 . . . . . .",
+   ". . . . . . . . .",
+   "v王 . . . . . . . .",
+   "v歩 v銀 . . . . . . .",
+   ". . 飛 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "38-20+",
+   "18-9",
+   "1-10+"
+  ],
+  "lastMulti": true,
+  "stars": 2,
+  "id": "a337",
+  "cat": "jissen",
+  "no": 337
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". . . . v歩 . v王 . .",
+   ". . . . . v金 . 香 v飛",
+   ". . . . . . . と .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "25-17",
+   "6-5",
+   "16-6+"
+  ],
+  "lastMulti": true,
+  "stars": 2,
+  "id": "a338",
+  "cat": "jissen",
+  "no": 338
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . v王 .",
+   ". . . . . . v桂 . v飛",
+   ". . . . . v杏 歩 銀 v金",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1,
+   "7": 1
+  },
+  "line": [
+   "d2@16",
+   "17-16",
+   "24-16+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a339",
+  "cat": "jissen",
+  "no": 339
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". v銀 . v香 . . . . .",
+   "銀 v王 . . . . . . .",
+   ". . v桂 金 飛 . . . .",
+   "v歩 . 金 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "29-19",
+   "10-2",
+   "21-3"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a340",
+  "cat": "jissen",
+  "no": 340
+ },
+ {
+  "v": "an-E-9",
+  "n": 3,
+  "rows": [
+   ". . . v銀 v王 . 角 . .",
+   ". . . . . . . . .",
+   ". . v全 歩 歩 . . . .",
+   ". . . . . . . 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "34-7+",
+   "d1@5",
+   "6-5+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a341",
+  "cat": "jissen",
+  "no": 341
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . 飛 .",
+   ". . . . . 金 歩 v龍 v王",
+   ". . . . . . . v歩 v金",
+   ". . . . . . . . 歩",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "3": 1
+  },
+  "line": [
+   "d3@34",
+   "25-34",
+   "15-16+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a342",
+  "cat": "jissen",
+  "no": 342
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . 銀 v金 . .",
+   ". . . . . . . . v王",
+   ". . . . . . 角 . .",
+   ". . . . . . v龍 v金 v桂",
+   ". . . . . 飛 角 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "42-33",
+   "17-26",
+   "d7@17"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a343",
+  "cat": "tsume",
+  "no": 343
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . . 角 v王",
+   ". . . . . . . . .",
+   ". . . . . 飛 桂 . v桂",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "3": 1
+  },
+  "line": [
+   "33-15+",
+   "17-26",
+   "d3@43"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a344",
+  "cat": "tsume",
+  "no": 344
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   "v王 v角 飛 . . . . . .",
+   ". v金 . . . . . . .",
+   "v角 v歩 飛 . . . . . .",
+   "桂 全 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1
+  },
+  "line": [
+   "d1@9",
+   "10-9",
+   "28-9"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a345",
+  "cat": "jissen",
+  "no": 345
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . v王 . v金 . . . .",
+   ". 歩 . v飛 . . . . .",
+   ". v金 v金 金 歩 . . . .",
+   "桂 . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "22-12+",
+   "4-12",
+   "d7@1"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a346",
+  "cat": "tsume",
+  "no": 346
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . v王 . v飛 . . . .",
+   ". . . . v金 . . . .",
+   ". . v角 v歩 . . . . .",
+   "桂 . 桂 金 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "27-10+",
+   "2-3",
+   "30-11"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a347",
+  "cat": "tsume",
+  "no": 347
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . v王 . . . . .",
+   ". . . v桂 v香 . . . .",
+   ". . v桂 . vと . 金 . .",
+   ". . . 角 金 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "31-11",
+   "3-11",
+   "30-20+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a348",
+  "cat": "jissen",
+  "no": 348
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . v王 .",
+   ". . . . . . 香 . .",
+   ". . . . . 香 角 v歩 .",
+   ". . . . . . . 金 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "23-14+",
+   "7-17",
+   "15-16+"
+  ],
+  "lastMulti": false,
+  "stars": 2,
+  "id": "a349",
+  "cat": "tsume",
+  "no": 349
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . v王 v金 v金 .",
+   ". . . . . . v桂 . .",
+   ". . . . . 角 桂 v杏 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1
+  },
+  "line": [
+   "d2@22",
+   "6-14",
+   "24-14+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a350",
+  "cat": "jissen",
+  "no": 350
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . v角 . v王 . .",
+   ". . . . . . . . .",
+   ". . . . . 銀 角 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "33-24+",
+   "15-6",
+   "d7@7"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a351",
+  "cat": "tsume",
+  "no": 351
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . 銀 . . . . . .",
+   ". . . v桂 . . . . .",
+   ". 金 飛 . v王 . v歩 . .",
+   ". . . . . v桂 . . .",
+   ". . . v歩 . . . . .",
+   ". . . . . 飛 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "20-12+",
+   "22-31",
+   "d5@41"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a352",
+  "cat": "jissen",
+  "no": 352
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . v桂 v王 . . .",
+   ". . . . . . . v金 .",
+   ". . . . . . . . .",
+   ". . . . . . 角 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "34-4+",
+   "5-4",
+   "d5@13"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a353",
+  "cat": "jissen",
+  "no": 353
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". v王 . v角 . . . . .",
+   ". . . . . . . . .",
+   ". 金 飛 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "29-19+",
+   "10-2",
+   "d7@1"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a354",
+  "cat": "tsume",
+  "no": 354
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . v王 .",
+   ". . . . . . . v桂 .",
+   ". . . . . . . . .",
+   ". . . . . 桂 角 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@31",
+   "7-8",
+   "33-16+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a355",
+  "cat": "jissen",
+  "no": 355
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . 銀 金 . v王",
+   ". . . . . . 銀 v金 .",
+   ". . . . . . . . 桂",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "15-25",
+   "17-25",
+   "d7@34"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a356",
+  "cat": "jissen",
+  "no": 356
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . v銀 v王",
+   ". . . . . . v銀 . v飛",
+   ". . . . . . . 銀 角",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "26-17+",
+   "7-17",
+   "d4@16"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a357",
+  "cat": "jissen",
+  "no": 357
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . v王 . .",
+   ". . . 桂 . . . 飛 .",
+   ". . . . . . v銀 . .",
+   ". . . . . 桂 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "41-24+",
+   "15-6",
+   "25-15+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a358",
+  "cat": "tsume",
+  "no": 358
+ },
+ {
+  "v": "an-W-9",
+  "n": 3,
+  "rows": [
+   ". . . . . . . v角 .",
+   ". . . . . . . . v王",
+   ". . . . . . . . .",
+   ". . . . . 金 飛 . 角",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "d7@26",
+   "17-26",
+   "33-25+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a359",
+  "cat": "jissen",
+  "no": 359
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . v歩 . . . . .",
+   ". . . . . . . . .",
+   ". . . と . v王 . 角 .",
+   ". . . . . . . . .",
+   ". . . 銀 角 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1
+  },
+  "line": [
+   "d1@31",
+   "23-14",
+   "31-15+",
+   "14-23",
+   "15-24"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a360",
+  "cat": "jissen",
+  "no": 360
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . v桂 .",
+   ". . . . . . . v圭 v王",
+   ". . . . . . . 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "d5@34",
+   "17-8",
+   "25-16+",
+   "8-16",
+   "d3@25"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a361",
+  "cat": "jissen",
+  "no": 361
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . v角 v王 .",
+   ". . . . . v歩 . . .",
+   ". . . . 桂 v全 . v歩 全",
+   ". . . . . . . . と",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "d7@17",
+   "6-26",
+   "35-26",
+   "7-6",
+   "17-16+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a362",
+  "cat": "jissen",
+  "no": 362
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . . . 角 v銀 v王 .",
+   ". . . . . 金 v歩 . .",
+   ". . . . . v角 杏 . v金",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "5-6+",
+   "7-17",
+   "d4@7",
+   "17-8",
+   "6-16"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a363",
+  "cat": "jissen",
+  "no": 363
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . v龍 v王 . 金 . .",
+   ". . v歩 . . . . . .",
+   ". . . v歩 . . v桂 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1,
+   "7": 1
+  },
+  "line": [
+   "d7@15",
+   "d1@5",
+   "6-5",
+   "4-5",
+   "d5@6"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a364",
+  "cat": "jissen",
+  "no": 364
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   "v王 . 金 . . . . . .",
+   ". . v金 . . . . . .",
+   "v銀 . . 飛 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@30",
+   "0-9",
+   "21-11+",
+   "18-10",
+   "11-10"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a365",
+  "cat": "jissen",
+  "no": 365
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . 飛 . . . v角 v金",
+   ". . . 角 . . . v飛 .",
+   ". . . . 杏 . v王 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "d5@33",
+   "24-15",
+   "3-23+",
+   "15-6",
+   "22-14"
+  ],
+  "lastMulti": true,
+  "from": 3,
+  "stars": 4,
+  "id": "a366",
+  "cat": "jissen",
+  "no": 366
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". v王 . . . . . . .",
+   ". 角 . v飛 . . . . .",
+   ". . . 香 . . . . .",
+   "桂 角 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1
+  },
+  "line": [
+   "10-30+",
+   "1-2",
+   "21-12+",
+   "2-1",
+   "27-10+"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a367",
+  "cat": "jissen",
+  "no": 367
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . .",
+   "金 . . v全 と . . . .",
+   ". . v王 . . . . . .",
+   ". . . . . . . . .",
+   ". . . 角 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 2
+  },
+  "line": [
+   "d7@29",
+   "20-21",
+   "d7@18",
+   "12-20",
+   "9-12"
+  ],
+  "lastMulti": true,
+  "stars": 5,
+  "id": "a368",
+  "cat": "jissen",
+  "no": 368
+ },
+ {
+  "v": "an-S-9",
+  "n": 5,
+  "rows": [
+   ". . . v王 . . . . .",
+   ". . v飛 v銀 . . . . .",
+   ". . 桂 金 . . . . .",
+   ". . 金 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@23",
+   "12-13",
+   "20-11+",
+   "3-4",
+   "21-13"
+  ],
+  "lastMulti": true,
+  "stars": 5,
+  "id": "a369",
+  "cat": "jissen",
+  "no": 369
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . . 銀 v王 . .",
+   ". . . . . . . . .",
+   ". . . . 杏 . . . v桂",
+   ". . . . 桂 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1
+  },
+  "line": [
+   "d2@24",
+   "6-7",
+   "5-15+",
+   "7-8",
+   "24-16+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a370",
+  "cat": "tsume",
+  "no": 370
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . 杏 .",
+   ". . . . . . . 歩 .",
+   ". . . . . 馬 . v金 .",
+   ". . . . . . . . v王",
+   ". . . . . 飛 . . .",
+   ". . . . . . . v桂 歩",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "41-44",
+   "35-34",
+   "16-25+",
+   "34-25",
+   "d5@33"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a371",
+  "cat": "tsume",
+  "no": 371
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . v金 . v王 . .",
+   ". . . . . . . . .",
+   ". . . . . 全 . . .",
+   ". . . . . 飛 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "32-24+",
+   "6-7",
+   "23-15",
+   "7-8",
+   "15-16"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a372",
+  "cat": "jissen",
+  "no": 372
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . 角 . .",
+   ". . . . v王 v香 桂 . .",
+   ". . . . . . 飛 . .",
+   ". . . 香 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "24-32+",
+   "23-32",
+   "15-23+",
+   "22-23",
+   "33-24"
+  ],
+  "lastMulti": true,
+  "from": 3,
+  "stars": 3,
+  "id": "a373",
+  "cat": "jissen",
+  "no": 373
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . v香 . v王 角 . . .",
+   ". . . . . v歩 . . .",
+   ". 銀 . . . 歩 . . .",
+   ". . . . . . 桂 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "33-14+",
+   "4-12",
+   "23-22+",
+   "12-3",
+   "5-13"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a374",
+  "cat": "jissen",
+  "no": 374
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . .",
+   "v王 . . . . . . . .",
+   ". . . . . . . . .",
+   "v桂 角 桂 . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "28-20+",
+   "d5@19",
+   "29-19+",
+   "9-1",
+   "19-10"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a375",
+  "cat": "jissen",
+  "no": 375
+ },
+ {
+  "v": "an-N-9",
+  "n": 5,
+  "rows": [
+   ". . . . . 飛 . v香 .",
+   ". . . . . . v金 . v王",
+   ". . . . . . . v飛 .",
+   ". . . . . . . 金 .",
+   ". . . . . . . 香 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "43-35",
+   "17-16",
+   "d6@8",
+   "7-8",
+   "5-8+"
+  ],
+  "lastMulti": false,
+  "stars": 4,
+  "id": "a376",
+  "cat": "jissen",
+  "no": 376
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . v角",
+   ". . . . . . . . v王",
+   ". . . . . . v桂 桂 .",
+   ". . . . . 飛 桂 v金 v歩",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "32-15+",
+   "17-26",
+   "d4@16",
+   "8-16",
+   "15-16"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a377",
+  "cat": "jissen",
+  "no": 377
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   "v王 . . . . . . . .",
+   "v歩 . . . . . . . .",
+   ". . . . . . . . .",
+   "桂 銀 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1
+  },
+  "line": [
+   "27-19",
+   "0-1",
+   "d2@20",
+   "1-0",
+   "20-11+"
+  ],
+  "lastMulti": false,
+  "stars": 3,
+  "id": "a378",
+  "cat": "tsume",
+  "no": 378
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . v王 . . .",
+   ". . . . v全 . . . .",
+   ". . . . 馬 . 飛 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1
+  },
+  "line": [
+   "33-15+",
+   "14-4",
+   "d1@14",
+   "4-3",
+   "14-12+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a379",
+  "cat": "jissen",
+  "no": 379
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . v香 . v王 . . . .",
+   ". . v馬 . . . . 龍 .",
+   ". . . 香 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "3": 1
+  },
+  "line": [
+   "d3@23",
+   "4-5",
+   "16-24",
+   "5-4",
+   "23-14+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a380",
+  "cat": "jissen",
+  "no": 380
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . . v歩 . . .",
+   ". . . . . . . . .",
+   ". . . . . . 角 v王 .",
+   ". . . . . . . . .",
+   ". . . . . . . v角 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 2
+  },
+  "line": [
+   "d5@34",
+   "25-15",
+   "d5@25",
+   "15-6",
+   "24-15+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a381",
+  "cat": "jissen",
+  "no": 381
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . . v銀 . . .",
+   ". . . . . . . . 金",
+   ". . . . . . . v王 .",
+   ". . . . 角 . . . .",
+   ". . . . . . . . .",
+   ". . . . 銀 全 . . 銀",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "7": 1
+  },
+  "line": [
+   "d7@26",
+   "25-34",
+   "31-51",
+   "34-33",
+   "49-41"
+  ],
+  "lastMulti": false,
+  "stars": 4,
+  "id": "a382",
+  "cat": "tsume",
+  "no": 382
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . 桂 . . v王 .",
+   ". . . . . . . . v桂",
+   ". . . . 桂 . 桂 角 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "d5@26",
+   "25-15",
+   "43-23+",
+   "15-5",
+   "22-14+"
+  ],
+  "lastMulti": false,
+  "stars": 4,
+  "id": "a383",
+  "cat": "tsume",
+  "no": 383
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . . v王 . . . .",
+   ". . . . . . 銀 飛 .",
+   ". . v銀 . vと . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@12",
+   "20-12",
+   "15-12+",
+   "4-5",
+   "d4@14"
+  ],
+  "lastMulti": false,
+  "stars": 4,
+  "id": "a384",
+  "cat": "tsume",
+  "no": 384
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". . . vと v桂 . . . .",
+   ". . . . . v王 . . .",
+   ". . . . . . . . .",
+   ". . . 歩 . v歩 . 銀 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1,
+   "6": 1
+  },
+  "line": [
+   "d6@31",
+   "14-13",
+   "d5@21",
+   "13-5",
+   "30-6+"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a385",
+  "cat": "jissen",
+  "no": 385
+ },
+ {
+  "v": "an-E-9",
+  "n": 5,
+  "rows": [
+   ". 角 . . . . . . .",
+   ". v王 . . . . . . .",
+   ". . . v歩 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1,
+   "7": 1
+  },
+  "line": [
+   "d7@2",
+   "10-18",
+   "d5@28",
+   "18-9",
+   "1-0+"
+  ],
+  "lastMulti": true,
+  "stars": 5,
+  "id": "a386",
+  "cat": "jissen",
+  "no": 386
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . v歩 . .",
+   ". . . . . . . v王 .",
+   ". . . . . . v圭 . .",
+   ". . . . 角 飛 . . .",
+   ". . . . . . . 馬 銀",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "44-24+",
+   "16-17",
+   "d3@25",
+   "17-8",
+   "24-16"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a387",
+  "cat": "jissen",
+  "no": 387
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . v銀 v全 .",
+   ". . . . . . 角 v桂 v王",
+   ". . . . . . . . .",
+   ". . . . . 龍 飛 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@25",
+   "16-25",
+   "33-25+",
+   "17-8",
+   "15-7+"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a388",
+  "cat": "jissen",
+  "no": 388
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . . v香 . v王 . .",
+   ". . . . 金 . . . v龍",
+   ". . . 桂 と v歩 . v飛 金",
+   ". . . . . 馬 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "22-5",
+   "6-15",
+   "13-14",
+   "15-7",
+   "5-6"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a389",
+  "cat": "jissen",
+  "no": 389
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . . 銀 . v王 . .",
+   ". . . 金 歩 . . . v香",
+   ". . . . . . . 銀 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "13-14+",
+   "6-7",
+   "14-15",
+   "7-8",
+   "15-16"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a390",
+  "cat": "jissen",
+  "no": 390
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . . . . . v王 .",
+   ". . . . . 全 . . v香",
+   ". . . . . . . . .",
+   ". . . . . 飛 馬 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "14-15",
+   "7-8",
+   "33-24",
+   "d1@16",
+   "15-16"
+  ],
+  "lastMulti": true,
+  "stars": 3,
+  "id": "a391",
+  "cat": "jissen",
+  "no": 391
+ },
+ {
+  "v": "an-W-9",
+  "n": 5,
+  "rows": [
+   ". . . v王 . . . . .",
+   ". . v金 . . . . . .",
+   ". v銀 v龍 金 . . . . .",
+   ". . . 金 角 . 香 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "31-32",
+   "d4@23",
+   "d4@13",
+   "23-13",
+   "21-13"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a392",
+  "cat": "jissen",
+  "no": 392
+ },
+ {
+  "v": "an-S-9",
+  "n": 7,
+  "rows": [
+   ". v王 . v飛 . . . . .",
+   ". . . 銀 . . . . .",
+   "飛 . v歩 . . . . . .",
+   ". v金 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "6": 1
+  },
+  "line": [
+   "d6@11",
+   "1-11",
+   "18-20+",
+   "11-1",
+   "d1@11",
+   "1-0",
+   "11-10+"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 4,
+  "id": "a393",
+  "cat": "tsume",
+  "no": 393
+ },
+ {
+  "v": "an-S-9",
+  "n": 7,
+  "rows": [
+   ". . . v飛 . . . . .",
+   ". v王 . 銀 . . . . .",
+   "飛 . v歩 . . . . . .",
+   ". v金 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1
+  },
+  "line": [
+   "18-20+",
+   "10-0",
+   "d1@9",
+   "0-9",
+   "d1@11",
+   "9-0",
+   "11-10+"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 4,
+  "id": "a394",
+  "cat": "tsume",
+  "no": 394
+ },
+ {
+  "v": "an-S-9",
+  "n": 7,
+  "rows": [
+   ". . . 飛 . . . v角 v金",
+   ". . . 角 . . . v飛 v王",
+   ". . . . 杏 . . . .",
+   ". . . . . . . . .",
+   ". . . . . . と . .",
+   ". . . . . . . 香 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {},
+  "line": [
+   "52-25+",
+   "17-25",
+   "3-43+",
+   "25-26",
+   "42-34",
+   "26-17",
+   "34-25"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 4,
+  "id": "a395",
+  "cat": "tsume",
+  "no": 395
+ },
+ {
+  "v": "an-S-9",
+  "n": 7,
+  "rows": [
+   ". . . . . . . v桂 v王",
+   ". . . . . . . v圭 .",
+   ". . . . . . . 飛 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "2": 1,
+   "5": 1
+  },
+  "line": [
+   "d2@17",
+   "8-17",
+   "d5@34",
+   "17-8",
+   "25-16+",
+   "8-16",
+   "d3@25"
+  ],
+  "lastMulti": true,
+  "from": 5,
+  "stars": 4,
+  "id": "a396",
+  "cat": "jissen",
+  "no": 396
+ },
+ {
+  "v": "an-S-9",
+  "n": 7,
+  "rows": [
+   ". . . . . . v全 . 銀",
+   ". . . . . . v桂 . v銀",
+   ". . . . . 桂 v香 銀 .",
+   ". . . . . 角 . v王 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "3": 1,
+   "6": 1
+  },
+  "line": [
+   "d6@42",
+   "34-25",
+   "d3@44",
+   "25-35",
+   "23-53+",
+   "35-25",
+   "53-43"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 5,
+  "id": "a397",
+  "cat": "tsume",
+  "no": 397
+ },
+ {
+  "v": "an-N-9",
+  "n": 7,
+  "rows": [
+   ". . . . v飛 . . . 金",
+   ". . . . . . . 歩 馬",
+   ". . . . . v王 . . .",
+   ". . . . 香 . . 馬 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "17-7",
+   "4-7",
+   "d5@22",
+   "23-15",
+   "8-7",
+   "15-5",
+   "16-6+"
+  ],
+  "lastMulti": true,
+  "from": 5,
+  "stars": 4,
+  "id": "a398",
+  "cat": "jissen",
+  "no": 398
+ },
+ {
+  "v": "an-N-9",
+  "n": 7,
+  "rows": [
+   ". . . . . 銀 . . v歩",
+   ". . . . 角 . . v王 .",
+   ". . . . 龍 . v桂 v角 .",
+   ". . . . . . . . .",
+   ". . . . . . 圭 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "22-6",
+   "16-6",
+   "d5@15",
+   "25-15",
+   "5-15+",
+   "6-15",
+   "13-5"
+  ],
+  "lastMulti": true,
+  "stars": 4,
+  "id": "a399",
+  "cat": "jissen",
+  "no": 399
+ },
+ {
+  "v": "an-N-9",
+  "n": 7,
+  "rows": [
+   ". . . . . vと . . .",
+   ". . . . . . . v王 .",
+   ". . . . . . . . .",
+   ". . . . 桂 飛 . . .",
+   ". . . . 飛 . . 桂 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1,
+   "4": 1
+  },
+  "line": [
+   "43-24+",
+   "16-24",
+   "40-23+",
+   "24-16",
+   "d1@25",
+   "16-17",
+   "d4@16"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 5,
+  "id": "a400",
+  "cat": "tsume",
+  "no": 400
+ },
+ {
+  "v": "an-E-9",
+  "n": 7,
+  "rows": [
+   ". . v王 . . . . . .",
+   ". . . v歩 . . . . .",
+   ". . . 歩 飛 . . . .",
+   ". v飛 . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 3
+  },
+  "line": [
+   "d4@11",
+   "2-11",
+   "d4@19",
+   "28-19",
+   "21-19+",
+   "11-2",
+   "d4@11"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 4,
+  "id": "a401",
+  "cat": "jissen",
+  "no": 401
+ },
+ {
+  "v": "an-E-9",
+  "n": 7,
+  "rows": [
+   ". . . . v杏 v歩 . v桂 .",
+   ". . . . v王 銀 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . 馬 .",
+   ". . . . . . . . .",
+   ". . . 桂 . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1,
+   "2": 2
+  },
+  "line": [
+   "d2@49",
+   "13-23",
+   "d1@33",
+   "23-15",
+   "33-25+",
+   "15-23",
+   "d2@33"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 5,
+  "id": "a402",
+  "cat": "tsume",
+  "no": 402
+ },
+ {
+  "v": "an-E-9",
+  "n": 7,
+  "rows": [
+   ". . . . v杏 v歩 . v桂 .",
+   ". . . . . 銀 v王 . .",
+   ". . . . . . . . .",
+   ". . . . . . . 馬 .",
+   ". . . . . . . . .",
+   ". . . 桂 . 飛 . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "1": 1,
+   "2": 1
+  },
+  "line": [
+   "50-23+",
+   "15-23",
+   "d1@33",
+   "23-15",
+   "33-25+",
+   "15-23",
+   "d2@33"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 5,
+  "id": "a403",
+  "cat": "tsume",
+  "no": 403
+ },
+ {
+  "v": "an-E-9",
+  "n": 7,
+  "rows": [
+   ". . . . . v王 . . .",
+   ". . . . . v桂 . v龍 .",
+   ". . . 全 . . 全 . v金",
+   ". . . . . . . . v金",
+   ". . . . . 角 桂 . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "41-22+",
+   "5-6",
+   "d4@15",
+   "16-15",
+   "24-15",
+   "6-15",
+   "d7@16"
+  ],
+  "lastMulti": false,
+  "from": 5,
+  "stars": 5,
+  "id": "a404",
+  "cat": "tsume",
+  "no": 404
+ },
+ {
+  "v": "an-E-9",
+  "n": 7,
+  "rows": [
+   ". . . vと v桂 . v王 . .",
+   ". . . . と . . . .",
+   ". . . . . . . . .",
+   ". . . 歩 . v歩 . 銀 .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1,
+   "6": 1
+  },
+  "line": [
+   "13-14",
+   "6-14",
+   "d6@31",
+   "14-13",
+   "d5@21",
+   "13-5",
+   "30-6+"
+  ],
+  "lastMulti": true,
+  "from": 5,
+  "stars": 5,
+  "id": "a405",
+  "cat": "jissen",
+  "no": 405
+ },
+ {
+  "v": "an-W-9",
+  "n": 7,
+  "rows": [
+   ". . . . . . v歩 . .",
+   ". . . . . . . . v王",
+   ". . . . . . v圭 . .",
+   ". . . . 角 飛 . . .",
+   ". . . . . . . 馬 銀",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "5": 1
+  },
+  "line": [
+   "d5@16",
+   "17-16",
+   "44-24+",
+   "16-17",
+   "d3@25",
+   "17-8",
+   "24-16"
+  ],
+  "lastMulti": true,
+  "from": 5,
+  "stars": 4,
+  "id": "a406",
+  "cat": "jissen",
+  "no": 406
+ },
+ {
+  "v": "an-W-9",
+  "n": 7,
+  "rows": [
+   ". . . . . . v歩 . v王",
+   ". . . . . . . . .",
+   ". . . . . . v圭 . .",
+   ". . . . 角 飛 . . .",
+   ". . . . . . . 馬 銀",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . .",
+   ". . . . . . . . ."
+  ],
+  "hand": {
+   "4": 1
+  },
+  "line": [
+   "d4@16",
+   "8-16",
+   "44-24+",
+   "16-17",
+   "d3@25",
+   "17-8",
+   "24-16"
+  ],
+  "lastMulti": true,
+  "from": 5,
+  "stars": 4,
+  "id": "a407",
+  "cat": "jissen",
+  "no": 407
  }
 ]; })(this);

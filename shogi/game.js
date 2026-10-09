@@ -17,7 +17,7 @@
     var ctx = null, muted = load('hensoku.muted', false), noise = null;
     function init() {
       if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
-      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); window.__hsAudioCtx = ctx; } catch (e) { return; }
       noise = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
       var d = noise.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
     }
@@ -79,15 +79,14 @@
     var hands = [null, null], sqs = [], board = document.createElement('div');
     board.className = 'sg-board wood';
     var w = opts.w, h = opts.h;
-    // マスの大きさ: 画面の幅と高さに収まるように
-    var avW = Math.min(window.innerWidth - 32, 460), avH = window.innerHeight - (opts.hands ? 330 : 250) - (opts.extra || 0);
-    // 実際に使える高さ（盤の入れ物の高さ）がわかるときは、そこから持ち駒・筋の番号のぶんを引いて決める。
-    // 上下のカードや持ち駒と重ならないように（画面の高さだけで見積もると、大きい画面で盤がはみ出していた）
-    if (host.clientHeight > 0) {
-      var hh = host.clientHeight - (opts.hands ? 2 * 62 + 16 : 0) - (opts.files ? 20 : 0) - 16;
-      if (hh > 0) avH = Math.min(avH + (opts.extra || 0), hh);
-    }
-    var c = Math.floor(Math.min((avW - (opts.ranks ? 18 : 0)) / w, avH / (h * 1.08), 74));
+    // マスの大きさ: 盤は画面の幅いっぱいに取る（誤タップを防ぐ）。カードや持ち駒は盤の上下の細い段にまとめて、盤は小さくしない。
+    // 縦長の画面（スマホ）では、ルールやモードに関係なく、いつも幅いっぱい。入りきらないぶんは画面全体が縦にスクロールする（.play の overflow）。
+    // 横長の画面（パソコンのブラウザ・横向き）だけ、「盤以外に使うぶん（opts.reserve）」を引いた高さに合わせて縮める
+    var vw = Math.min(window.innerWidth, 480);
+    var avW = vw - 8 - 12 - (opts.ranks ? 18 : 0);
+    var avH = window.innerHeight - (opts.reserve !== undefined ? opts.reserve : (opts.hands ? 300 : 230));
+    var c = Math.floor(Math.min(avW / w, 64));
+    if (window.innerHeight < window.innerWidth * 1.3) c = Math.max(Math.min(c, Math.floor(avH / (h * 1.08))), Math.min(34, c));
     board.style.setProperty('--c', c + 'px');
     board.style.gridTemplateColumns = 'repeat(' + w + ', ' + c + 'px)';
     for (var i = 0; i < w * h; i++) { var q = document.createElement('div'); q.className = 'sg-sq'; q.dataset.i = i; board.appendChild(q); sqs.push(q); }
@@ -115,9 +114,13 @@
       if (files) files.style.marginRight = '16px';
     }
     if (opts.hands) {
-      hands[1] = document.createElement('div'); hands[1].className = 'sg-hand';
-      hands[0] = document.createElement('div'); hands[0].className = 'sg-hand';
-      [0, 1].forEach(function (p) { hands[p].style.width = Math.max(w * c + 12, 300) + 'px'; });
+      [1, 0].forEach(function (p) {
+        // 持ち駒の段: [名前・時計][持ち駒（横スクロール）][カードなどの置き場]
+        var row = document.createElement('div'); row.className = 'sg-hand';
+        row.innerHTML = '<span class="sg-hlab"></span><span class="sg-hps"></span><span class="sg-hx"></span>';
+        row.style.width = (w * c + 12 + (opts.ranks ? 18 : 0)) + 'px';
+        hands[p] = row;
+      });
       wrap.appendChild(hands[1]); if (files) wrap.appendChild(files); wrap.appendChild(boardEl); wrap.appendChild(hands[0]);
     } else { if (files) wrap.appendChild(files); wrap.appendChild(boardEl); }
     host.innerHTML = ''; host.appendChild(wrap);
@@ -131,9 +134,10 @@
       return '<span class="' + cls + '">' + ch + '</span>';
     }
     function handRow(p, s, V, info) {
-      var el = hands[p]; el.innerHTML = '';
-      var lab = document.createElement('span'); lab.className = 'sg-hlab'; lab.innerHTML = (info.labels ? info.labels[p] : (p === 0 ? '☗ 先手' : '☖ 後手')) + '<br>持ち駒';
-      el.appendChild(lab);
+      var rowEl = hands[p], lab = rowEl.firstChild, el = rowEl.children[1];
+      el.innerHTML = '';
+      lab.innerHTML = '<b>' + (info.labels ? info.labels[p] : (p === 0 ? '☗ 先手' : '☖ 後手')) + '</b><i data-clk="' + p + '">持ち駒</i>';
+      rowEl.classList.toggle('turn', info.turn === p);
       if (info.rest && p === 1) { var r = document.createElement('span'); r.className = 'sg-rest'; r.textContent = '残りの駒ぜんぶ（合い駒に使える）'; el.appendChild(r); return; }
       var any = false;
       for (var k = V.handTypes.length - 1; k >= 0; k--) {
@@ -147,7 +151,9 @@
       if (!any) { var e = document.createElement('span'); e.className = 'sg-none'; e.textContent = 'なし'; el.appendChild(e); }
     }
     return {
-      // info: { sel, dests{}, last, check, hint{}, flip, labels, rest, selHand, hintHand, gone[] }
+      // 持ち駒の段の右はしの置き場（トランプの手札・特殊効果カード・時計を入れる）
+      slot: function (p) { return hands[p] ? hands[p].children[2] : null; },
+      // info: { sel, dests{}, last, check, hint{}, flip, labels, rest, selHand, hintHand, gone[], turn }
       render: function (s, V, info) {
         wrap.classList.toggle('flip', !!info.flip);
         if (files) {
@@ -191,6 +197,81 @@
     document.body.appendChild(box);
     return box;
   }
+
+
+  // ===================== ヒント・答えの「1日の無料回数」と動画広告 =====================
+  // 無料回数を使い切ったら、アプリ版では動画広告（リワード広告）を1本見ると1回使える。
+  // アプリ側（HensokuShogiApp）は rewardAd を受け取って広告を出し、window.__rewardAdResult(id, 'granted'|'skipped'|'unavailable') で返す。
+  // rewardAd が無い（ゲーム箱・自分用アプリなど広告なしの版）ときは、回数を気にせずそのまま使える
+  var GATE = {
+    free: { hint: 3, answer: 1 },        // 1日の無料回数（夜0時にもどる）
+    goodwillPerDay: 1,                   // 広告が読み込めなかったとき、1日1回だけそのまま使わせる
+    key: 'hensoku.gate'
+  };
+  var Gate = (function () {
+    var pending = {}, seq = 0, NAME = { hint: 'ヒント', answer: '答え' };
+    function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+    function state() {
+      var s = load(GATE.key, null);
+      if (!s || s.day !== today()) s = { day: today(), used: { hint: 0, answer: 0 }, goodwill: 0, paid: {} };
+      s.paid = s.paid || {};
+      return s;
+    }
+    // アプリの rewardAd（テストでは window.__rewardBridge で差しかえられる）
+    function bridge() { return window.__rewardBridge || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.rewardAd) || null; }
+    function ads() { return !!bridge(); }
+    function left(kind) { var s = state(); return Math.max(0, GATE.free[kind] - (s.used[kind] || 0)); }
+    // その問題の答えを今日もう見たか（見たあとは、同じ問題の検討の「答え」はそのまま見られる）
+    function paid(pid) { return !!(pid && state().paid[pid]); }
+    function markPaid(pid) { if (!pid) return; var s = state(); s.paid[pid] = 1; save(GATE.key, s); }
+    window.__rewardAdResult = function (id, res) { var cb = pending[id]; delete pending[id]; if (cb) cb(res); };
+    // kind の1回ぶんを使う。使えるなら then()。o.confirm があれば無料のときに確認を出す。o.pid は答えを見た問題
+    function use(kind, then, o) {
+      o = o || {};
+      if (!ads()) { markPaid(o.pid); then(); return; }
+      if (kind === 'answer' && paid(o.pid)) { then(); return; }
+      var name = NAME[kind], n = left(kind);
+      function grant(fromFree) {
+        var s = state();
+        if (fromFree) s.used[kind] = (s.used[kind] || 0) + 1;
+        if (kind === 'answer' && o.pid) s.paid[o.pid] = 1;
+        save(GATE.key, s); then(); refreshLabels();
+      }
+      if (n > 0) {
+        if (o.confirm) askYes(o.confirm, o.okLabel || 'はい', function () { grant(true); }, { sub: '今日の無料の' + name + '：あと ' + n + ' 回（夜0時にもどります）' });
+        else grant(true);
+        return;
+      }
+      askYes('今日の無料の' + name + 'は使い切りました', '📺 動画を見て' + name + 'を見る', function () {
+        var id = 'r' + (++seq) + '_' + Date.now();
+        pending[id] = function (res) {
+          if (res === 'granted') { grant(false); return; }
+          if (res === 'unavailable') {
+            var s = state();
+            if (s.goodwill < GATE.goodwillPerDay) { s.goodwill++; save(GATE.key, s); toast('広告を読み込めなかったので、今回はそのまま見られます', 2400); grant(false); }
+            else toast('今は広告を読み込めません。少しあとで試してね', 2400);
+            return;
+          }
+          toast('動画を最後まで見ると、' + name + 'が見られます', 2400);
+        };
+        try { bridge().postMessage({ kind: kind, id: id }); }
+        catch (e) { delete pending[id]; toast('今は広告を読み込めません。少しあとで試してね', 2400); }
+      }, { sub: '短い動画を1本見ると、' + name + 'を1回見られます。無料の' + name + 'は1日 ' + GATE.free[kind] + ' 回（夜0時にもどります）' });
+    }
+    // ボタンの文字（ヒント・答え）
+    function label(kind, base, ico) {
+      if (!ads()) return ico + ' ' + base;
+      var n = left(kind);
+      return n > 0 ? ico + ' ' + base + '（あと' + n + '）' : '📺 ' + base;
+    }
+    function refreshLabels() {
+      var solvedNow = P && P.done && P.verdict && P.verdict.ok;
+      var free = solvedNow || (P && P.pz && paid(P.pz.id));
+      var h = document.getElementById('p-hint'); if (h) h.textContent = label('hint', 'ヒント', '💡');
+      ['p-answer', 'r-answer'].forEach(function (k) { var b = document.getElementById(k); if (b) b.textContent = free || !ads() ? '📖 答え' : label('answer', '答え', '📖'); });
+    }
+    return { use: use, left: left, paid: paid, markPaid: markPaid, refreshLabels: refreshLabels, ads: ads, _state: state, _today: today };
+  })();
 
   // 成るかどうかを聞く
   function askPromote(t, cb) {
@@ -269,7 +350,11 @@
   function flipView() { return (G.mode === 'cpu' || G.mode === 'online') && G.human === 1; }
 
   // ---- ルール一覧 ----
-  var MENU = ['go5', 'komagoma', 'ninja', 'kaeru', 'taiho', 'an', 'trump', 'koka', 'sougyoku', 'hasami', 'fudake', 'honshogi', 'irekae', 'komaochi'];
+  // メニューに出すルール。ほかの変則ルール（5五・こまごま・忍者・かえる・大砲・王様2枚・はさみ・歩だけ・飛車角入れ替え・駒落ち）は
+  // いったん封印。SHOW_EXTRA_VARIANTS を true にすると戻る（記録・棋譜の見返しは封印中も見られる）
+  var SHOW_EXTRA_VARIANTS = false;
+  var MENU_ALL = ['go5', 'komagoma', 'ninja', 'kaeru', 'taiho', 'an', 'trump', 'koka', 'sougyoku', 'hasami', 'fudake', 'honshogi', 'irekae', 'komaochi'];
+  var MENU = SHOW_EXTRA_VARIANTS ? MENU_ALL : ['an', 'trump', 'koka', 'honshogi'];
   function menuInfo(id) {
     if (id === 'koka') return { emoji: '🎴', title: '特殊効果将棋', tag: 'オリジナル', desc: '1局に1回だけ使える「特殊効果カード」つきの本将棋' };
     if (id === 'hasami') return { emoji: '🫸', title: 'はさみ将棋', tag: '変則', desc: '歩を縦横にすべらせて、はさんで取る' };
@@ -349,9 +434,9 @@
     seg($('su-first'), sides, setupSel.first, function (i) { setupSel.first = i; save('hensoku.first', i); openSetup(id); });
     dispToggles($('su-disp'), 'game', id === 'an');
     if (id === 'trump') {
-      var tb = document.createElement('button'); tb.className = 'tg' + (trumpShow() ? ' on' : '');
+      var tb = document.createElement('button'); tb.className = 'tg' + (load('hensoku.trumpShow', true) ? ' on' : '');
       tb.innerHTML = '<span><b>相手の手札を見せる</b><small>' + (setupSel.H ? 'CPU戦：CPU の手札を見る／2人で1台：おたがいの手札を見せ合う（オフなら、手番の人だけが「見る」でのぞく）' : '手札0枚のときは、めくった札はいつもおたがい見えます') + '</small></span><i></i>';
-      tb.onclick = function () { save('hensoku.trumpShow', !trumpShow()); Snd.play('select'); openSetup(id); };
+      tb.onclick = function () { save('hensoku.trumpShow', !load('hensoku.trumpShow', true)); Snd.play('select'); openSetup(id); };
       $('su-disp').insertBefore(tb, $('su-disp').lastChild);
     }
     if (id === 'koka') {
@@ -413,11 +498,29 @@
     $('g-fx').hidden = !isK; $('g-fxopp').hidden = !isK;
     // 盤の大きさは、画面に出ている入れ物の高さから決めるので、先に対局画面を出しておく（カードや持ち駒と重ならないように）
     if (curScreen !== 'game') show('game');
-    G.view = BoardView($('g-board'), { w: G.ad.w, h: G.ad.h, hands: G.ad.hands, stones: G.ad.kind === 'hasami', files: isT, extra: isT ? (G.ad.H ? 120 : 84) : isK ? 110 : 0, onSquare: tapSquare, onHand: tapHand });
+    makeGameView();
     $('g-undo').hidden = G.mode !== 'cpu';
     $('g-again').hidden = G.mode === 'online';   // オンラインでは「はじめから」も引き分けもなし（投了は右上）
     $('g-resign').hidden = false;
     document.body.classList.toggle('online', G.mode === 'online');
+  }
+  // 対局の盤をつくる。トランプの手札・特殊効果カード・時計は、盤の上下の持ち駒の段の右はしに入れる（盤を大きく取るため）
+  var BAR_IDS = ['g-opp', 'g-fxopp', 'g-cards', 'g-fx'];
+  function parkBars() { var host = $('g-park'); BAR_IDS.forEach(function (id) { if ($(id).parentNode !== host) host.appendChild($(id)); }); }
+  function placeBars() {
+    if (!G.view || !G.view.slot || !G.ad.hands) return;
+    var topP = flipView() ? 0 : 1, botP = 1 - topP;
+    [['g-opp', topP], ['g-fxopp', topP], ['g-cards', botP], ['g-fx', botP]].forEach(function (a) {
+      var slot = G.view.slot(a[1]); if (slot && $(a[0]).parentNode !== slot) slot.appendChild($(a[0]));
+    });
+  }
+  function makeGameView() {
+    parkBars();
+    var isT = G.ad.kind === 'trump';
+    $('game').classList.toggle('hands', !!G.ad.hands);
+    G.view = BoardView($('g-board'), { w: G.ad.w, h: G.ad.h, hands: G.ad.hands, stones: G.ad.kind === 'hasami', files: isT,
+      reserve: G.ad.hands ? 262 : 250, onSquare: tapSquare, onHand: tapHand });
+    placeBars();
   }
   function startGame(id, mode) {
     clearTimeout(G.timer);
@@ -525,10 +628,11 @@
     if (G.ad.kind === 'shogi' && s.check) { var ks = R.kingSquares(V, s.b, s.turn); checkSq = ks.length ? ks[0] : -1; }
     var names = sideNames();
     var filesOn = null;
+    placeBars();
     if (G.ad.kind === 'trump') filesOn = renderCards(s, interactive);
     var mines = null, fxt = null;
     if (G.ad.kind === 'koka') { renderFx(s, interactive); mines = mineView(s); fxt = fxTargets(s); if (fxt) dests = {}; }
-    G.view.render(s, V || { handTypes: [] }, { showBorrow: disp.game.borrow, sel: G.sel, selHand: G.selHand, dests: dests, check: checkSq, flip: flipView(), files: filesOn, mines: mines, fxt: fxt,
+    G.view.render(s, V || { handTypes: [] }, { showBorrow: disp.game.borrow, sel: G.sel, selHand: G.selHand, dests: dests, check: checkSq, flip: flipView(), files: filesOn, mines: mines, fxt: fxt, turn: G.done ? -1 : G.ad.turn(s),
       labels: names.map(function (n, p) { return (p === 0 ? '☗ ' : '☖ ') + (G.mode === 'cpu' ? (p === G.human ? 'あなた' : 'CPU') : G.mode === 'online' ? (p === G.human ? 'あなた' : 'あいて') : n); }), gone: gone || [] });
     var t = G.ad.turn(s);
     for (var p = 0; p < 2; p++) {
@@ -538,7 +642,7 @@
       el.querySelector('.nm').textContent = G.mode === 'online' ? (p === G.human ? 'あなた' : 'あいて') : names[p];
       el.querySelector('.sc').textContent = G.ad.kind === 'hasami' ? s.cap[p] + '枚' : '';
     }
-    if (G.mode === 'online') paintClocks();
+    paintClocks();
     $('g-undo').disabled = G.busy || G.hist.length < 2;
     $('g-resign').disabled = G.done;
     var st = $('g-status');
@@ -557,7 +661,11 @@
     return '<span class="cd ' + (red ? 'red ' : '') + (cls || '') + '" data-k="' + k + '"><small>' + su + '</small>' + HS.trump.cardName(c) + '<i>' + c + '筋</i></span>';
   }
   // 相手の手札を見せるか（設定）。2人で1台で見せないときは、手番の人だけが「見る」でのぞく
-  function trumpShow() { return load('hensoku.trumpShow', true); }
+  // オンラインでは、部屋をつくった人の設定（cfg.opt.show）を2台で使う。それぞれの端末の設定を見ると、2台で食いちがっていた
+  function trumpShow() {
+    if (G.mode === 'online' && G.cfg && G.cfg.opt && G.cfg.opt.show !== undefined) return !!G.cfg.opt.show;
+    return load('hensoku.trumpShow', true);
+  }
   function trumpHidden() { return G.ad && G.ad.kind === 'trump' && G.ad.H > 0 && !trumpShow() && G.mode === 'local'; }
   // 2人で1台で、手番ごとに交代画面をはさむか（トランプの手札・特殊効果カードを見せないルール）
   function hiddenHands() { return trumpHidden() || (G.ad && G.ad.kind === 'koka' && !G.ad.fxOpt.show && G.mode === 'local'); }
@@ -737,7 +845,7 @@
   function openReplay(r, fromGame) {
     var pr = recPlay(r), ad = pr.ad, states = pr.states, labels = pr.labels;
     RP = { rec: r, ad: ad, states: states, labels: labels, k: fromGame ? states.length - 1 : 0, flip: (r.mode === 'cpu' || r.mode === 'online') && r.human === 1, timer: null };
-    RP.view = BoardView($('rp-board'), { w: ad.w, h: ad.h, hands: ad.hands, stones: ad.kind === 'hasami', files: ad.kind === 'trump', extra: ad.kind === 'trump' ? 40 : 0, onSquare: function () {}, onHand: function () {} });
+    RP.view = BoardView($('rp-board'), { w: ad.w, h: ad.h, hands: ad.hands, stones: ad.kind === 'hasami', files: ad.kind === 'trump', reserve: 280 + (ad.kind === 'trump' ? 40 : 0), onSquare: function () {}, onHand: function () {} });
     $('rp-title').textContent = r.title; $('rp-sub').textContent = recWho(r) + '　' + r.result;
     $('rp-try').hidden = ad.kind === 'trump' || WEB;
     sheet('result', false); show('replay'); rpRender();
@@ -789,7 +897,7 @@
     G.hist = RP.states.slice(0, RP.k + 1); G.moves = r.moves.slice(0, RP.k); G.busy = false; G.done = false; G.sel = null; G.selHand = null; G.peek = false;
     $('g-title').textContent = r.title; $('g-sub').textContent = '記録から検討（2人で1台）';
     $('g-cards').hidden = true; $('g-opp').hidden = true; $('g-fx').hidden = G.ad.kind !== 'koka'; $('g-fxopp').hidden = G.ad.kind !== 'koka';
-    G.view = BoardView($('g-board'), { w: G.ad.w, h: G.ad.h, hands: G.ad.hands, stones: G.ad.kind === 'hasami', extra: G.ad.kind === 'koka' ? 110 : 0, onSquare: tapSquare, onHand: tapHand });
+    makeGameView();
     $('g-undo').hidden = true;
     show('game'); refresh();
   }
@@ -798,7 +906,7 @@
   var PZ = HS.PUZZLES || [];
   var solved = load('hensoku.solved2', {});
   // P.hist: 指した手の記録 [{ s: 指す前の局面, m: 手, by: 0 攻め方 / 1 玉方 }]
-  var P = { i: 0, pz: null, V: null, s0: null, s: null, hist: [], solver: null, view: null, sel: null, selHand: null, busy: false, done: false, hint: 0, play: null, verdict: null, filter: load('hensoku.tFilter', 'all') };
+  var P = { i: 0, pz: null, V: null, s0: null, s: null, hist: [], solver: null, view: null, sel: null, selHand: null, busy: false, done: false, hint: 0, play: null, verdict: null, filter: load('hensoku.tFilter', 'all'), cat: load('hensoku.tCat', 'tsume') };
   // 詰将棋の設定: mode = 'move'（盤を動かして解く）/ 'read'（盤を動かさずに解く）, def = 'auto'（玉方は自動）/ 'self'（玉方も自分で動かす）, hide = 手数をかくす
   var tset = load('hensoku.tset', null) || { mode: 'move', def: 'auto', hide: false };
   function setT(k, v) { tset[k] = v; save('hensoku.tset', tset); }
@@ -810,10 +918,15 @@
   function vTitle(id) { var V = HS.VARIANTS[id]; return V.an ? AN_SHORT[V.anDir] + '将棋' : V.title; }
   function stars(n) { return '★★★★★'.slice(0, n) + '<span style="opacity:.3">' + '★★★★★'.slice(0, 5 - n) + '</span>'; }
   function lenLabel(n) { return n >= 9 ? n + '手詰め（長編）' : n + '手詰め'; }
+  // 2つの分類: 詰将棋（駒余りなし・正解は1通り）と 実戦詰め（駒が余っても・詰ませ方が何通りあってもよい）
+  var CAT_NAME = { tsume: '詰将棋', jissen: '実戦詰め' };
+  var CAT_NOTE = { tsume: '詰将棋：駒余りなし・正解は1通り', jissen: '実戦詰め：駒が余ってもOK・詰ませ方が何通りあってもOK' };
+  function pzCat(p) { return p.cat === 'tsume' ? 'tsume' : 'jissen'; }
+  function strictCat() { return !P.mine && P.pz && pzCat(P.pz) === 'tsume'; }
   // 一覧に出す順番（手数 → 難しさ → 番号）。ルールのタブで絞りこむ
   function listOrder() {
     return PZ.map(function (p, i) { return i; })
-      .filter(function (i) { return P.filter === 'all' || pzRule(PZ[i]) === P.filter; })
+      .filter(function (i) { return pzCat(PZ[i]) === P.cat && (P.filter === 'all' || pzRule(PZ[i]) === P.filter); })
       .sort(function (a, b) { var p = PZ[a], q = PZ[b]; return p.n - q.n || p.stars - q.stars || p.no - q.no; });
   }
   // 今の問題のあとで、まだ解いていない問題（なければ一覧の次）
@@ -826,6 +939,10 @@
     var host = $('t-list'); host.innerHTML = '';
     var count = PZ.filter(function (p) { return solved[p.id]; }).length;
     $('t-prog').textContent = 'クリア ' + count + ' / ' + PZ.length + ' 問';
+    // いちばん上のタブ: 詰将棋 / 実戦詰め
+    var cats = ['tsume', 'jissen'];
+    seg($('t-cat'), cats.map(function (c) { return CAT_NAME[c] + '（' + PZ.filter(function (p) { return pzCat(p) === c; }).length + '）'; }), cats.indexOf(P.cat), function (i) { P.cat = cats[i]; save('hensoku.tCat', P.cat); buildTsume(); });
+    $('t-catnote').textContent = CAT_NOTE[P.cat];
     // 東西南北で絞りこむ
     var tabs = [['all', 'ぜんぶ']].concat(['S', 'N', 'E', 'W'].map(function (d) { return [d, AN_SHORT[d]]; }));
     seg($('t-filter'), tabs.map(function (t) { return t[1]; }), tabs.map(function (t) { return t[0]; }).indexOf(P.filter), function (i) { P.filter = tabs[i][0]; save('hensoku.tFilter', P.filter); buildTsume(); });
@@ -877,7 +994,7 @@
     P.i = i; P.mine = !!list; P.pz = p; P.V = HS.VARIANTS[p.v]; P.s0 = puzzleStart(p); P.solver = new HS.Solver(P.V);
     pView(40);
     pTitle();
-    $('p-sub').innerHTML = vTitle(p.v) + (P.mine ? '' : '　' + '★★★★★'.slice(0, p.stars));
+    $('p-sub').innerHTML = vTitle(p.v) + (P.mine ? '' : '・' + CAT_NAME[pzCat(p)] + '　' + '★★★★★'.slice(0, p.stars));
     $('p-rule').textContent = (P.V.an ? AN_SHORT[P.V.anDir] + '：' + AN_RULE[P.V.anDir] : '');
     show('puzzle');
     pReset();
@@ -886,7 +1003,7 @@
   // 盤の大きさ（検討モードは下にパネルがあるので小さめ）
   function pView(extra) {
     P.viewExtra = extra;
-    P.view = BoardView($('p-board'), { w: P.V.w, h: P.V.h, hands: true, files: true, ranks: true, extra: extra, onSquare: pTap, onHand: pHand });
+    P.view = BoardView($('p-board'), { w: P.V.w, h: P.V.h, hands: true, files: true, ranks: true, reserve: extra > 40 ? 330 : 285, onSquare: pTap, onHand: pHand });
   }
   function pTitle() {
     var p = P.pz; if (!p) return;
@@ -947,6 +1064,7 @@
     else st.textContent = '攻め方の番　あと ' + (attackTotal() - usedAttack()) + ' 回指せます（' + (P.hist.length + 1) + '手目）';
     renderMoves();
     $('p-undo').disabled = !P.hist.length || P.busy || P.done;
+    Gate.refreshLabels();
   }
   // 盤の下に、ここまでの手順を棋譜で出す
   function renderMoves() {
@@ -1002,7 +1120,11 @@
     Snd.play(m.cap ? 'cap' : 'place'); if (n.check) setTimeout(function () { Snd.play('check'); }, 110); haptic(n.check ? 'medium' : 'light');
     var replies = R.legalFrom(P.V, n, false);
     if (!replies.length) { judge(); return; }                    // 詰み（または玉方が指せない）
-    if (usedAttack() >= attackTotal()) { judge(); return; }      // 手数を使い切った
+    if (usedAttack() >= attackTotal()) {                         // 手数を使い切った: 玉方が逃げる手を指して見せてから判定
+      P.busy = true; pRender();
+      setTimeout(function () { pEscape(); Snd.play('place'); haptic('light'); pRender(); setTimeout(judge, 650); }, 480);
+      return;
+    }
     if (tset.def === 'self') { pRender(); return; }              // 玉方も自分で動かす
     P.busy = true; pRender();
     setTimeout(function () {
@@ -1014,6 +1136,13 @@
     }, 480);
   }
   // 玉方の応手: 本筋どおりならその手。それ以外は、いちばん長く逃げる手（詰まない手があればそれ）
+  // 攻め方が手数を使い切って詰んでいないとき: 玉方が逃げる手を1手指す（逃げた形を見せてから判定する。その間は触れない）
+  function pEscape() {
+    var esc = P.solver.bestDefense(P.s, 1) || R.legalFrom(P.V, P.s, false)[0];
+    var n3 = R.apply(P.V, P.s, esc); n3.check = R.inCheck(P.V, n3, n3.turn);
+    P.hist.push({ s: P.s, m: esc, by: 1, escape: true }); P.s = n3;
+    P.busy = false; P.done = true;
+  }
   function defenderReply(s) {
     var k = P.hist.length;
     if (onMainLine() && P.pz.line[k]) {
@@ -1037,6 +1166,16 @@
     }
     return null;
   }
+  // 詰将棋（分類 tsume）は正解が1通り: 玉方が本筋どおりに逃げたのに、攻め方の手が本筋とちがうなら正解にしない
+  function strictLineOk(moves) {
+    var main = P.pz.line.map(decode);
+    for (var k = 0; k < moves.length; k++) {
+      if (!main[k]) return false;
+      if (R.same(moves[k], main[k])) continue;
+      return k % 2 === 1;                 // 玉方が別の（同じ長さの）逃げ方をしたら、そこから先は問わない
+    }
+    return moves.length === main.length;
+  }
   function judge() {
     P.done = true; P.busy = false;
     var s = P.s, mated = s.turn === 1 && !R.legalFrom(P.V, s, false).length && R.inCheck(P.V, s, 1);
@@ -1044,7 +1183,9 @@
     if (tset.def === 'self') {
       v.self = true; v.defs = defenseReview(P.hist);
       if (mated && findMistake()) { v.ok = false; v.unsound = true; }
+      else if (mated && v.defs.some(function (d) { return !d.best; })) { v.ok = false; v.weakDef = true; }
     }
+    if (v.ok && strictCat() && !strictLineOk(P.hist.map(function (x) { return x.m; }))) { v.ok = false; v.notUnique = true; }
     if (v.ok) {
       v.alt = !onMainLine();
       solved[P.pz.id] = true; save('hensoku.solved2', solved);
@@ -1089,14 +1230,20 @@
     var html = '';
     if (v.ok) {
       $('pres-title').textContent = '正解！'; $('pres-title').className = 'win';
-      html += '<p class="vmsg">' + mine.length + '手で詰みました。' + (v.alt ? '<br>本の手順とはちがう順番でも、ちゃんと詰んでいます（別の詰め方）。' : '<br>本の手順どおり。おみごと！') + '</p>';
+      html += '<p class="vmsg">' + mine.length + '手で詰みました。' + (!v.alt ? '<br>本の手順どおり。おみごと！' : strictCat() ? '<br>玉方が本の手順とはちがう逃げ方をしましたが、ちゃんと詰んでいます。' : '<br>本の手順とはちがう順番でも、ちゃんと詰んでいます（実戦詰めなので、別の詰め方もOK）。') + '</p>';
       html += '<div class="kl one"><div><h4>あなたの手順</h4><ol>' + mine.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ol></div></div>';
       html += defsHTML(v);
     } else {
       $('pres-title').textContent = '不正解'; $('pres-title').className = 'lose';
-      if (v.unsound) html += '<p class="vmsg">あなたの選んだ逃げ方では詰みましたが、玉方がもっと粘る逃げ方をすると' + (hiddenN(P.pz) ? '' : ' ' + P.pz.n + '手以内に') + '詰みません。<br>どの逃げ方でも詰む手順を考えよう。</p>';
+      if (v.notUnique) html += '<p class="vmsg">詰みましたが、この問題は<b>詰将棋</b>（正解は1通り）です。<br>本の手順の詰ませ方を考えよう。</p>';
+      else if (v.weakDef) html += '<p class="vmsg">玉方の逃げ方が間違っています（もっと長く逃げられます）。<br>玉方は、いちばん長く粘る逃げ方を選んでね。</p>';
+      else if (v.unsound) html += '<p class="vmsg">あなたの選んだ逃げ方では詰みましたが、玉方がもっと粘る逃げ方をすると' + (hiddenN(P.pz) ? '' : ' ' + P.pz.n + '手以内に') + '詰みません。<br>どの逃げ方でも詰む手順を考えよう。</p>';
       else if (v.readReason) html += '<p class="vmsg">その手順は正解になりません。<br>' + v.readReason + '</p>';
-      else html += '<p class="vmsg">' + (hiddenN(P.pz) ? '' : P.pz.n + '手以内に') + '詰みませんでした。<br>最初の局面から、もう一度考えてみよう。</p>';
+      else {
+        var escX = v.hist.length && v.hist[v.hist.length - 1].escape ? v.hist[v.hist.length - 1] : null;
+        html += '<p class="vmsg">' + (escX ? HS.kifu(P.V, escX.s, escX.m, v.hist.length > 1 ? v.hist[v.hist.length - 2].m.t : -1) + ' と逃げられて、' : '') +
+          (hiddenN(P.pz) ? '' : P.pz.n + '手以内に') + '詰みませんでした。<br>最初の局面から、もう一度考えてみよう。</p>';
+      }
       if (v.self) html += defsHTML(v);
       html += '<p class="vtip">どうしても分からないときは、盤の下の「答え」で正解を見られます。</p>';
     }
@@ -1110,6 +1257,12 @@
     sheet('pres', true);
   }
   // 答えを見る（1手ずつ）
+  // 答えを見る（解いたあとは無料。解く前は1日の無料回数、そのあとは動画）
+  function askAnswer() {
+    var solvedNow = P.done && P.verdict && P.verdict.ok;
+    if (solvedNow || !Gate.ads() || Gate.paid(P.pz.id)) { askYes('答えを見ますか？', '答えを見る', function () { Snd.play('select'); pAnswer(); }); return; }
+    Gate.use('answer', function () { Snd.play('select'); pAnswer(); }, { pid: P.pz.id, confirm: '答えを見ますか？', okLabel: '答えを見る' });
+  }
   function pAnswer() {
     sheet('pres', false);
     P.play = { k: 0, states: [P.s0] };
@@ -1212,6 +1365,7 @@
   // 盤は最初の局面のまま。入力した手は、盤には何も残さず、棋譜だけに出す
   function rdState() { return P.rd.states[P.rd.states.length - 1]; }
   function rdRender() {
+    Gate.refreshLabels();
     var s = rdState(), d = disp.tsume, dests = {};
     if (d.dests && (P.rd.sel !== null || P.rd.selHand)) R.moves(P.V, s).forEach(function (m) { if (P.rd.selHand ? m.f < 0 && m.d === P.rd.selHand : m.f === P.rd.sel) dests[m.t] = 1; });
     var show0 = { b: P.s0.b, hand: P.s0.hand, turn: s.turn, last: null };
@@ -1269,7 +1423,13 @@
     var s = P.s0, N = P.pz.n, states = [s];
     moves.forEach(function (m) { s = R.apply(P.V, s, m); states.push(s); });
     var end = states[states.length - 1], mated = end.turn === 1 && !R.legalFrom(P.V, end, false).length && R.inCheck(P.V, end, 1);
-    if (!mated || moves.length > N) return { ok: false, why: '最後の局面が詰みになっていません。' };
+    if (!mated || moves.length > N) {
+      if (!mated && end.turn === 1 && R.legalFrom(P.V, end, false).length) {
+        var esc = P.solver.bestDefense(end, Math.max(1, N - moves.length));
+        if (esc) return { ok: false, why: '最後の局面は詰んでいません。' + HS.kifu(P.V, end, esc, moves.length ? moves[moves.length - 1].t : -1) + ' と逃げられます。', esc: esc };
+      }
+      return { ok: false, why: '最後の局面が詰みになっていません。' };
+    }
     for (var k = 0; k < moves.length; k++) {
       var before = states[k], after = states[k + 1], left = N - k;
       if (k % 2 === 0) { if (!P.solver.and(after, left - 1)) return { ok: false, why: '途中の攻め方の手で、玉方がうまく逃げると詰まなくなります。' }; }
@@ -1284,6 +1444,7 @@
   function rdSubmit() {
     if (P.done || !P.rd.moves.length) return;
     var r = rdCheck(P.rd.moves), v = { ok: r.ok, hist: P.rd.moves.map(function (m, k) { return { m: m, by: k % 2 }; }) };
+    if (r.ok && strictCat() && !strictLineOk(P.rd.moves)) { r = { ok: false, why: 'この問題は詰将棋（正解は1通り）です。本の手順の詰ませ方を入力しよう。' }; v.ok = false; }
     P.done = true;
     if (r.ok) {
       var main = P.pz.line.map(decode);
@@ -1348,46 +1509,49 @@
     box.innerHTML = head + '<div style="opacity:.6">考え中…</div>';
     setTimeout(function () {
       if (!P.study || tk !== st.token) return;
-      var s = P.s, left = stLeft(), k = st.k, html = head, prevT = k ? st.line[k - 1].t : -1, nk = prefixKey(st.line, k);
+      var s = P.s, left = stLeft(), k = st.k, html = '<div class="show">使い方：盤で駒を動かすか、玉方の逃げ方を一覧から選ぶ。棋譜の手をタップでその局面へ</div>' + head, prevT = k ? st.line[k - 1].t : -1, nk = prefixKey(st.line, k), rev = [];
       if (st.ref) html += stBtn('ref', '△ その逃げ方を指してみる');
-      if (mated) html += '<div>詰みです。ほかの手を試すときは、棋譜の手をタップして戻ろう。</div>';
+      if (mated) html += '<div class="sturn">詰みです。ほかの手を試すときは、「◀ 1手戻る」か棋譜の手をタップ。</div>';
       else if (s.turn === 1) {
         // 玉方の番: 逃げ方の一覧（手数は、答えを見るまで出さない）
         var replies = R.legalFrom(P.V, s, false), shown = st.revealAll[nk];
         var mainNext = k < st.main.length && isMain(st.line.slice(0, k)) ? st.main[k] : null;
         var lens = shown ? defReplies(s, left) : null, best = -1;
         if (lens) lens.forEach(function (r) { if (r.total > best) best = r.total; });
-        html += '<div>☖ 玉方の逃げ方は ' + replies.length + ' 通り。選んで、その変化を自分で詰ませてみよう。</div>';
+        html += '<div class="sturn">☖ 玉方の番：逃げ方は ' + replies.length + ' 通り。タップで選んで、その変化を詰ませてみよう</div>';
         html += '<table><tr><th>逃げ方</th><th>' + (shown ? '詰むまで' : 'じょうたい') + '</th></tr>' + replies.map(function (m, j) {
           var key = nk + '|' + encM(m), r = lens ? lens[j] : null;
           var right = shown ? (r.total === Infinity ? '詰まない' : 'あと ' + r.total + ' 手' + (r.total === best ? '（最長）' : '')) : ST_LABEL[st.status[key]];
           return '<tr class="row' + (shown && r.total === best ? ' best' : '') + '" data-j="' + j + '"><td>' + kif(s, m, prevT) + (mainNext && R.same(mainNext, m) ? '　<small>本手順</small>' : '') + '</td><td>' + right + '</td></tr>';
         }).join('') + '</table>';
         st.replies = replies;
-        if (!shown) html += stBtn('all', '🔓 全部の答え（詰むまでの手数）を見る');
+        if (!shown) rev.push(stBtn('all', '逃げ方ごとの、詰むまでの手数'));
         // 直前の攻め方の手（本手順でないとき）が通じるかは、押したときだけ
         if (k > 0 && !isMain(st.line.slice(0, k))) {
           var ak = prefixKey(st.line, k);
           if (st.atkShown[ak]) html += '<div class="smsg ' + (st.atkShown[ak].ok ? 'ok' : 'bad') + '">' + st.atkShown[ak].text + '</div>' + (st.atkShown[ak].ref ? stBtn('ref2', '△ その逃げ方を指してみる') : '');
-          else html += stBtn('atk', '🔓 直前の ' + kif(st.states[k - 1], st.line[k - 1], k > 1 ? st.line[k - 2].t : -1) + ' で詰むか見る');
+          else rev.push(stBtn('atk', '直前の ' + kif(st.states[k - 1], st.line[k - 1], k > 1 ? st.line[k - 2].t : -1) + ' で詰むか'));
         }
       } else {
-        html += '<div>☗ 攻め方の番：王手で詰ませよう' + (hiddenN(P.pz) ? '' : '（残り ' + left + ' 手）') + '。</div>';
-        html += stBtn('rev', inBranch() ? '🔓 この変化の答えを見る' : '🔓 ここからの詰め手順を見る');
+        html += '<div class="sturn">☗ 攻め方の番：盤で王手を指して詰ませよう' + (hiddenN(P.pz) ? '' : '（残り ' + left + ' 手）') + '</div>';
+        rev.push(stBtn('rev', inBranch() ? 'この変化の答え' : 'ここからの詰め手順'));
       }
-      if (st.vars.length) html += '<div class="vars">変化（タップで呼び出す）' + st.vars.map(function (v, j) { return '<button data-v="' + j + '">' + v.label + '</button>'; }).join('') + '</div>';
+      if (rev.length) html += '<div class="sreveal"><div class="srh">🔓 答えを見る（押したときだけ表示）</div>' + rev.join('') + '</div>';
+      if (st.vars.length) html += '<details class="vars"' + (st.varsOpen ? ' open' : '') + '><summary>試した変化 ' + st.vars.length + ' 件（タップで呼び出す）</summary>' + st.vars.map(function (v, j) { return '<button data-v="' + j + '">' + v.label + '</button>'; }).join('') + '</details>';
       box.innerHTML = html;
       box.querySelectorAll('tr.row').forEach(function (tr) { tr.onclick = function () { stPlay(st.replies[+tr.dataset.j]); }; });
       box.querySelectorAll('[data-a]').forEach(function (b) {
         b.onclick = function () {
           var a = b.dataset.a; Snd.play('select');
-          if (a === 'all') stRevealAll();
-          else if (a === 'rev') stReveal();
-          else if (a === 'atk') stAtkReveal();
+          if (a === 'all' || a === 'rev' || a === 'atk') {
+            var fn = a === 'all' ? stRevealAll : a === 'rev' ? stReveal : stAtkReveal;
+            Gate.use('answer', fn, { pid: P.pz && P.pz.id });
+          }
           else if (a === 'ref' && st.ref) stPlay(st.ref);
           else if (a === 'ref2') { var x = st.atkShown[prefixKey(st.line, st.k)]; if (x && x.ref) stPlay(x.ref); }
         };
       });
+      var dv = box.querySelector('details.vars'); if (dv) dv.addEventListener('toggle', function () { st.varsOpen = dv.open; });
       box.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { var v = st.vars[+b.dataset.v]; st.line = v.line.slice(); st.msg = ''; st.ref = null; stRebuild(); stGo(v.line.length); }; });
     }, 30);
   }
@@ -1543,7 +1707,7 @@
     else { E.b = new Array(81).fill(0); E.hand = {}; E.id = null; E.report = null; E.b[1 * 9 + 7] = -8; }  // 新しい問題: 玉方の玉だけ（２二）
     E.imported = !!imported;
     show('edit');
-    E.view = BoardView($('e-board'), { w: 9, h: 9, hands: false, files: true, ranks: true, extra: 250, onSquare: eTap });
+    E.view = BoardView($('e-board'), { w: 9, h: 9, hands: false, files: true, ranks: true, reserve: 430, onSquare: eTap });
     eRender();
   }
   function eRender() {
@@ -1616,6 +1780,18 @@
     if (vf.done) { E.run = null; var rep = vf.report(); rep.pz = pz; E.report = rep; eRender(); eShowReport(rep); return; }
     E.run = setTimeout(tick, 30);
   }
+  // 詰将棋（駒余りなし・攻め方の手が毎回1つ＝初手・途中・最後）か 実戦詰め か
+  function eCategory(r) {
+    var why = [];
+    if (r.firstCount !== 1) why.push('初手が' + r.firstCount + '通り');
+    if (r.yozume && r.yozume.length) why.push('余詰めあり');
+    if (r.lastMulti) why.push('最後の1手がほかにもある');
+    var s = puzzleStart(r.pz), V = HS.VARIANTS[r.pz.v];
+    (r.line || []).forEach(function (x) { s = R.apply(V, s, decode(x)); });
+    var rest = s.hand[0].reduce(function (a, x) { return a + x; }, 0);
+    if (rest) why.push('攻め方の持ち駒が' + rest + '枚余る');
+    return { cat: why.length ? 'jissen' : 'tsume', why: why, rest: rest };
+  }
   // 検証の結果（答えの手順は出さない）
   function eShowReport(r) {
     var items = [];
@@ -1632,6 +1808,9 @@
         if (r.lastMulti) it('info', '最後の1手は、ほかの詰め方もあります');
         if (r.plainToo === true) it('info', 'ふつうの本将棋のルールでも同じ手数で詰みます（借りた動きを使わない問題）');
         if (r.plainToo === false) it('ok', '借りた動きを使わないと詰みません');
+        var ec = eCategory(r);
+        it(ec.cat === 'tsume' ? 'ok' : 'info', ec.cat === 'tsume' ? '分類：<b>詰将棋</b>（駒余りなし・正解は1通り）'
+          : '分類：<b>実戦詰め</b>（' + ec.why.join('・') + '）。詰将棋にするには、駒余りなし・正解1通りにします');
       }
     }
     var good = !!r.exact;
@@ -1644,7 +1823,7 @@
   }
   function eSaveAndPlay() {
     var r = E.report; if (!r || !r.exact) return;
-    var pz = r.pz, item = { id: E.id || 'u' + Date.now().toString(36), v: pz.v, n: pz.n, rows: pz.rows, hand: pz.hand, line: r.line, lastMulti: r.lastMulti, stars: Math.min(5, 1 + (pz.n >> 1)), custom: true, imported: E.imported, created: Date.now() };
+    var pz = r.pz, item = { id: E.id || 'u' + Date.now().toString(36), v: pz.v, n: pz.n, rows: pz.rows, hand: pz.hand, line: r.line, lastMulti: r.lastMulti, cat: eCategory(r).cat, stars: Math.min(5, 1 + (pz.n >> 1)), custom: true, imported: E.imported, created: Date.now() };
     var k = mine.findIndex(function (q) { return q.id === item.id; });
     if (k >= 0) mine[k] = item; else mine.unshift(item);
     mine.forEach(function (q, j) { q.no = mine.length - j; });
@@ -2018,7 +2197,7 @@
   }
   function createRoom(id) {
     var rid = realId(id), code = ShogiNet.newCode(6);
-    ON.cfgPending = { menuId: id, rid: rid, opt: { all: setupSel.all, H: setupSel.H, fxN: setupSel.fxN, fxShow: setupSel.fxShow }, seed: (Math.random() * 2147483647) | 0, host: Math.random() < 0.5 ? 0 : 1, clock: JSON.parse(JSON.stringify(setupSel.clock)) };
+    ON.cfgPending = { menuId: id, rid: rid, opt: { all: setupSel.all, H: setupSel.H, fxN: setupSel.fxN, fxShow: setupSel.fxShow, show: load('hensoku.trumpShow', true) }, seed: (Math.random() * 2147483647) | 0, host: Math.random() < 0.5 ? 0 : 1, clock: JSON.parse(JSON.stringify(setupSel.clock)) };
     sheet('setup', false);
     if (!openRoom(code, true)) return;
     showOnline(); openRoomSheet(code, true);
@@ -2126,12 +2305,20 @@
     return CLOCK.run(c, st, Date.now() - ON.turnStart);
   }
   function paintClocks() {
-    var c = G.cfg && G.cfg.clock;
+    var c = G.mode === 'online' && G.cfg && G.cfg.clock;
     for (var p = 0; p < 2; p++) {
       var el = $('pl' + p).querySelector('.sc');
-      if (!c || c.kind === 'none') { el.textContent = ''; el.classList.remove('clk', 'low'); continue; }
-      var v = clockNow(p);
-      el.textContent = '⏱ ' + CLOCK.text(c, v); el.classList.add('clk'); el.classList.toggle('low', CLOCK.low(c, v) && !G.done);
+      // 持ち駒の段の名前の下にも時計を出す（対局画面では上の名札の段をしまうので）
+      var hl = document.querySelector('#g-board [data-clk="' + p + '"]');
+      if (!c || c.kind === 'none') {
+        if (G.ad && G.ad.kind === 'hasami') { /* はさみ将棋は取った数（refresh で書く） */ } else el.textContent = '';
+        el.classList.remove('clk', 'low');
+        if (hl) { hl.textContent = '持ち駒'; hl.classList.remove('clk', 'low'); }
+        continue;
+      }
+      var v = clockNow(p), low = CLOCK.low(c, v) && !G.done;
+      el.textContent = '⏱ ' + CLOCK.text(c, v); el.classList.add('clk'); el.classList.toggle('low', low);
+      if (hl) { hl.textContent = '⏱ ' + CLOCK.text(c, v); hl.classList.add('clk'); hl.classList.toggle('low', low); }
     }
   }
   function startTick() { stopTick(); ON.tick = setInterval(tickOnline, 250); }
@@ -2182,7 +2369,10 @@
         if (G.done) leave(); else askYes('オンライン対戦をやめますか？', 'やめる（投了）', leave, { danger: true, sub: '対局中なので、投了になります' });
         return;
       }
-      clearTimeout(G.timer); G.busy = false; sheet('result', false); buildVariants(); show('variants');
+      var back = function () { clearTimeout(G.timer); G.busy = false; sheet('result', false); buildVariants(); show('variants'); };
+      // 対局の途中なら、ひとこと確認してからもどる（途中の対局は記録されない）
+      if (!G.done && G.hist && G.hist.length > 1) askYes('対局をやめて、ルールえらびにもどりますか？', 'やめる', back, { danger: true, sub: 'この対局は記録されません' });
+      else back();
     });
     $('g-undo').addEventListener('click', undo);
     $('g-resign').addEventListener('click', resign);
@@ -2208,10 +2398,15 @@
     $('rp-flip').addEventListener('click', function () { RP.flip = !RP.flip; Snd.play('select'); rpRender(); });
     $('rp-try').addEventListener('click', function () { rpStop(); tryFrom(); });
     $('p-back').addEventListener('click', function () { sheet('pres', false); if (P.mine) { buildMine(); show('mine'); } else { buildTsume(); show('tsume'); } });
-    $('p-hint').addEventListener('click', function () { if (P.done || P.busy) return; if (selfDef()) { toast('玉方の番です'); return; } P.hint = Math.min(2, P.hint + 1); Snd.play('select'); pRender(); });
+    $('p-hint').addEventListener('click', function () {
+      if (P.done || P.busy || P.play) return; if (selfDef()) { toast('玉方の番です'); return; }
+      if (P.hint >= 2) { toast('この手のヒントは、もう全部出ています'); return; }
+      if (!hintMove()) return;
+      Gate.use('hint', function () { P.hint = Math.min(2, P.hint + 1); Snd.play('select'); pRender(); });
+    });
     $('p-retry').addEventListener('click', function () { Snd.play('select'); pReset(); });
     $('p-undo').addEventListener('click', pUndo);
-    $('p-answer').addEventListener('click', function () { askYes('答えを見ますか？', '答えを見る', function () { Snd.play('select'); pAnswer(); }); });
+    $('p-answer').addEventListener('click', function () { askAnswer(); });
     $('p-disp').addEventListener('click', function () { Snd.play('select'); openDisp(); });
     $('pd-close').addEventListener('click', function () { sheet('pdisp', false); });
     $('pdisp').addEventListener('click', function (e) { if (e.target.id === 'pdisp') sheet('pdisp', false); });
@@ -2224,7 +2419,7 @@
     $('r-del').addEventListener('click', rdDel);
     $('r-clear').addEventListener('click', function () { askYes('入力した手を、ぜんぶけしますか？', 'ぜんぶけす', rdClear); });
     $('r-submit').addEventListener('click', function () { Snd.init(); rdSubmit(); });
-    $('r-answer').addEventListener('click', function () { askYes('答えを見ますか？', '答えを見る', function () { Snd.play('select'); pAnswer(); }); });
+    $('r-answer').addEventListener('click', function () { askAnswer(); });
     $('r-disp').addEventListener('click', function () { Snd.play('select'); openDisp(); });
     $('s-first').addEventListener('click', function () { P.study.msg = ''; stGo(0); });
     $('s-prev').addEventListener('click', function () { P.study.msg = ''; stGo(P.study.k - 1); });
@@ -2302,12 +2497,14 @@
     setup: openSetup, variants: function () { buildVariants(); show('variants'); }, tsume: function () { buildTsume(); show('tsume'); },
     // CPU どうしで何手か進める（同期）
     auto: function (n, lv, ms) { for (var k = 0; k < n; k++) { var s = curS(); if (G.ad.over(s)) break; var m = G.ad.ai(s, lv === undefined ? 1 : lv, ms || 40); G.moves.push(m); G.hist.push(G.ad.play(s, m)); } clearTimeout(G.timer); G.busy = false; refresh(); },
+    Gate: Gate, GATE: GATE, askAnswer: function () { askAnswer(); },
     tap: tapSquare, hand: tapHand, puzzle: openPuzzle, ptap: pTap, phand: pHand, answer: pAnswer, step: pStep, hint: function () { P.hint = Math.min(2, P.hint + 1); pRender(); },
     // 詰将棋: 攻め方の手を指す（玉方は同期で応じる）。テストでは待たない
     pmove: function (str) {
       var m = decode(str), n = R.apply(P.V, P.s, m); n.check = R.inCheck(P.V, n, n.turn);
       P.hist.push({ s: P.s, m: m, by: 0 }); P.s = n;
-      if (!R.legalFrom(P.V, n, false).length || usedAttack() >= attackTotal()) { judge(); return P.verdict; }
+      if (!R.legalFrom(P.V, n, false).length) { judge(); return P.verdict; }
+      if (usedAttack() >= attackTotal()) { pEscape(); judge(); return P.verdict; }
       var reply = defenderReply(P.s), n2 = R.apply(P.V, P.s, reply); n2.check = R.inCheck(P.V, n2, n2.turn);
       P.hist.push({ s: P.s, m: reply, by: 1 }); P.s = n2; pRender(); return null;
     },
@@ -2320,6 +2517,8 @@
     everify: eVerify, ereport: function () { return E.report; }, esave: eSaveAndPlay, share: openShare, doShare: doShare, shareNow: function () { return shareNow; },
     online: { ON: ON, createRoom: createRoom, joinRoom: joinRoom, setClock: setClock, beginOnline: beginOnline, offerDraw: offerDraw, hostRematch: hostRematch, resign: function () { if (ON.net) ON.net.resign(); G.done = true; finish({ winner: 1 - G.human, text: 'あなたが投了' }); }, kifuText: function () { return G.lastRec ? kifuText(G.lastRec) : ''; }, setPick: function (v) { ON.pick = v; }, openSetup: openSetup, leave: leaveOnline, resume: resumeOnline, show: showOnline },
     fx: { onCard: onFxCard, tap: fxTap, sel: function () { return G.fxSel; } },
+    trumpShowNow: function () { return trumpShow(); },
+    setSetup: function (o) { Object.keys(o).forEach(function (k) { if (k === 'trumpShow') save('hensoku.trumpShow', o[k]); else setupSel[k] = o[k]; }); },
     importCode: function (code) { $('imp-text').value = code; doImport(); return $('imp-err').textContent; }
   };
 })();
