@@ -8,6 +8,7 @@ Allow: /shogi/
 Allow: /madoshizuku/
 Allow: /gohan/
 Allow: /nattofilm/
+Allow: /kakezan/
 Allow: /yudetamago/
 Allow: /tsundoku/
 Allow: /notre-app/
