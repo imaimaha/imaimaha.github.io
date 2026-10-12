@@ -11,4 +11,5 @@ Allow: /nattofilm/
 Allow: /yudetamago/
 Allow: /tsundoku/
 Allow: /notre-app/
+Allow: /sanpobingo/
 Disallow: /
