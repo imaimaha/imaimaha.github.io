@@ -10,4 +10,5 @@ Allow: /gohan/
 Allow: /nattofilm/
 Allow: /yudetamago/
 Allow: /tsundoku/
+Allow: /notre-app/
 Disallow: /
