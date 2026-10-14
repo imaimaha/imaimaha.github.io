@@ -13,4 +13,7 @@ Allow: /yudetamago/
 Allow: /tsundoku/
 Allow: /notre-app/
 Allow: /sanpobingo/
+Allow: /hitofude/
+Allow: /okazu/
+Allow: /suji/
 Disallow: /
