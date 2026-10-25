@@ -16,6 +16,15 @@ Deno.serve(async (req) => {
   }
 
   const sb = createClient(SB_URL, SB_KEY)
+
+  // LINE 連携のオン/オフ (settings.line_enabled = 'false' で LINE 送信を止める。Web Push は継続)
+  const { data: enabledSetting } = await sb
+    .from('settings')
+    .select('value')
+    .eq('key', 'line_enabled')
+    .maybeSingle()
+  const lineEnabled = String(enabledSetting?.value ?? 'true') !== 'false'
+
   let to: string | null = null
   let partnerUserId: string | null = null
 
@@ -28,7 +37,9 @@ Deno.serve(async (req) => {
     .eq('key', 'line_group_id')
     .maybeSingle()
 
-  if (groupSetting?.value) {
+  if (!lineEnabled) {
+    // LINE オフ: 宛先解決をスキップ
+  } else if (groupSetting?.value) {
     to = groupSetting.value
   } else if (sender_id) {
     console.warn('[line-notify] line_group_id が未設定のため個人トークに送信します')
@@ -54,7 +65,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  const res = await fetch('https://api.line.me/v2/bot/message/push', {
+  const res = lineEnabled ? await fetch('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -64,9 +75,9 @@ Deno.serve(async (req) => {
       to,
       messages: [lineMessage],
     }),
-  })
+  }) : null
 
-  if (!res.ok) {
+  if (res && !res.ok) {
     const err = await res.text()
     return json({ error: err }, 500)
   }
