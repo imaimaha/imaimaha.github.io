@@ -16,6 +16,7 @@
     { "key": "nattofilm", "id": "6821884133", "name": "ねばっと 納豆フィルム剥がし", "text": "ねばねばの糸を巻き取ってはがす", "icon": "icons/nattofilm.png", "cat": "relax" },
     { "key": "madoshizuku", "id": "6821822966", "name": "まどのしずく", "text": "雨の窓で、しずくを集めて大きくする", "icon": "icons/madoshizuku.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
+    { "key": "pokerstudy", "id": "6823270157", "name": "プリフロップ練習帳", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
     { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" }
   ]
 }
