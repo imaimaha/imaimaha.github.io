@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "updated": "2026-11-10",
+  "categories": [
+    { "id": "puzzle", "label": "パズル・脳トレ" },
+    { "id": "relax", "label": "のんびり" },
+    { "id": "versus", "label": "対戦" }
+  ],
+  "apps": [
+    { "key": "sujinoheya", "id": "6825416177", "name": "すうじのへや", "text": "へや割りと住人さがしの数字パズル", "icon": "icons/sujinoheya.png", "cat": "puzzle" },
+    { "key": "hitofude", "id": "6823269398", "name": "ひとふでいもむし", "text": "なぞって葉っぱを食べる一筆書き", "icon": "icons/hitofude.png", "cat": "puzzle" },
+    { "key": "okazutsume", "id": "6823270044", "name": "おかず詰めパズル", "text": "おかずを詰めて列をそろえる", "icon": "icons/okazutsume.png", "cat": "puzzle" },
+    { "key": "kakezanrunner", "id": "6821955613", "name": "暗算ランナー", "text": "計算ゲートをくぐって数をふやす", "icon": "icons/kakezanrunner.png", "cat": "puzzle" },
+    { "key": "jimidrive", "id": "6818812573", "name": "ナンバー暗算ドライブ", "text": "車のナンバーの数字で10を作る暗算", "icon": "icons/jimidrive.png", "cat": "puzzle" },
+    { "key": "yudetamago", "id": "6821884836", "name": "つるっと ゆでたまご剥き", "text": "ゆでたまごの殻をつるっとむく", "icon": "icons/yudetamago.png", "cat": "relax" },
+    { "key": "nattofilm", "id": "6821884133", "name": "ねばっと 納豆フィルム剥がし", "text": "ねばねばの糸を巻き取ってはがす", "icon": "icons/nattofilm.png", "cat": "relax" },
+    { "key": "madoshizuku", "id": "6821822966", "name": "まどのしずく", "text": "雨の窓で、しずくを集めて大きくする", "icon": "icons/madoshizuku.png", "cat": "relax" },
+    { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
+    { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" }
+  ]
+}
