@@ -1,10 +1,11 @@
 {
   "version": 1,
-  "updated": "2026-11-10",
+  "updated": "2026-11-14",
   "categories": [
     { "id": "puzzle", "label": "パズル・脳トレ" },
     { "id": "relax", "label": "のんびり" },
-    { "id": "versus", "label": "対戦" }
+    { "id": "versus", "label": "対戦" },
+    { "id": "life", "label": "くらし・記録" }
   ],
   "apps": [
     { "key": "sujinoheya", "id": "6825416177", "name": "すうじのへや", "text": "へや割りと住人さがしの数字パズル", "icon": "icons/sujinoheya.png", "cat": "puzzle" },
@@ -17,6 +18,8 @@
     { "key": "madoshizuku", "id": "6821822966", "name": "まどのしずく", "text": "雨の窓で、しずくを集めて大きくする", "icon": "icons/madoshizuku.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
     { "key": "pokerstudy", "id": "6823270157", "name": "プリフロップ練習帳", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
-    { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" }
+    { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" },
+    { "key": "sanpobingo", "id": "6821944194", "name": "おさんぽ日記", "text": "歩数と行った場所の日記と、散歩ビンゴ", "icon": "icons/sanpobingo.png", "cat": "life" },
+    { "key": "tsundokutower", "id": "6821840892", "name": "積読記録", "text": "積んだ本をタワーにして、読んで崩す", "icon": "icons/tsundokutower.png", "cat": "life" }
   ]
 }
