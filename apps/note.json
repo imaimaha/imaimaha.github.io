@@ -1,30 +1,37 @@
 {
  "profile": "https://note.com/redemarrage22",
+ "source": "api",
+ "count": 5,
  "items": [
   {
    "title": "NISAの積立1000円から",
    "url": "https://note.com/redemarrage22/n/n0ee633fb35ab",
-   "date": "2026-11-18"
+   "date": "2026-11-18",
+   "thumb": ""
   },
   {
    "title": "理想の休日 〜ごろごろ部門〜",
    "url": "https://note.com/redemarrage22/n/nc97c7734f0d6",
-   "date": "2026-11-17"
+   "date": "2026-11-17",
+   "thumb": ""
   },
   {
    "title": "AIの台頭によるSE職への不安",
    "url": "https://note.com/redemarrage22/n/n4b15d4016dc1",
-   "date": "2026-11-16"
+   "date": "2026-11-16",
+   "thumb": ""
   },
   {
    "title": "ブラック企業を誇ったらいいじゃん",
    "url": "https://note.com/redemarrage22/n/n8618a7b9bb95",
-   "date": "2026-11-13"
+   "date": "2026-11-13",
+   "thumb": ""
   },
   {
    "title": "【自己紹介】26歳、新卒で入った会社をもうすぐやめる",
    "url": "https://note.com/redemarrage22/n/n77b86dc8f40e",
-   "date": "2026-11-11"
+   "date": "2026-11-11",
+   "thumb": "https://assets.st-note.com/production/uploads/images/334786889/rectangle_large_type_2_6bd9fe8a8fbe8a58dfb1c292a359c928.png?fit=bounds&quality=85&width=1280"
   }
  ]
 }
