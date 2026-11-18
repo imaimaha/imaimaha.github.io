@@ -173,7 +173,7 @@
     // ステージ1 は「はこぶ」だけおぼえる: 答えの向きで出す（回すのは つぎから）
     if (o.index === 0 && st.sol) { var qi = 0; st.sol.forEach(function (mv) { if (mv[0] === 0) G.rot[qi++] = mv[1]; }); }
     // 小さい画面（SE）でも切れないように短く（2026-11-18）: 今日は「今日のおべんとう」、過去の問題は「11/17 のおべんとう」
-    $('pl-title').textContent = G.daily ? (st.day !== OB.dayKey() ? +st.day.slice(5, 7) + '/' + +st.day.slice(8, 10) + ' のおべんとう' : '今日のおべんとう') : st.id + '. ' + st.name;
+    $('pl-title').textContent = G.daily ? (st.day !== OB.dayKey() ? +st.day.slice(5, 7) + '/' + +st.day.slice(8, 10) + ' のおべんとう' : G.ny ? 'お正月のおべんとう' : '今日のおべんとう') : st.id + '. ' + st.name;
     show('play');
     tellScreen('play');
     paintMute();
@@ -239,6 +239,7 @@
     }
   }
   function drawMini(canvas, k) {
+    DR.skin = null;
     var c = canvas.getContext('2d'), sh = FOODS[k].cells, d = DR.dims(sh), s = 40 / Math.max(d[0], d[1], 2);
     DR.food(c, k, sh, (44 - d[1] * s) / 2, (44 - d[0] * s) / 2, s, { face: null });
   }
@@ -469,7 +470,7 @@
     if (OB.goalDone(G.ctx, G.s)) { G.over = true; clockStop(); pstat('clear', pkey(), clockMs() / 1000); G.winT = performance.now() + 380; refreshUI(); later(stageClear, 1350); Snd.win(); haptic('goal'); return; }
     if (OB.stuck(G.ctx, G.s)) {
       G.over = true; clockStop(); pstat('fail', pkey()); refreshUI();
-      var why = G.s.idx >= G.ctx.pieces.length && G.s.hold < 0 ? 'おかずが なくなっちゃった…' : '「' + FOODS[curPiece(0) ? curPiece(0).k : curPiece(1).k].name + '」の入るすきまが ない…';
+      var why = G.s.idx >= G.ctx.pieces.length && G.s.hold < 0 ? 'おかずが なくなっちゃった…' : '「' + DR.nameOf(curPiece(0) ? curPiece(0).k : curPiece(1).k) + '」の入るすきまが ない…';
       later(function () { stageFail(why); }, 400);   // 行き止まりは すぐ知らせる（1.0.6 ビルド 8 から 0.65秒 → 0.4秒）
     }
   }
@@ -621,6 +622,7 @@
   function draw() {
     var now = clock(), c = cx, s = L.s, N = G.N, t = (now - G.t0) / 1000;
     c.clearRect(0, 0, L.W, L.H);
+    DR.skin = G.ny ? 'osechi' : null;   // お正月の今日のおべんとう
     // ゆれ（小皿の「回せない」）
     DR.box(c, L.gx, L.gy, s, N);
     var gr = groups();
@@ -740,14 +742,15 @@
     if (winning) {
       var wa = Math.min(1, (now - G.winT) / 350);
       c.save(); c.translate(L.gx + s * N / 2, L.gy + s * N / 2); c.scale(0.6 + 0.4 * ease(wa), 0.6 + 0.4 * ease(wa)); c.globalAlpha = wa;
-      c.font = '900 ' + Math.round(Math.min(44, s * N / 6.5)) + 'px "Hiragino Maru Gothic ProN", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.lineWidth = 10; c.strokeStyle = '#fff'; c.strokeText('いただきます！', 0, 0); c.fillStyle = '#e8604c'; c.fillText('いただきます！', 0, 0);
+      var wt = G.ny ? 'あけましておめでとう！' : 'いただきます！';   // お正月の今日のおべんとう
+      c.font = '900 ' + Math.round(Math.min(44, s * N / (G.ny ? wt.length + 1.5 : 6.5))) + 'px "Hiragino Maru Gothic ProN", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.lineWidth = 10; c.strokeStyle = '#fff'; c.strokeText(wt, 0, 0); c.fillStyle = G.ny ? '#c0262d' : '#e8604c'; c.fillText(wt, 0, 0);
       c.restore();
       if (!G.confetti) {
         G.confetti = true;
         for (var q = 0; q < 40; q++) {
           var ks = OB.KINDS[q % OB.KINDS.length];
-          G.parts.push({ x: L.gx + Math.random() * s * N, y: L.gy - 10, vx: (Math.random() - 0.5) * 120, vy: Math.random() * -160, life: 1.4, t: 0, col: FOODS[ks].color, r: s * 0.1 });
+          G.parts.push({ x: L.gx + Math.random() * s * N, y: L.gy - 10, vx: (Math.random() - 0.5) * 120, vy: Math.random() * -160, life: 1.4, t: 0, col: G.ny ? ['#d9b44a', '#c0262d', '#fff7f2'][q % 3] : FOODS[ks].color, r: s * 0.1 });
         }
       }
     } else G.confetti = false;
@@ -843,9 +846,20 @@
   // 今日のおべんとう（ブラウザ版）
   // =====================================================================
   var PZ = OB.dailyPuzzle(DAY);
+  // ---------- お正月（毎年 12/29〜1/7 日本時間。../oshogatsu.js。見た目とことばだけ・問題はそのまま。アプリの 1.0.10 と同じ） ----------
+  function shogatsuOn() { return !!(root.Shogatsu && Shogatsu.active()); }
+  var NY = shogatsuOn();
+  function shogatsuDeco() {
+    document.body.classList.toggle('shogatsu', NY);
+    if (!NY) return;
+    Shogatsu.banner(document.querySelector('.wp-app'), document.querySelector('.wp-how'));
+    var h = document.querySelector('.wp-head h1'); if (h && h.firstChild && h.firstChild.nodeType === 3) h.firstChild.nodeValue = '🎍 お正月のおべんとう';
+  }
+  shogatsuDeco();
   function startDaily(day, keep) {
     begin(PZ, { daily: true });
     G.past = false; G.again = !!WP.record(); G.track = false; G.hintOK = false;
+    G.ny = NY;   // お正月の今日のおべんとう（絵とことばだけ。問題は同じ）
     G.restarts = keep ? keep.restarts : 0; G.ms = keep ? keep.ms : 0; G.hints = 0;
     if (keep) G.started = true;
     refreshUI();
@@ -868,14 +882,16 @@
     var gone = !r.left;
     var row = (gone ? WP.tierRow(r.sec, [60, 120, 180, 300], '🍙', '⬜', '🍱') : '🍱のこり' + r.left) + (r.restarts ? ' ↺' + r.restarts : '');
     var info = document.createElement('p'); info.textContent = 'のこり ' + r.left + 'こ・やりなおし ' + r.restarts + '回';
-    WP.showClear({ sec: r.sec, fresh: fresh, head: gone ? 'ぴったり！ いただきます！' : 'ごちそうさま！', emoji: gone ? '🍱' : '🍙', row: row, extra: [info],
+    var ex = [info];
+    if (NY) { var ny = document.createElement('p'); ny.className = 'ok-ny'; ny.textContent = (gone ? 'ぴったり！ ' : '') + 'お正月のおべんとう（1/7 まで）。ことしも よろしくね'; ex.unshift(ny); }
+    WP.showClear({ sec: r.sec, fresh: fresh, head: NY ? 'あけましておめでとう！' : gone ? 'ぴったり！ いただきます！' : 'ごちそうさま！', emoji: NY ? '🎍' : gone ? '🍱' : '🍙', row: row, extra: ex,
       note: prev ? '今日の記録（1回目）: のこり ' + prev.left + 'こ・' + WP.fmt(prev.sec) : null,
       again: function () { startDaily(DAY); } });
   }
 
   // 自動テスト用（答えは問題からいつでも計算できるので、出してもこまらない）
   root.__webPlay = {
-    puzzle: function () { return PZ; }, done: function () { return !!(G && G.over); },
+    puzzle: function () { return PZ; }, ny: function () { return NY; }, skin: function () { return DR.skin; }, done: function () { return !!(G && G.over); },
     geom: function (src) { var g = trayGeom(src); var sh = shapeOf(src); return { tray: g && { cx: g.cx, cy: g.cy }, dims: sh && DR.dims(sh), L: { gx: L.gx, gy: L.gy, s: L.s, hold: L.hold }, lift: liftPx(), rot: G.rot[pieceIndex(src)] % FOODS[curPiece(src).k].rots.length, placed: G.s.placed, hold: G.s.hold }; }
   };
 

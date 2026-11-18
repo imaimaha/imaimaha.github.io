@@ -100,11 +100,77 @@
     ctx.restore();
   }
 
+  // お正月の盤（v.ny）: 葉っぱに 松・竹・梅、石は 鏡もち
+  function drawShochikubai(ctx, x, y, s, kind) {
+    ctx.save(); ctx.lineCap = 'round';
+    if (kind === 0) {   // 松: 扇のような松葉 3つ
+      ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = Math.max(1.2, s * 0.035);
+      [[0.5, 0.5, 0.2], [0.32, 0.66, 0.15], [0.68, 0.66, 0.15]].forEach(function (f) {
+        for (var a = -3; a <= 3; a++) { var an = -Math.PI / 2 + a * 0.32; ctx.beginPath(); ctx.moveTo(x + s * f[0], y + s * f[1]); ctx.lineTo(x + s * f[0] + Math.cos(an) * s * f[2], y + s * f[1] + Math.sin(an) * s * f[2]); ctx.stroke(); }
+      });
+    } else if (kind === 1) {   // 竹: ふしのある幹と葉
+      ctx.fillStyle = 'rgba(255,255,255,.7)'; rr(ctx, x + s * 0.3, y + s * 0.18, s * 0.11, s * 0.66, s * 0.05); ctx.fill();
+      ctx.fillStyle = 'rgba(80,140,50,.6)'; ctx.fillRect(x + s * 0.3, y + s * 0.44, s * 0.11, s * 0.03);
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.beginPath(); ctx.ellipse(x + s * 0.56, y + s * 0.4, s * 0.17, s * 0.05, -0.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + s * 0.6, y + s * 0.58, s * 0.16, s * 0.05, 0.25, 0, 7); ctx.fill();
+    } else {   // 梅: もも色の花
+      var cx = x + s * 0.5, cy = y + s * 0.5;
+      ctx.fillStyle = '#ff9fb4';
+      for (var q = 0; q < 5; q++) { var an2 = q * 1.2566 - Math.PI / 2; ctx.beginPath(); ctx.arc(cx + Math.cos(an2) * s * 0.13, cy + Math.sin(an2) * s * 0.13, s * 0.12, 0, 7); ctx.fill(); }
+      ctx.fillStyle = '#fff3c4'; ctx.beginPath(); ctx.arc(cx, cy, s * 0.07, 0, 7); ctx.fill();
+      ctx.fillStyle = '#e0a100'; for (q = 0; q < 5; q++) { var an3 = q * 1.2566 - Math.PI / 2; ctx.beginPath(); ctx.arc(cx + Math.cos(an3) * s * 0.05, cy + Math.sin(an3) * s * 0.05, s * 0.018, 0, 7); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+  function drawKagami(ctx, x, y, s, p) {
+    ctx.fillStyle = '#efe3cc'; rr(ctx, x + p, y + p, s - 2 * p, s - 2 * p, s * 0.3); ctx.fill();
+    // 三方（台）
+    ctx.fillStyle = '#d9b36c'; rr(ctx, x + s * 0.16, y + s * 0.72, s * 0.68, s * 0.14, s * 0.03); ctx.fill();
+    ctx.fillStyle = '#b8914c'; ctx.fillRect(x + s * 0.24, y + s * 0.84, s * 0.52, s * 0.05);
+    // 紅白の紙
+    ctx.fillStyle = '#e53950'; ctx.beginPath(); ctx.moveTo(x + s * 0.2, y + s * 0.72); ctx.lineTo(x + s * 0.5, y + s * 0.62); ctx.lineTo(x + s * 0.8, y + s * 0.72); ctx.closePath(); ctx.fill();
+    // おもち 2だん
+    ctx.fillStyle = '#fffdf7'; ctx.strokeStyle = '#d8cdb8'; ctx.lineWidth = Math.max(1, s * 0.025);
+    ctx.beginPath(); ctx.ellipse(x + s * 0.5, y + s * 0.6, s * 0.3, s * 0.13, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x + s * 0.5, y + s * 0.45, s * 0.22, s * 0.11, 0, 0, 7); ctx.fill(); ctx.stroke();
+    // だいだい
+    ctx.fillStyle = '#ff9a1f'; ctx.beginPath(); ctx.arc(x + s * 0.5, y + s * 0.3, s * 0.1, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4caf50'; ctx.beginPath(); ctx.ellipse(x + s * 0.58, y + s * 0.2, s * 0.07, s * 0.03, -0.5, 0, 7); ctx.fill();
+  }
+  // いもむしの はちまき（紅白）
+  function drawHachimaki(ctx, hc, hr, s) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(hc[0], hc[1], hr, 0, 7); ctx.clip();
+    var top = hc[1] - hr * 0.78, h = hr * 0.32;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(hc[0] - hr, top, hr * 2, h);
+    ctx.fillStyle = '#e53935';
+    for (var q = -4; q <= 4; q++) { ctx.beginPath(); var bx = hc[0] + q * hr * 0.28; ctx.moveTo(bx, top); ctx.lineTo(bx + hr * 0.12, top); ctx.lineTo(bx + hr * 0.26, top + h); ctx.lineTo(bx + hr * 0.14, top + h); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+    // むすび目（右）
+    var kx = hc[0] + hr * 0.86, ky = top + h / 2;
+    ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.ellipse(kx + s * 0.06, ky - s * 0.04, s * 0.07, s * 0.035, -0.6, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(kx + s * 0.07, ky + s * 0.04, s * 0.07, s * 0.035, 0.6, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#c62828'; ctx.lineWidth = Math.max(1, s * 0.015); ctx.stroke();
+  }
+  // ちょうちょのあとの帯「謹賀新年」
+  function drawNewYear(ctx, W, H, s, a) {
+    var w = Math.min(W * 0.78, s * 5.2), h = Math.max(30, Math.min(s * 0.95, w * 0.2)), x = (W - w) / 2, y = H * 0.66;
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(60,20,10,.18)'; rr(ctx, x + 2, y + 4, w, h, h * 0.3); ctx.fill();
+    ctx.fillStyle = '#b3202a'; rr(ctx, x, y, w, h, h * 0.3); ctx.fill();
+    ctx.strokeStyle = '#e2b64a'; ctx.lineWidth = Math.max(1.5, h * 0.06); rr(ctx, x + h * 0.12, y + h * 0.12, w - h * 0.24, h - h * 0.24, h * 0.22); ctx.stroke();
+    ctx.fillStyle = '#fff6dc'; ctx.font = '700 ' + Math.round(h * 0.52) + 'px "Hiragino Mincho ProN","Hiragino Sans",serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('謹 賀 新 年', W / 2, y + h * 0.53);
+    ctx.restore();
+  }
+
   function drawCell(v, i) {
     var b = v.b, s = v.cell, ctx = v.ctx, k = b.kind[i], K = HF.K;
     if (k === K.VOID) return;
     var x = (i % b.W) * s, y = Math.floor(i / b.W) * s, p = Math.max(1, s * 0.05), cnt = v.s ? v.s.cnt[i] : 0;
     var c = cxy(b, i, s);
+    if (k === K.ROCK && v.ny) { drawKagami(ctx, x, y, s, p); return; }
     if (k === K.ROCK) {
       ctx.fillStyle = COL.rock; rr(ctx, x + p, y + p, s - 2 * p, s - 2 * p, s * 0.3); ctx.fill();
       ctx.fillStyle = '#d6d0c6'; rr(ctx, x + p * 2.4, y + p * 2.2, s * 0.42, s * 0.28, s * 0.14); ctx.fill();
@@ -165,7 +231,7 @@
     }
     ctx.fillStyle = ((i % b.W) + Math.floor(i / b.W)) % 2 ? COL.leaf : COL.leaf2;
     rr(ctx, x + p, y + p, s - 2 * p, s - 2 * p, s * 0.22); ctx.fill();
-    if (k === K.LEAF) drawLeafVein(ctx, x, y, s);
+    if (k === K.LEAF) { if (v.ny) drawShochikubai(ctx, x, y, s, ((i % b.W) + Math.floor(i / b.W) * 2) % 3); else drawLeafVein(ctx, x, y, s); }
     if (k === K.ARROW) drawArrow(ctx, c[0], c[1], s, b.arrow[i], '#fff');
     if (k === K.MUSH) drawMush(ctx, c[0], c[1] + s * 0.06, s, 1);
     if (k === K.BERRY) {
@@ -222,6 +288,7 @@
     else ctx.arc(hc[0], hc[1] + s * 0.06, s * 0.09, 0.15 * Math.PI, 0.85 * Math.PI);
     ctx.stroke();
     ctx.fillStyle = 'rgba(255,120,120,.45)'; ctx.beginPath(); ctx.arc(hc[0] - s * 0.2, hc[1] + s * 0.07, s * 0.05, 0, 7); ctx.arc(hc[0] + s * 0.2, hc[1] + s * 0.07, s * 0.05, 0, 7); ctx.fill();
+    if (v.ny) drawHachimaki(ctx, hc, hr, s);
     if (v.stuck) { ctx.fillStyle = '#7fc8ff'; ctx.beginPath(); ctx.moveTo(hc[0] + s * 0.3, hc[1] - s * 0.3); ctx.quadraticCurveTo(hc[0] + s * 0.38, hc[1] - s * 0.16, hc[0] + s * 0.3, hc[1] - s * 0.13); ctx.quadraticCurveTo(hc[0] + s * 0.22, hc[1] - s * 0.16, hc[0] + s * 0.3, hc[1] - s * 0.3); ctx.fill(); }
   }
 
@@ -326,18 +393,29 @@
       ctx.beginPath(); ctx.arc(bx + Math.cos(ang) * rad, by + Math.sin(ang) * rad, s * 0.05 * (1 + (p % 3)), 0, 7); ctx.fill();
     }
     drawButterfly(ctx, bx, by, size, e * 14, an.wing);
+    if (v.ny && e > 1.7) drawNewYear(ctx, W, H, s, reducedMotion() ? 1 : Math.min(1, (e - 1.7) / 0.5));
   }
 
   // ---------------------------------------------------------------------------
   // あそぶ
   // ---------------------------------------------------------------------------
   var PZ = HF.daily(DAY);
+  // お正月（毎年 12/29〜1/7 日本時間。../oshogatsu.js。見た目だけ・盤はそのまま。アプリの 1.0.12 と同じ）
+  function shogatsuOn() { return !!(root.Shogatsu && Shogatsu.active()); }
+  function reducedMotion() { return !!(root.Shogatsu && Shogatsu.reduced()); }
+  var NY = shogatsuOn();
+  function shogatsuDeco() {
+    document.body.classList.toggle('shogatsu', NY);
+    if (!NY) return;
+    Shogatsu.banner(document.querySelector('.wp-app'), document.querySelector('.wp-how'));
+    var h = document.querySelector('.wp-head h1'); if (h && h.firstChild && h.firstChild.nodeType === 3) h.firstChild.nodeValue = '🎍 お正月のいもむし';
+  }
   var g = null, raf = 0;
   function now() { return (root.performance && performance.now ? performance.now() : Date.now()) / 1000; }
 
   function begin() {
     var b = HF.parse(PZ.map);
-    g = { b: b, s: HF.state(b), undos: 0, done: false, anim: null, flash: null, mark: null, pop: 0, dragging: false, backed: false, last: null };
+    g = { b: b, s: HF.state(b), undos: 0, done: false, ny: NY, anim: null, flash: null, mark: null, pop: 0, dragging: false, backed: false, last: null };
     if (b.start >= 0) HF.push(g.s, b.start);
     var board = $('board'), old = board.querySelector('canvas'); if (old) old.remove();
     var cv = document.createElement('canvas'); board.insertBefore(cv, $('toast')); g.cv = cv;
@@ -362,7 +440,7 @@
     raf = 0;
     if (!g) return;
     var t = now();
-    render({ ctx: g.ctx, b: g.b, s: g.s, cell: g.cell, t: t, now: t, hint: [], flash: g.flash, mark: g.mark, anim: g.anim, stuck: isStuck(), pop: g.pop, freePulse: g.b.start < 0 });
+    render({ ctx: g.ctx, b: g.b, s: g.s, cell: g.cell, t: t, now: t, hint: [], flash: g.flash, mark: g.mark, anim: g.anim, stuck: isStuck(), pop: g.pop, freePulse: g.b.start < 0, ny: g.ny });
     raf = requestAnimationFrame(frame);
   }
   function isStuck() { return g && !g.done && g.s.path.length > 0 && !HF.done(g.s) && HF.moves(g.s).length === 0; }
@@ -541,7 +619,7 @@
     g.done = true; g.dragging = false;
     var sec = WP.timer.stop(), prev = WP.record();
     WP.saveRecord(sec, { undos: g.undos });
-    g.anim = { t0: now(), wing: ['#fff176', '#ffb300'] };
+    g.anim = { t0: now(), wing: g.ny ? ['#ff7a8a', '#e2b64a'] : ['#fff176', '#ffb300'] };
     Snd.clear(); setTimeout(Snd.flutter, 1500);
     info();
     var gg = g;
@@ -549,13 +627,16 @@
   }
   function shareRow(sec) { return WP.tierRow(sec, [45, 90, 150, 240], '🍃', '🤍', '🐛', '🦋'); }
   function result(fresh, sec, prev) {
-    WP.showClear({ sec: sec, fresh: fresh, head: 'ちょうちょになった！', emoji: '🦋', row: shareRow(sec), again: begin,
+    var ny = [];
+    if (NY) { var p = document.createElement('p'); p.className = 'hf-ny'; p.textContent = '謹賀新年　ことしも よろしくね'; ny.push(p); }
+    WP.showClear({ sec: sec, fresh: fresh, head: 'ちょうちょになった！', emoji: '🦋', row: shareRow(sec), again: begin, extra: ny,
       note: prev ? '今日の記録（1回目）: ' + WP.fmt(prev.sec) : null });
   }
 
   // 自動テスト用（答えは盤からいつでも計算できるので、出してもこまらない）
-  root.__webPlay = { puzzle: function () { return { map: PZ.map, sol: PZ.sol, day: DAY }; }, cell: function () { return g && g.cell; }, done: function () { return !!(g && g.done); }, len: function () { return g.s.path.length; }, head: function () { return HF.head(g.s); } };
+  root.__webPlay = { puzzle: function () { return { map: PZ.map, sol: PZ.sol, day: DAY }; }, ny: function () { return NY; }, cell: function () { return g && g.cell; }, done: function () { return !!(g && g.done); }, len: function () { return g.s.path.length; }, head: function () { return HF.head(g.s); } };
 
+  shogatsuDeco();
   begin();
   var rec = WP.record();
   if (rec) result(false, rec.sec);

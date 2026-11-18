@@ -4,6 +4,21 @@
 (function (root) {
   'use strict';
   var F = root.OB.FOODS;
+  // お正月（12/29〜1/7 の今日のおべんとう。game.js が DR.skin = 'osechi' にする）: おかずの形・数はそのまま、絵と名前だけ おせちに
+  var OSECHI = {
+    ume:     { name: '黒豆',         color: '#2e2427', dark: '#120b0d', lightFace: true },
+    edamame: { name: '数の子',       color: '#f6e08e', dark: '#c9a23a' },
+    wiener:  { name: '昆布巻き',     color: '#4b4a2c', dark: '#25240f', lightFace: true },
+    brocco:  { name: 'くりきんとん', color: '#f7c22c', dark: '#c68d0e' },
+    tamago:  { name: 'だて巻き',     color: '#f4b733', dark: '#9a5e10' },
+    karaage: { name: 'かまぼこ',     color: '#fff7f2', dark: '#d63a4c' },
+    ebi:     { name: 'えび',         color: '#ef5b3c', dark: '#a8301c' },
+    onigiri: { name: '紅白なます',   color: '#fbf7ee', dark: '#e0835a' },
+    napo:    { name: 'たたきごぼう', color: '#8d5c36', dark: '#583418', lightFace: true },
+    hamburg: { name: '鯛',           color: '#f2838a', dark: '#b9434f' },
+    shake:   { name: 'お煮しめ',     color: '#cf9152', dark: '#8a5523' }
+  };
+  function look(k) { return (DR.skin === 'osechi' && OSECHI[k]) || F[k]; }
 
   function rr(c, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -36,7 +51,8 @@
   // o: { alpha, face: 'smile'|'wow'|'happy'|'sad'|'sleep'|null, faceCell: [行,列], lock: true, ice: true, shadow: true, t: 秒 }
   function food(c, k, cells, ox, oy, s, o) {
     o = o || {};
-    var f = F[k]; if (!f) return;
+    var f = look(k); if (!F[k]) return;
+    var fface = F[k].face;
     c.save();
     if (o.alpha != null) c.globalAlpha = o.alpha;
     if (o.shadow) {
@@ -48,7 +64,7 @@
     // もよう
     c.save(); blobPath(c, cells, ox, oy, s, Math.max(3, s * 0.11)); c.clip();
     var set = {}; cells.forEach(function (p) { set[p[0] + ',' + p[1]] = 1; });
-    cells.forEach(function (p, i) { deco(c, k, ox + p[1] * s, oy + p[0] * s, s, set, p, i); });
+    cells.forEach(function (p, i) { if (f !== F[k]) decoOsechi(c, k, ox + p[1] * s, oy + p[0] * s, s, set, p, i); else deco(c, k, ox + p[1] * s, oy + p[0] * s, s, set, p, i); });
     // つや
     c.fillStyle = 'rgba(255,255,255,.28)';
     cells.forEach(function (p) {
@@ -64,7 +80,7 @@
         c.beginPath(); c.moveTo(x + s * 0.22, y + s * 0.62); c.lineTo(x + s * 0.42, y + s * 0.4); c.moveTo(x + s * 0.55, y + s * 0.8); c.lineTo(x + s * 0.8, y + s * 0.52); c.stroke();
       });
     }
-    var fc = o.faceCell || cells[Math.min(f.face, cells.length - 1)];
+    var fc = o.faceCell || cells[Math.min(fface, cells.length - 1)];
     if (o.face !== null && fc && cells.some(function (p) { return p[0] === fc[0] && p[1] === fc[1]; })) {
       face(c, ox + fc[1] * s, oy + fc[0] * s, s, o.ice ? 'cold' : (o.face || 'smile'), k, o.t || 0);
     }
@@ -147,9 +163,71 @@
     }
   }
 
+  // おせちのもよう（DR.skin = 'osechi' のとき）
+  function decoOsechi(c, k, x, y, s, set, p, i) {
+    var u = set[(p[0] - 1) + ',' + p[1]], d = set[(p[0] + 1) + ',' + p[1]], l = set[p[0] + ',' + (p[1] - 1)], r = set[p[0] + ',' + (p[1] + 1)];
+    c.lineWidth = Math.max(1.2, s * 0.05); c.lineCap = 'round';
+    switch (k) {
+      case 'ume':   // 黒豆: つやつやの豆と金ぱく
+        c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(x + s * 0.36, y + s * 0.3, s * 0.12, s * 0.06, -0.6, 0, 7); c.fill();
+        c.fillStyle = '#e8c45a'; c.fillRect(x + s * 0.66, y + s * 0.2, s * 0.1, s * 0.08); c.fillRect(x + s * 0.72, y + s * 0.3, s * 0.05, s * 0.05);
+        break;
+      case 'edamame':   // 数の子: こまかいつぶつぶ
+        c.fillStyle = 'rgba(190,140,30,.45)';
+        for (var a = 0; a < 4; a++) for (var b = 0; b < 3; b++) dot(c, x + s * (0.2 + a * 0.2 + (b % 2) * 0.1), y + s * (0.3 + b * 0.2), s * 0.04);
+        break;
+      case 'wiener':   // 昆布巻き: かんぴょうの帯・はしは うずまき
+        c.fillStyle = '#d9b77a'; c.fillRect(x + s * 0.44, y, s * 0.13, s);
+        if (!l || !r) { c.strokeStyle = 'rgba(160,150,90,.6)'; c.beginPath(); c.arc(x + s * 0.5, y + s * 0.5, s * 0.22, 0, 5.2); c.stroke(); c.beginPath(); c.arc(x + s * 0.5, y + s * 0.5, s * 0.1, 0, 5.2); c.stroke(); }
+        break;
+      case 'brocco':   // くりきんとん: くりと、なめらかなきんとん
+        c.strokeStyle = 'rgba(200,130,10,.45)'; c.beginPath(); c.arc(x + s * 0.5, y + s * 0.55, s * 0.28, 3.4, 6.0); c.stroke();
+        if (i === 0) { c.fillStyle = '#e8a91c'; c.beginPath(); c.ellipse(x + s * 0.5, y + s * 0.5, s * 0.22, s * 0.18, 0.3, 0, 7); c.fill(); c.fillStyle = 'rgba(255,240,180,.7)'; dot(c, x + s * 0.42, y + s * 0.44, s * 0.06); }
+        break;
+      case 'tamago':   // だて巻き: 黄色の うずまき
+        c.strokeStyle = 'rgba(130,70,8,.8)'; c.lineWidth = Math.max(1.6, s * 0.07); c.beginPath();
+        for (var q = 0; q < 14; q++) { var an = q * 0.75, rd = s * (0.04 + q * 0.022), px = x + s * 0.5 + Math.cos(an) * rd, py = y + s * 0.52 + Math.sin(an) * rd; if (q) c.lineTo(px, py); else c.moveTo(px, py); }
+        c.stroke();
+        c.strokeStyle = 'rgba(120,70,10,.35)'; c.beginPath(); c.moveTo(x, y + s * 0.12); c.lineTo(x + s, y + s * 0.12); c.moveTo(x, y + s * 0.9); c.lineTo(x + s, y + s * 0.9); c.stroke();
+        break;
+      case 'karaage':   // かまぼこ: 上が紅・下が白
+        if (!u) { c.fillStyle = '#e04a5c'; c.fillRect(x, y, s, s * 0.34); c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(x, y + s * 0.3, s, s * 0.04); }
+        break;
+      case 'ebi':   // えび: しまもよう・はしに しっぽ
+        c.strokeStyle = 'rgba(255,235,220,.75)';
+        c.beginPath(); c.arc(x + s * 0.5, y + s * 1.05, s * 0.55, 3.6, 5.8); c.stroke();
+        c.beginPath(); c.arc(x + s * 0.5, y + s * 1.35, s * 0.6, 3.7, 5.7); c.stroke();
+        if (!d && !r && (u || l)) { c.fillStyle = '#c42c1a'; c.beginPath(); c.moveTo(x + s * 0.4, y + s * 0.5); c.lineTo(x + s * 0.95, y + s * 0.2); c.lineTo(x + s * 0.95, y + s * 0.85); c.closePath(); c.fill(); }
+        break;
+      case 'onigiri':   // 紅白なます: だいこん（白）と にんじん（だいだい）の せん切り
+        c.strokeStyle = '#ec8a4c'; c.lineWidth = Math.max(1.2, s * 0.045);
+        for (var n = 0; n < 4; n++) { c.beginPath(); c.moveTo(x + s * (0.12 + n * 0.22), y + s * 0.2); c.lineTo(x + s * (0.26 + n * 0.2), y + s * 0.82); c.stroke(); }
+        break;
+      case 'napo':   // たたきごぼう: ごま
+        c.strokeStyle = 'rgba(60,30,10,.5)'; c.beginPath(); c.moveTo(x + s * 0.15, y + s * 0.5); c.lineTo(x + s * 0.85, y + s * 0.5); c.stroke();
+        c.fillStyle = '#f4ead2'; [[0.3, 0.3], [0.62, 0.34], [0.46, 0.7], [0.75, 0.68], [0.22, 0.66]].forEach(function (m) { c.beginPath(); c.ellipse(x + s * m[0], y + s * m[1], s * 0.04, s * 0.022, 0.6, 0, 7); c.fill(); });
+        break;
+      case 'hamburg':   // 鯛: うろこ
+        c.strokeStyle = 'rgba(255,230,230,.7)';
+        for (var e2 = 0; e2 < 2; e2++) for (var f2 = 0; f2 < 2; f2++) { c.beginPath(); c.arc(x + s * (0.3 + f2 * 0.4), y + s * (0.32 + e2 * 0.36), s * 0.15, 0.2, Math.PI - 0.2); c.stroke(); }
+        break;
+      case 'shake':   // お煮しめ: れんこんと ねじり梅のにんじん
+        if (i % 2 === 0) {
+          c.fillStyle = '#efe0c0'; dot(c, x + s * 0.5, y + s * 0.5, s * 0.3);
+          c.fillStyle = '#c99a62'; [[0, -0.15], [0.14, -0.05], [0.09, 0.12], [-0.09, 0.12], [-0.14, -0.05]].forEach(function (m) { dot(c, x + s * (0.5 + m[0]), y + s * (0.5 + m[1]), s * 0.05); });
+        } else {
+          c.fillStyle = '#ee7a32';
+          for (var pt = 0; pt < 5; pt++) { var aa = pt * 1.2566 - 1.57; dot(c, x + s * 0.5 + Math.cos(aa) * s * 0.15, y + s * 0.5 + Math.sin(aa) * s * 0.15, s * 0.13); }
+          c.fillStyle = '#f7a35c'; dot(c, x + s * 0.5, y + s * 0.5, s * 0.08);
+        }
+        break;
+    }
+  }
+
   // かお
   function face(c, x, y, s, mood, k, t) {
     var dark = k === 'onigiri' ? '#3a3a3a' : '#3b2216';
+    if (DR.skin === 'osechi' && OSECHI[k] && OSECHI[k].lightFace) dark = '#fff1d6';
     var cx = x + s * 0.5, cy = y + s * (k === 'onigiri' ? 0.36 : 0.5), ex = s * 0.16, er = Math.max(1.6, s * 0.065);
     // まばたき（ときどき）
     var blink = mood === 'smile' && ((t * 1000 + x * 13 + y * 7) % 4200) < 110;
@@ -204,6 +282,7 @@
 
   // お弁当箱（曲げわっぱ）。x,y はなかの左上
   function box(c, x, y, s, N) {
+    if (DR.skin === 'osechi') return jubako(c, x, y, s, N);
     var w = s * N, b = Math.max(8, s * 0.26);
     c.save();
     c.fillStyle = 'rgba(90,45,10,.18)'; rr(c, x - b + 3, y - b + 8, w + b * 2, w + b * 2, b * 1.4); c.fill();
@@ -217,6 +296,33 @@
     c.fillStyle = '#fbefdc'; rr(c, x, y, w, w, s * 0.16); c.fill();
     // マスの目印（うすい点線）
     c.strokeStyle = 'rgba(180,120,60,.16)'; c.lineWidth = 1; c.setLineDash([3, 4]);
+    for (var k = 1; k < N; k++) {
+      c.beginPath(); c.moveTo(x + k * s, y + 4); c.lineTo(x + k * s, y + w - 4); c.moveTo(x + 4, y + k * s); c.lineTo(x + w - 4, y + k * s); c.stroke();
+    }
+    c.setLineDash([]);
+    c.restore();
+  }
+
+  // 重箱（お正月）: 黒のうるし・ふちに金・なかは朱
+  function jubako(c, x, y, s, N) {
+    var w = s * N, b = Math.max(8, s * 0.26);
+    c.save();
+    c.fillStyle = 'rgba(40,10,10,.25)'; rr(c, x - b + 3, y - b + 8, w + b * 2, w + b * 2, b * 0.7); c.fill();
+    var g = c.createLinearGradient(0, y - b, 0, y + w + b);
+    g.addColorStop(0, '#3a2626'); g.addColorStop(0.5, '#1c1112'); g.addColorStop(1, '#2a1a1b');
+    c.fillStyle = g; rr(c, x - b, y - b, w + b * 2, w + b * 2, b * 0.7); c.fill();
+    c.strokeStyle = '#d9b44a'; c.lineWidth = Math.max(1.5, b * 0.14); rr(c, x - b * 0.62, y - b * 0.62, w + b * 1.24, w + b * 1.24, b * 0.5); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.10)'; rr(c, x - b * 0.8, y - b * 0.85, w + b * 1.6, b * 0.18, b * 0.09); c.fill();
+    // すみに金の松葉もよう（小さく）
+    c.strokeStyle = 'rgba(230,195,90,.8)'; c.lineWidth = Math.max(1, b * 0.08);
+    [[x - b * 0.32, y - b * 0.32], [x + w + b * 0.32, y + w + b * 0.32]].forEach(function (q) {
+      for (var a = -2; a <= 2; a++) { c.beginPath(); c.moveTo(q[0], q[1]); c.lineTo(q[0] + Math.cos(a * 0.35 - 0.8) * b * 0.28, q[1] + Math.sin(a * 0.35 - 0.8) * b * 0.28); c.stroke(); }
+    });
+    c.fillStyle = '#d9b44a'; rr(c, x - 3, y - 3, w + 6, w + 6, s * 0.12); c.fill();
+    var gi = c.createLinearGradient(0, y, 0, y + w);
+    gi.addColorStop(0, '#a3222b'); gi.addColorStop(1, '#8a1a22');
+    c.fillStyle = gi; rr(c, x, y, w, w, s * 0.1); c.fill();
+    c.strokeStyle = 'rgba(240,200,110,.30)'; c.lineWidth = 1; c.setLineDash([3, 4]);
     for (var k = 1; k < N; k++) {
       c.beginPath(); c.moveTo(x + k * s, y + 4); c.lineTo(x + k * s, y + w - 4); c.moveTo(x + 4, y + k * s); c.lineTo(x + w - 4, y + k * s); c.stroke();
     }
@@ -239,5 +345,8 @@
 
   function dims(cells) { var h = 0, w = 0; cells.forEach(function (p) { h = Math.max(h, p[0] + 1); w = Math.max(w, p[1] + 1); }); return [h, w]; }
 
-  root.DR = { rr: rr, blobPath: blobPath, food: food, face: face, rice: rice, balan: balan, box: box, plate: plate, dims: dims, dot: dot };
+  // skin: null（ふつう）| 'osechi'（お正月の今日のおべんとう）。絵をかく前に game.js が毎回 決める
+  var DR = { rr: rr, blobPath: blobPath, food: food, face: face, rice: rice, balan: balan, box: box, plate: plate, dims: dims, dot: dot,
+    skin: null, OSECHI: OSECHI, look: look, nameOf: function (k) { return look(k).name; } };
+  root.DR = DR;
 })(this);

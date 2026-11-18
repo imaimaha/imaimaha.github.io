@@ -1,0 +1,39 @@
+/* 暗算ランナー（アプリの index.html の色・HUD の見た目から） */
+:root{--wp-bg:#eef5f4;--wp-ink:#22313f;--wp-accent:#1f9e8f;--wp-accent-dark:#16786c;--wp-card:#fff;--wp-line:#e3e8ea;
+  --teal:#1f9e8f;--teal-d:#16786c;--coral:#ee7a5a;--red:#e5484d;--gold:#f2b53a;--sub:#62707c;
+  --num:"Avenir Next Condensed","DIN Alternate","Avenir Next","Helvetica Neue",sans-serif}
+.wp-app{font-family:"Avenir Next","Hiragino Sans","Hiragino Kaku Gothic ProN",-apple-system,sans-serif}
+.wp-info b{font-family:var(--num);font-size:17px}
+#kz-prog{flex:0 0 auto;height:5px;margin:2px 14px 0;border-radius:3px;background:#dde6e8;overflow:hidden}
+#kz-fill{height:100%;width:0;background:var(--teal);transition:width .3s}
+#kz-stage{flex:1 1 auto;min-height:0;position:relative;overflow:hidden;margin:6px 8px 0;border-radius:16px;touch-action:none;background:#dcEff7}
+#kz-scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+#streak{display:flex;justify-content:center;gap:6px;position:absolute;left:0;right:0;top:8px;pointer-events:none}
+#streak i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:0 0 0 1px rgba(34,49,63,.15)}
+#streak i.on{background:var(--gold)}
+#badge{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;padding:4px 12px 3px;border-radius:9px;background:#fff;color:var(--wp-ink);
+  font-family:var(--num);font-weight:700;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--wp-ink),0 4px 10px rgba(34,49,63,.25)}
+#badge.fever{background:#fff4d6;box-shadow:0 0 0 2px var(--gold),0 4px 14px rgba(242,181,58,.5)}
+#badge.hurt{color:var(--red);box-shadow:0 0 0 2px var(--red),0 4px 10px rgba(229,72,77,.3)}
+#toast{position:absolute;right:8px;top:24px;pointer-events:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+#toast .t{font-family:var(--num);font-weight:700;font-size:16px;color:var(--wp-ink);white-space:nowrap;background:rgba(255,255,255,.82);padding:2px 9px;border-radius:8px;box-shadow:0 1px 4px rgba(34,49,63,.12);animation:tpop .8s ease-out forwards}
+#toast .t.good{color:var(--teal-d)}#toast .t.bad{color:var(--red)}#toast .t.rare{color:#a06a00;background:#fff4d6}#toast .t.small{font-size:13px;color:var(--sub)}
+@keyframes tpop{0%{transform:translateX(8px);opacity:0}12%{transform:none;opacity:1}65%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+#warn{position:absolute;left:10px;right:10px;top:24px;pointer-events:none;text-align:center;font-weight:800;font-size:min(4.4vw,17px);color:#fff;padding:7px 0;border-radius:12px;background:rgba(229,72,77,.92);box-shadow:0 4px 12px rgba(229,72,77,.3)}
+#warn.deadly{animation:warnpulse .4s ease-in-out infinite alternate}
+@keyframes warnpulse{from{transform:scale(1)}to{transform:scale(1.03)}}
+#flash{position:absolute;inset:0;pointer-events:none;background:rgba(229,72,77,.45);opacity:0}
+#flash.on{animation:flash .7s ease-out}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+#hint{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-weight:800;font-size:16px;pointer-events:none}
+#hint span{background:rgba(255,255,255,.9);padding:8px 16px;border-radius:12px;display:inline-block;animation:hintwob 1.2s ease-in-out infinite}
+@keyframes hintwob{0%,100%{transform:translateX(-12px)}50%{transform:translateX(12px)}}
+#kz-start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;background:linear-gradient(180deg,rgba(220,239,247,.2) 20%,rgba(244,247,246,.9) 70%)}
+#kz-start p{margin:0}
+#kz-start .k{font-size:26px;font-weight:800;letter-spacing:.04em}
+#kz-start .r{font-size:15px;font-weight:700}#kz-start .r b{font-family:var(--num);font-size:19px}
+#kz-start .m{font-size:13px;color:var(--sub);line-height:1.5;max-width:300px}
+#kz-start .btn{min-width:220px;margin:8px 0 2px;font-size:19px}
+#kz-start .s{font-size:11.5px;color:var(--sub)}
+@media (hover:none) and (pointer:coarse){#kz-start .s{display:none}}
+#wp-ov .kz-sub{font-size:12.5px;opacity:.8}

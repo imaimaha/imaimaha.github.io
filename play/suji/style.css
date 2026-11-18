@@ -49,3 +49,14 @@
 .bdg.ok{background:var(--ok);color:#fff}
 .bdg.over{background:var(--bad);color:#fff}
 .wall{position:absolute;background:var(--grid);z-index:3;pointer-events:none}
+/* クリスマス期間（12/1〜12/25。../xmas.js）: 住人にサンタの帽子・盤のふちに飾り（アプリの 1.0.11 の index.html から） */
+body.xmas .rm .who.res::before,body.xmas .bc .ppl::before{content:"";position:absolute;left:50%;top:50%;width:.52em;height:.42em;margin:-.86em 0 0 -.16em;
+  background:linear-gradient(#e0303f,#b8202e);clip-path:polygon(0 100%,100% 100%,62% 0);transform:rotate(14deg);transform-origin:50% 100%;z-index:1;pointer-events:none}
+body.xmas .rm .who.res::after,body.xmas .bc .ppl::after{content:"";position:absolute;left:50%;top:50%;width:.56em;height:.13em;margin:-.5em 0 0 -.2em;border-radius:.07em;
+  background:#fff;box-shadow:.26em -.4em 0 -.01em #fff;transform:rotate(14deg);z-index:1;pointer-events:none}
+body.xmas .bc .ppl{position:relative;display:flex;align-items:center;justify-content:center;width:1em;height:1em}
+body.xmas #p-board{box-shadow:0 0 0 3px var(--grid),0 0 0 7px #fff,0 0 0 9px #1f7a46}
+body.xmas #p-board::before{content:"";position:absolute;left:-9px;right:-9px;top:-14px;height:12px;z-index:6;pointer-events:none;
+  background:radial-gradient(circle at 6px 8px,#e0303f 3px,transparent 3.5px) 0 0/36px 12px repeat-x,radial-gradient(circle at 18px 8px,#f2c040 3px,transparent 3.5px) 0 0/36px 12px repeat-x,radial-gradient(circle at 30px 8px,#2f9a5a 3px,transparent 3.5px) 0 0/36px 12px repeat-x,
+  radial-gradient(ellipse 10px 5px at 50% 0,#fff 98%,transparent) 0 6px/20px 8px repeat-x}
+body.xmas .xmas-banner{display:block;width:max-content;margin:2px auto 0}

@@ -20,6 +20,16 @@
   var PPL = ['👻', '🤖', '👴', '🐱', '🧙', '👵', '🐶', '🧛', '🐼', '🐰', '🦊', '🐧', '🧚', '🐸', '🐻', '🦉'];
   var TINT = ['#ffe9c7', '#d8f1e1', '#dde7fb', '#fbdfe7', '#eadffb', '#d6eef3', '#f6eec8', '#e3eed6'];
   var ROOMC = ['#ffe3b8', '#cdeedb', '#d3e0fb', '#f9d4df', '#e3d5fa', '#cbe9ef', '#f3e8b8', '#dbe9c9'];
+  // クリスマス期間（毎年 12/1〜12/25 日本時間。../xmas.js）: 住人がサンタの帽子（CSS）・盤のふちに飾り・今日の問題に 🎄。問題はかわらない（アプリの 1.0.11 と同じ）
+  function xmasOn() { return !!(root.Xmas && Xmas.active()); }
+  var XM = xmasOn();
+  function xmasDeco() {
+    document.body.classList.toggle('xmas', XM);
+    if (!XM) return;
+    Xmas.banner(document.querySelector('.wp-app'), $('wp-how'));
+    var hd = document.querySelector('.wp-head h1'); if (hd && hd.firstChild && hd.firstChild.nodeType === 3) hd.firstChild.nodeValue = '🎄 今日のすうじのへや';
+  }
+  xmasDeco();
   var save = { set: {}, tips: WP.lget('web.suji.tips') || {} };
   function store() { WP.lset('web.suji.tips', save.tips); }
 
@@ -437,7 +447,7 @@
   function paintTabs() {
     ['a', 'b'].forEach(function (m) {
       var bt = $('tab-' + m); bt.classList.toggle('on', m === cur);
-      bt.textContent = MODES[m].icon + ' 今日の' + MODES[m].name;
+      bt.textContent = (XM ? '🎄' : MODES[m].icon) + ' 今日の' + MODES[m].name;
       if (WP.record(m)) bt.appendChild(h('span', 'ok', ' ✅'));
     });
   }
@@ -502,7 +512,7 @@
 
   // 自動テスト用（答えは盤からいつでも計算できるので、出してもこまらない）
   root.__webPlay = {
-    puzzle: function (m) { return GS[m || cur].st; }, mode: function () { return cur; }, select: select, cs: function () { return CS; },
+    puzzle: function (m) { return GS[m || cur].st; }, xmas: function () { return XM; }, mode: function () { return cur; }, select: select, cs: function () { return CS; },
     done: function () { return !!(G && G.done); }, sol: function () { return G.mode === 'a' ? G.sol.map(function (rc) { return rc.cells; }) : null; }
   };
 
