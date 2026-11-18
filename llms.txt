@@ -1,0 +1,40 @@
+# いまのアプリ
+
+> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。
+
+## ページ
+- [ホーム](https://imaimaha.github.io/): サイトのトップ
+- [今日の問題](https://imaimaha.github.io/today/): 毎日0時（日本時間）にかわる、みんな同じ1問
+- [ランキングのしくみ](https://imaimaha.github.io/ranking/): サインインなし、ニックネームだけで参加
+- [アプリ一覧](https://imaimaha.github.io/apps/): すべてのアプリ
+- [お知らせ](https://imaimaha.github.io/news/): アップデートとリリース
+- [よくある質問](https://imaimaha.github.io/faq/): 無料・広告・データ・通知・機種変更
+- [作っている人](https://imaimaha.github.io/about/): いま（将棋・ポーカー・アプリ開発が好き）
+- [いま やっていること](https://imaimaha.github.io/now/)
+- [お問い合わせ](https://imaimaha.github.io/contact/)
+
+## アプリ
+### パズル・脳トレ
+- [ひとふでいもむし](https://imaimaha.github.io/hitofude/): いもむしを指でなぞって葉っぱを食べる一筆書きパズル。毎日の「今日のいもむし」はみんな同じ盤でタイム勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823269398
+- [すうじのへや](https://imaimaha.github.io/suji/): 数字をヒントに盤をへやに分ける「へや割り」と、住人を入れる「住人さがし」。今日の問題はみんな同じでタイム勝負。全365ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6825416177
+- [おかず詰めパズル](https://imaimaha.github.io/okazu/): おかずをお弁当箱につめて、たてかよこを1列そろえるブロックパズル。毎日の「今日のおべんとう」はみんな同じ問題で勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823270044
+- [暗算ランナー](https://imaimaha.github.io/kakezan/): 左右の計算ゲートの得なほうをくぐって数をふやす暗算ランゲーム。毎日の「今日のステージ」はみんな同じコースで、どこまで行けるか勝負。全200ステージ。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821955613
+- [ナンバー暗算ドライブ](https://imaimaha.github.io/jimidrive/): すれ違う車のナンバー4桁で10を作れるかを数秒で判断する暗算ゲーム。毎日の「今日のドライブ」はみんな同じナンバーでランキング勝負。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6818812573
+### のんびり
+- [つるっと ゆでたまご剥き](https://imaimaha.github.io/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
+- [ねばっと 納豆フィルム剥がし](https://imaimaha.github.io/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
+- [まどのしずく](https://imaimaha.github.io/madoshizuku/): 雨の日の車の窓で、指でしずくを集めて大きくする、のんびりゲーム。5つの雨と12の景色、眠る前の雨音タイマー、60秒チャレンジのランキングつき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821822966
+### 対戦
+- [変則将棋対戦](https://imaimaha.github.io/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
+- [下剋上デュエル](https://imaimaha.github.io/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
+- [プリフロップ練習帳](https://imaimaha.github.io/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
+### くらし・記録
+- [おさんぽ日記](https://imaimaha.github.io/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
+- [積読記録](https://imaimaha.github.io/tsundoku/): まだ読んでいない本（積読）を背表紙のタワーにして見せる読書記録アプリ。バーコードで登録、読書タイマー、図書館の返却日のお知らせつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821840892
+- [居候お掃除マン](https://imaimaha.github.io/osouji/): いっしょに住む人と家のおそうじを分担するアプリ。やったら報告、もう1人が確認して OK。予定のお知らせやごほうびポイントつき。会員登録なし・広告なしの無料アプリ。 App Store: https://apps.apple.com/jp/app/id6829721534
+- [Notre Endroit](https://imaimaha.github.io/notre-app/): 恋人や夫婦など、ふたりだけで使うアプリ。交換日記、帰る時間と今のきもちの共有、記念日のカウントダウン、毎日のクイズ。会員登録なし・広告なしの無料iPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821843630
+
+## そのほか
+- note: https://note.com/redemarrage22
+- App Store の開発者ページ: https://apps.apple.com/jp/developer/id6818812575
+- 連絡先: imaimaha.apps@gmail.com
