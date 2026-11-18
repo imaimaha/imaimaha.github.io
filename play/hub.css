@@ -1,0 +1,17 @@
+/* /play/ のいちらん */
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff8ee;color:#3b2f25;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:560px;margin:0 auto;padding:12px 16px 40px}
+.crumb{font-size:12px;opacity:.8;margin:0 0 6px}.crumb ol{display:inline;list-style:none;margin:0;padding:0}.crumb li{display:inline}.crumb li+li:before{content:" › "}.crumb a{color:inherit}
+h1{font-size:24px;margin:8px 0 4px}
+.lead{font-size:14px;line-height:1.7;margin:4px 0 14px}
+.games{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.games a{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;padding:14px;text-decoration:none;color:inherit;box-shadow:0 3px 0 #f0dcc4}
+.games a:active{transform:translateY(2px);box-shadow:0 1px 0 #f0dcc4}
+.games img{width:64px;height:64px;border-radius:15px;flex:0 0 auto}
+.games b{display:block;font-size:17px}
+.games span{display:block;font-size:13px;line-height:1.5;opacity:.8;margin-top:2px}
+.games .go{flex:0 0 auto;margin-left:auto;font-size:13px;font-weight:800;background:#e8604c;color:#fff;border-radius:999px;padding:6px 12px;opacity:1}
+h2{font-size:17px;margin:22px 0 6px}
+p,li{font-size:14px;line-height:1.75}
+a{color:#3b2f25}

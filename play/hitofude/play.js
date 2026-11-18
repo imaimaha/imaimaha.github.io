@@ -539,17 +539,18 @@
 
   function finish() {
     g.done = true; g.dragging = false;
-    var sec = WP.timer.stop(), first = !WP.record();
+    var sec = WP.timer.stop(), prev = WP.record();
     WP.saveRecord(sec, { undos: g.undos });
     g.anim = { t0: now(), wing: ['#fff176', '#ffb300'] };
     Snd.clear(); setTimeout(Snd.flutter, 1500);
     info();
     var gg = g;
-    setTimeout(function () { if (g === gg) result(true, first ? sec : WP.record().sec); }, root.__wpFast ? 0 : 2700);
+    setTimeout(function () { if (g === gg) result(true, sec, prev); }, root.__wpFast ? 0 : 2700);
   }
   function shareRow(sec) { return WP.tierRow(sec, [45, 90, 150, 240], '🍃', '🤍', '🐛', '🦋'); }
-  function result(fresh, sec) {
-    WP.showClear({ sec: sec, fresh: fresh, head: 'ちょうちょになった！', emoji: '🦋', row: shareRow(sec), again: begin });
+  function result(fresh, sec, prev) {
+    WP.showClear({ sec: sec, fresh: fresh, head: 'ちょうちょになった！', emoji: '🦋', row: shareRow(sec), again: begin,
+      note: prev ? '今日の記録（1回目）: ' + WP.fmt(prev.sec) : null });
   }
 
   // 自動テスト用（答えは盤からいつでも計算できるので、出してもこまらない）

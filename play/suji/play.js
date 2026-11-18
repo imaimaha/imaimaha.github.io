@@ -483,19 +483,20 @@
     if (!G || G.done) return;
     if (!(G.mode === 'a' ? winA() : winB())) return;
     G.done = true;
-    var sec = G.timer.stop(), first = !WP.record(G.mode), g = G;
+    var sec = G.timer.stop(), prev = WP.record(G.mode), g = G;
     WP.saveRecord(sec, null, G.mode);
     if (G.mode === 'a') A.glow.hidden = true;
     snd('clear'); paintTabs();
-    setTimeout(function () { if (G === g) result(true, first ? sec : WP.record(g.mode).sec); }, root.__wpFast ? 0 : 900);
+    setTimeout(function () { if (G === g) result(true, sec, prev); }, root.__wpFast ? 0 : 900);
   }
-  function result(fresh, sec) {
+  function result(fresh, sec, prev) {
     var mode = cur, other = mode === 'a' ? 'b' : 'a';
     var btns = [];
     if (!WP.record(other)) btns.push({ label: MODES[other].icon + ' 今日の' + MODES[other].name + 'もやる', main: false, run: function () { select(other); } });
     WP.showClear({ sec: sec, fresh: fresh, head: mode === 'a' ? 'へやが ぜんぶ できた！' : '住人が ぜんぶ入った！', emoji: mode === 'a' ? '🏠' : '👻',
       name: '今日の' + MODES[mode].name, tag: 'すうじのへや',
       row: WP.tierRow(sec, [60, 120, 180, 300], mode === 'a' ? '🏠' : '👻', '⬜'),
+      note: prev ? '今日の記録（1回目）: ' + WP.fmt(prev.sec) : null,
       buttons: btns, again: function () { GS[mode].again = true; reset(mode); } });
   }
 

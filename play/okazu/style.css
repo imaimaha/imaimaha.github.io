@@ -1,0 +1,55 @@
+/* おかず詰めパズル（アプリの style.css から、あそぶ画面に使うところだけ） */
+:root{--wp-bg:#fff3e3;--wp-ink:#4a2c1d;--wp-accent:#e8604c;--wp-accent-dark:#b9412f;--wp-card:#fffdf8;--wp-line:#ecd5b8;
+  --bg:#fff3e3;--ink:#4a2c1d;--sub:#8a6a55;--accent:#e8604c;--accent-d:#b9412f;--green:#4f9e4f;--wood:#c98b4f;--card:#fffdf8;--line:#ecd5b8;--gold:#f5b301}
+html,body{background-color:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(232,96,76,.07) 0 22px,transparent 22px 44px),repeating-linear-gradient(90deg,rgba(232,96,76,.07) 0 22px,transparent 22px 44px)}
+.hidden{display:none!important}
+.ph{display:inline-block}
+.btn small{display:block;font-size:12px;font-weight:700;opacity:.75;margin-top:-2px}
+.btn[disabled]{opacity:.4}
+#goals { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 2px 10px 4px; min-height: 36px; }
+.goal { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 14px; font-weight: 800; box-shadow: 0 2px 0 var(--line); }
+.goal.done { background: #e4f5dd; color: #2f7a2f; }
+.goal .bar { width: 48px; height: 8px; border-radius: 4px; background: #f1e3d0; overflow: hidden; }
+.goal .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; transition: width .25s; }
+.goal.done .bar i { background: var(--green); }
+.goal.star { background: transparent; box-shadow: none; font-size: 12px; color: var(--sub); padding: 0 4px; font-weight: 700; }
+#board { flex: 1 1 auto; min-height: 0; position: relative; touch-action: none; }
+#cv{position:absolute;left:0;top:0;touch-action:none}
+#toast {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); background: rgba(74, 44, 29, .88); color: #fff;
+  padding: 10px 16px; border-radius: 14px; font-size: 14px; font-weight: 700; max-width: 84%; text-align: center; pointer-events: none; line-height: 1.5;
+}
+#bar { flex: 0 0 auto; display: flex; gap: 8px; padding: 6px 10px 10px; }
+#bar .btn { flex: 1 1 0; padding: 0 4px; font-size: 15px; min-height: 52px; line-height: 1.15; }
+#bar .btn small { font-size: 11px; }
+#bar .btn .nw { white-space: nowrap; }
+@media (max-width: 400px) { #bar .btn .nw { font-size: 13.5px; letter-spacing: -.03em; } }
+#ov { position: fixed; inset: 0; z-index: 8000; display: flex; align-items: center; justify-content: center; background: rgba(60, 30, 10, .38); padding: 16px; }
+#ov[hidden] { display: none; }
+#ov .box {
+  width: min(340px, 92vw); max-height: 88vh; overflow-y: auto; background: var(--card); border-radius: 26px; padding: 20px 18px 16px; text-align: center;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .3); animation: pop .38s cubic-bezier(.2, 1.6, .4, 1);
+}
+#ov h2 { margin: 2px 0 4px; font-size: 27px; }
+#ov .big { font-size: 56px; line-height: 1.1; }
+#ov .stars { font-size: 46px; letter-spacing: 6px; color: var(--gold); min-height: 58px; }
+#ov .stars span { display: inline-block; animation: star .45s both; }
+#ov .stars .off { color: #e4d6c4; }
+#ov p { margin: 6px 0; font-size: 14px; line-height: 1.6; }
+#ov p.note { font-size: 12px; color: var(--sub); }
+#ov .score { font-size: 40px; font-weight: 800; color: var(--accent); }
+#ov .btn { display: block; width: 100%; margin-top: 10px; }
+#ov .rvrow { display: flex; gap: 8px; }
+#ov .rvrow .btn { flex: 1 1 0; margin-top: 4px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
+#ov .rvrow .btn:nth-child(2) { flex: 2 1 0; }
+#ov ul { text-align: left; font-size: 14px; line-height: 1.7; padding-left: 1.2em; margin: 8px 0; }
+#ov .ill { margin: 6px auto 2px; display: block; }
+/* 説明（1.0.6 ビルド 8 から）: はじめての説明・あそぶ前の説明・行き止まりのカード */
+#btn-help { font-size: 20px; }
+#ov.soft { align-items: flex-end; background: rgba(60, 30, 10, .2); padding-bottom: calc(env(safe-area-inset-bottom) + 10px); animation: fadeIn .25s ease-out; }
+#ov .box.soft { padding: 12px 16px 10px; animation: softIn .32s ease-out; }
+#ov .box.soft .big { font-size: 38px; }
+#ov .box.soft h2 { font-size: 22px; }
+#ov .box.soft .rvrow .btn { white-space: normal; font-size: 15px; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes softIn { from { transform: translateY(18px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }

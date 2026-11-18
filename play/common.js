@@ -121,6 +121,7 @@
     box.appendChild(el('div', 'big', o.emoji || cfg.emoji));
     box.appendChild(el('div', 'time', WP.fmt(o.sec)));
     if (o.row) box.appendChild(el('div', 'row', o.row));
+    if (o.note) box.appendChild(el('p', 'tip', o.note));
     (o.extra || []).forEach(function (x) { box.appendChild(x); });
     var msg = el('p', 'copied', '');
     var sh = el('button', 'btn main', '📣 結果をシェア'); sh.type = 'button'; sh.id = 'wp-share';
