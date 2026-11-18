@@ -71,7 +71,7 @@
   $$('video[data-vsrc]').forEach(function (v) {
     var src = v.getAttribute('data-vsrc');
     function load() { if (!v.getAttribute('src')) { v.src = src; } }
-    if (still || !('IntersectionObserver' in window)) { v.controls = true; v.preload = 'none'; load(); return; }
+    if (still || !('IntersectionObserver' in window)) { if (v.hasAttribute('data-card')) return; v.controls = true; v.preload = 'none'; load(); return; }
     var vo = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
         if (e.isIntersecting) { load(); var pr = v.play(); if (pr && pr.catch) pr.catch(function () { v.controls = true; }); }

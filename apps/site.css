@@ -467,6 +467,11 @@ section.block .narrow > h2::after { margin-left: 0; }
 .tl p { margin: 0; }
 .tl a { font-weight: 700; }
 
+
+.dcard .frame { height: 232px; }
+.dcard .frame .vclip { display: block; width: 80%; height: 100%; margin: 0 auto; object-fit: cover; object-position: 50% 42%; border-radius: 16px 16px 0 0; background: #222; box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+.go.sm2 { min-height: 44px; padding: 0 14px; font-size: 14px; border-radius: 14px; box-shadow: 0 4px 0 var(--orange-d); }
+.ctanote { margin: 12px 0 0; font-size: 13px; color: var(--dim); }
 /* ---------- responsive ---------- */
 @media (min-width: 700px) {
   .stage { height: 450px; max-width: 520px; }

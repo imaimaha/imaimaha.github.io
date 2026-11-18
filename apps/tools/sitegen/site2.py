@@ -124,9 +124,11 @@ def daily_card(d):
     name, i, _ = NAMES[d]; k, w = DAILY_LINE[d].split('：', 1); f, alt = shot_for(d)
     return (f'<li class="dcard tilt rv" style="{cv(d)}"><div class="top"><img class="ic" src="/{d}/icon-256.webp" width="52" height="52" alt="" loading="lazy">'
             f'<h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div><span class="badge">{esc(k)}</span><p class="what">{esc(w)}</p>'
-            f'<div class="frame">{scr(d, f, alt)}</div>'
-            f'<div class="acts"><a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' +
-            (f'<a class="ghost sm2" href="/play/{d}/">ブラウザで1問だけ遊ぶ</a>' if d in PLAY else '<span class="more" aria-hidden="true">くわしく →</span>') + '</div></li>')
+            f'<div class="frame">' + (f'<video class="vclip" muted loop playsinline preload="none" poster="/{d}/clip.jpg" data-vsrc="/{d}/clip.mp4" data-card width="300" height="650" aria-label="{esc(name)} のプレイのようす"></video>'
+                                      if os.path.exists(f'{R}/{d}/clip.mp4') else scr(d, f, alt)) + '</div>'
+            '<div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
+            f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' +
+            ('' if d in PLAY else '<span class="more" aria-hidden="true">くわしく →</span>') + '</div></li>')
 
 def app_card(d, k=None):
     name, i, text = NAMES[d]; cid, lb = CAT_OF[d]
@@ -257,7 +259,8 @@ def page_home():
              '<span class="ln"><span class="w mark" style="--d:.3s">ちょっと</span><span class="w" style="--d:.45s">あそぼ。</span></span></h1>'
              '<p class="lead">いもむし、お弁当、ゆでたまご、納豆……。毎日みんなと同じ1問で勝負できる、ちいさな iPhone アプリたちです。</p>'
              f'<div class="emo" aria-hidden="true">{emo}</div>'
-             '<div class="ctas"><a class="go" href="/today/" data-confetti>今日の問題であそぶ →</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
+             '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ ブラウザで今すぐ遊ぶ</a><a class="ghost" href="/today/">今日の問題を見る</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
+             '<p class="ctanote">いもむし・すうじ・おかずの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
              f'<ul class="stats"><li><b data-n="{len(ALL)}">{len(ALL)}</b>本のアプリ</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b>本で毎日ランキング</li><li><b>全部</b>無料</li></ul></div>'
              f'<div class="stage" aria-label="アプリの画面"><span class="sticker s1" aria-hidden="true">今日の1問！</span>{phones}<span class="sticker s2" aria-hidden="true">みんな同じ問題</span></div>'
              '</div></section>')
@@ -324,7 +327,7 @@ def page_today():
         name, i, _ = NAMES[d]; t, w = DAILY_LINE[d].split('：', 1)
         lis += (f'<li class="rv" style="{cv(d)}"><span class="no">{k + 1:02d}</span><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
                 f'<div><p class="nm">{esc(name)}</p><h3>{esc(t)}</h3><p class="w">{esc(w)}</p></div>'
-                f'<div class="acts"><a class="go sm" href="{store(i)}">アプリで挑戦</a>' + (f'<a class="ghost" href="/play/{d}/">ブラウザで1問だけ遊ぶ</a>' if d in PLAY else '') +
+                f'<div class="acts"><a class="go sm" href="{store(i)}">アプリで挑戦</a>' + (f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
                 f'<a class="ghost" href="/{d}/">くわしく</a></div></li>')
     body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap"><div class="today">{calendar(big=True)}{countdown()}{rsample()}</div></div></section>'
             '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>今日の問題があるアプリ</h2>'
@@ -556,7 +559,7 @@ def demo_section(d):
 def today_mini(d):
     if d not in DAILY: return ''
     name, i, _ = NAMES[d]; k, w = DAILY_LINE[d].split('：', 1)
-    play = f'<a class="ghost" href="/play/{d}/">ブラウザで1問だけ遊ぶ</a>' if d in PLAY else ''
+    play = f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else ''
     return (f'<section class="block todaymini" aria-labelledby="h-tm"><div class="wrap"><div class="today">{calendar()}{countdown()}'
             f'<div class="tmtext rv"><h2 id="h-tm">📅 {esc(k)}</h2><p>{esc(w)}。毎日0時（日本時間）に新しい問題になります。</p>'
             f'<div class="btns"><a class="go sm" href="{store(i)}" data-confetti>アプリで挑戦</a>{play}<a class="ghost" href="/today/">ほかの今日の問題</a></div></div></div></div></section>')
