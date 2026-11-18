@@ -29,6 +29,7 @@ Allow: /news/
 Allow: /about/
 Allow: /faq/
 Allow: /contact/
+Allow: /note/
 Allow: /sitemap.xml
 Disallow: /
 
