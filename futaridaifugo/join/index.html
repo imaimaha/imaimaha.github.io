@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ふたり大富豪 友達からの招待</title>
+<meta name="description" content="ふたり大富豪（iPhone アプリ）の対戦への招待です。">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f7e9e8">
+<meta name="color-scheme" content="light">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:title" content="ふたり大富豪 で対戦しよう！">
+<meta property="og:description" content="友達からの招待です。アプリで同じ部屋に入れます。">
+<meta property="og:image" content="https://imaimaha.github.io/futaridaifugo/og.jpg">
+<link rel="icon" href="/futaridaifugo/icon-256.webp" type="image/webp">
+<link rel="apple-touch-icon" href="/futaridaifugo/icon.png">
+<style>
+:root{--a:#b3261e;--s:#f7e9e8;--d:#8c1e17;--ink:#2a2019;--dim:#6b5848;--line:#eadfce}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fffaf2;color:var(--ink);line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:16px;line-break:strict;text-wrap:pretty}
+main{max-width:520px;margin:0 auto;padding:26px 16px 40px;text-align:center}
+.ic{width:88px;height:88px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+h1{font-size:22px;line-height:1.4;margin:12px 0 4px}
+.lead{margin:0 0 16px;color:var(--dim)}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:0 0 16px}
+.main{border:2px solid var(--a);background:var(--s)}
+.lab{font-size:14px;color:var(--dim);margin:0}
+.code{font:800 44px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;margin:4px 0 12px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
+.btn{display:flex;align-items:center;justify-content:center;min-height:56px;padding:10px 18px;border-radius:14px;background:var(--d);color:#fff;font-weight:800;font-size:18px;text-decoration:none}
+.btn:active{opacity:.85}
+.btn.st{background:#111;font-size:17px}
+.small{font-size:13px;color:var(--dim);margin:10px 0 0}
+h2{font-size:16px;margin:0 0 10px}
+.msg{font-weight:700;color:var(--d);margin:0 0 10px}
+.bad{color:#b3261e;font-weight:700}
+.ft{font-size:13px;margin-top:22px}
+.ft a{color:var(--dim);display:inline-flex;align-items:center;min-height:44px}
+.nw{white-space:nowrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<img class="ic" src="/futaridaifugo/icon-256.webp" width="88" height="88" alt="">
+<h1><span class="nw">ふたり大富豪</span><br>友達からの招待</h1>
+<p class="lead">アプリで、友達と同じ部屋に入れます。</p>
+<section class="card main" id="ok" hidden>
+<p class="lab">部屋コード</p>
+<p class="code" id="code"></p>
+<a class="btn" id="open" href="#">アプリで参加する</a>
+<p class="small">アプリが開いたら、コードが入った画面になります。「入る」を押すと部屋に入ります。<br>開かないときは、アプリの「オンライン対戦」の「コード」の欄に、このコードを入れてね。</p>
+</section>
+<section class="card main" id="ng">
+<p class="bad">招待のリンクが正しくないようです。</p>
+<p class="small">送ってくれた人に、部屋コード（英数字5文字）を教えてもらって、アプリの「オンライン対戦」の「コード」の欄に入れてね。</p>
+</section>
+<section class="card" id="store">
+<p class="msg" id="fb" hidden>アプリが開かなかったときは、まだ入っていないのかもしれません。</p>
+<h2>アプリをまだ入れていない人は</h2>
+<a class="btn st" href="https://apps.apple.com/jp/app/id6836394499"><span class="nw">App Store</span> で入れる（無料）</a>
+<p class="small">入れたら、もう一度このリンクを開いてね。</p>
+</section>
+<p class="ft"><a href="/futaridaifugo/"><span class="nw">ふたり大富豪</span> の紹介ページ</a></p>
+</main>
+<script>
+(function () {
+  var LEN = 5, SCHEME = 'futaridaifugo';
+  var c = '';
+  try { c = (new URLSearchParams(location.search).get('c') || '').toUpperCase(); } catch (e) {}
+  if (!/^[A-Z0-9]{4,8}$/.test(c) || c.length !== LEN) return;   // 形がちがうコードは使わない（アプリも開かない）
+  var url = SCHEME + '://join?c=' + c;
+  document.getElementById('code').textContent = c;
+  document.getElementById('open').href = url;
+  document.getElementById('ok').hidden = false;
+  document.getElementById('ng').hidden = true;
+  // 自動で開くのは、このコードで1回だけ（もどってきたときに何度も開かない）
+  var key = 'join-tried-' + c, tried = false;
+  try { tried = sessionStorage.getItem(key) === '1'; sessionStorage.setItem(key, '1'); } catch (e) { tried = true; }
+  var fb = document.getElementById('fb');
+  if (tried) { fb.hidden = false; return; }
+  var timer = setTimeout(function () { if (!document.hidden) fb.hidden = false; }, 1200);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) clearTimeout(timer); });
+  setTimeout(function () { location.href = url; }, 60);
+})();
+</script>
+</body>
+</html>

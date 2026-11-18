@@ -7,6 +7,7 @@
   文の中身は content.py（短いタイトル・説明・質問・ルール・いまやっていること）と apps_data.py
   確認: python3 -m http.server でサイトを出して crawl.py（リンク切れ・h1・タイトル長さ・JSON-LD）、check2.py（スクショ）
   プレイ動画: vid/rec.py <アプリ>（vid/enc.swift を swiftc でビルドしてから）
+  招待ページ /<app>/join/?c=部屋コード（page_join。対戦アプリの「招待を送る」のリンク。ナビなし・noindex）
   サポートページ /<app>/support/（page_support。App Store の「サポート」とアプリの「お問い合わせ」から来る。ナビなし・noindex）も、ここで一緒に作る
   App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまは ふたり大富豪）は、App Store のボタンのかわりに「近日公開」"""
 import os, sys, json, html, datetime
@@ -805,6 +806,113 @@ ul{{padding-left:22px}}
     out = re.sub(r'href="(?!https?:|mailto:|/|#)', f'href="/{d}/', out)   # orig の相対リンク（privacy.html など）
     write(f'/{d}/support/', out)
 
+# ---------------- 友達の招待ページ（/<app>/join/?c=部屋のコード） ----------------
+# 2026-11-20: 対戦アプリの「招待を送る」が送るリンク。アプリが入っていれば URL スキーム（<scheme>://join?c=…）でアプリを開き、
+# アプリはオンライン対戦の画面にコードを入れる（入るかは本人が「入る」を押して決める）。入っていなければ App Store へ。
+# サポートページと同じく、ナビなし・noindex・sitemap に入れない。コードは英大文字・数字だけ（アプリごとの文字数）。ほかのパラメータは見ない。
+# 開くのは1回だけ（sessionStorage）。1.2 秒たってもページが見えたままなら「アプリが開かなかったら」の案内を出す
+JOIN = {  # dir -> (URL スキーム, 部屋コードの文字数, App Store の id（NAMES にまだないとき）, アプリでコードを入れる場所)
+    'hensokushogi': ('hensokushogi', 6, None, '「友達とネット対戦」の「コードで招待された人」'),
+    'gekokujo': ('gekokujo', 5, None, '「オンライン」の「コード」'),
+    'futaridaifugo': ('futaridaifugo', 5, '6836394499', '「オンライン対戦」の「コード」'),   # 審査中（id はもう決まっている。公開されればリンクが生きる）
+}
+
+def page_join(d):
+    scheme, n, sid, where = JOIN[d]
+    name = NAMES[d][0]; acc, soft, deep = colors(APPS[d]['accent'])
+    st = store(NAMES[d][1] or sid)
+    out = f"""<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(name)} 友達からの招待</title>
+<meta name="description" content="{esc(name)}（iPhone アプリ）の対戦への招待です。">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="{soft}">
+<meta name="color-scheme" content="light">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:title" content="{esc(name)} で対戦しよう！">
+<meta property="og:description" content="友達からの招待です。アプリで同じ部屋に入れます。">
+<meta property="og:image" content="{BASE}/{d}/og.jpg">
+<link rel="icon" href="/{d}/icon-256.webp" type="image/webp">
+<link rel="apple-touch-icon" href="/{d}/icon.png">
+<style>
+:root{{--a:{acc};--s:{soft};--d:{deep};--ink:#2a2019;--dim:#6b5848;--line:#eadfce}}
+*{{box-sizing:border-box}}
+html{{-webkit-text-size-adjust:100%}}
+body{{margin:0;background:#fffaf2;color:var(--ink);line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:16px;line-break:strict;text-wrap:pretty}}
+main{{max-width:520px;margin:0 auto;padding:26px 16px 40px;text-align:center}}
+.ic{{width:88px;height:88px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.14)}}
+h1{{font-size:22px;line-height:1.4;margin:12px 0 4px}}
+.lead{{margin:0 0 16px;color:var(--dim)}}
+.card{{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:0 0 16px}}
+.main{{border:2px solid var(--a);background:var(--s)}}
+.lab{{font-size:14px;color:var(--dim);margin:0}}
+.code{{font:800 44px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;margin:4px 0 12px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}}
+.btn{{display:flex;align-items:center;justify-content:center;min-height:56px;padding:10px 18px;border-radius:14px;background:var(--d);color:#fff;font-weight:800;font-size:18px;text-decoration:none}}
+.btn:active{{opacity:.85}}
+.btn.st{{background:#111;font-size:17px}}
+.small{{font-size:13px;color:var(--dim);margin:10px 0 0}}
+h2{{font-size:16px;margin:0 0 10px}}
+.msg{{font-weight:700;color:var(--d);margin:0 0 10px}}
+.bad{{color:#b3261e;font-weight:700}}
+.ft{{font-size:13px;margin-top:22px}}
+.ft a{{color:var(--dim);display:inline-flex;align-items:center;min-height:44px}}
+.nw{{white-space:nowrap}}
+[hidden]{{display:none!important}}
+</style>
+</head>
+<body>
+<main>
+<img class="ic" src="/{d}/icon-256.webp" width="88" height="88" alt="">
+<h1>{esc(name)}<br>友達からの招待</h1>
+<p class="lead">アプリで、友達と同じ部屋に入れます。</p>
+<section class="card main" id="ok" hidden>
+<p class="lab">部屋コード</p>
+<p class="code" id="code"></p>
+<a class="btn" id="open" href="#">アプリで参加する</a>
+<p class="small">アプリが開いたら、コードが入った画面になります。「入る」を押すと部屋に入ります。<br>開かないときは、アプリの{esc(where)}の欄に、このコードを入れてね。</p>
+</section>
+<section class="card main" id="ng">
+<p class="bad">招待のリンクが正しくないようです。</p>
+<p class="small">送ってくれた人に、部屋コード（英数字{n}文字）を教えてもらって、アプリの{esc(where)}の欄に入れてね。</p>
+</section>
+<section class="card" id="store">
+<p class="msg" id="fb" hidden>アプリが開かなかったときは、まだ入っていないのかもしれません。</p>
+<h2>アプリをまだ入れていない人は</h2>
+<a class="btn st" href="{st}">App Store で入れる（無料）</a>
+<p class="small">入れたら、もう一度このリンクを開いてね。</p>
+</section>
+<p class="ft"><a href="/{d}/">{esc(name)} の紹介ページ</a></p>
+</main>
+<script>
+(function () {{
+  var LEN = {n}, SCHEME = '{scheme}';
+  var c = '';
+  try {{ c = (new URLSearchParams(location.search).get('c') || '').toUpperCase(); }} catch (e) {{}}
+  if (!/^[A-Z0-9]{{4,8}}$/.test(c) || c.length !== LEN) return;   // 形がちがうコードは使わない（アプリも開かない）
+  var url = SCHEME + '://join?c=' + c;
+  document.getElementById('code').textContent = c;
+  document.getElementById('open').href = url;
+  document.getElementById('ok').hidden = false;
+  document.getElementById('ng').hidden = true;
+  // 自動で開くのは、このコードで1回だけ（もどってきたときに何度も開かない）
+  var key = 'join-tried-' + c, tried = false;
+  try {{ tried = sessionStorage.getItem(key) === '1'; sessionStorage.setItem(key, '1'); }} catch (e) {{ tried = true; }}
+  var fb = document.getElementById('fb');
+  if (tried) {{ fb.hidden = false; return; }}
+  var timer = setTimeout(function () {{ if (!document.hidden) fb.hidden = false; }}, 1200);
+  document.addEventListener('visibilitychange', function () {{ if (document.hidden) clearTimeout(timer); }});
+  setTimeout(function () {{ location.href = url; }}, 60);
+}})();
+</script>
+</body>
+</html>
+"""
+    write(f'/{d}/join/', out)
+
 def fix_privacy_nav(d):
     # プライバシーポリシーの下のリンク: 前は「サポート」→ 紹介ページ（./）。サポートページ（support/）と紹介ページの2つにする（ナビはもともとない）
     fn = f'{R}/{d}/privacy.html'
@@ -852,6 +960,7 @@ if __name__ == '__main__':
     page_now(); page_sitemap()
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
+    for d in JOIN: page_join(d)
     llms()
     if '--og' in sys.argv: make_og()
     print('ok', sorted(OG_PAGES))
