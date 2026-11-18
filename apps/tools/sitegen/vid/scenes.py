@@ -1,22 +1,33 @@
 SCENES = {}
-SCENES['hitofude'] = dict(dir='Hitofude', setup="""
-const T = window.__hfT; T.closeOv(); T.startStage(STAGE); await sleep(200); T.closeOv(); T.resume();
-""".replace('STAGE', '23'), play="""
-const T = window.__hfT;
-for (let k = 1; k <= 60; k++) { T.demoSteps(k); await sleep(240); if (!document.getElementById('ov').hidden) break; }
-""", tail=3600)
+SCENES['hitofude'] = dict(dir='Hitofude', setup='''
+const T = window.__hfT; T.closeOv(); T.startStage(33); await sleep(300); T.closeOv(); T.resume(); await sleep(200);
+''', py='''
+info = pg.evaluate("""() => { const st = HF_STAGES.stages.find(s => s.id === 33); const cv = [...document.querySelectorAll('canvas')].filter(c => c.getBoundingClientRect().width > 100)[0]; const r = cv.getBoundingClientRect(); return { W: st.map[0].length, H: st.map.length, sol: st.sol, x: r.left, y: r.top, w: r.width, h: r.height }; }""")
+cw = info['w'] / info['W']; ch = info['h'] / info['H']
+def c(i): return (info['x'] + (i % info['W'] + 0.5) * cw, info['y'] + (i // info['W'] + 0.5) * ch)
+m = pg.mouse; sol = info['sol']
+x, y = c(sol[0]); m.move(x, y); pg.wait_for_timeout(250); m.down(); pg.wait_for_timeout(200)
+for a, b in zip(sol, sol[1:]):
+    (x0, y0), (x1, y1) = c(a), c(b)
+    for k in range(1, 6):
+        t = k / 5; m.move(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t); pg.wait_for_timeout(36)
+m.up()
+''', tail=3300)
 SCENES['suji'] = dict(dir='SujiNoHeya', setup="""
 const T = window.__sj; T.unlockAll(); T.stage('a', 60); await sleep(400); return await dismiss(['▶ はじめる', 'はじめる', 'とばす', 'スキップ']);
 """, play="""
 const T = window.__sj; const n = T.state().sol.length;
 for (let k = 1; k <= n; k++) { T.fill(k / n); await sleep(420); }
 """, tail=3500)
-SCENES['okazu'] = dict(dir='OkazuTsume', setup="""
-const T = window.__bento; T.unlockAll(); T.fakeStars(40); await dismiss(['とばす']); T.stage(36); await sleep(400); return await dismiss(['はじめる']);
-""", play="""
+SCENES['okazu'] = dict(dir='OkazuTsume', poster=0.93, setup='''
+await dismiss(['とばす']); const T = window.__bento; T.unlockAll(); T.fakeStars(40); T.stage(10); await sleep(400); return await dismiss(['はじめる']);
+''', play='''
 const T = window.__bento; const n = (T.G().st.sol || []).length;
-for (let k = 0; k < n; k++) { try { T.demoDrag(0, -10); } catch (e) {} await sleep(380); T.solve(1); await sleep(520); }
-""", tail=3500)
+for (let k = 0; k < n; k++) {
+  await sleep(350);
+  await sleep(500); T.solve(1); await sleep(800);
+}
+''', tail=2600)
 SCENES['kakezan'] = dict(dir='KakezanRunner', maxsec=10, bitrate=520000, setup="""
 const T = window.__kz; T.unlockAll(); await dismiss(['とばす']); T.stage(30); await sleep(500); return await dismiss(['とばす', 'はじめる', 'スタート']);
 """, play="""
