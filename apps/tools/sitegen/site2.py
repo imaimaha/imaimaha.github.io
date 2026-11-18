@@ -38,7 +38,7 @@ ORG = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "alternate
 CAT_EMO = {'puzzle': '🧩', 'relax': '☕', 'versus': '⚔️', 'life': '📒'}
 CAT_SUB = {'puzzle': '毎日の1問で勝負', 'relax': '指でのんびり', 'versus': '友達と読み合い', 'life': '毎日の記録に'}
 ALL = [d for _, _, ds in CATS for d in ds]
-PLAY = ['hitofude', 'suji', 'okazu', 'jimidrive', 'yudetamago', 'gekokujo']   # ブラウザで遊べるページ（/play/<app>/）。DAILY のアプリは「今日の1問」、ほかは CPU 対戦など
+PLAY = ['hitofude', 'suji', 'okazu', 'jimidrive', 'yudetamago', 'kakezan', 'gekokujo']   # ブラウザで遊べるページ（/play/<app>/）。DAILY のアプリは「今日の1問」、ほかは CPU 対戦など
 def play_label(d): return '▶ ブラウザで1問あそぶ' if d in DAILY else '▶ ブラウザで遊ぶ'
 PLAY_NOTE = {'gekokujo': 'CPU と1試合・登録なし'}   # 今日の問題のないアプリの「ブラウザで遊ぶ」のよこの文
 CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
