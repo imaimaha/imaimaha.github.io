@@ -30,6 +30,7 @@ Allow: /about/
 Allow: /faq/
 Allow: /contact/
 Allow: /note/
+Allow: /play/
 Allow: /sitemap.xml
 Disallow: /
 
