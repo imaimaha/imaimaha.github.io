@@ -1,5 +1,8 @@
 User-agent: *
-# アプリのサポートページと、AdMob が読む app-ads.txt だけは公開する（Notre 本体は検索に出さない）
+# トップ（アプリの一覧）・アプリの紹介ページ・AdMob が読む app-ads.txt は公開する
+# 古い Notre の Web ページ（2026-11-19 に閉じた。ファイルだけ残している）は検索に出さない
+Allow: /$
+Allow: /index.html
 Allow: /app-ads.txt
 Allow: /jimidrive/
 Allow: /gekokujo/
