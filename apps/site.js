@@ -66,6 +66,21 @@
     });
   }
 
+
+  /* プレイ動画: 見えるところに来たら読みこんで再生（動きを減らす設定のときは、ポスターのまま。押すと再生） */
+  $$('video[data-vsrc]').forEach(function (v) {
+    var src = v.getAttribute('data-vsrc');
+    function load() { if (!v.getAttribute('src')) { v.src = src; } }
+    if (still || !('IntersectionObserver' in window)) { v.controls = true; v.preload = 'none'; load(); return; }
+    var vo = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { load(); var pr = v.play(); if (pr && pr.catch) pr.catch(function () { v.controls = true; }); }
+        else if (!v.paused) v.pause();
+      });
+    }, { rootMargin: '200px 0px' });
+    vo.observe(v);
+  });
+
   /* 電話の画面のゆるい視差 */
   var stage = d.querySelector('.stage');
   if (stage && !still) {
