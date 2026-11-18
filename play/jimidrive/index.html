@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0f1120">
+<title>今日のドライブ｜ブラウザで遊べるナンバー暗算（10を作る・無料）</title>
+<meta name="description" content="すれ違う車のナンバー4桁で「10が作れるか」を答えながら目的地へ走る暗算ゲーム。iPhoneアプリ「ナンバー暗算ドライブ」と同じ今日のドライブ（同じ道・同じナンバーの順番）を、ブラウザで無料・登録なしで。日本時間0時に新しい道になります。">
+<link rel="canonical" href="https://imaimaha.github.io/play/jimidrive/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="いまのアプリ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="今日のドライブ｜ブラウザで遊べるナンバー暗算">
+<meta property="og:description" content="車のナンバー4桁で10が作れる？ 毎日かわる1本の道を、ブラウザで無料。">
+<meta property="og:url" content="https://imaimaha.github.io/play/jimidrive/">
+<meta property="og:image" content="https://imaimaha.github.io/jimidrive/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ナンバー暗算ドライブ のアイコン">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="今日のドライブ｜ブラウザで遊べるナンバー暗算">
+<meta name="twitter:description" content="車のナンバー4桁で10が作れる？ 毎日かわる1本の道を、ブラウザで無料。">
+<meta name="twitter:image" content="https://imaimaha.github.io/jimidrive/og.jpg">
+<link rel="icon" href="../../jimidrive/icon-256.webp" type="image/webp">
+<link rel="apple-touch-icon" href="../../jimidrive/icon.png">
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":["VideoGame","WebApplication"],"name":"今日のドライブ（ブラウザ版）","alternateName":"ナンバー暗算ドライブ 今日のドライブ","description":"夜の高速道路で、すれ違う車のナンバー4桁を1回ずつ使って＋−×÷とカッコで10が作れるか（水曜は素数か）を答えながら目的地へ走る暗算ゲーム。iPhoneアプリ「ナンバー暗算ドライブ」と同じ今日のドライブを、ブラウザで無料で遊べます。","url":"https://imaimaha.github.io/play/jimidrive/","image":"https://imaimaha.github.io/jimidrive/og.jpg","inLanguage":"ja","genre":["暗算","テンパズル","脳トレ"],"gamePlatform":"Web browser","applicationCategory":"GameApplication","operatingSystem":"Web browser","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"sameAs":["https://apps.apple.com/jp/app/id6818812573","https://imaimaha.github.io/jimidrive/"],"author":{"@type":"Organization","name":"いまのアプリ","url":"https://imaimaha.github.io/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://imaimaha.github.io/"},{"@type":"ListItem","position":2,"name":"ブラウザで遊ぶ","item":"https://imaimaha.github.io/play/"},{"@type":"ListItem","position":3,"name":"今日のドライブ","item":"https://imaimaha.github.io/play/jimidrive/"}]}</script>
+</head>
+<body class="wp">
+<main>
+<div class="wp-app">
+  <nav class="wp-crumb" aria-label="パンくずリスト"><ol><li><a href="../../">ホーム</a></li><li><a href="../">ブラウザで遊ぶ</a></li><li aria-current="page">今日のドライブ</li></ol></nav>
+  <header class="wp-head">
+    <h1>🚗 今日のドライブ<small id="wp-date"></small></h1>
+    <button id="wp-mute" class="wp-ib" type="button" aria-label="音">🔊</button>
+  </header>
+  <p class="wp-how" id="wp-how"></p>
+  <div id="hud">
+    <div class="hud-row">
+      <div class="stat"><span class="lbl">走行</span><span class="val"><span id="dist">0.0</span><small>km</small></span></div>
+      <div class="stat" id="stat-score"><span class="lbl">スコア</span><span class="val" id="score">0</span><span id="score-pop"></span></div>
+      <div class="stat"><span class="lbl">ミス</span><span id="lives"><i></i><i></i><i></i></span></div>
+      <div class="stat"><span class="lbl">タイム</span><span class="val" id="wp-time">0:00</span></div>
+    </div>
+    <div id="route">
+      <div id="route-track"><div id="route-fill"></div><div id="route-car"></div></div>
+      <div id="route-labels"><span id="route-from"></span><span id="route-next"></span><span id="route-to"></span></div>
+    </div>
+  </div>
+  <div id="jd-stage">
+    <canvas id="jd-scene" aria-hidden="true"></canvas>
+    <div id="toast" aria-live="polite"></div>
+    <div id="center">
+      <div id="plate-wrap" class="hidden">
+        <div id="question" class="make10">Q. 10作れる？</div>
+        <div id="car-tag">セダン</div>
+        <div id="plate">
+          <div class="plate-top"><span id="p-region">品川</span><span id="p-class">300</span></div>
+          <div class="plate-bottom"><span id="p-kana">さ</span><span id="p-num">35<span class="dash">-</span>24</span></div>
+          <div id="rare-badge">レア ご当地</div>
+          <div id="stamp"></div>
+        </div>
+        <div id="timer"><div id="timer-fill"></div></div>
+        <div id="feedback" class="hidden"><div id="fb-title"></div><div id="fb-expr"></div></div>
+      </div>
+      <div id="approach">対向車 接近中</div>
+    </div>
+    <div id="jd-start">
+      <p class="k">MIDNIGHT MAKE 10 DRIVE</p>
+      <p class="r" id="jd-start-route"></p>
+      <p class="m" id="jd-start-mode"></p>
+      <button id="btn-go" class="btn main" type="button">エンジンをかける</button>
+      <p class="s">音が出ます（右上でミュート）・キーボードは F / J</p>
+    </div>
+  </div>
+  <div class="wp-bar jd-btns">
+    <button id="btn-yes" class="btn" type="button" disabled>10作れる！<small>F / ←</small></button>
+    <button id="btn-no" class="btn" type="button" disabled>10は無理！<small>J / →</small></button>
+  </div>
+  <p class="wp-foot"><a href="https://apps.apple.com/jp/app/id6818812573" rel="noopener">📱 アプリ版（5路線・図鑑・ランキング）</a>　<a href="../">ほかのゲーム</a></p>
+  <p class="wp-scroll">▼ このページについて</p>
+</div>
+<section class="wp-about">
+  <h2>このページについて</h2>
+  <p>iPhoneアプリ「ナンバー暗算ドライブ」の毎日の1本「今日のドライブ」を、ブラウザで遊べるページです。路線・区間・問題（平日は「10作れる？」、水曜は「素数？」、土日はミックス）と、すれ違う車のナンバーの順番は、アプリと同じです。日本時間の0時に新しい道にかわります。景色はアプリの3Dのかわりに、かんたんな夜の高速道路にしています。無料・登録なしで、記録はこの端末の中にだけ残ります（どこにも送りません）。</p>
+  <h2>遊び方</h2>
+  <ul>
+    <li>「エンジンをかける」で出発。対向車とすれ違うと、ナンバープレートが大きく出ます。</li>
+    <li>4つの数字を1回ずつ使い、＋−×÷とカッコで 10 が作れるか（並べかえOK）を「10作れる！」「10は無理！」で答えます。素数の日は、35-24 なら 3524 が素数かを答えます。</li>
+    <li>正解すると「パパーン！」と目的地に近づき、残り時間が多いほど・連続で正解するほど点が増えます。制限時間は1枚あたり約6秒で、目的地に近づくと4秒まで短くなります。</li>
+    <li>ミス（まちがい・時間切れ）が3回でおしまい。目的地に着くと、残ったミスの数だけボーナスがつきます。</li>
+  </ul>
+  <a class="apps" href="../../jimidrive/"><img src="../../jimidrive/icon-256.webp" alt="ナンバー暗算ドライブ のアイコン" width="56" height="56"><span>ナンバー暗算ドライブ（iPhone・無料）<br>5つの路線・図鑑・過去の問題・ランキングはアプリで</span></a>
+  <p><a href="../">ほかの「ブラウザで遊べるゲーム」も遊ぶ ›</a></p>
+</section>
+</main>
+<div id="wp-ov" hidden></div>
+<script src="solver.js"></script>
+<script src="data.js"></script>
+<script src="daily.js"></script>
+<script src="../common.js"></script>
+<script src="play.js"></script>
+</body>
+</html>

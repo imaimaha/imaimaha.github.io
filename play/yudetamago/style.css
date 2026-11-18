@@ -1,0 +1,95 @@
+/* つるっと ゆでたまご剥き（アプリの index.html の色・HUD・下のパネル・演出から。画面いっぱいの fixed を、遊ぶところ #yd-game の中の absolute に） */
+:root{--wp-bg:#18242c;--wp-ink:#fbf6ec;--wp-accent:#ffc23a;--wp-accent-dark:#c58d16;--wp-card:#0e181f99;--wp-line:#00000055}
+html,body{background:#18242c}
+.yd-app{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;color:#fbf6ec}
+.wp-crumb a,.wp-foot a,.wp-about a{color:#ffe07a}
+.wp-ib{background:#0e181f99;color:#fbf6ec}
+#yd-game{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;margin:4px 6px 0;border-radius:18px;touch-action:none;
+  background:radial-gradient(circle at 50% 40%,#557686 0%,#2d4250 55%,#18242c 100%)}
+body.xmas #yd-game{background:radial-gradient(circle at 20% 12%,#7a2a34 0%,transparent 42%),radial-gradient(circle at 82% 88%,#1f5a3c 0%,transparent 48%),radial-gradient(circle at 50% 40%,#3e5866 0%,#22333f 55%,#121c23 100%)}
+#yd-game button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+#stage{position:absolute;inset:0}
+#stage canvas{position:absolute;left:0;top:0;display:block;touch-action:none}
+/* 上の HUD */
+#hud{position:absolute;left:0;right:0;top:0;pointer-events:none;padding:8px 10px 0}
+#topbar{display:flex;align-items:center;gap:8px}
+.chip{background:#0e181f99;border-radius:14px;padding:5px 12px 6px;line-height:1.1}
+.chip .lbl{display:block;font-size:10px;opacity:.75;letter-spacing:.05em}
+.chip b{font-size:21px;font-variant-numeric:tabular-nums}
+.chip .unit{font-size:11px;margin-left:2px;opacity:.8}
+#rankChip{margin-left:auto;text-align:center;min-width:86px}
+#rank{font-size:24px;font-weight:900}
+#power{margin:8px auto 0;width:170px;display:flex;align-items:center;gap:6px;font-size:11px;opacity:.9}
+#power .bar{flex:1;height:6px;border-radius:3px;background:#ffffff26;overflow:hidden}
+#powerBar{display:block;height:100%;width:0;background:#ffd75e}
+#power.hot .bar{background:#ff5a4a55}
+#power.hot #powerBar{background:#ff4a3a}
+.r-SSS{color:#ffe066;text-shadow:0 0 10px #ffcf3a}.r-SS{color:#ffe27a}.r-S{color:#ffd166}.r-A{color:#9ee6a0}.r-B{color:#9fd3ff}
+.r-C{color:#e0c9ff}.r-D{color:#ffb38a}.r-F{color:#ff8a80}
+/* 下のパネル */
+#hint{position:absolute;left:12px;right:12px;text-align:center;font-size:14px;font-weight:700;bottom:138px;text-shadow:0 1px 6px #000c;pointer-events:none;line-height:1.4}
+#bottom{position:absolute;left:0;right:0;bottom:0;pointer-events:none;padding:0 10px 10px}
+.panel{background:#0e181fb3;border-radius:20px;padding:10px 12px 12px;max-width:460px;margin:0 auto}
+.gauge{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:7px}
+.gauge span{width:56px;opacity:.85}
+.gauge .bar{flex:1;height:10px;border-radius:5px;background:#ffffff1f;overflow:hidden}
+.gauge .bar i{display:block;height:100%;width:0;border-radius:5px;transition:width .15s}
+#peelBar{background:linear-gradient(90deg,#e9c79c,#ffe9c4)}
+#hpBar{background:#7fe08a}
+.gauge b{width:40px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:10px;margin-top:4px}
+.btns button{pointer-events:auto;flex:1;border:0;border-radius:16px;min-height:48px;padding:8px 6px 8px;font-weight:800;font-size:16px;display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.btns small{font-size:10px;font-weight:600;opacity:.8;margin-top:2px}
+#btnBig{background:linear-gradient(#ff8a5c,#e85a3a);color:#fff;box-shadow:0 3px 0 #a8381f}
+#btnSalt{background:linear-gradient(#f4f4f0,#d9dcdc);color:#2b3a44;box-shadow:0 3px 0 #9aa3a6}
+.btns button:active{transform:translateY(2px);box-shadow:none}
+.btns button:disabled{opacity:.4}
+/* 演出 */
+#ring{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:4px solid #7fe08a;pointer-events:none;box-shadow:0 0 12px #0008;transition:border-color .08s}
+#fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pop{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:22px;white-space:nowrap;color:#fff;text-shadow:0 2px 0 #0007,0 0 8px #0006;animation:pop .85s ease-out forwards}
+.pop.good{color:#b8ffbf}.pop.bad{color:#ff7a6a;font-size:26px}.pop.warn{color:#ffd75e;font-size:20px}.pop.salt{color:#fff;font-size:17px}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+#banner{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:42px;font-weight:900;pointer-events:none;color:#fff;text-shadow:0 3px 0 #c9861a,0 0 18px #ffb34a;opacity:0;padding:0 10px;line-height:1.2}
+#banner.show{animation:banner 1.6s ease-out forwards}
+#banner small{display:block;font-size:18px;text-shadow:0 2px 6px #000a}
+@keyframes banner{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.12)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.04)}}
+#toast{position:absolute;left:50%;top:96px;transform:translateX(-50%);max-width:90%;background:#0e181fd9;padding:8px 16px;border-radius:16px;font-size:14px;font-weight:700;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#toast.show{opacity:1}
+#flash{position:absolute;inset:0;background:#fff6d8;opacity:0;pointer-events:none}
+#flash.go{animation:flash .7s ease-out}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+#vignette{position:absolute;inset:0;pointer-events:none;opacity:0;box-shadow:inset 0 0 90px 30px #ff2a1a;transition:opacity .1s}
+#err{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:16px}
+/* はじめの画面（今日のたまご） */
+.yd-start{position:absolute;left:0;right:0;bottom:0;padding:10px;display:flex;justify-content:center}
+.yd-start .card{width:100%;max-width:420px;background:#0e181fc7;border-radius:22px;padding:14px;text-align:center}
+.yd-start .tag{display:inline-block;margin:0;font-size:12px;font-weight:800;color:#3a2a0c;background:#ffd45a;border-radius:10px;padding:2px 10px}
+.yd-start h2{margin:4px 0 2px;font-size:22px;font-weight:900}
+.yd-start .desc{margin:0;font-size:13px;line-height:1.5;opacity:.9}
+.yd-start .rule{margin:2px 0 4px;font-size:12px;opacity:.75}
+.howto{font-size:12px;line-height:1.6;opacity:.9;margin:4px 2px 8px;padding:0;list-style:none;text-align:left}
+.howto li::before{content:"・"}
+.yd-start .btn{width:100%;background:linear-gradient(#ffe07a,#ffc23a);color:#3a2a0c;box-shadow:0 3px 0 #c58d16;font-size:18px}
+/* 割れたとき */
+.yd-fail{position:absolute;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:10px;background:#0b151c66}
+.yd-fail .box{width:100%;max-width:420px;background:#0e181fe6;border-radius:22px;padding:14px;text-align:center;animation:wppop .35s cubic-bezier(.2,1.5,.4,1)}
+.yd-fail h2{margin:0 0 4px;font-size:21px;font-weight:900}
+.yd-fail p{margin:3px 0;font-size:13px;line-height:1.5}
+.yd-fail .cm{font-size:15px;font-weight:700}
+.yd-fail .tip{opacity:.8;font-size:12px}
+.yd-fail .btn{width:100%;margin-top:8px;background:linear-gradient(#ffe07a,#ffc23a);color:#3a2a0c;box-shadow:0 3px 0 #c58d16}
+/* クリアの画面（WebPlay） */
+#wp-ov{background:rgba(8,14,18,.45)}
+#wp-ov .box{background:#16252f;color:#fbf6ec}
+#wp-ov .btn{background:#ffffff1c;color:#fbf6ec;box-shadow:0 3px 0 #0007}
+#wp-ov .btn.main{background:linear-gradient(#ffe07a,#ffc23a);color:#3a2a0c;box-shadow:0 3px 0 #c58d16}
+#wp-ov .store{background:#000;box-shadow:0 4px 0 #333}
+#wp-ov .land,#wp-ov .copied{color:#ffe07a}
+#wp-ov .yd-rank{display:flex;align-items:center;justify-content:center;gap:12px}
+#wp-ov .yd-rank b{font-size:54px;font-weight:900;line-height:1}
+#wp-ov .yd-rank span{font-size:22px;font-weight:800}
+#wp-ov .yd-detail{font-size:12px;opacity:.85}
+#wp-ov .yd-rare{color:#ffd75e;font-weight:800}
+.wp-about .apps{background:#24343f}
+@media (max-height:700px){#hint{bottom:128px;font-size:13px}.yd-start .howto{display:none}#banner{font-size:34px}}

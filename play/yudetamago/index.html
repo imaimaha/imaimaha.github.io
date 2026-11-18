@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#24343f">
+<title>今日のたまご｜ブラウザで遊べるゆでたまご殻むき3D（無料）</title>
+<meta name="description" content="ゆでたまごの殻だけをツルッとむく3Dゲーム。殻をタップしてヒビを入れ、白身を削らないようにゆっくり引いてむこう。iPhoneアプリ「つるっと ゆでたまご剥き」と同じ今日のたまごを、ブラウザで無料・登録なしで。日本時間0時に新しいたまごになります。">
+<link rel="canonical" href="https://imaimaha.github.io/play/yudetamago/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="いまのアプリ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="今日のたまご｜ブラウザで遊べるゆでたまご殻むき3D">
+<meta property="og:description" content="殻だけをツルッと。毎日かわる今日のたまごを、ブラウザで無料。">
+<meta property="og:url" content="https://imaimaha.github.io/play/yudetamago/">
+<meta property="og:image" content="https://imaimaha.github.io/yudetamago/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="つるっと ゆでたまご剥き のアイコン">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="今日のたまご｜ブラウザで遊べるゆでたまご殻むき3D">
+<meta name="twitter:description" content="殻だけをツルッと。毎日かわる今日のたまごを、ブラウザで無料。">
+<meta name="twitter:image" content="https://imaimaha.github.io/yudetamago/og.jpg">
+<link rel="icon" href="../../yudetamago/icon-256.webp" type="image/webp">
+<link rel="apple-touch-icon" href="../../yudetamago/icon.png">
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":["VideoGame","WebApplication"],"name":"今日のたまご（ブラウザ版）","alternateName":"つるっと ゆでたまご剥き 今日のたまご","description":"ゆでたまごの殻だけをツルッとむく3Dゲーム。殻をタップしてヒビを入れ、白身を削らないようにむくと、タイムときれいさで SSS〜F のランクがつきます。iPhoneアプリ「つるっと ゆでたまご剥き」と同じ今日のたまごを、ブラウザで無料で遊べます。","url":"https://imaimaha.github.io/play/yudetamago/","image":"https://imaimaha.github.io/yudetamago/og.jpg","inLanguage":"ja","genre":["カジュアル","3D","バカゲー"],"gamePlatform":"Web browser","applicationCategory":"GameApplication","operatingSystem":"Web browser","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"sameAs":["https://apps.apple.com/jp/app/id6821884836","https://imaimaha.github.io/yudetamago/"],"author":{"@type":"Organization","name":"いまのアプリ","url":"https://imaimaha.github.io/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://imaimaha.github.io/"},{"@type":"ListItem","position":2,"name":"ブラウザで遊ぶ","item":"https://imaimaha.github.io/play/"},{"@type":"ListItem","position":3,"name":"今日のたまご","item":"https://imaimaha.github.io/play/yudetamago/"}]}</script>
+</head>
+<body class="wp">
+<main>
+<div class="wp-app yd-app">
+  <nav class="wp-crumb" aria-label="パンくずリスト"><ol><li><a href="../../">ホーム</a></li><li><a href="../">ブラウザで遊ぶ</a></li><li aria-current="page">今日のたまご</li></ol></nav>
+  <header class="wp-head">
+    <h1>🥚 今日のたまご<small id="wp-date"></small></h1>
+    <button id="wp-mute" class="wp-ib" type="button" aria-label="音">🔊</button>
+  </header>
+  <div id="yd-game">
+    <div id="stage"></div>
+    <div id="vignette"></div>
+    <div id="hud" hidden>
+      <div id="topbar">
+        <div class="chip"><span class="lbl">タイム</span><b id="time">0.0</b><span class="unit">秒</span></div>
+        <div class="chip" id="rankChip"><span class="lbl">ツルツル完成度</span><b id="rank" class="r-SSS">SSS</b></div>
+      </div>
+      <div id="power"><span>力み</span><div class="bar"><i id="powerBar"></i></div></div>
+    </div>
+    <div id="hint" hidden></div>
+    <div id="bottom" hidden>
+      <div class="panel">
+        <div class="gauge"><span>剥けた殻</span><div class="bar"><i id="peelBar"></i></div><b id="peelPct">0%</b></div>
+        <div class="gauge" id="hpRow"><span>白身HP</span><div class="bar"><i id="hpBar"></i></div><b id="hpVal">100</b></div>
+        <div class="btns">
+          <button id="btnBig" type="button">一気に剥く<small id="bigLeft">ハイリスク・残り2回</small></button>
+          <button id="btnSalt" type="button">塩を振る<small id="saltInfo">ちょっとボーナス</small></button>
+        </div>
+      </div>
+    </div>
+    <div id="ring" hidden></div>
+    <div id="fx"></div>
+    <div id="banner"></div>
+    <div id="toast"></div>
+    <div id="flash"></div>
+    <div id="start" class="yd-start">
+      <div class="card">
+        <p class="tag">📅 今日のたまご</p>
+        <h2 id="startName">白たまご</h2>
+        <p class="desc" id="startDesc"></p>
+        <p class="rule" id="startRule"></p>
+        <ul class="howto">
+          <li>殻を<b>タップ</b>してヒビを入れる（連打しすぎると…）</li>
+          <li>ヒビから<b>ドラッグ</b>で剥く。速すぎ・急な方向転換は白身ごと削れる</li>
+          <li>何もない所のドラッグ／2本指で、たまごを回す</li>
+        </ul>
+        <button id="btnStart" class="btn main" type="button">むきはじめる</button>
+      </div>
+    </div>
+  </div>
+  <p class="wp-foot"><a href="https://apps.apple.com/jp/app/id6821884836" rel="noopener">📱 アプリ版（図鑑・半熟・ランキング）</a>　<a href="../">ほかのゲーム</a></p>
+  <p class="wp-scroll">▼ このページについて</p>
+</div>
+<section class="wp-about">
+  <h2>このページについて</h2>
+  <p>iPhoneアプリ「つるっと ゆでたまご剥き」の毎日の1個「今日のたまご」を、ブラウザでそのまま遊べるページです。たまごの種類・かたさ・かけらの数・ランクの決め方はアプリと同じで、日本時間の0時に新しいたまごにかわります。無料・登録なしで、記録はこの端末の中にだけ残ります（どこにも送りません）。3D の表示に WebGL を使います。</p>
+  <h2>遊び方</h2>
+  <ul>
+    <li>殻をタップすると、パリッとヒビが入ります。連打しすぎると「力み」がたまって爆発します。</li>
+    <li>ヒビの入ったところからドラッグすると、つながったかけらが次々にはがれます。速く引きすぎる・急に向きを変えると、白身ごと削れます（指のまわりの輪が 緑→黄→赤）。</li>
+    <li>殻をぜんぶむくとクリア。白身ダメージとタイムで SSS〜F のランクがつきます。「一気に剥く」はハイリスク、「塩を振る」は1回 +1点（3回まで）。</li>
+  </ul>
+  <a class="apps" href="../../yudetamago/"><img src="../../yudetamago/icon-256.webp" alt="つるっと ゆでたまご剥き のアイコン" width="56" height="56"><span>つるっと ゆでたまご剥き（iPhone・無料）<br>18種類のたまご図鑑・半熟モード・ランキングはアプリで</span></a>
+  <p><a href="../">ほかの「ブラウザで遊べるゲーム」も遊ぶ ›</a></p>
+</section>
+</main>
+<div id="wp-ov" hidden></div>
+<script src="three.min.js"></script>
+<script src="xmas.js"></script>
+<script src="logic.js"></script>
+<script src="../common.js"></script>
+<script src="play.js"></script>
+</body>
+</html>
