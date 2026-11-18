@@ -38,11 +38,8 @@ PLAY = ['hitofude', 'suji', 'okazu']   # ブラウザで遊べる今日の1問�
 CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
 def logo_svg(uid, size=34):
-    return (f'<svg width="{size}" height="{size}" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="{uid}" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6f4a"/></linearGradient></defs>'
-            f'<rect width="32" height="32" rx="10" fill="url(#{uid})"/><circle cx="16" cy="17" r="9.5" fill="#fff"/>'
-            '<path d="M16 11.5V17l3.6 2.4" fill="none" stroke="#3b2b1f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
-            '<circle cx="10.5" cy="6.5" r="2.2" fill="#fff"/><circle cx="21.5" cy="6.5" r="2.2" fill="#fff"/></svg>')
+    from icons import mark
+    return mark().replace('<svg xmlns="http://www.w3.org/2000/svg" ', f'<svg width="{size}" height="{size}" aria-hidden="true" ').replace('id="g"', f'id="{uid}"').replace('url(#g)', f'url(#{uid})')
 
 NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ', '🌐'), ('/apps/', 'アプリ一覧', '📱'), ('/ranking/', 'ランキング', '🏆'), ('/news/', 'お知らせ', '📣'),
        ('/note/', 'note', '📝'), ('/about/', '作っている人', '🙋')]
@@ -81,6 +78,10 @@ def crumb_ld(items, last_url):
     return {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": k + 1, "name": t, "item": BASE + (u or last_url)} for k, (u, t) in enumerate(items)]}
 
+ICON_LINKS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+              '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n<link rel="manifest" href="/apps/site.webmanifest">\n'
+              '<meta name="apple-mobile-web-app-title" content="いまのアプリ">\n<meta name="color-scheme" content="light">\n<meta name="format-detection" content="telephone=no">')
+
 def head(path, title, desc, extra_ld=(), og_img=None, preload=None):
     url = BASE + path
     og_img = og_img or f'{BASE}/apps/og.jpg'
@@ -91,7 +92,7 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None):
          f'<meta property="og:title" content="{esc(title)}">\n<meta property="og:description" content="{esc(desc)}">\n<meta property="og:url" content="{url}">',
          f'<meta property="og:image" content="{og_img}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{BRAND}のアイコン一覧">',
          f'<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="{esc(title)}">\n<meta name="twitter:description" content="{esc(desc)}">\n<meta name="twitter:image" content="{og_img}">',
-         '<link rel="icon" href="/apps/logo.svg" type="image/svg+xml">\n<link rel="apple-touch-icon" href="/apps/logo.png">']
+         ICON_LINKS]
     if preload: L.append(f'<link rel="preload" as="image" href="{preload}">')
     L.append(f'<link rel="stylesheet" href="/apps/site.css?v={V}">')
     L.append(f'<link rel="me" href="{NOTE}">')
@@ -625,6 +626,8 @@ def landing(d):
     k = out.index('<h2>遊び方は3ステップ</h2>'); k = out.index('</section>', k) + len('</section>'); out = out[:k] + '\n' + rules_section(d) + out[k:]
     k = out.index('<section class="block support"'); out = out[:k] + updates_section(d) + '\n' + aeo_section(d) + '\n' + out[k:]
     out = out.replace('</body>', f'<script src="/apps/site.js?v={V}" defer></script>\n</body>', 1)
+    out = out.replace('<link rel="icon" href="icon-256.webp" type="image/webp">\n<link rel="apple-touch-icon" href="icon.png">', ICON_LINKS, 1)
+    assert ICON_LINKS in out
     open(f'{R}/{d}/index.html', 'w', encoding='utf-8').write(out)
 
 # ---------------- 新しいページ ----------------
