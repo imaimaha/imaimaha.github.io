@@ -31,6 +31,7 @@ Allow: /faq/
 Allow: /contact/
 Allow: /note/
 Allow: /play/
+Allow: /now/
 Allow: /sitemap.xml
 Disallow: /
 
