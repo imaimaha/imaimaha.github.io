@@ -6,7 +6,9 @@
   lookup.json は App Store の公開中の情報（curl "https://itunes.apple.com/lookup?id=...&country=jp" で取りなおす）
   文の中身は content.py（短いタイトル・説明・質問・ルール・いまやっていること）と apps_data.py
   確認: python3 -m http.server でサイトを出して crawl.py（リンク切れ・h1・タイトル長さ・JSON-LD）、check2.py（スクショ）
-  プレイ動画: vid/rec.py <アプリ>（vid/enc.swift を swiftc でビルドしてから）"""
+  プレイ動画: vid/rec.py <アプリ>（vid/enc.swift を swiftc でビルドしてから）
+  サポートページ /<app>/support/（page_support。App Store の「サポート」とアプリの「お問い合わせ」から来る。ナビなし・noindex）も、ここで一緒に作る
+  App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまは ふたり大富豪）は、App Store のボタンのかわりに「近日公開」"""
 import os, sys, json, html, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = HERE   # gen.py・apps_data.py・orig/・data/ も同じフォルダ
@@ -22,7 +24,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261121'
+V = '20261122'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -159,7 +161,7 @@ def app_card(d, k=None):
     return (f'<li class="acard tilt rv" style="{cv(d)}"{key}>{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
             f'<div><span class="cat">{CAT_EMO[cid]} {esc(lb)}</span><h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
             f'<p>{esc(text)}</p><div class="acts"><span class="more" aria-hidden="true">くわしく →</span>'
-            f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a></div></li>')
+            + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '<span class="pill soon">近日公開</span>') + '</div></li>')
 
 def calendar(big=False):
     return (f'<div class="cal{" big" if big else ""}" aria-label="今日の日付（日本時間）"><span class="cm" data-cal-m>今日</span>'
@@ -260,7 +262,7 @@ def itemlist():
         items.append({"@type": "ListItem", "position": k + 1, "item": {
             "@type": "SoftwareApplication", "name": name, "description": text, "url": f"{BASE}/{d}/",
             "image": f"{BASE}/{d}/icon-256.webp", "applicationCategory": a['cat'],
-            "operatingSystem": f"iOS {a.get('minos', '18')}.0 以降", "downloadUrl": store(i),
+            "operatingSystem": f"iOS {a.get('minos', '18')}.0 以降", **({"downloadUrl": store(i)} if i else {}),
             "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}}})
     return {"@type": "ItemList", "name": f"{BRAND}の一覧", "numberOfItems": len(items), "itemListElement": items}
 
@@ -695,6 +697,123 @@ def page_sitemap():
     sub_page('/apps/sitemap/', 'サイトマップ', f'サイトマップ｜{BRAND}', 'いまのアプリのすべてのページの一覧です。アプリの紹介・今日の問題・ランキング・お知らせ・よくある質問など。',
              'このサイトのページの一覧です。', body, crumbs=[('/', 'ホーム'), (None, 'サイトマップ')], og='sitemap')
 
+# ---------------- アプリごとのサポートページ（/<app>/support/） ----------------
+# App Store の「サポート」から来る人のためのページ。サイトのナビ・パンくず・フッター・note・ほかのアプリの紹介は出さない（2026-11-19 ユーザー「いい感じにして、まかせる」）。
+# 中身は orig/<app>.html（よくある質問・そのアプリだけの説明）から作る。noindex（検索には出さない。sitemap.xml にも入れない）。
+# いちばん下に小さく「アプリの紹介ページ」へのリンクだけ。各アプリの「お問い合わせ」もここを開く（アプリの中の SFSafariViewController）
+SUPPORT_SKIP = ('遊び方', '使い方', 'どんなアプリ？', 'よくある質問', 'お問い合わせ')
+
+def support_parts(d):
+    src = open(f'{SITE}/orig/{d}.html', encoding='utf-8').read()
+    body = src.split('</header>', 1)[1].split('</main>', 1)[0]
+    tagline = re.search(r'<header>.*?<p>(.*?)</p>', src, re.S).group(1)
+    secs = re.split(r'<h2>(.*?)</h2>', body)
+    faqs, extra = [], []
+    for k in range(1, len(secs), 2):
+        h, x = secs[k], secs[k + 1]
+        if h == 'よくある質問':
+            card = x.split('<div class="card">', 1)[1].rsplit('</div>', 1)[0]
+            for m in re.finditer(r'<h3>(.*?)</h3>(.*?)(?=<h3>|$)', card, re.S):
+                faqs.append((m.group(1).strip(), m.group(2).strip()))
+        elif h not in SUPPORT_SKIP:
+            x = re.sub(r'\s*<nav>.*?</nav>', '', x, flags=re.S).strip()
+            extra.append((h, x))
+    return tagline, faqs, extra
+
+def page_support(d):
+    import urllib.parse
+    name, i, _ = NAMES[d]; acc, soft, deep = colors(APPS[d]['accent'])
+    tagline, faqs, extra = support_parts(d)
+    q = lambda t: urllib.parse.quote(t, safe='')
+    body_t = ('（わかるところだけで大丈夫です）\n\n■ 端末（例: iPhone 15）：\n■ iOS のバージョン：\n■ アプリのバージョン：\n■ 困っていること：\n\n')
+    mailto = f'mailto:{MAIL}?subject={q(name + " のお問い合わせ")}&body={q(body_t)}'
+    qa = ''.join(f'<details class="qa"><summary>{q_}</summary><div class="a">{a_}</div></details>' for q_, a_ in faqs)
+    ex = ''.join(f'<section class="card"><h2>{h}</h2>{x}</section>' for h, x in extra)
+    url = f'{BASE}/{d}/support/'
+    out = f"""<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(name)} サポート</title>
+<meta name="description" content="{esc(name)}（iPhone アプリ）のサポートページ。よくある質問と、メールでのお問い合わせ。">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{url}">
+<meta name="theme-color" content="{soft}">
+<meta name="color-scheme" content="light">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="/{d}/icon-256.webp" type="image/webp">
+<link rel="apple-touch-icon" href="/{d}/icon.png">
+<style>
+:root{{--a:{acc};--s:{soft};--d:{deep};--ink:#2a2019;--dim:#6b5848;--line:#eadfce}}
+*{{box-sizing:border-box}}
+html{{-webkit-text-size-adjust:100%}}
+body{{margin:0;background:#fffaf2;color:var(--ink);line-height:1.8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:16px;line-break:strict;text-wrap:pretty}}
+main{{max-width:680px;margin:0 auto;padding:22px 16px 40px}}
+.hd{{display:flex;align-items:center;gap:14px;margin:4px 0 18px}}
+.hd img{{width:64px;height:64px;border-radius:15px;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.12)}}
+h1{{margin:0;line-height:1.3;font-size:22px}}
+h1 .sp{{display:block;font-size:15px;color:var(--d);margin-top:2px}}
+.tag{{margin:2px 0 0;color:var(--dim);font-size:13px;line-height:1.5}}
+h2{{font-size:18px;margin:0 0 8px;line-height:1.4;text-wrap:balance}}
+.card{{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 18px 14px;margin:0 0 16px}}
+.card p{{margin:0 0 10px}}
+.contact{{border:2px solid var(--a);background:var(--s)}}
+.mailbtn{{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:10px 18px;border-radius:14px;background:var(--d);color:#fff;font-weight:800;font-size:17px;text-decoration:none;margin:4px 0 10px}}
+.mailbtn:active{{opacity:.85}}
+.addr{{font-size:14px;color:var(--dim);margin:0 0 8px;overflow-wrap:anywhere}}
+.addr b{{color:var(--ink);user-select:all;-webkit-user-select:all}}
+.tpl{{margin:6px 0 8px;padding:10px 14px;border-radius:12px;background:#fff;font-size:14px;list-style:none}}
+.tpl li{{margin:2px 0}}
+.small{{font-size:13px;color:var(--dim)}}
+.qa{{border-top:1px solid var(--line)}}
+.qa:first-of-type{{border-top:0}}
+.qa summary{{cursor:pointer;font-weight:700;padding:12px 28px 12px 0;min-height:44px;list-style:none;position:relative}}
+.qa summary::-webkit-details-marker{{display:none}}
+.qa summary::after{{content:"＋";position:absolute;right:2px;top:12px;color:var(--d)}}
+.qa[open] summary::after{{content:"－"}}
+.qa .a{{padding:0 0 10px;font-size:15px}}
+.qa .a p{{margin:0 0 8px}}
+a{{color:var(--d)}}
+ul{{padding-left:22px}}
+.links a{{display:inline-flex;align-items:center;min-height:44px;font-weight:700}}
+.ft{{text-align:center;margin-top:26px;font-size:13px}}
+.ft a{{color:var(--dim);display:inline-flex;align-items:center;min-height:44px}}
+.nw{{white-space:nowrap}}
+</style>
+</head>
+<body>
+<main id="main">
+<header class="hd"><img src="/{d}/icon-256.webp" width="64" height="64" alt=""><div><h1>{esc(name)}<span class="sp">サポート</span></h1><p class="tag">{tagline}</p></div></header>
+<section class="card contact" aria-labelledby="h-contact"><h2 id="h-contact">✉️ お問い合わせ</h2>
+<p>不具合やご要望・ご質問は、メールでどうぞ。下のボタンを押すと、メールのアプリが開きます。</p>
+<a class="mailbtn" href="{esc(mailto)}">メールで問い合わせる</a>
+<p class="addr">あて先：<b>{MAIL}</b></p>
+<p class="small">メールには、次のことを書いてもらえると助かります（ボタンから開くと、はじめから入っています）。</p>
+<ul class="tpl"><li>■ 端末（例: iPhone 15）</li><li>■ iOS のバージョン</li><li>■ アプリのバージョン</li><li>■ 困っていること（できれば画面のスクリーンショットも）</li></ul>
+<p class="small">iOS のバージョンは「設定」→「一般」→「情報」、アプリのバージョンは「設定」→「一般」→「iPhone ストレージ」→「{esc(name)}」で見られます。ひとりで作っているので、お返事に少し時間がかかることがあります。</p>
+</section>
+<section class="card" aria-labelledby="h-faq"><h2 id="h-faq">💬 よくある質問</h2>{qa}</section>
+{ex}<section class="card" aria-labelledby="h-priv"><h2 id="h-priv">🔒 プライバシー</h2>
+<p>このアプリで扱う情報や、データの消し方は、プライバシーポリシーにまとめています。</p>
+<p class="links"><a href="/{d}/privacy.html">{esc(name)} のプライバシーポリシー</a></p></section>
+<p class="ft"><a href="/{d}/">アプリの紹介ページ</a></p>
+</main>
+</body>
+</html>
+"""
+    out = re.sub(r'href="(?!https?:|mailto:|/|#)', f'href="/{d}/', out)   # orig の相対リンク（privacy.html など）
+    write(f'/{d}/support/', out)
+
+def fix_privacy_nav(d):
+    # プライバシーポリシーの下のリンク: 前は「サポート」→ 紹介ページ（./）。サポートページ（support/）と紹介ページの2つにする（ナビはもともとない）
+    fn = f'{R}/{d}/privacy.html'
+    if not os.path.exists(fn): return
+    s = open(fn, encoding='utf-8').read()
+    new = '<nav><a href="support/">サポート・お問い合わせ</a><a href="./">アプリの紹介ページ</a></nav>'
+    s2 = re.sub(r'<nav>(?:(?!</nav>).)*</nav>', new, s, count=1, flags=re.S)
+    if s2 != s: open(fn, 'w', encoding='utf-8').write(s2)
+
 # ---------------- OG 画像・llms.txt ----------------
 def make_og():
     from playwright.sync_api import sync_playwright
@@ -723,15 +842,16 @@ def llms():
     for cid, lb, ds in CATS:
         L.append(f'### {lb}')
         for d in ds:
-            L.append(f'- [{NAMES[d][0]}]({BASE}/{d}/): {SEO[d][1]} App Store: {store(NAMES[d][1])}')
+            L.append(f'- [{NAMES[d][0]}]({BASE}/{d}/): {SEO[d][1]} ' + (f'App Store: {store(NAMES[d][1])}' if NAMES[d][1] else 'App Store: 近日公開'))
     L += ['', '## そのほか', f'- App Store の開発者ページ: {DEV}', f'- 連絡先: {MAIL}', '']
-    open(f'{R}/apps/llms.txt', 'w', encoding='utf-8').write('\n'.join(L))
+    for fn in (f'{R}/apps/llms.txt', f'{R}/llms.txt'):   # /llms.txt も同じ中身
+        open(fn, 'w', encoding='utf-8').write('\n'.join(L))
 
 if __name__ == '__main__':
     page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
     page_now(); page_sitemap()
     for c, _, _ in CATS: page_category(c)
-    for d in ALL: landing(d)
+    for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     llms()
     if '--og' in sys.argv: make_og()
     print('ok', sorted(OG_PAGES))

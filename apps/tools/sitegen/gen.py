@@ -57,8 +57,8 @@ def support_block(d, a):
     # extra FAQ at the top of the FAQ card (also used for FAQPage JSON-LD)
     minos = a.get('minos', '18')
     price = a.get('ads', ADS)
-    pre = (f'\n    <h3>無料ですか？</h3>\n    <p>はい、無料でダウンロードして遊べます（{price.replace("無料・", "")}）。'
-           f'<a href="{store(NAMES[d][1])}">App Store のページ</a>からどうぞ。</p>'
+    get = (f'<a href="{store(NAMES[d][1])}">App Store のページ</a>からどうぞ。' if NAMES[d][1] else 'App Store で近日公開です。')
+    pre = (f'\n    <h3>無料ですか？</h3>\n    <p>はい、無料でダウンロードして遊べます（{price.replace("無料・", "")}）。{get}</p>'
            f'\n    <h3>どの端末で使えますか？</h3>\n    <p>iPhone（iOS {minos} 以降）で使えます。Android 版はありません。</p>')
     i = body.index('<h2 id="faq">')
     j = body.index('<div class="card">', i) + len('<div class="card">')
@@ -76,6 +76,8 @@ def support_block(d, a):
 
 # ---------- pieces ----------
 def store_btn(i, label='App Store で', big='無料ダウンロード', extra=''):
+    if not i:   # App Store のアプリがまだない（NAMES の id が None）: ボタンのかわりに「近日公開」
+        return '<span class="store soon" role="note"><span class="s1">App Store で</span><span class="s2">近日公開</span></span>'
     return (f'<a class="store" href="{store(i)}"{extra}><span class="s1">{label}</span>'
             f'<span class="s2">{big}</span></a>')
 
@@ -98,7 +100,7 @@ def app_card(d, daily=False, cls=''):
     dl = f'<span class="daily">{esc(DAILY_LINE[d])}</span>' if daily and d in DAILY else ''
     return (f'<li class="card-app{cls}"><img src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
             f'<div class="body"><a class="nm" href="/{d}/">{esc(name)}</a><span class="tx">{esc(text)}</span>{dl}'
-            f'<div class="acts"><a class="dl" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>'
+            f'<div class="acts">' + (f'<a class="dl" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '<span class="pill soon">近日公開</span>') +
             f'<a href="/{d}/">くわしく見る</a></div></div></li>')
 
 PERSON = {"@type": "Organization", "name": BRAND, "url": BASE + "/", "sameAs": [DEV, NOTE]}  # 個人名は出さない（ブランド名で）
@@ -125,7 +127,7 @@ def page(d):
     w(f'<meta name="description" content="{esc(a["desc"])}">')
     w(f'<link rel="canonical" href="{url}">')
     w(f'<meta name="theme-color" content="{soft}">')
-    w(f'<meta name="apple-itunes-app" content="app-id={i}">')
+    if i: w(f'<meta name="apple-itunes-app" content="app-id={i}">')
     w(f'<meta property="og:type" content="website">\n<meta property="og:site_name" content="いまのアプリ">\n<meta property="og:locale" content="ja_JP">')
     w(f'<meta property="og:title" content="{esc(a["title"])}">\n<meta property="og:description" content="{esc(a["desc"])}">')
     w(f'<meta property="og:url" content="{url}">\n<meta property="og:image" content="{og}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">')
@@ -141,7 +143,10 @@ def page(d):
           "screenshot": [f"{url}shots/{f}.webp" for f, _ in shots],
           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY", "url": store(i)},
           "author": PERSON, "publisher": PERSON}
-    store_names = json.load(open(f'{S}/data/{i}.json'))['trackName']
+    if not i:
+        for k in ('downloadUrl', 'installUrl'): del sw[k]
+        del sw['offers']['url']
+    store_names = json.load(open(f'{S}/data/{i}.json'))['trackName'] if i else name
     if store_names != name: sw['alternateName'] = store_names
     else: del sw['alternateName']
     w(ld(sw))
@@ -170,7 +175,7 @@ def page(d):
     # ranking / versus
     rk = a.get('rank')
     if rk:
-        versus = d in ('hensokushogi', 'gekokujo')
+        versus = d in ('hensokushogi', 'gekokujo', 'futaridaifugo')
         tag = 'ONLINE' if versus else 'RANKING'
         rcls = 'rgrid' if [f for f, _ in shots if 'daily' in f or 'online' in f] else 'rnone'
         rs = [(f, alt) for f, alt in shots if 'daily' in f or 'online' in f]

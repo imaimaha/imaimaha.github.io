@@ -27,6 +27,7 @@
 ### 対戦
 - [変則将棋対戦](https://imaimaha.github.io/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
 - [下剋上デュエル](https://imaimaha.github.io/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
+- [ふたり大富豪](https://imaimaha.github.io/futaridaifugo/): ジョーカーなしの52枚を赤と黒に分けて、ふたりで遊ぶ大富豪。5スキップ・7わたし・8切り・10すて・イレブンバック・革命。CPU や友達とオンラインで。近日公開。 App Store: 近日公開
 - [プリフロップ練習帳](https://imaimaha.github.io/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
 ### くらし・記録
 - [おさんぽ日記](https://imaimaha.github.io/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194

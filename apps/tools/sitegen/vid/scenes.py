@@ -118,3 +118,20 @@ while (performance.now() - t0 < 12000) {
   clickText(['次へ', 'つぎへ']); await sleep(300);
 }
 """, tail=300)
+SCENES['futaridaifugo'] = dict(dir='FutariDaifugo', load=1500, maxsec=12, poster=0.92, bitrate=600000, init="""
+localStorage.setItem('daifugo2.seenRules', 'true');
+Math.random = (function () { let s = 777; return function () { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; })();
+""", setup="""
+window.__df.A.level = 0; window.__df.startCpu(); await sleep(2600); return 'ok';
+""", play="""
+const D = window.__df; const t0 = performance.now();
+while (performance.now() - t0 < 13000) {
+  const g = D.A.vg; if (!g || g.phase === 'over') break;
+  if (g.phase !== 'play' || g.turn === D.A.me) {
+    const a = D.C.cpu(g, D.A.me, 2);
+    if (g.phase === 'play' && a && a.t === 'play' && a.cards) { D.tap(a.cards[0]); await sleep(120); for (const c of a.cards.slice(1)) if (D.A.sel.indexOf(c) < 0) { D.tap(c); await sleep(120); } await sleep(450); D.go(); }
+    else D.auto(2);
+  }
+  await sleep(450);
+}
+""", tail=2500)

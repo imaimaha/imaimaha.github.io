@@ -33,6 +33,16 @@ for u, s in sorted(pages.items()):
     crumb = 'class="crumb' in s
     ogi = re.search(r'<meta property="og:image" content="([^"]+)"', s)
     issues = []
+    if u.endswith('/privacy.html') or u.endswith('/support/'):
+        # ひとりで立つページ（App Store から来る。ナビ・パンくず・OGP なし）。サポートは noindex と canonical だけ確かめる
+        if h1 != 1: issues.append(f'h1 x{h1}')
+        if u.endswith('/support/'):
+            if '<meta name="robots" content="noindex">' not in s: issues.append('no noindex')
+            if not can or can.group(1) != BASE + u: issues.append('canonical')
+            if '<nav' in s or 'class="crumb' in s: issues.append('nav')
+        if issues: probs.append((u, issues))
+        print(f'{u:28s} t{len(t):3d} standalone {"OK" if not issues else issues}')
+        continue
     if len(t) > 32: issues.append(f'title {len(t)}')
     if not d or len(d) > 110: issues.append(f'desc {len(d)}')
     if not can or can.group(1) != BASE + u: issues.append(f'canonical {can.group(1) if can else None}')
