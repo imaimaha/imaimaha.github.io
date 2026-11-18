@@ -16,4 +16,10 @@ Allow: /sanpobingo/
 Allow: /hitofude/
 Allow: /okazu/
 Allow: /suji/
+Allow: /pokerstudy/
+Allow: /osouji/
+Allow: /apps/
+Allow: /sitemap.xml
 Disallow: /
+
+Sitemap: https://imaimaha.github.io/sitemap.xml
