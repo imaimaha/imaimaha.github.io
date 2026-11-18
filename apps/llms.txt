@@ -35,6 +35,5 @@
 - [Notre Endroit](https://imaimaha.github.io/notre-app/): 恋人や夫婦など、ふたりだけで使うアプリ。交換日記、帰る時間と今のきもちの共有、記念日のカウントダウン、毎日のクイズ。会員登録なし・広告なしの無料iPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821843630
 
 ## そのほか
-- note: https://note.com/redemarrage22
 - App Store の開発者ページ: https://apps.apple.com/jp/developer/id6818812575
 - 連絡先: imaimaha.apps@gmail.com

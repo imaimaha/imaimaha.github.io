@@ -18,6 +18,7 @@ from gen import colors, mix
 R = os.path.expanduser('~/Developer/imaimaha.github.io')
 BASE = 'https://imaimaha.github.io'
 NOTE = 'https://note.com/redemarrage22'
+NOTE_ON = False   # 2026-11-19 ユーザー「いったん NOTE への遷移はきろう。後で復活させる」→ True にもどせば全部もどる
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
@@ -29,7 +30,7 @@ def store(i): return f'https://apps.apple.com/jp/app/id{i}'
 def ld(obj): return '<script type="application/ld+json">' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + '</script>'
 
 ORG = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "alternateName": "imaimaha のアプリ", "url": BASE + "/",
-       "logo": BASE + "/apps/logo.png", "email": MAIL, "sameAs": [DEV, NOTE],
+       "logo": BASE + "/apps/logo.png", "email": MAIL, "sameAs": [DEV] + ([NOTE] if NOTE_ON else []),
        "description": "将棋・ポーカー・アプリ開発が好きな「いま」が、iPhone 向けの小さなアプリをひとりで作っています。"}
 CAT_EMO = {'puzzle': '🧩', 'relax': '☕', 'versus': '⚔️', 'life': '📒'}
 CAT_SUB = {'puzzle': '毎日の1問で勝負', 'relax': '指でのんびり', 'versus': '友達と読み合い', 'life': '毎日の記録に'}
@@ -42,7 +43,7 @@ def logo_svg(uid, size=34):
     return mark().replace('<svg xmlns="http://www.w3.org/2000/svg" ', f'<svg width="{size}" height="{size}" aria-hidden="true" ').replace('id="g"', f'id="{uid}"').replace('url(#g)', f'url(#{uid})')
 
 NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ', '🌐'), ('/apps/', 'アプリ一覧', '📱'), ('/ranking/', 'ランキング', '🏆'), ('/news/', 'お知らせ', '📣'),
-       ('/note/', 'note', '📝'), ('/about/', '作っている人', '🙋')]
+       ] + ([('/note/', 'note', '📝')] if NOTE_ON else []) + [('/about/', '作っている人', '🙋')]
 MENU = [('/', 'ホーム', '🏠')] + NAV + [('/now/', 'いま やっていること', '🛠️'), ('/faq/', 'よくある質問', '💬'), ('/contact/', 'お問い合わせ', '✉️'), ('/apps/sitemap/', 'サイトマップ', '🗺️')]
 
 def header(cur):
@@ -60,7 +61,7 @@ def footer(privacy=None):
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
     sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ')]
     cols = [('あそぶ', [('/', 'ホーム'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
-            ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること'), ('/note/', 'note の記事'), (NOTE, 'note（いまのページ）'), (DEV, 'App Store で全部のアプリを見る')]),
+            ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
     def li(u, t):
         rel = ' rel="me noopener"' if u == NOTE else ''
@@ -95,7 +96,7 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None):
          ICON_LINKS]
     if preload: L.append(f'<link rel="preload" as="image" href="{preload}">')
     L.append(f'<link rel="stylesheet" href="/apps/site.css?v={V}">')
-    L.append(f'<link rel="me" href="{NOTE}">')
+    if NOTE_ON: L.append(f'<link rel="me" href="{NOTE}">')
     for o in extra_ld: L.append(ld(o))
     L.append('</head>\n<body>')
     return '\n'.join(L)
@@ -197,7 +198,7 @@ def note_list(n=None, thumbs=False):
     return f'<ul class="notes{" thumbs" if thumbs else ""}" id="notes"' + (f' data-max="{n}"' if n else '') + f'>{lis}</ul>'
 
 def me_card(h='h3', full=False):
-    btns = (f'<a class="go sm" href="{NOTE}" rel="me noopener">📝 note を読む</a>'
+    btns = ((f'<a class="go sm" href="{NOTE}" rel="me noopener">📝 note を読む</a>' if NOTE_ON else '') +
             f'<a class="ghost" href="{DEV}">App Store で全部見る</a>' + '<a class="ghost" href="/now/">いま やっていること</a>' + ('' if full else '<a class="ghost" href="/about/">もっと見る</a>') +
             ('<a class="ghost" href="/contact/">お問い合わせ</a>' if full else ''))
     return (f'<div class="me rv"><div class="av" aria-hidden="true">🐛</div><div><{h}>作っている人：いま</{h}>'
@@ -311,8 +312,8 @@ def page_home():
     L.append('<section class="sec" aria-labelledby="h-news"><div class="wrap"><div class="cols c2"><div>'
              '<div class="sec-h rv"><h2 id="h-news" style="font-size:24px">📣 お知らせ</h2><a class="more-link" href="/news/">ぜんぶ見る →</a></div>'
              f'<ul class="news">{"".join(news_li(n, full=False) for n in ns)}</ul></div><div>'
-             '<div class="sec-h rv"><h2 id="h-note" style="font-size:24px">📝 note の最新記事</h2><a class="more-link" href="/note/">note の記事をぜんぶ見る →</a></div>'
-             f'{note_list(4)}</div></div></div></section>')
+             + ('<div class="sec-h rv"><h2 id="h-note" style="font-size:24px">📝 note の最新記事</h2><a class="more-link" href="/note/">note の記事をぜんぶ見る →</a></div>'
+             f'{note_list(4)}' if NOTE_ON else '') + '</div></div></div></section>')
     mc = me_card().replace('<h3>', '<h2 id="h-me">').replace('</h3>', '</h2>')
     L.append(f'<section class="sec white" id="profile" aria-labelledby="h-me"><div class="wrap">{mc}</div></section>')
     L.append('</main>'); L.append(tail())
@@ -437,14 +438,14 @@ def page_about():
             f'<ul class="linklist" style="padding:0">{counts}</ul></div>'
             '<div class="box rv"><h2>🌱 たいせつにしていること</h2><ul><li>1回が短く、すきま時間に遊べること</li><li>サインインなしで、名前を決めるだけで参加できること</li>'
             '<li>集めるデータは少なく。記録はなるべく iPhone の中に</li></ul></div>'
-            '<div class="sec-h rv" style="margin-top:26px"><h2 style="font-size:24px">📝 note の最新記事</h2><a class="more-link" href="/note/">ぜんぶ見る →</a></div>'
-            f'{note_list(5)}</div></section>' + timeline())
+            + ('<div class="sec-h rv" style="margin-top:26px"><h2 style="font-size:24px">📝 note の最新記事</h2><a class="more-link" href="/note/">ぜんぶ見る →</a></div>'
+            f'{note_list(5)}' if NOTE_ON else '') + '</div></section>' + timeline())
     person_page = {"@context": "https://schema.org", "@type": "ProfilePage", "url": BASE + "/about/", "name": "作っている人：いま",
-                   "mainEntity": {"@type": "Person", "@id": BASE + "/about/#ima", "name": "いま", "url": BASE + "/about/", "sameAs": [NOTE],
+                   "mainEntity": {"@type": "Person", "@id": BASE + "/about/#ima", "name": "いま", "url": BASE + "/about/", "sameAs": [NOTE] if NOTE_ON else [],
                                   "knowsAbout": ["将棋", "ポーカー", "iPhone アプリ開発"], "worksFor": None}}
     del person_page['mainEntity']['worksFor']
     sub_page('/about/', '作っている人', f'作っている人：いま｜{BRAND}',
-             '将棋・ポーカー・アプリ開発が好きな「いま」が、毎日ちょっと遊べる iPhone アプリをひとりで作っています。note の記事もこちらから。',
+             '将棋・ポーカー・アプリ開発が好きな「いま」が、毎日ちょっと遊べる iPhone アプリをひとりで作っています。' + ('note の記事もこちらから。' if NOTE_ON else ''),
              'いまのアプリを作っている「いま」のページです。', body, [person_page, ORG_LD])
 
 from content import GLOSS as GLOSS_ALL
@@ -621,7 +622,7 @@ def landing(d):
             obj['@type'] = 'MobileApplication'
             obj['operatingSystem'] = f'iOS {a.get("minos", "18")}.0 以降'
             obj['description'] = seo_d
-            obj['publisher'] = obj['author'] = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "url": BASE + "/", "sameAs": [DEV, NOTE]}
+            obj['publisher'] = obj['author'] = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "url": BASE + "/", "sameAs": [DEV] + ([NOTE] if NOTE_ON else [])}
             if r:
                 obj['softwareVersion'] = r['version']
                 obj['datePublished'] = rel_date(d)
@@ -682,7 +683,7 @@ def page_now():
 def page_sitemap():
     groups = [('あそぶ', [('/', 'ホーム'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
               ('アプリ', [('/apps/', 'アプリ一覧')] + [(f'/apps/{c}/', l) for c, l, _ in CATS]),
-              ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること'), ('/note/', 'note の記事')]),
+              ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事')] if NOTE_ON else [])),
               ('サポート', [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ'), ('/apps/sitemap/', 'サイトマップ')])]
     body = '<section class="sec" style="padding-top:16px"><div class="narrow">'
     for h, ls in groups:
@@ -723,11 +724,11 @@ def llms():
         L.append(f'### {lb}')
         for d in ds:
             L.append(f'- [{NAMES[d][0]}]({BASE}/{d}/): {SEO[d][1]} App Store: {store(NAMES[d][1])}')
-    L += ['', '## そのほか', f'- note: {NOTE}', f'- App Store の開発者ページ: {DEV}', f'- 連絡先: {MAIL}', '']
+    L += ['', '## そのほか', f'- App Store の開発者ページ: {DEV}', f'- 連絡先: {MAIL}', '']
     open(f'{R}/apps/llms.txt', 'w', encoding='utf-8').write('\n'.join(L))
 
 if __name__ == '__main__':
-    page_home(); page_apps(); page_today(); page_ranking(); page_news(); page_note(); page_about(); page_faq(); page_contact()
+    page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
     page_now(); page_sitemap()
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d)
