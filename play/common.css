@@ -1,0 +1,56 @@
+/* ブラウザで遊べる「今日の問題」共通の見た目（/play/）。色は各ゲームの style.css で --wp-* を決める */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--wp-bg);color:var(--wp-ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+html,body{height:auto;min-height:100%}
+.wp-app{position:relative;height:100vh;height:100svh;min-height:520px;display:flex;flex-direction:column;max-width:520px;margin:0 auto;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+.wp-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px 2px}
+.wp-head h1{flex:1 1 auto;margin:0;font-size:17px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wp-head h1 small{font-size:13px;opacity:.7;margin-left:4px}
+.wp-crumb{flex:0 0 auto;margin:0;padding:6px 12px 0;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8}
+.wp-crumb ol{display:inline;list-style:none;margin:0;padding:0}.wp-crumb li{display:inline}.wp-crumb li+li:before{content:" › "}
+.wp-crumb a{color:var(--wp-ink)}
+.wp-back{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--wp-ink);text-decoration:none;background:var(--wp-card);border-radius:12px;padding:8px 10px;box-shadow:0 2px 0 var(--wp-line)}
+.wp-ib{flex:0 0 auto;width:40px;height:40px;border-radius:12px;border:0;background:var(--wp-card);box-shadow:0 2px 0 var(--wp-line);font-size:18px;padding:0;cursor:pointer;color:var(--wp-ink)}
+.wp-how{flex:0 0 auto;margin:4px 14px 0;font-size:12.5px;line-height:1.5;text-align:center;opacity:.8}
+.wp-info{flex:0 0 auto;display:flex;justify-content:center;align-items:center;gap:14px;min-height:28px;font-size:14px;font-weight:700;white-space:nowrap}
+.wp-info b{font-variant-numeric:tabular-nums}
+.wp-info .warn{color:#e5483b}
+.wp-bar{flex:0 0 auto;display:flex;justify-content:center;gap:10px;padding:6px 14px 6px}
+.wp-bar .btn{flex:1 1 0;max-width:240px;padding:0 6px;white-space:nowrap}
+.wp-foot{flex:0 0 auto;text-align:center;font-size:12px;padding:2px 10px 8px;opacity:.85}
+.wp-foot a{color:var(--wp-ink);font-weight:700}
+.btn{font:inherit;font-weight:800;font-size:16px;border:0;border-radius:16px;min-height:48px;padding:0 16px;cursor:pointer;
+  background:var(--wp-card);color:var(--wp-ink);box-shadow:0 3px 0 var(--wp-line);touch-action:manipulation}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wp-line)}
+.btn.main{background:var(--wp-accent);color:#fff;box-shadow:0 4px 0 var(--wp-accent-dark)}
+/* クリアの画面 */
+#wp-ov{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:rgba(20,30,20,.4);padding:12px}
+#wp-ov .box{width:min(360px,94vw);max-height:94vh;overflow:auto;background:#fff;border-radius:26px;padding:18px 18px 14px;text-align:center;
+  box-shadow:0 14px 40px rgba(0,0,0,.3);animation:wppop .35s cubic-bezier(.2,1.5,.4,1);-webkit-user-select:none;user-select:none}
+#wp-ov .tip{font-size:12px;opacity:.7;margin:0}
+#wp-ov h2{margin:2px 0 2px;font-size:23px}
+#wp-ov .big{font-size:50px;line-height:1.15}
+#wp-ov .time{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0}
+#wp-ov .row{font-size:22px;letter-spacing:2px;margin:2px 0 4px}
+#wp-ov p{margin:4px 0;font-size:14px;line-height:1.6}
+#wp-ov .btn{display:block;width:100%;margin-top:9px}
+#wp-ov .store{display:block;margin-top:12px;padding:12px 14px;border-radius:18px;background:#111;color:#fff;text-decoration:none;font-weight:800;font-size:16px;line-height:1.4;box-shadow:0 4px 0 #444}
+#wp-ov .store small{display:block;font-size:12px;font-weight:700;opacity:.8}
+#wp-ov .land{display:inline-block;margin-top:10px;font-size:13px;color:var(--wp-ink);font-weight:700}
+#wp-ov .next{font-size:13px;opacity:.75;margin-top:8px;font-variant-numeric:tabular-nums}
+#wp-ov .copied{font-size:12px;color:var(--wp-accent);font-weight:800;min-height:18px;margin:4px 0 0}
+@keyframes wppop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@media (max-height:640px){.wp-how{font-size:11.5px}.wp-foot{padding-bottom:4px}.btn{min-height:44px}}
+.wp-copybuf{position:fixed;left:-9999px;top:0;opacity:0}
+.wp-about{max-width:520px;margin:0 auto;padding:18px 18px 40px;font-size:14px;line-height:1.75}
+.wp-about h2{font-size:17px;margin:18px 0 6px}
+.wp-about ul{padding-left:1.2em;margin:6px 0}
+.wp-about a{color:var(--wp-ink);font-weight:700}
+.wp-about .apps{display:flex;align-items:center;gap:12px;background:var(--wp-card);border-radius:18px;padding:12px;margin:12px 0;box-shadow:0 3px 0 var(--wp-line);text-decoration:none}
+.wp-about .apps img{width:56px;height:56px;border-radius:13px;flex:0 0 auto}
+.wp-about .apps span{font-weight:700;color:var(--wp-ink);line-height:1.5}
+.wp-scroll{flex:0 0 auto;text-align:center;font-size:11px;opacity:.6;padding:0 0 4px}
