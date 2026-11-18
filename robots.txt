@@ -23,6 +23,12 @@ Allow: /suji/
 Allow: /pokerstudy/
 Allow: /osouji/
 Allow: /apps/
+Allow: /today/
+Allow: /ranking/
+Allow: /news/
+Allow: /about/
+Allow: /faq/
+Allow: /contact/
 Allow: /sitemap.xml
 Disallow: /
 
