@@ -516,6 +516,19 @@ body { line-break: strict; }
   .me { flex-direction: column; align-items: flex-start; }
   .notes.thumbs a { grid-template-columns: 88px 1fr; } .notes.thumbs .th { width: 88px; }
 }
+/* 期間限定のかざり（site.js が期間中だけ出す。ヒーローの中に重ねるだけ） */
+.sdeco { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.sdeco.xmas i { position: absolute; top: -12px; border-radius: 50%; background: #a9c4e6; animation: sfall linear infinite; }
+@keyframes sfall { from { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(14px, calc(var(--fall, 700px) / 2), 0); } to { transform: translate3d(-6px, var(--fall, 700px), 0); } }
+.sdeco.shogatsu { background: radial-gradient(ellipse 70% 46% at 78% 108%, rgba(255,176,92,.42), rgba(255,200,120,.18) 55%, transparent 80%),
+  linear-gradient(180deg, rgba(255,226,214,.35), transparent 40%); }
+.sribbon { position: absolute; z-index: 2; top: 4px; right: 10px; margin: 0; padding: 1px 12px 2px; border-radius: 99px; font-size: 12px; font-weight: 800;
+  line-height: 20px; white-space: nowrap; color: #fff; border: 1.5px solid #e2b64a; box-shadow: 0 2px 6px rgba(59,43,31,.18); pointer-events: none; }
+.sribbon.xmas { background: linear-gradient(90deg, #2c7a47, #1d6339); }
+.sribbon.shogatsu { background: linear-gradient(90deg, #c0262d, #d4462f); }
+.season.xmas { background: linear-gradient(180deg, #eef7f0, #fff7e8); }
+.season.shogatsu { background: linear-gradient(180deg, #fff0e6, #fff7e8); }
+@media (min-width: 900px) { .sribbon { top: 14px; right: 24px; font-size: 13px; line-height: 22px; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .vphone.slides .slide + .slide { display: none; }

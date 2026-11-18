@@ -25,7 +25,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261122'
+V = '20261123'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -219,12 +219,18 @@ def jst_date(iso):
 ID2D = {NAMES[d][1]: d for d in NAMES}
 LOOKUP_T = {ID2D[str(r['trackId'])]: r for r in json.load(open(f'{HERE}/lookup.json'))['results'] if str(r['trackId']) in ID2D}
 RELEASE_FIX_N = {'jimidrive': '2026-10-07'}   # はじめてのアプリの公開日（作った人の記録）
-SITE_NEWS = [('2026-11-19', 'サイトをリニューアルしました', ['サイトの名前を「いまのアプリ」にして、見た目を新しくしました。',
+SITE_NEWS = [('2026-11-20', 'ブラウザで遊べる今日の1問を6つに', ['ひとふでいもむし・すうじのへや・おかず詰めパズル・ナンバー暗算ドライブ・ゆでたまごの今日の1問と、下剋上デュエルの CPU 対戦が、アプリを入れなくてもブラウザで遊べるようになりました。']),
+             ('2026-11-20', '各アプリのサポートページを新しくしました', ['アプリごとのサポートページに、よくある質問と、お問い合わせのメールのボタンをまとめました。']),
+             ('2026-11-19', 'サイトをリニューアルしました', ['サイトの名前を「いまのアプリ」にして、見た目を新しくしました。',
               '「今日の問題」「ランキングのしくみ」「お知らせ」「よくある質問」「お問い合わせ」「note の記事」のページを足しました。'])]
 
 def news_items():
     lk = json.load(open(f'{HERE}/lookup.json'))['results']
-    out = [dict(date=dt, kind='site', d=None, title=t, lines=ls) for dt, t, ls in SITE_NEWS]
+    seen = {}
+    out = []
+    for dt, t, ls in SITE_NEWS:   # おなじ日のサイトのお知らせが2つ以上あるときは、id に -2, -3 … をつける
+        seen[dt] = seen.get(dt, 0) + 1
+        out.append(dict(date=dt, kind='site', d=None, title=t, lines=ls, sfx='' if seen[dt] == 1 else f'-{seen[dt]}'))
     for r in lk:
         d = ID2D.get(str(r['trackId']))
         if not d: continue
@@ -249,7 +255,7 @@ def news_li(n, full=True):
     else:
         body = ('<ul>' + ''.join(f'<li>{esc(x)}</li>' for x in lines[:2]) + '</ul><details><summary>ほかの変更（' + str(len(lines) - 2) + '）</summary><ul>' +
                 ''.join(f'<li>{esc(x)}</li>' for x in lines[2:]) + '</ul></details>')
-    nid = 'n-' + n['date'].replace('-', '') + '-' + (n['d'] or 'site') + '-' + n['kind']
+    nid = 'n-' + n['date'].replace('-', '') + '-' + (n['d'] or 'site') + '-' + n['kind'] + n.get('sfx', '')
     n['id'] = nid
     return (f'<li class="rv" id="{nid}">{ic}<div class="meta"><time datetime="{n["date"]}">{int(y)}年{int(m)}月{int(dd)}日</time><b class="{kind[0]}">{kind[1]}</b></div>'
             f'<h3>{t}</h3>{body}</li>')
@@ -268,6 +274,27 @@ def itemlist():
             "operatingSystem": f"iOS {a.get('minos', '18')}.0 以降", **({"downloadUrl": store(i)} if i else {}),
             "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}}})
     return {"@type": "ItemList", "name": f"{BRAND}の一覧", "numberOfItems": len(items), "itemListElement": items}
+
+# 期間限定（クリスマス 12/1–12/25・お正月 12/29–1/7、日本時間）。HTML には hidden で入れておき、期間中だけ site.js が出す（?xmasPreview=1 / ?shogatsuPreview=1 でためせる）
+SEASONS = [('xmas', '🎄', 'クリスマスの今日の1問', 'クリスマスの期間（12/1〜12/25）は、アプリの「今日の1問」がクリスマスのかざりつけになります（12/1 からのアップデートのあと、アプリに出ます）。',
+            [('yudetamago', 'クリスマスのたまご', '今日のたまごが、オーナメントのような赤・緑・金のたまごに。むくと図鑑に入ります。'),
+             ('madoshizuku', '雪の窓', '今日の雨の景色が、雪の夜のイルミネーションの窓に。雨と目標はいつもと同じです。'),
+             ('suji', 'サンタの住人', '住人がサンタの帽子をかぶり、盤のふちにも飾りがつきます。問題はいつもと同じです。')]),
+           ('shogatsu', '🎍', 'お正月の今日の1問', 'お正月の期間（12/29〜1/7）は、アプリの「今日の1問」がお正月のかざりつけになります。',
+            [('okazu', 'お正月のおべんとう', '今日のおべんとうが、おせちの重箱に。問題はいつもと同じです。'),
+             ('hitofude', 'お正月のいもむし', '葉っぱは松・竹・梅、石は鏡もちに。盤はいつもと同じです。')])]
+
+def season_card(d, label, text):
+    name, i, _ = NAMES[d]
+    return (f'<li class="acard tilt" style="{cv(d)}"><div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+            f'<div><span class="cat">{esc(label)}</span><h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
+            f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY else '<span class="more" aria-hidden="true">くわしく →</span>')
+            + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '') + '</div></li>')
+
+def season_secs():
+    return [f'<section class="sec season {k}" data-season="{k}" aria-labelledby="h-{k}" hidden><div class="wrap"><div class="sec-h"><h2 id="h-{k}">{e} {esc(t)}</h2>'
+            f'<p>{esc(lead)}</p></div><ul class="rail" aria-labelledby="h-{k}">{"".join(season_card(*c) for c in cards)}</ul></div></section>'
+            for k, e, t, lead, cards in SEASONS]
 
 HERO_SHOTS = [('suji', '4_daily', 'すうじのへやの「今日のへや割り」の画面'),
               ('hitofude', '5_daily', 'ひとふでいもむしの「今日のいもむし」の画面'),
@@ -295,6 +322,7 @@ def page_home():
     L.append('<section class="sec white" id="ranking" aria-labelledby="h-today"><div class="wrap"><div class="sec-h rv"><h2 id="h-today">📅 今日の1問</h2>'
              '<a class="more-link" href="/today/">今日の問題をぜんぶ見る →</a><p>毎日、みんなに同じ問題。サインインなし、ニックネームを決めるだけでランキングに参加できます。</p></div>'
              f'<div class="today">{calendar()}{countdown()}{rsample()}</div></div></section>')
+    L.extend(season_secs())
     # daily apps
     L.append('<section class="sec" aria-labelledby="h-daily"><div class="wrap"><div class="sec-h rv"><h2 id="h-daily">🏆 毎日、みんなで勝負</h2>'
              '<a class="more-link" href="/ranking/">ランキングのしくみ →</a></div>'
@@ -683,7 +711,7 @@ def page_now():
             '<p><a class="more-link" href="/news/">お知らせをぜんぶ見る →</a></p>'
             '<p class="small">このページは「いま やっていること」をときどき書きかえる、Now ページです。</p></div></section>')
     sub_page('/now/', 'いま やっていること', f'いま やっていること｜{BRAND}',
-             '「いま」がいま作っているもの・つぎにやること・さいきんの更新。縛り将棋の作りなおし、ポーカーのランキング、ブラウザで遊べる今日の1問など。',
+             '「いま」がいま作っているもの・つぎにやること・さいきんの更新。ふたり大富豪の公開準備、クリスマスとお正月の期間限定、友達を招待するリンク、ブラウザで遊べる今日の1問など。',
              'いま作っているものと、つぎにやること。ときどき書きかえます。', body, og='now')
 
 def page_sitemap():

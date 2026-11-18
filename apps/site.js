@@ -67,6 +67,41 @@
   }
 
 
+  /* 期間限定のかざり（日本時間。クリスマス 12/1〜12/25・お正月 12/29〜1/7）。HTML は いつも同じで、期間中だけ ここで出す。
+     ためすとき: ?xmasPreview=1 / ?shogatsuPreview=1（=0 で期間中でも出さない）。リボンと雪は ヒーローの中に重ねるだけ（ほかの場所は動かない） */
+  (function () {
+    function flag(k) { var m = new RegExp('[?&]' + k + '=([01])(?:&|$)').exec(location.search || ''); return m ? m[1] === '1' : null; }
+    var t = jst().x, mo = t.getUTCMonth() + 1, dd = t.getUTCDate();
+    var xf = flag('xmasPreview'), sf = flag('shogatsuPreview');
+    var xmas = xf !== null ? xf : (mo === 12 && dd <= 25);
+    var ny = sf !== null ? sf : ((mo === 12 && dd >= 29) || (mo === 1 && dd <= 7));
+    if (xmas && ny) xmas = false;
+    var k = xmas ? 'xmas' : ny ? 'shogatsu' : '';
+    if (!k) return;
+    root.classList.add('season-' + k);
+    $$('[data-season="' + k + '"]').forEach(function (e) { e.hidden = false; });
+    var hero = d.querySelector('.hhero');
+    if (!hero) return;
+    var deco = d.createElement('div'); deco.className = 'sdeco ' + k; deco.setAttribute('aria-hidden', 'true');
+    if (k === 'xmas') {
+      var fall = hero.offsetHeight + 24;
+      deco.style.setProperty('--fall', fall + 'px');
+      for (var i = 0; i < 22; i++) {
+        var f = d.createElement('i'), r = Math.random();
+        f.style.left = (Math.random() * 100).toFixed(1) + '%';
+        f.style.width = f.style.height = (3 + r * 4).toFixed(1) + 'px';
+        f.style.opacity = (0.35 + Math.random() * 0.45).toFixed(2);
+        if (still) f.style.top = (Math.random() * 96).toFixed(1) + '%';
+        else { f.style.animationDuration = (9 + Math.random() * 9).toFixed(1) + 's'; f.style.animationDelay = (-Math.random() * 18).toFixed(1) + 's'; }
+        deco.appendChild(f);
+      }
+    }
+    hero.insertBefore(deco, hero.firstChild);
+    var rb = d.createElement('p'); rb.className = 'sribbon ' + k;
+    rb.textContent = k === 'xmas' ? '🎄 クリスマス期間（12/25 まで）' : '🎍 あけましておめでとう';
+    hero.appendChild(rb);
+  })();
+
   /* プレイ動画: 見えるところに来たら読みこんで再生（動きを減らす設定のときは、ポスターのまま。押すと再生） */
   $$('video[data-vsrc]').forEach(function (v) {
     var src = v.getAttribute('data-vsrc');
