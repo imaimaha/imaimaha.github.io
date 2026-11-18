@@ -58,7 +58,7 @@ def header(cur):
 def footer(privacy=None):
     sup = [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ')]
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
-    sup += [('/contact/#privacy', 'プライバシーポリシー（アプリごと）'), ('/apps/sitemap/', 'サイトマップ')]
+    sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ')]
     cols = [('あそぶ', [('/', 'ホーム'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
             ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること'), ('/note/', 'note の記事'), (NOTE, 'note（いまのページ）'), (DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
@@ -103,7 +103,27 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None):
 def tail(privacy=None):
     return footer(privacy) + f'\n<script src="/apps/site.js?v={V}" defer></script>\n</body>\n</html>\n'
 
+# 段落ち対策: 本文のテキストの中のアプリ名などを、途中で折り返さない <span class="nw"> でかこむ（空白のところでは折り返してよい）
+NW_WORDS = None
+def nowrap_text(out):
+    global NW_WORDS
+    if NW_WORDS is None:
+        ws = {NAMES[d][0] for d in NAMES} | {'いまのアプリ', 'App Store', 'ニックネーム', 'ランキング', 'ブラウザ', 'iPhone アプリ', 'プライバシーポリシー', 'お問い合わせ'}
+        NW_WORDS = sorted(ws, key=len, reverse=True)
+    pat = re.compile('|'.join(re.escape(w) for w in NW_WORDS) + r'|[ァ-ヴー一-龥]{1,6}は？|[ぁ-ん]{1,4}ますか？')
+    def wrap(m):
+        w = m.group(0)
+        if w in ('App Store', 'iPhone アプリ', 'Notre Endroit') or w.endswith('？'): return f'<span class="nw">{w}</span>'
+        return ' '.join(f'<span class="nw">{x}</span>' for x in w.split(' '))
+    i = out.index('<body')
+    head, body = out[:i], out[i:]
+    parts = re.split(r'(<script\b.*?</script>|<style\b.*?</style>|<[^>]+>)', body, flags=re.S)
+    for k in range(0, len(parts), 2):
+        if parts[k]: parts[k] = pat.sub(wrap, parts[k])
+    return head + ''.join(parts)
+
 def write(path, out):
+    out = nowrap_text(out)
     fn = R + path + 'index.html'
     os.makedirs(os.path.dirname(fn), exist_ok=True)
     open(fn, 'w', encoding='utf-8').write(out)
@@ -178,7 +198,7 @@ def note_list(n=None, thumbs=False):
 
 def me_card(h='h3', full=False):
     btns = (f'<a class="go sm" href="{NOTE}" rel="me noopener">📝 note を読む</a>'
-            f'<a class="ghost" href="{DEV}">App Store で全部のアプリを見る</a>' + '<a class="ghost" href="/now/">いま やっていること</a>' + ('' if full else '<a class="ghost" href="/about/">もっと見る</a>') +
+            f'<a class="ghost" href="{DEV}">App Store で全部見る</a>' + '<a class="ghost" href="/now/">いま やっていること</a>' + ('' if full else '<a class="ghost" href="/about/">もっと見る</a>') +
             ('<a class="ghost" href="/contact/">お問い合わせ</a>' if full else ''))
     return (f'<div class="me rv"><div class="av" aria-hidden="true">🐛</div><div><{h}>作っている人：いま</{h}>'
             '<p>将棋・ポーカー・アプリ開発が好きな「いま」です。毎日ちょっと遊べる iPhone アプリを、ひとりで作っています。</p>'
@@ -312,7 +332,7 @@ def page_apps():
     chips = '<button type="button" data-f="all" aria-pressed="true">すべて</button>' + ''.join(
         f'<button type="button" data-f="{cid}" aria-pressed="false">{CAT_EMO[cid]} {esc(lb)}</button>' for cid, lb, _ in CATS)
     secs = ''.join(f'<section class="sec" id="{cid}" data-sec="{cid}" aria-labelledby="h-{cid}" style="padding:14px 0 26px"><div class="wrap">'
-                   f'<div class="sec-h"><h2 id="h-{cid}" style="font-size:24px">{CAT_EMO[cid]} {esc(lb)} <small style="font-size:14px;color:var(--dim)">{len(ds)}本</small></h2></div>'
+                   f'<div class="sec-h"><h2 id="h-{cid}" style="font-size:24px">{CAT_EMO[cid]} {esc(lb)}</h2><span class="n">{len(ds)}本</span></div>'
                    f'<ul class="grid">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>' for cid, lb, ds in CATS)
     body = ('<div class="wrap"><div class="filters" id="filters" role="group" aria-label="ジャンルで絞りこむ" hidden>' + chips + '</div>'
             '<label class="search" hidden><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="アプリの名前やことばでさがす" aria-label="アプリをさがす"></label>'
@@ -628,6 +648,7 @@ def landing(d):
     out = out.replace('</body>', f'<script src="/apps/site.js?v={V}" defer></script>\n</body>', 1)
     out = out.replace('<link rel="icon" href="icon-256.webp" type="image/webp">\n<link rel="apple-touch-icon" href="icon.png">', ICON_LINKS, 1)
     assert ICON_LINKS in out
+    out = nowrap_text(out)
     open(f'{R}/{d}/index.html', 'w', encoding='utf-8').write(out)
 
 # ---------------- 新しいページ ----------------
