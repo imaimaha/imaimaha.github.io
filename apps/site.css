@@ -164,3 +164,9 @@ section.block h2::after { content: ""; display: block; width: 44px; height: 4px;
   .store { min-width: 0; width: 100%; max-width: 320px; }
 }
 @media (prefers-reduced-motion: reduce) { .store { transition: none; } .shots ul { scroll-behavior: auto; } }
+.notes { list-style: none; padding: 0; margin: 0 0 8px; }
+.notes li a { display: flex; flex-wrap: wrap; gap: 0 12px; min-height: 44px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.notes time { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.notes span { font-weight: 700; }
+.profile h3 { margin: 22px 0 4px; font-size: 18px; }
+.profile .more a { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
