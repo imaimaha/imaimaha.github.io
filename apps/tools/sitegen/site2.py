@@ -38,7 +38,9 @@ ORG = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "alternate
 CAT_EMO = {'puzzle': '🧩', 'relax': '☕', 'versus': '⚔️', 'life': '📒'}
 CAT_SUB = {'puzzle': '毎日の1問で勝負', 'relax': '指でのんびり', 'versus': '友達と読み合い', 'life': '毎日の記録に'}
 ALL = [d for _, _, ds in CATS for d in ds]
-PLAY = ['hitofude', 'suji', 'okazu']   # ブラウザで遊べる今日の1問（/play/<app>/。別の担当が作っている）
+PLAY = ['hitofude', 'suji', 'okazu', 'jimidrive', 'yudetamago', 'gekokujo']   # ブラウザで遊べるページ（/play/<app>/）。DAILY のアプリは「今日の1問」、ほかは CPU 対戦など
+def play_label(d): return '▶ ブラウザで1問あそぶ' if d in DAILY else '▶ ブラウザで遊ぶ'
+PLAY_NOTE = {'gekokujo': 'CPU と1試合・登録なし'}   # 今日の問題のないアプリの「ブラウザで遊ぶ」のよこの文
 CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
 def logo_svg(uid, size=34):
@@ -161,7 +163,7 @@ def app_card(d, k=None):
     key = f' data-k="{esc(name + " " + text + " " + lb)}"' if k else ''
     return (f'<li class="acard tilt rv" style="{cv(d)}"{key}>{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
             f'<div><span class="cat">{CAT_EMO[cid]} {esc(lb)}</span><h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
-            f'<p>{esc(text)}</p><div class="acts"><span class="more" aria-hidden="true">くわしく →</span>'
+            f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY and d not in DAILY else '<span class="more" aria-hidden="true">くわしく →</span>')
             + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '<span class="pill soon">近日公開</span>') + '</div></li>')
 
 def calendar(big=False):
@@ -579,7 +581,8 @@ def demo_section(d):
             f'<ul class="facts"><li><b>料金</b>{esc(a.get("ads", ADS))}</li><li><b>対応</b>iPhone（iOS {a.get("minos", "18")} 以降）</li>'
             f'<li><b>ジャンル</b><a href="/apps/{CAT_OF[d][0]}/">{CAT_EMO[CAT_OF[d][0]]} {esc(CAT_OF[d][1])}</a></li>' +
             (f'<li><b>今日の問題</b><a href="/today/">毎日0時（日本時間）にかわる</a></li>' if d in DAILY else '') +
-            '</ul></div></div></section>')
+            '</ul>' + (f'<p class="playbtn"><a class="go sm" href="/play/{d}/">{play_label(d)}</a>　<span>{esc(PLAY_NOTE.get(d, "登録なし"))}</span></p>' if d in PLAY and d not in DAILY else '') +
+            '</div></div></section>')
 
 def today_mini(d):
     if d not in DAILY: return ''

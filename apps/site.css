@@ -525,3 +525,7 @@ body { line-break: strict; }
 .dcard .acts { flex-wrap: wrap; }
 .dcard .acts a, .acard .acts a { position: relative; z-index: 2; }
 .ghost.sm2 { min-height: 44px; padding: 0 12px; font-size: 13px; border-radius: 14px; box-shadow: 0 3px 0 var(--line); }
+/* 紹介ページの「〇〇とは？」の箱の「ブラウザで遊ぶ」（今日の問題のないアプリ。下剋上） */
+.playbtn { margin: 14px 0 0; font-size: 13px; font-weight: 700; color: var(--d); }
+.acard .acts { flex-wrap: wrap; row-gap: 8px; }
+.acard .acts .go.sm2 { white-space: nowrap; padding: 0 12px; font-size: 13.5px; }
