@@ -386,9 +386,43 @@ def facts():
 # 前のトップにしかなかったものの移り先: 「ここで1問」（今日のいもむし）→ /today/、「数字で見る」→ /apps/、カレンダー・カウントダウン・ランキングの例 → /today/（もとからある）
 CREW = [('01_imomushi', 'いもむしのキャラクター'), ('02_bento', 'お弁当のキャラクター'), ('03_tamago', 'ゆでたまごのキャラクター'),
         ('04_natto', '納豆のキャラクター'), ('05_shogi', '将棋の駒のキャラクター')]   # /apps/home/*.webp（256px。元は zip の 04_images/characters_and_banners_v2）
-GUIDE = [('hitofude-kotsu', '一筆書きパズルのコツ｜行き止まりを先に見つける考え方', '2026-11-19'),
-         ('mainichi-1mon-puzzle', '毎日1問のパズルアプリの選び方｜5つの見るポイント', '2026-11-19'),
-         ('make-10-anzan', '4つの数字で10を作る暗算のコツ｜5つの考え方', '2026-11-19')]   # /guide/ の読み物（手で書いたページ）。新しい順
+GUIDE = [('hitofude-zukei', '一筆書きができる図形の見分け方｜点に集まる線の数を数えるだけ', '2026-11-19'),   # puzzle
+         ('hitofude-kotsu', '一筆書きパズルのコツ｜行き止まりを先に見つける考え方', '2026-11-19'),   # puzzle
+         ('hitofude-reidai', 'ひとふでいもむしの解き方｜1つの盤で、失敗と正解を順に見る', '2026-11-19'),   # puzzle
+         ('hitofude-shikake', 'ひとふでいもむしの仕掛け7つ｜石・枝・矢印・穴など', '2026-11-19'),   # puzzle
+         ('heyawari-tokikata', 'へや割りパズルの解き方｜5×5の例題で、決まるところから順に', '2026-11-19'),   # puzzle
+         ('jyunin-sagashi-kotsu', '住人さがしパズルの解き方｜0のへやと、列の決まりから順に', '2026-11-19'),   # puzzle
+         ('okazu-kotsu', 'おかず詰めパズルのコツ｜「つぎ」を見て、すみから詰める', '2026-11-19'),   # puzzle
+         ('mainichi-1mon-puzzle', '毎日1問のパズルアプリの選び方｜5つの見るポイント', '2026-11-19'),   # puzzle
+         ('anzan-kotsu', '暗算を速くするコツ7つ｜きりのいい数にしてから計算する', '2026-11-19'),   # anzan
+         ('make-10-anzan', '4つの数字で10を作る暗算のコツ｜5つの考え方', '2026-11-19'),   # anzan
+         ('make10-dekinai', '4つの数字で10を作れない組み合わせ一覧｜1〜9なら48組', '2026-11-19'),   # anzan
+         ('make10-nanmon', '分数がいる10の難問｜1158・1199・1337・3478', '2026-11-19'),   # anzan
+         ('sosuu-miwakekata', '4けたの素数を速く見分ける方法｜2・3・5・7・11の順', '2026-11-19'),   # anzan
+         ('kakezan-gate-kotsu', '暗算ランナーのコツ｜＋と×、−と÷のどちらが得かを一瞬で決める', '2026-11-19'),   # anzan
+         ('hensoku-shogi-rules', '変則将棋のルール一覧｜安南将棋・トランプ将棋・王手将棋など', '2026-11-19'),   # shogi
+         ('annan-shogi', '安南将棋のルールとコツ｜うしろの駒の動きを借りる将棋', '2026-11-19'),   # shogi
+         ('trump-shogi', 'トランプ将棋のルールとコツ｜カードの数字の筋だけ動かせる将棋', '2026-11-19'),   # shogi
+         ('oute-shogi', '王手将棋のルールとコツ｜先に王手をかけたら勝ち', '2026-11-19'),   # shogi
+         ('kagemusha-shogi', '影武者将棋のルールとコツ｜ひみつの1枚を取られたら負け', '2026-11-19'),   # shogi
+         ('tokushu-kouka-shogi', '特殊効果将棋のカード13種類｜効果と使いどころ', '2026-11-19'),   # shogi
+         ('shibari-shogi', '縛り将棋のルールと攻略｜囲い・戦法の形を作ってから攻める', '2026-11-19'),   # shogi
+         ('hensoku-tsume-kotsu', '変則詰将棋（安南詰将棋）のコツ｜借りた動きで王手を探す', '2026-11-19'),   # shogi
+         ('online-taisen', '友達とオンライン対戦するには｜部屋のコードを送るだけ、登録なし', '2026-11-19'),   # shogi
+         ('daifugo-local-rules', '大富豪のローカルルール一覧｜8切り・革命・イレブンバック', '2026-11-19'),   # cards
+         ('futari-daifugo-kotsu', 'ふたり大富豪のコツ｜相手の手札は、はじめは自分と同じ数字', '2026-11-19'),   # cards
+         ('gekokujo-kotsu', '下剋上デュエルのコツ｜1が9に勝つ読み合いで、相手の残りを読む', '2026-11-19'),   # cards
+         ('poker-preflop-kihon', 'ポーカーのプリフロップとは｜席の順番で、参加する手が変わる理由', '2026-11-19'),   # cards
+         ('poker-range-hyou', '13×13のレンジ表の読み方｜ペア・スーテッド・オフスート', '2026-11-19'),   # cards
+         ('sanpo-tsuzukeru', '散歩を続けるコツ5つ｜「目的」と「記録」を小さく作る', '2026-11-19'),   # sanpo
+         ('sanpo-bingo', '散歩ビンゴの遊び方とお題の例｜9つのなかまから選ぶ', '2026-11-19'),   # sanpo
+         ('ima-apps-kangaekata', '「いまのアプリ」の作り方｜小さく・登録なし・毎日1問', '2026-11-19'),   # ima
+         ('ranking-battle', '毎日の1問を、みんなとのバトルにした理由｜ランキングのしくみ', '2026-11-19'),   # ima
+         ('koukoku-dashikata', '広告の出し方で気をつけていること｜遊んでいる間は出さない', '2026-11-19'),   # ima
+         ]   # /guide/ の読み物（手で書いたページ）。まとまり（GUIDE_GROUPS）ごとに、はじめがハブの記事
+GUIDE_GROUPS = [('puzzle', '🧩 パズルのコツ', ['hitofude-zukei', 'hitofude-kotsu', 'hitofude-reidai', 'hitofude-shikake', 'heyawari-tokikata', 'jyunin-sagashi-kotsu', 'okazu-kotsu', 'mainichi-1mon-puzzle']), ('anzan', '🧮 暗算と数あそび', ['anzan-kotsu', 'make-10-anzan', 'make10-dekinai', 'make10-nanmon', 'sosuu-miwakekata', 'kakezan-gate-kotsu']), ('shogi', '☗ 変則将棋', ['hensoku-shogi-rules', 'annan-shogi', 'trump-shogi', 'oute-shogi', 'kagemusha-shogi', 'tokushu-kouka-shogi', 'shibari-shogi', 'hensoku-tsume-kotsu', 'online-taisen']), ('cards', '🃏 カードゲーム', ['daifugo-local-rules', 'futari-daifugo-kotsu', 'gekokujo-kotsu', 'poker-preflop-kihon', 'poker-range-hyou']), ('sanpo', '👟 散歩と記録', ['sanpo-tsuzukeru', 'sanpo-bingo']), ('ima', '🐛 いまのアプリについて', ['ima-apps-kangaekata', 'ranking-battle', 'koukoku-dashikata'])]
+GUIDE_GROUP = {s: gid for gid, _, ss in GUIDE_GROUPS for s in ss}
+HOME_READS = [ss[0] for _, _, ss in GUIDE_GROUPS]   # トップに出す読み物（まとまりごとのハブ）
 DESC_TOP = ('将棋・ポーカー・アプリ開発が好きな「いま」のホームページ。毎日1問のパズルなど無料のiPhoneアプリ「いまのアプリ」と、'
             'パズルのコツの読み物、noteの記事をまとめています。')
 
@@ -407,7 +441,7 @@ def page_home():
     L.append('<section class="sec white" aria-labelledby="h-daily"><div class="wrap"><div class="sec-h rv"><h2 id="h-daily">📅 今日の1問</h2>'
              '<a class="more-link" href="/today/">今日の問題をぜんぶ見る →</a><p>みんな同じ問題。サインインなし、ニックネームだけでランキングに参加できます。</p></div>'
              f'<ul class="rail" aria-label="今日の問題で勝負できるアプリ">{"".join(daily_card(d) for d in DAILY)}</ul></div></section>')
-    reads = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE)
+    reads = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE if s in HOME_READS)
     L.append('<section class="sec" aria-labelledby="h-read"><div class="wrap"><div class="sec-h rv"><h2 id="h-read">📖 読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div>'
              f'<ul class="readlist rv">{reads}</ul></div></section>')
     tiles = ''.join(f'<li class="ctile tilt rv"><span class="e" aria-hidden="true">{CAT_EMO[cid]}</span><h3><a class="stretch" href="/apps/#{cid}">{esc(lb)}</a></h3>'
@@ -804,7 +838,9 @@ def page_guide_article(slug):
     dl = (f'<p class="rv dateline"><time datetime="{meta["published"]}">{jp_date(meta["published"])}</time> 公開' +
           (f'・<time datetime="{meta["modified"]}">{jp_date(meta["modified"])}</time> 更新' if meta['modified'] != meta['published'] else '') + '　')
     body = body.replace('<p class="rv dateline">', dl, 1)
-    others = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE if s != slug)
+    grp = GUIDE_GROUP.get(slug)   # ほかの読み物: 同じまとまりの記事（なければ、ほかのまとまりのハブ）
+    near = [(s, t) for s, t, _ in GUIDE if s != slug and GUIDE_GROUP.get(s) == grp][:6] or [(s, t) for s, t, _ in GUIDE if s != slug and s in HOME_READS]
+    others = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t in near)
     h = head(path, meta['title'], meta['desc'], lds, og_img=f'{BASE}/apps/og/{og}.jpg', og_type='article')
     h = h.replace('<meta property="og:type" content="article">', f'<meta property="og:type" content="article">\n<meta property="article:published_time" content="{meta["published"]}">', 1)
     L = [h, header('/guide/'), '<main id="main">',
@@ -817,17 +853,20 @@ def page_guide_article(slug):
 
 def page_guide():
     for s, _, _ in GUIDE: page_guide_article(s)
-    lis = ''
-    for s, t, dt in GUIDE:
-        meta, _ = guide_meta(s)
-        lis += f'<li><a href="/guide/{s}/">{gtitle(t)}<small class="gd">{esc(meta["desc"])}</small></a></li>'
+    secs = ''
+    for gid, lb, ss in GUIDE_GROUPS:   # まとまりごとに見出しと一覧（はじめがハブの記事）
+        lis = ''
+        for s in ss:
+            meta, _ = guide_meta(s); t = next(x for k, x, _ in GUIDE if k == s)
+            lis += f'<li><a href="/guide/{s}/">{gtitle(t)}<small class="gd">{esc(meta["desc"])}</small></a></li>'
+        secs += f'<h2 id="g-{gid}" class="rv" style="margin:26px 0 12px">{esc(lb)}</h2><ul class="readlist">{lis}</ul>'
     items = {"@context": "https://schema.org", "@type": "ItemList", "name": "読み物", "itemListElement": [
         {"@type": "ListItem", "position": k + 1, "url": f'{BASE}/guide/{s}/', "name": t} for k, (s, t, _) in enumerate(GUIDE)]}
-    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow"><ul class="readlist">{lis}</ul>'
+    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{secs}'
             '<p class="rv" style="margin-top:18px">パズルのコツや、作っていて気づいたことなどを、ゆっくり増やしていきます。</p></div></section>')
-    sub_page('/guide/', '読み物', f'読み物｜パズルのコツと遊び方のメモ｜{BRAND}',
-             'パズルのコツや遊び方のメモをまとめています。毎日1問のパズルアプリをつくる「いま」が書いています。',
-             'パズルのコツや遊び方のメモです。', body, [items])
+    sub_page('/guide/', '読み物', f'読み物｜パズル・暗算・変則将棋・カードゲームのコツ｜{BRAND}',
+             'パズルの解き方、暗算のコツ、変則将棋や大富豪のルール、散歩を続けるコツなどをまとめています。毎日1問のパズルアプリをつくる「いま」が書いています。',
+             'パズル・暗算・変則将棋・カードゲーム・散歩のコツと、アプリを作っていて考えていることです。', body, [items])
 
 # ---------------- 新しいページ ----------------
 def page_category(cid):
@@ -1281,7 +1320,7 @@ def llms():
          f'- [どれが合う？]({BASE}/start/): 3つの質問で、合いそうなアプリをえらぶ',
          f'- [あそびかた図鑑]({BASE}/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ',
          f'- [ランキングのしくみ]({BASE}/ranking/): サインインなし、ニックネームだけで参加', f'- [アプリ一覧]({BASE}/apps/): すべてのアプリ',
-         f'- [読み物]({BASE}/guide/): パズルのコツと遊び方のメモ'] + [f'  - [{t}]({BASE}/guide/{s}/)' for s, t, _ in GUIDE] + [
+         f'- [読み物]({BASE}/guide/): パズル・暗算・変則将棋・カードゲーム・散歩のコツと、作っている人の考え'] + [x for gid, lb, ss in GUIDE_GROUPS for x in [f'  - {lb[2:]}'] + [f'    - [{t}]({BASE}/guide/{s}/)' for s in ss for k, t, _ in GUIDE if k == s]] + [
          f'- [お知らせ]({BASE}/news/): アップデートとリリース', f'- [よくある質問]({BASE}/faq/): 無料・広告・データ・通知・機種変更',
          f'- [作っている人]({BASE}/about/): いま（将棋・ポーカー・アプリ開発が好き）', f'- [いま やっていること]({BASE}/now/)', f'- [お問い合わせ]({BASE}/contact/)', '', '## アプリ']
     for cid, lb, ds in CATS:

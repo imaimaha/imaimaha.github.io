@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>「いまのアプリ」の作り方｜小さく・登録なし・毎日1問</title>
+<meta name="description" content="「いまのアプリ」は、1回が短い・サインインなし・データは少なく、という3つを大事にして、ひとりで作っているiPhoneアプリです。毎日みんな同じ1問にしている理由や、友達と遊べるしくみを、作っている「いま」が紹介します。">
+<link rel="canonical" href="https://imaimaha.com/guide/ima-apps-kangaekata/">
+<meta name="theme-color" content="#fff7e8">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-11-19">
+<meta property="og:site_name" content="いまのアプリ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="「いまのアプリ」の作り方｜小さく・登録なし・毎日1問">
+<meta property="og:description" content="「いまのアプリ」は、1回が短い・サインインなし・データは少なく、という3つを大事にして、ひとりで作っているiPhoneアプリです。毎日みんな同じ1問にしている理由や、友達と遊べるしくみを、作っている「いま」が紹介します。">
+<meta property="og:url" content="https://imaimaha.com/guide/ima-apps-kangaekata/">
+<meta property="og:image" content="https://imaimaha.com/apps/og/guide-ima-apps-kangaekata.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="いまのアプリのアイコン一覧">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="「いまのアプリ」の作り方｜小さく・登録なし・毎日1問">
+<meta name="twitter:description" content="「いまのアプリ」は、1回が短い・サインインなし・データは少なく、という3つを大事にして、ひとりで作っているiPhoneアプリです。毎日みんな同じ1問にしている理由や、友達と遊べるしくみを、作っている「いま」が紹介します。">
+<meta name="twitter:image" content="https://imaimaha.com/apps/og/guide-ima-apps-kangaekata.jpg">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/apps/site.webmanifest">
+<meta name="apple-mobile-web-app-title" content="いまのアプリ">
+<meta name="color-scheme" content="light">
+<meta name="format-detection" content="telephone=no">
+<link rel="stylesheet" href="/apps/site.css?v=20261129">
+<link rel="me" href="https://note.com/redemarrage22">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://imaimaha.com/"},{"@type":"ListItem","position":2,"name":"読み物","item":"https://imaimaha.com/guide/"},{"@type":"ListItem","position":3,"name":"「いまのアプリ」の作り方","item":"https://imaimaha.com/guide/ima-apps-kangaekata/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"「いまのアプリ」の作り方｜小さく・登録なし・毎日1問","description":"「いまのアプリ」は、1回が短い・サインインなし・データは少なく、という3つを大事にして、ひとりで作っているiPhoneアプリです。毎日みんな同じ1問にしている理由や、友達と遊べるしくみを、作っている「いま」が紹介します。","datePublished":"2026-11-19","dateModified":"2026-11-19","inLanguage":"ja","mainEntityOfPage":"https://imaimaha.com/guide/ima-apps-kangaekata/","image":"https://imaimaha.com/apps/og/guide-ima-apps-kangaekata.jpg","author":{"@type":"Person","@id":"https://imaimaha.com/about/#ima","name":"いま","url":"https://imaimaha.com/about/"},"publisher":{"@type":"Organization","@id":"https://imaimaha.com/#org","name":"いまのアプリ","logo":{"@type":"ImageObject","url":"https://imaimaha.com/apps/logo.png"}}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"「いま」と「いまのアプリ」は、何がちがいますか？","acceptedAnswer":{"@type":"Answer","text":"「いま」は作っている人の名前、「いまのアプリ」は、いまが作っているアプリのまとまりの名前です。"}},{"@type":"Question","name":"Android 版はありますか？","acceptedAnswer":{"@type":"Answer","text":"いまは iPhone 版だけです。今日の問題のうち6つは、ブラウザでも遊べます。"}},{"@type":"Question","name":"要望や不具合は、どこに送ればいいですか？","acceptedAnswer":{"@type":"Answer","text":"お問い合わせのページから、メールでどうぞ。"}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">本文へ</a><header class="hd"><div class="wrap"><a class="logo" href="/" aria-label="いまのアプリ ホーム"><svg width="34" height="34" aria-hidden="true" viewBox="0 0 64 64"><defs><linearGradient id="lg-h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a43"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#lg-h)"/><g transform="translate(32 33) scale(1.0) translate(-32 -33)"><circle cx="19.5" cy="13.5" r="5.5" fill="#fff"/><circle cx="44.5" cy="13.5" r="5.5" fill="#fff"/><circle cx="32" cy="35" r="20" fill="#fff"/><path d="M32 23.5V35l8 5" fill="none" stroke="#3b2b1f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="35" r="2.6" fill="#3b2b1f"/></g></svg><span>いまの<i>アプリ</i></span></a><nav class="gnav" aria-label="メインメニュー"><a href="/today/">今日の問題</a><a href="/play/"><span class="nw">ブラウザ</span>で遊ぶ</a><a href="/apps/">アプリ一覧</a><a href="/guide/" aria-current="page">読み物</a><a href="/ranking/"><span class="nw">ランキング</span></a><a href="/news/">お知らせ</a><a href="/note/">note</a><a href="/about/">作っている人</a></nav><a class="lang" href="/en/" hreflang="en" lang="en">English</a><details class="mnav"><summary aria-label="メニューを開く"><span></span></summary><nav aria-label="メニュー"><a href="/"><span aria-hidden="true">🏠</span>ホーム</a><a href="/start/"><span aria-hidden="true">🧭</span>どれから遊ぶ？3問で診断</a><a href="/today/"><span aria-hidden="true">📅</span>今日の問題</a><a href="/play/"><span aria-hidden="true">🌐</span><span class="nw">ブラウザ</span>で遊ぶ</a><a href="/apps/"><span aria-hidden="true">📱</span>アプリ一覧</a><a href="/guide/" aria-current="page"><span aria-hidden="true">📖</span>読み物</a><a href="/ranking/"><span aria-hidden="true">🏆</span><span class="nw">ランキング</span></a><a href="/news/"><span aria-hidden="true">📣</span>お知らせ</a><a href="/note/"><span aria-hidden="true">📝</span>note</a><a href="/about/"><span aria-hidden="true">🙋</span>作っている人</a><a href="/now/"><span aria-hidden="true">🛠️</span>いま やっていること</a><a href="/faq/"><span aria-hidden="true">💬</span>よくある質問</a><a href="/contact/"><span aria-hidden="true">✉️</span><span class="nw">お問い合わせ</span></a><a href="/apps/sitemap/"><span aria-hidden="true">🗺️</span>サイトマップ</a></nav></details></div></header>
+<main id="main">
+<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div><nav class="crumb wrap" aria-label="パンくずリスト"><ol><li><a href="/">ホーム</a></li><li><a href="/guide/">読み物</a></li><li aria-current="page">「<span class="nw">いまのアプリ</span>」の作り方</li></ol></nav><div class="wrap"><h1>「<span class="nw">いまのアプリ</span>」の作り方｜小さく・登録なし・毎日1問</h1><p class="lead2">「<span class="nw">いまのアプリ</span>」は、すきま時間に1回だけ遊べて、登録なしで、みんなと同じ問題でくらべられることを大事にしています。その考え方をまとめました。</p></div></section>
+<article class="sec" style="padding-top:20px"><div class="narrow"><p class="rv dateline"><time datetime="2026-11-19">2026年11月19日</time> 公開　この記事は、AIで下書きしたあと、作者が確かめて公開しています。</p>
+
+<h2 class="rv">結論：大事にしているのは3つ</h2>
+<p class="rv">「<span class="nw">いまのアプリ</span>」は、「いま」がひとりで作っている <span class="nw">iPhone アプリ</span>のまとまりです。企画・デザイン・プログラム・<span class="nw">App Store</span> への申請まで、ひとりでやっています。どのアプリでも、次の3つを大事にしています。</p>
+<ol class="rv">
+<li><b>1回が短く、すきま時間に遊べること。</b></li>
+<li><b>サインインなしで、名前を決めるだけで参加できること。</b></li>
+<li><b>集めるデータは少なく。記録はなるべく iPhone の中に。</b></li>
+</ol>
+<p class="rv">アプリを作りはじめたきっかけは、友達がアプリを作っていたことでした。いまが「売り」だと考えているのは、一度入れたら気軽に遊べて、1日1回でいい、というところです。</p>
+
+<h2 class="rv">はじめてのアプリは、<span class="nw">ナンバー暗算ドライブ</span></h2>
+<p class="rv">はじめて公開したアプリは、2026年10月7日の<a href="/jimidrive/"><span class="nw">ナンバー暗算ドライブ</span></a>です。すれ違う車のナンバー4桁で、10が作れるかを判断する暗算ゲームです。通勤中にアプリのアイデアを探していて、子どもの頃を思い出したのが、このゲームのもとになりました。そのあと10月から11月にかけて、パズル・のんびり遊ぶゲーム・対戦・くらしの記録のアプリを、つぎつぎに公開しました。いまは、パズル・脳トレ5本、のんびり3本、対戦4本、くらし・記録4本があります（<a href="/apps/">アプリ一覧</a>）。</p>
+
+<h2 class="rv">毎日、みんなに同じ1問</h2>
+<p class="rv">パズルや脳トレのアプリには、毎日0時（日本時間）に変わる「今日の問題」があります。問題は日付から作るので、だれの iPhone でも、その日は同じ盤・同じナンバー・同じコースです。同じ問題なので、タイムやスコアを<a href="/ranking/"><span class="nw">ランキング</span></a>でくらべられます。</p>
+<p class="rv"><span class="nw">ランキング</span>をつけた理由を、いまはこう話しています。「ただアプリを遊んでいるだけだと、ただの暇つぶし。それがバトルになるって、おもしろいでしょ？」。パズルでほかの人とバトルするのが、楽しいのだそうです。くわしくは「<a href="/guide/ranking-battle/">毎日の1問を、みんなとのバトルにした理由</a>」に書きました。</p>
+
+<h2 class="rv">サインインなし、記録はなるべく iPhone の中</h2>
+<p class="rv">ゲームの記録や日記は、基本的に iPhone の中に保存しています。<span class="nw">ランキング</span>に参加するときに送るのは、<span class="nw">ニックネーム</span>と記録と、iPhone の中で作ったランダムな番号だけです。本名・連絡先・場所などは送りません。名前と記録は、いつでも自分で消せます。</p>
+<p class="rv">ふたりや家族で使うアプリ（<a href="/notre-app/"><span class="nw">Notre Endroit</span></a>・<a href="/osouji/"><span class="nw">居候お掃除マン</span></a>）は、共有のためにデータをサーバーに保存します。この2つには、広告も分析ツールも入れていません。</p>
+
+<h2 class="rv">アプリがなくても、友達と遊べるように</h2>
+<p class="rv">今日の1問のうち6つは、アプリを入れなくても、<span class="nw">ブラウザ</span>で遊べます（<a href="/play/"><span class="nw">ブラウザ</span>で遊ぶ</a>）。アプリと同じ今日の問題で、記録はその端末の中にだけ残ります。</p>
+<p class="rv">対戦のアプリ（<a href="/hensokushogi/"><span class="nw">変則将棋対戦</span></a>・<a href="/gekokujo/"><span class="nw">下剋上デュエル</span></a>・<a href="/futaridaifugo/"><span class="nw">ふたり大富豪</span></a>）は、部屋のコードを送るだけで、友達とオンラインで遊べます。アカウントの登録はいりません。</p>
+<p class="rv">対戦アプリを作ったのは、現実では顔を合わせないと遊べないゲームも、ひとりで全部作れる、と気づいたからです。</p>
+
+<h2 class="rv">無料で、アプリ内課金なし</h2>
+<p class="rv">どのアプリも無料で、アプリ内課金はありません。多くのアプリは、広告で無料にしています。無料にしているのは、たくさんの人に遊んでもらえたらうれしいからです。遊んでいる最中には広告を出さないなど、出し方で気をつけていることは「<a href="/guide/koukoku-dashikata/">広告の出し方で気をつけていること</a>」にまとめました。</p>
+
+<h2 class="rv">よくある質問</h2>
+<details class="qa rv"><summary><span class="qt">「いま」と「<span class="nw">いまのアプリ</span>」は、<span class="nw">何<span class="nw">がちがいますか？</span></span></span></summary><div class="a"><p>「いま」は作っている人の名前、「<span class="nw">いまのアプリ</span>」は、いまが作っているアプリのまとまりの名前です。</p></div></details><details class="qa rv"><summary><span class="qt">Android 版は<span class="nw"><span class="nw">ありますか？</span></span></span></summary><div class="a"><p>いまは iPhone 版だけです。今日の問題のうち6つは、<span class="nw">ブラウザ</span>でも遊べます。</p></div></details><details class="qa rv"><summary><span class="qt">要望や不具合は、どこに送れば<span class="nw">いいですか？</span></span></summary><div class="a"><p><a href="/contact/"><span class="nw">お問い合わせ</span></a>のページから、メールでどうぞ。</p></div></details>
+<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">📖 ほかの読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div><ul class="readlist rv"><li><a href="/guide/ranking-battle/">毎日の1問を、みんなとのバトルにした理由<span class="st"><span class="nw">ランキング</span>のしくみ</span></a></li><li><a href="/guide/koukoku-dashikata/">広告の出し方で気をつけていること<span class="st">遊んでいる間は出さない</span></a></li></ul></div></article>
+</main>
+<footer class="ft"><div class="bye"><div class="crew" aria-hidden="true"><span>🐛</span><span>🍱</span><span>🥚</span><span>🫘</span><span>🚗</span><span>💧</span></div><div class="bye-in"><p class="bye-h">また あした。</p><p class="bye-s">次の1問まで <b class="bye-t" data-cdf>--:--:--</b></p><div class="bye-go"><a class="go sm" href="/play/">▶ 今日の1問をあそぶ</a></div><ul class="wall" aria-label="ぜんぶのアプリ"><li><a href="/hitofude/" aria-label="ひとふでいもむし"><img src="/hitofude/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/suji/" aria-label="すうじのへや"><img src="/suji/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/okazu/" aria-label="おかず詰めパズル"><img src="/okazu/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/kakezan/" aria-label="暗算ランナー"><img src="/kakezan/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/jimidrive/" aria-label="ナンバー暗算ドライブ"><img src="/jimidrive/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/yudetamago/" aria-label="つるっと ゆでたまご剥き"><img src="/yudetamago/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/nattofilm/" aria-label="ねばっと 納豆フィルム剥がし"><img src="/nattofilm/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/madoshizuku/" aria-label="まどのしずく"><img src="/madoshizuku/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/hensokushogi/" aria-label="変則将棋対戦"><img src="/hensokushogi/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/gekokujo/" aria-label="下剋上デュエル"><img src="/gekokujo/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/futaridaifugo/" aria-label="ふたり大富豪"><img src="/futaridaifugo/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/pokerstudy/" aria-label="ポーカー プリフロ練習"><img src="/pokerstudy/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/sanpobingo/" aria-label="おさんぽ日記"><img src="/sanpobingo/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/tsundoku/" aria-label="積読記録"><img src="/tsundoku/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/osouji/" aria-label="居候お掃除マン"><img src="/osouji/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li><li><a href="/notre-app/" aria-label="Notre Endroit"><img src="/notre-app/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li></ul></div></div><div class="wrap"><div><a class="logo" href="/"><svg width="34" height="34" aria-hidden="true" viewBox="0 0 64 64"><defs><linearGradient id="lg-f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a43"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#lg-f)"/><g transform="translate(32 33) scale(1.0) translate(-32 -33)"><circle cx="19.5" cy="13.5" r="5.5" fill="#fff"/><circle cx="44.5" cy="13.5" r="5.5" fill="#fff"/><circle cx="32" cy="35" r="20" fill="#fff"/><path d="M32 23.5V35l8 5" fill="none" stroke="#3b2b1f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="35" r="2.6" fill="#3b2b1f"/></g></svg><span>いまの<i>アプリ</i></span></a><p class="tag">すきま時間に、ちょっとあそぼ。<br>iPhone 向けの小さなアプリを、ひとりで作っています。</p></div><div class="cols3"><div><h2>あそぶ</h2><ul><li><a href="/">ホーム</a></li><li><a href="/start/">どれが合う？3問で診断</a></li><li><a href="/today/">今日の問題</a></li><li><a href="/play/"><span class="nw">ブラウザ</span>で遊ぶ</a></li><li><a href="/apps/">アプリ一覧</a></li><li><a href="/zukan/">あそびかた図鑑</a></li><li><a href="/ranking/"><span class="nw">ランキング</span>のしくみ</a></li><li><a href="/news/">お知らせ・更新情報</a></li></ul></div><div><h2>いまのこと</h2><ul><li><a href="/about/">作っている人</a></li><li><a href="/guide/">読み物</a></li><li><a href="/now/">いま やっていること</a></li><li><a href="/note/">note の記事</a></li><li><a href="https://note.com/redemarrage22" rel="me noopener">note（いまのページ）</a></li><li><a href="https://apps.apple.com/jp/developer/id6818812575"><span class="nw">App Store</span> で全部のアプリを見る</a></li></ul></div><div><h2>サポート</h2><ul><li><a href="/faq/">よくある質問</a></li><li><a href="/contact/"><span class="nw">お問い合わせ</span></a></li><li><a href="/contact/#privacy"><span class="nw">プライバシーポリシー</span></a></li><li><a href="/apps/sitemap/">サイトマップ</a></li><li><a href="/en/" hreflang="en" lang="en">English</a></li></ul></div></div><small>Apple、<span class="nw">App Store</span>、iPhone は Apple Inc. の商標です。</small></div></footer>
+<script src="/apps/site.js?v=20261129" defer></script>
+</body>
+</html>

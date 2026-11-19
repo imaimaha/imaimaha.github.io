@@ -1,0 +1,37 @@
+<!-- {"title": "4けたの素数を速く見分ける方法｜2・3・5・7・11の順", "short": "4けたの素数の見分け方", "desc": "4けたの数（1000〜9999）が素数かどうかを、暗算で速く見分ける方法を解説します。2・5・3でわれるかを見るだけで、候補は3分の1以下に。7と11の見分け方と、それでも残る数（1003など）の考え方も。", "lead": "4けたの数が素数かどうかは、まず2・5・3でわれるかを見ます。これだけで、9000個の4けたの数のうち、素数かもしれない数は2400個にしぼれます。", "published": "2026-11-19", "modified": "2026-11-19"} -->
+<p class="rv dateline">この記事は、AIで下書きしたあと、作者が確かめて公開しています。</p>
+
+<h2 class="rv">結論：「1のくらい」と「数字の合計」を見る</h2>
+<p class="rv">素数は、1とその数自身でしかわれない数です。4けたの数が素数かを短い時間で判断するなら、次の順に見ます。</p>
+<ol class="rv">
+<li><b>1のくらいが偶数か5</b>なら、素数ではありません（2か5でわれる）。</li>
+<li><b>4つの数字の合計が3でわれる</b>なら、素数ではありません（3でわれる）。</li>
+<li>残ったら、7と11でわれるかを見ます。</li>
+</ol>
+
+<h2 class="rv">どれくらいしぼれるか</h2>
+<p class="rv">1000〜9999の4けたの数は9000個あり、そのうち素数は1061個（約12%）です。作者がプログラムで数えたところ、ふるい落としの効き目は次のとおりでした。</p>
+<div class="rv" style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums">
+<tr><th style="text-align:left;padding:4px 8px">調べたもの</th><th style="text-align:right;padding:4px 8px">残る数</th><th style="text-align:right;padding:4px 8px">そのうち素数の割合</th></tr>
+<tr><td style="padding:4px 8px">2と5（1のくらい）</td><td style="text-align:right;padding:4px 8px">3,600</td><td style="text-align:right;padding:4px 8px">約30%</td></tr>
+<tr><td style="padding:4px 8px">＋3（数字の合計）</td><td style="text-align:right;padding:4px 8px">2,400</td><td style="text-align:right;padding:4px 8px">約44%</td></tr>
+<tr><td style="padding:4px 8px">＋7</td><td style="text-align:right;padding:4px 8px">2,057</td><td style="text-align:right;padding:4px 8px">約52%</td></tr>
+<tr><td style="padding:4px 8px">＋11</td><td style="text-align:right;padding:4px 8px">1,870</td><td style="text-align:right;padding:4px 8px">約57%</td></tr>
+<tr><td style="padding:4px 8px">＋13</td><td style="text-align:right;padding:4px 8px">1,727</td><td style="text-align:right;padding:4px 8px">約61%</td></tr>
+</table></div>
+<p class="rv">2・5・3の3つを見るだけで、候補は9000個から2400個にへります。そこまで残った数は、半分近くが素数です。</p>
+
+<h2 class="rv">7でわれるかの見分け方</h2>
+<p class="rv">4けたの数を「上2けた」と「下2けた」に分けます。上2けたを2倍して、下2けたに足します。その答えが7でわれれば、もとの数も7でわれます（100を7でわると2あまるため）。</p>
+<p class="rv">例：2023 → 上は20、下は23。20×2＋23＝63。63は7でわれるので、2023も7でわれます（2023＝7×289）。</p>
+
+<h2 class="rv">11でわれるかの見分け方</h2>
+<p class="rv">数字を、左から「＋−＋−」と交互に足し引きします。答えが0か11の倍数なら、11でわれます。</p>
+<p class="rv">例：1001 → 1−0＋0−1＝0 なので、11でわれます（1001＝7×11×13）。</p>
+
+<h2 class="rv">それでも残る「素数に見える数」</h2>
+<p class="rv">2・3・5・7・11のどれでもわれないのに、素数ではない4けたの数もあります。いちばん小さいのは1003（17×59）です。本当に素数かを確かめるには、その数の平方根まで（4けたなら97まで）の素数で、ぜんぶわってみる必要があります。短い時間で答えるゲームでは、ここまでのふるいで「たぶん素数」と判断するのが、現実的な落としどころです。</p>
+
+<div class="box rv" style="margin-top:22px"><h2>🚗 <span class="nw">ナンバー暗算ドライブ</span></h2><p>すれ違う車のナンバー4桁で、「素数？」を判断するモードがあります（35-24 なら 3524 が素数か）。答えのあとに、素因数分解を見せてくれます。毎日の「今日のドライブ」は、水曜日が素数の日です。無料（広告あり）の <span class="nw">iPhone アプリ</span>です。実際の車の運転中には遊ばないでください。</p><div class="btns"><a class="ghost" href="/jimidrive/">くわしく見る</a><a class="go sm" href="/play/jimidrive/"><span class="nw">ブラウザ</span>で1問あそぶ</a></div></div>
+<h2 class="rv">よくある質問</h2>
+<details class="qa rv"><summary><span class="qt">1は<span class="nw">素数ですか？</span></span></summary><div class="a"><p>素数ではありません。素数は、1より大きく、1とその数自身でしかわれない数です。</p></div></details><details class="qa rv"><summary><span class="qt">4けたの素数は、<span class="nw">いくつありますか？</span></span></summary><div class="a"><p>1000〜9999のあいだに、1061個あります。いちばん小さいのは1009、いちばん大きいのは9973です。</p></div></details><details class="qa rv"><summary><span class="qt">ゲームの「素数？」は、<span class="nw">時間が長いですか？</span></span></summary><div class="a"><p>ナンバー暗算ドライブでは、素数の問題は、10を作る問題の1.4倍の時間があります。</p></div></details>
