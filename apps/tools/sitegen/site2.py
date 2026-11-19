@@ -370,6 +370,8 @@ def page_home():
              f'<div class="emo" aria-hidden="true">{emo}</div>'
              '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ ブラウザで今すぐ遊ぶ</a><a class="ghost" href="/today/">今日の問題を見る</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
              '<p class="startlink"><a class="more-link" href="/start/">🧭 どれから遊ぶ？3問で診断 →</a></p>'
+             f'<div class="hpm" id="hpm"><div class="hpm-hd"><p><b>🐛 今日のいもむしを ここで1問</b><small>アプリと同じ今日の盤・登録なし</small></p>'
+             f'<button type="button" class="go sm" data-hp="{V}">▶ ここで遊ぶ</button></div><div id="hpm-body" hidden></div></div>'
              f'<p class="ctanote">いもむし・すうじ・おかずなど{len([d for d in PLAY if d in DAILY])}つの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
              f'<ul class="stats"><li><b data-n="{len(ALL)}">{len(ALL)}</b>本のアプリ</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b>本で毎日ランキング</li><li><b>全部</b>無料</li></ul></div>'
              f'<div class="stage" aria-label="アプリの画面"><span class="sticker s1" aria-hidden="true">今日の1問！</span>{phones}<span class="sticker s2" aria-hidden="true">みんな同じ問題</span></div>'
@@ -565,7 +567,7 @@ def page_faq():
     links = ''.join(f'<li><a href="/{d}/#faq"><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>{esc(NAMES[d][0])}</span></a></li>' for d in ALL)
     body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{qa}'
             f'<div class="box rv" style="margin-top:22px"><h2>📱 アプリごとのよくある質問</h2><p>遊び方や、そのアプリだけの質問は、各アプリのページにまとめています。</p><ul class="linklist" style="padding:0">{links}</ul></div>'
-            '<div class="box rv" id="glossary"><h2>📖 ことばの説明</h2><p>ゲームの中の しかけ（石・ワープ・バラン・安南将棋など）は、絵つきの<a href="/zukan/">あそびかた図鑑</a>にまとめています。</p><dl class="gloss">' +
+            '<div class="box rv" id="glossary"><h2>📖 ことばの説明</h2><p>ゲームの中の しかけ（石・ワープ・バラン・安南将棋など）は、絵つきの あそびかた図鑑にまとめています。</p><p><a class="more-link" href="/zukan/">📖 あそびかた図鑑を見る →</a></p><dl class="gloss">' +
             ''.join(f'<div class="gl"><dt><dfn>{esc(t)}</dfn></dt><dd>{esc(x)} <a href="{u}">くわしく</a></dd></div>' for t, (x, u) in GLOSS_ALL.items()) +
             '</dl></div></div></section>')
     import re
@@ -1061,6 +1063,9 @@ def page_start():
 
 # ---------------- 404（GitHub Pages が、ないページのときに出す /404.html） ----------------
 # ---------------- /zukan/ あそびかた図鑑（しかけ・ルールを絵でひとつずつ） ----------------
+def tail_nw(t, n=6):   # さいごの数文字は折り返さない（1〜2文字だけの行を作らない）
+    return esc(t) if len(t) <= n + 2 else esc(t[:-n]) + f'<span class="nw">{esc(t[-n:])}</span>'
+
 def page_zukan():
     secs = ZK.sections()
     url = BASE + '/zukan/'
@@ -1071,25 +1076,26 @@ def page_zukan():
         for zid, term, text, art in items:
             n += 1
             cards += (f'<li class="zc rv" id="{zid}"><div class="zart">{art}</div><span class="no">No.{n:02d}</span>'
-                      f'<h3><dfn>{esc(term)}</dfn></h3><p>{esc(text)}</p></li>')
+                      f'<h3><dfn>{tail_nw(term, 4)}</dfn></h3><p>{tail_nw(text)}</p></li>')
             terms.append({"@type": "DefinedTerm", "@id": f"{url}#{zid}", "name": term, "description": text, "url": f"{url}#{zid}", "inDefinedTermSet": {"@id": url + "#set"}})
         extra = ''
         if d == 'hensokushogi':
             extra = ('<h3 class="zsub" id="sg-cards">🃏 特殊効果将棋の13まいのカード</h3><ul class="zfx">' +
-                     ''.join(f'<li id="sg-fx-{k + 1}"><span class="e" aria-hidden="true">{e}</span><div><b><dfn>{esc(nm)}</dfn></b><span>{esc(x)}</span></div></li>' for k, (e, nm, x) in enumerate(ZK.FX)) + '</ul>')
+                     ''.join(f'<li id="sg-fx-{k + 1}"><span class="e" aria-hidden="true">{e}</span><div><b><dfn>{esc(nm)}</dfn></b><span>{tail_nw(x)}</span></div></li>' for k, (e, nm, x) in enumerate(ZK.FX)) + '</ul>')
             for k, (e, nm, x) in enumerate(ZK.FX):
                 terms.append({"@type": "DefinedTerm", "@id": f"{url}#sg-fx-{k + 1}", "name": f"{nm}（特殊効果将棋）", "description": x, "url": f"{url}#sg-fx-{k + 1}", "inDefinedTermSet": {"@id": url + "#set"}})
         links = f'<a class="more-link" href="/{d}/">{esc(t)}のページ →</a>'
         if d in PLAY: links += f'<a class="more-link" href="/play/{d}/">{play_label(d)}</a>'
         body += (f'<section class="sec zsec" id="{d}" aria-labelledby="h-{d}" style="{cv(d)}"><div class="wrap"><div class="zh">'
-                 f'<img src="/{d}/icon-256.webp" width="56" height="56" alt="" loading="lazy"><div><h2 id="h-{d}">{esc(t)}</h2><p>{esc(intro)}</p></div></div>'
+                 f'<img src="/{d}/icon-256.webp" width="56" height="56" alt="" loading="lazy"><div><h2 id="h-{d}">{esc(t)}</h2><p>{tail_nw(intro, 8)}</p></div></div>'
                  f'<ul class="zg">{cards}</ul>{extra}<p class="zlinks">{links}</p></div></section>')
     body = (f'<section class="sec" style="padding:8px 0 0"><div class="wrap"><nav aria-label="アプリをえらぶ"><ul class="zjump">{jump}</ul></nav></div></section>' + body +
             '<section class="sec white"><div class="narrow"><div class="box rv"><h2>📖 ほかのことば</h2><p>「今日の問題」「ランキング」「テンパズル」などのことばは、'
-            '<a href="/faq/#glossary">よくある質問の「ことばの説明」</a>にあります。遊び方の動画や画面は、各アプリのページでどうぞ。</p></div></div></section>')
+            'よくある質問の「ことばの説明」にあります。遊び方の動画や画面は、各アプリのページでどうぞ。</p>'
+            '<p><a class="more-link" href="/faq/#glossary">ことばの説明を見る →</a></p></div></div></section>')
     dts = {"@context": "https://schema.org", "@type": "DefinedTermSet", "@id": url + "#set", "name": "あそびかた図鑑", "url": url, "inLanguage": "ja",
            "description": "いまのアプリのゲームに出てくる しかけ・ルールの説明", "hasDefinedTerm": terms}
-    sub_page('/zukan/', '📖 あそびかた図鑑', f'あそびかた図鑑｜一筆書き・へや割り・変則将棋・大富豪のしかけとルール｜{BRAND}',
+    sub_page('/zukan/', '📖 あそびかた図鑑', f'あそびかた図鑑｜パズルと変則将棋のしかけ｜{BRAND}',
              '石・矢印の葉・ワープ・キノコ・木の実（ひとふでいもむし）、へや割り・住人さがし、おかず詰めのごはん・バラン・こおり・小皿、安南・トランプ・王手・影武者・縛り将棋、ふたり大富豪のルールを絵でひとつずつ。',
              'アプリに出てくる しかけやルールを、小さな絵でひとつずつ。わからないマスや駒があったら、ここを見てね。', body, [dts],
              crumbs=[('/', 'ホーム'), (None, 'あそびかた図鑑')], og='zukan')

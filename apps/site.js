@@ -263,6 +263,22 @@
     }).catch(function () {});
   }
 
+  /* トップの「今日のいもむしを ここで1問」: ボタンをおしたときだけ /play/hitofude/logic.js と /apps/hero-play.js を読む（トップは軽いまま） */
+  (function () {
+    var bt = d.querySelector('[data-hp]'), hb = d.getElementById('hpm-body');
+    if (!bt || !hb) return;
+    function load(src, next) { var sc = d.createElement('script'); sc.src = src; sc.onload = next; sc.onerror = fail; d.body.appendChild(sc); }
+    function fail() { hb.textContent = '読みこめませんでした。'; var a = d.createElement('a'); a.href = '/play/hitofude/'; a.textContent = 'ブラウザ版のページで遊ぶ →'; hb.appendChild(a); bt.disabled = false; }
+    function go() {
+      bt.hidden = true; hb.hidden = false; hb.textContent = '盤を用意しています…';
+      var v = bt.getAttribute('data-hp');
+      if (window.HF) load('/apps/hero-play.js?v=' + v, function () {});
+      else load('/play/hitofude/logic.js?v=' + v, function () { load('/apps/hero-play.js?v=' + v, function () {}); });
+    }
+    bt.addEventListener('click', go);
+    if (/[?&]hpDemo=1(?:&|$)/.test(location.search)) go();
+  })();
+
   /* アプリ一覧の絞りこみ */
   var fl = d.getElementById('filters'), q = d.getElementById('q');
   if (fl) {

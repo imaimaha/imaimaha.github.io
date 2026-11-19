@@ -61,7 +61,7 @@
     if (!days[todayKey]) { var go = el('a', 'wk-go', '▶ 今日のぶんを遊ぶ'); go.href = g[0] + '/'; ft.appendChild(go); }
     else ft.appendChild(el('p', 'wk-ok', '今日のスタンプ OK！ また あした。'));
     card.appendChild(ft);
-    card.appendChild(el('p', 'wk-cap', '遊ぶゲームは毎週月曜にかわります。スタンプはこの端末のブラウザ版の記録だけで、どこにも送りません（景品はありません）。'));
+    var cap = el('p', 'wk-cap', '遊ぶゲームは毎週月曜にかわります。スタンプはこの端末のブラウザ版の記録だけで、どこにも送りません'); cap.appendChild(el('span', 'nw', '（景品はありません）。')); card.appendChild(cap);
     box.textContent = '';
     box.appendChild(card);
   }
