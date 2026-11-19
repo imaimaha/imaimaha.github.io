@@ -28,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261129'
+V = '20261130'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -420,8 +420,16 @@ GUIDE = [('hitofude-zukei', '一筆書きができる図形の見分け方｜点
          ('ranking-battle', '毎日の1問を、みんなとのバトルにした理由｜ランキングのしくみ', '2026-11-19'),   # ima
          ('koukoku-dashikata', '広告の出し方で気をつけていること｜遊んでいる間は出さない', '2026-11-19'),   # ima
          ]   # /guide/ の読み物（手で書いたページ）。まとまり（GUIDE_GROUPS）ごとに、はじめがハブの記事
-GUIDE_GROUPS = [('puzzle', '🧩 パズルのコツ', ['hitofude-zukei', 'hitofude-kotsu', 'hitofude-reidai', 'hitofude-shikake', 'heyawari-tokikata', 'jyunin-sagashi-kotsu', 'okazu-kotsu', 'mainichi-1mon-puzzle']), ('anzan', '🧮 暗算と数あそび', ['anzan-kotsu', 'make-10-anzan', 'make10-dekinai', 'make10-nanmon', 'sosuu-miwakekata', 'kakezan-gate-kotsu']), ('shogi', '☗ 変則将棋', ['hensoku-shogi-rules', 'annan-shogi', 'trump-shogi', 'oute-shogi', 'kagemusha-shogi', 'tokushu-kouka-shogi', 'shibari-shogi', 'hensoku-tsume-kotsu', 'online-taisen']), ('cards', '🃏 カードゲーム', ['daifugo-local-rules', 'futari-daifugo-kotsu', 'gekokujo-kotsu', 'poker-preflop-kihon', 'poker-range-hyou']), ('sanpo', '👟 散歩と記録', ['sanpo-tsuzukeru', 'sanpo-bingo']), ('ima', '🐛 いまのアプリについて', ['ima-apps-kangaekata', 'ranking-battle', 'koukoku-dashikata'])]
+GUIDE_GROUPS = [('puzzle', 'パズルのコツ', ['hitofude-zukei', 'hitofude-kotsu', 'hitofude-reidai', 'hitofude-shikake', 'heyawari-tokikata', 'jyunin-sagashi-kotsu', 'okazu-kotsu', 'mainichi-1mon-puzzle']), ('anzan', '暗算と数あそび', ['anzan-kotsu', 'make-10-anzan', 'make10-dekinai', 'make10-nanmon', 'sosuu-miwakekata', 'kakezan-gate-kotsu']), ('shogi', '変則将棋', ['hensoku-shogi-rules', 'annan-shogi', 'trump-shogi', 'oute-shogi', 'kagemusha-shogi', 'tokushu-kouka-shogi', 'shibari-shogi', 'hensoku-tsume-kotsu', 'online-taisen']), ('cards', 'カードゲーム', ['daifugo-local-rules', 'futari-daifugo-kotsu', 'gekokujo-kotsu', 'poker-preflop-kihon', 'poker-range-hyou']), ('sanpo', '散歩と記録', ['sanpo-tsuzukeru', 'sanpo-bingo']), ('ima', 'いまのアプリについて', ['ima-apps-kangaekata', 'ranking-battle', 'koukoku-dashikata'])]
 GUIDE_GROUP = {s: gid for gid, _, ss in GUIDE_GROUPS for s in ss}
+GUIDE_GROUP_LB = {gid: lb for gid, lb, _ in GUIDE_GROUPS}
+GUIDE_GROUP_INTRO = {   # /guide/<group>/ のはじめの文（1〜2文）
+    'puzzle': '一筆書き・へや割り・住人さがし・おかず詰めの解き方とコツです。例題の盤を見ながら、決まるところから順に解く考え方をまとめています。',
+    'anzan': '暗算を速くするコツと、4つの数字で10を作るあそび、4けたの素数の見分け方です。きりのいい数を作るのが、いちばんの近道です。',
+    'shogi': '安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。友達とオンラインで対戦するしかたも書いています。',
+    'cards': '大富豪のローカルルールと、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーのプリフロップとレンジ表の読み方です。',
+    'sanpo': '散歩を続けるコツと、散歩ビンゴの遊び方です。目的と記録を小さく作ると、毎日の散歩が少し楽しくなります。',
+    'ima': '「いまのアプリ」をどんな考えで作っているかです。毎日の1問をランキングにした理由や、広告の出し方で気をつけていることを書いています。'}
 HOME_READS = [ss[0] for _, _, ss in GUIDE_GROUPS]   # トップに出す読み物（まとまりごとのハブ）
 DESC_TOP = ('将棋・ポーカー・アプリ開発が好きな「いま」のホームページ。毎日1問のパズルなど無料のiPhoneアプリ「いまのアプリ」と、'
             'パズルのコツの読み物、noteの記事をまとめています。')
@@ -442,7 +450,7 @@ def page_home():
              '<a class="more-link" href="/today/">今日の問題をぜんぶ見る →</a><p>みんな同じ問題。サインインなし、ニックネームだけでランキングに参加できます。</p></div>'
              f'<ul class="rail" aria-label="今日の問題で勝負できるアプリ">{"".join(daily_card(d) for d in DAILY)}</ul></div></section>')
     reads = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE if s in HOME_READS)
-    L.append('<section class="sec" aria-labelledby="h-read"><div class="wrap"><div class="sec-h rv"><h2 id="h-read">📖 読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div>'
+    L.append('<section class="sec" aria-labelledby="h-read"><div class="wrap"><div class="sec-h rv"><h2 id="h-read">読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div>'
              f'<ul class="readlist rv">{reads}</ul></div></section>')
     tiles = ''.join(f'<li class="ctile tilt rv"><span class="e" aria-hidden="true">{CAT_EMO[cid]}</span><h3><a class="stretch" href="/apps/#{cid}">{esc(lb)}</a></h3>'
                     f'<p>{CAT_SUB[cid]}・{len(ds)}本</p><div class="ics" aria-hidden="true">' + ''.join(f'<img src="/{d}/icon-256.webp" width="28" height="28" alt="" loading="lazy">' for d in ds) + '</div></li>'
@@ -825,7 +833,8 @@ def page_guide_article(slug):
     meta, body = guide_meta(slug)
     path = f'/guide/{slug}/'; og = 'guide-' + slug
     OG_PAGES[og] = (meta['short'], meta['desc'])
-    cr = [('/', 'ホーム'), ('/guide/', '読み物'), (None, meta['short'])]
+    grp = GUIDE_GROUP.get(slug)
+    cr = [('/', 'ホーム'), ('/guide/', '読み物')] + ([(f'/guide/{grp}/', GUIDE_GROUP_LB[grp])] if grp else []) + [(None, meta['short'])]
     art = {"@context": "https://schema.org", "@type": "Article", "headline": meta['title'], "description": meta['desc'],
            "datePublished": meta['published'], "dateModified": meta['modified'], "inLanguage": "ja", "mainEntityOfPage": BASE + path,
            "image": f'{BASE}/apps/og/{og}.jpg', "author": PERSON,
@@ -838,28 +847,46 @@ def page_guide_article(slug):
     dl = (f'<p class="rv dateline"><time datetime="{meta["published"]}">{jp_date(meta["published"])}</time> 公開' +
           (f'・<time datetime="{meta["modified"]}">{jp_date(meta["modified"])}</time> 更新' if meta['modified'] != meta['published'] else '') + '　')
     body = body.replace('<p class="rv dateline">', dl, 1)
-    grp = GUIDE_GROUP.get(slug)   # ほかの読み物: 同じまとまりの記事（なければ、ほかのまとまりのハブ）
+    # ほかの読み物: 同じまとまりの記事（なければ、ほかのまとまりのハブ）
     near = [(s, t) for s, t, _ in GUIDE if s != slug and GUIDE_GROUP.get(s) == grp][:6] or [(s, t) for s, t, _ in GUIDE if s != slug and s in HOME_READS]
     others = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t in near)
+    more = f'/guide/{grp}/' if grp else '/guide/'
     h = head(path, meta['title'], meta['desc'], lds, og_img=f'{BASE}/apps/og/{og}.jpg', og_type='article')
     h = h.replace('<meta property="og:type" content="article">', f'<meta property="og:type" content="article">\n<meta property="article:published_time" content="{meta["published"]}">', 1)
     L = [h, header('/guide/'), '<main id="main">',
          '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb(cr) +
          f'<div class="wrap"><h1>{esc(meta["title"])}</h1><p class="lead2">{meta["lead"]}</p></div></section>',
          f'<article class="sec" style="padding-top:20px"><div class="narrow">{body}'
-         f'<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">📖 ほかの読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div><ul class="readlist rv">{others}</ul>'
+         f'<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">ほかの読み物</h2><a class="more-link" href="{more}">ぜんぶ見る →</a></div><ul class="readlist rv">{others}</ul>'
          '</div></article>', '</main>', tail()]
     write(path, '\n'.join(L))
 
+def guide_lis(ss):   # 読み物の一覧（題・説明）
+    lis = ''
+    for s in ss:
+        meta, _ = guide_meta(s); t = next(x for k, x, _ in GUIDE if k == s)
+        lis += f'<li><a href="/guide/{s}/">{gtitle(t)}<small class="gd">{esc(meta["desc"])}</small></a></li>'
+    return lis
+
+def page_guide_group(gid):   # /guide/<group>/: まとまりごとのページ（はじめの文と、そのまとまりの記事）
+    lb = GUIDE_GROUP_LB[gid]; ss = dict((g, x) for g, _, x in GUIDE_GROUPS)[gid]; path = f'/guide/{gid}/'
+    items = {"@context": "https://schema.org", "@type": "ItemList", "name": lb, "itemListElement": [
+        {"@type": "ListItem", "position": k + 1, "url": f'{BASE}/guide/{s}/', "name": next(x for q, x, _ in GUIDE if q == s)} for k, s in enumerate(ss)]}
+    others = ''.join(f'<li><a href="/guide/{g}/">{esc(l)}</a></li>' for g, l, _ in GUIDE_GROUPS if g != gid)
+    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow"><ul class="readlist">{guide_lis(ss)}</ul>'
+            '<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">ほかの読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div>'
+            f'<nav aria-label="読み物のまとまり"><ul class="zjump gj">{others}</ul></nav></div></section>')
+    intro = GUIDE_GROUP_INTRO[gid]
+    sub_page(path, esc(lb), f'{lb}の読み物｜{BRAND}', intro, esc(intro), body, [items],
+             crumbs=[('/', 'ホーム'), ('/guide/', '読み物'), (None, lb)], og='guide-g-' + gid)
+
 def page_guide():
     for s, _, _ in GUIDE: page_guide_article(s)
-    secs = ''
+    for gid, _, _ in GUIDE_GROUPS: page_guide_group(gid)
+    chips = ''.join(f'<li><a href="#g-{gid}">{esc(lb)}</a></li>' for gid, lb, _ in GUIDE_GROUPS)
+    secs = f'<nav aria-label="読み物のまとまり"><ul class="zjump gj">{chips}</ul></nav>'
     for gid, lb, ss in GUIDE_GROUPS:   # まとまりごとに見出しと一覧（はじめがハブの記事）
-        lis = ''
-        for s in ss:
-            meta, _ = guide_meta(s); t = next(x for k, x, _ in GUIDE if k == s)
-            lis += f'<li><a href="/guide/{s}/">{gtitle(t)}<small class="gd">{esc(meta["desc"])}</small></a></li>'
-        secs += f'<h2 id="g-{gid}" class="rv" style="margin:26px 0 12px">{esc(lb)}</h2><ul class="readlist">{lis}</ul>'
+        secs += f'<h2 id="g-{gid}" class="rv" style="margin:30px 0 12px">{esc(lb)}</h2><ul class="readlist">{guide_lis(ss)}</ul>'
     items = {"@context": "https://schema.org", "@type": "ItemList", "name": "読み物", "itemListElement": [
         {"@type": "ListItem", "position": k + 1, "url": f'{BASE}/guide/{s}/', "name": t} for k, (s, t, _) in enumerate(GUIDE)]}
     body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{secs}'
@@ -1320,7 +1347,7 @@ def llms():
          f'- [どれが合う？]({BASE}/start/): 3つの質問で、合いそうなアプリをえらぶ',
          f'- [あそびかた図鑑]({BASE}/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ',
          f'- [ランキングのしくみ]({BASE}/ranking/): サインインなし、ニックネームだけで参加', f'- [アプリ一覧]({BASE}/apps/): すべてのアプリ',
-         f'- [読み物]({BASE}/guide/): パズル・暗算・変則将棋・カードゲーム・散歩のコツと、作っている人の考え'] + [x for gid, lb, ss in GUIDE_GROUPS for x in [f'  - {lb[2:]}'] + [f'    - [{t}]({BASE}/guide/{s}/)' for s in ss for k, t, _ in GUIDE if k == s]] + [
+         f'- [読み物]({BASE}/guide/): パズル・暗算・変則将棋・カードゲーム・散歩のコツと、作っている人の考え'] + [x for gid, lb, ss in GUIDE_GROUPS for x in [f'  - [{lb}]({BASE}/guide/{gid}/): {GUIDE_GROUP_INTRO[gid]}'] + [f'    - [{t}]({BASE}/guide/{s}/)' for s in ss for k, t, _ in GUIDE if k == s]] + [
          f'- [お知らせ]({BASE}/news/): アップデートとリリース', f'- [よくある質問]({BASE}/faq/): 無料・広告・データ・通知・機種変更',
          f'- [作っている人]({BASE}/about/): いま（将棋・ポーカー・アプリ開発が好き）', f'- [いま やっていること]({BASE}/now/)', f'- [お問い合わせ]({BASE}/contact/)', '', '## アプリ']
     for cid, lb, ds in CATS:

@@ -10,7 +10,7 @@
 - [ランキングのしくみ](https://imaimaha.com/ranking/): サインインなし、ニックネームだけで参加
 - [アプリ一覧](https://imaimaha.com/apps/): すべてのアプリ
 - [読み物](https://imaimaha.com/guide/): パズル・暗算・変則将棋・カードゲーム・散歩のコツと、作っている人の考え
-  - パズルのコツ
+  - [パズルのコツ](https://imaimaha.com/guide/puzzle/): 一筆書き・へや割り・住人さがし・おかず詰めの解き方とコツです。例題の盤を見ながら、決まるところから順に解く考え方をまとめています。
     - [一筆書きができる図形の見分け方｜点に集まる線の数を数えるだけ](https://imaimaha.com/guide/hitofude-zukei/)
     - [一筆書きパズルのコツ｜行き止まりを先に見つける考え方](https://imaimaha.com/guide/hitofude-kotsu/)
     - [ひとふでいもむしの解き方｜1つの盤で、失敗と正解を順に見る](https://imaimaha.com/guide/hitofude-reidai/)
@@ -19,14 +19,14 @@
     - [住人さがしパズルの解き方｜0のへやと、列の決まりから順に](https://imaimaha.com/guide/jyunin-sagashi-kotsu/)
     - [おかず詰めパズルのコツ｜「つぎ」を見て、すみから詰める](https://imaimaha.com/guide/okazu-kotsu/)
     - [毎日1問のパズルアプリの選び方｜5つの見るポイント](https://imaimaha.com/guide/mainichi-1mon-puzzle/)
-  - 暗算と数あそび
+  - [暗算と数あそび](https://imaimaha.com/guide/anzan/): 暗算を速くするコツと、4つの数字で10を作るあそび、4けたの素数の見分け方です。きりのいい数を作るのが、いちばんの近道です。
     - [暗算を速くするコツ7つ｜きりのいい数にしてから計算する](https://imaimaha.com/guide/anzan-kotsu/)
     - [4つの数字で10を作る暗算のコツ｜5つの考え方](https://imaimaha.com/guide/make-10-anzan/)
     - [4つの数字で10を作れない組み合わせ一覧｜1〜9なら48組](https://imaimaha.com/guide/make10-dekinai/)
     - [分数がいる10の難問｜1158・1199・1337・3478](https://imaimaha.com/guide/make10-nanmon/)
     - [4けたの素数を速く見分ける方法｜2・3・5・7・11の順](https://imaimaha.com/guide/sosuu-miwakekata/)
     - [暗算ランナーのコツ｜＋と×、−と÷のどちらが得かを一瞬で決める](https://imaimaha.com/guide/kakezan-gate-kotsu/)
-  - 変則将棋
+  - [変則将棋](https://imaimaha.com/guide/shogi/): 安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。友達とオンラインで対戦するしかたも書いています。
     - [変則将棋のルール一覧｜安南将棋・トランプ将棋・王手将棋など](https://imaimaha.com/guide/hensoku-shogi-rules/)
     - [安南将棋のルールとコツ｜うしろの駒の動きを借りる将棋](https://imaimaha.com/guide/annan-shogi/)
     - [トランプ将棋のルールとコツ｜カードの数字の筋だけ動かせる将棋](https://imaimaha.com/guide/trump-shogi/)
@@ -36,16 +36,16 @@
     - [縛り将棋のルールと攻略｜囲い・戦法の形を作ってから攻める](https://imaimaha.com/guide/shibari-shogi/)
     - [変則詰将棋（安南詰将棋）のコツ｜借りた動きで王手を探す](https://imaimaha.com/guide/hensoku-tsume-kotsu/)
     - [友達とオンライン対戦するには｜部屋のコードを送るだけ、登録なし](https://imaimaha.com/guide/online-taisen/)
-  - カードゲーム
+  - [カードゲーム](https://imaimaha.com/guide/cards/): 大富豪のローカルルールと、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーのプリフロップとレンジ表の読み方です。
     - [大富豪のローカルルール一覧｜8切り・革命・イレブンバック](https://imaimaha.com/guide/daifugo-local-rules/)
     - [ふたり大富豪のコツ｜相手の手札は、はじめは自分と同じ数字](https://imaimaha.com/guide/futari-daifugo-kotsu/)
     - [下剋上デュエルのコツ｜1が9に勝つ読み合いで、相手の残りを読む](https://imaimaha.com/guide/gekokujo-kotsu/)
     - [ポーカーのプリフロップとは｜席の順番で、参加する手が変わる理由](https://imaimaha.com/guide/poker-preflop-kihon/)
     - [13×13のレンジ表の読み方｜ペア・スーテッド・オフスート](https://imaimaha.com/guide/poker-range-hyou/)
-  - 散歩と記録
+  - [散歩と記録](https://imaimaha.com/guide/sanpo/): 散歩を続けるコツと、散歩ビンゴの遊び方です。目的と記録を小さく作ると、毎日の散歩が少し楽しくなります。
     - [散歩を続けるコツ5つ｜「目的」と「記録」を小さく作る](https://imaimaha.com/guide/sanpo-tsuzukeru/)
     - [散歩ビンゴの遊び方とお題の例｜9つのなかまから選ぶ](https://imaimaha.com/guide/sanpo-bingo/)
-  - いまのアプリについて
+  - [いまのアプリについて](https://imaimaha.com/guide/ima/): 「いまのアプリ」をどんな考えで作っているかです。毎日の1問をランキングにした理由や、広告の出し方で気をつけていることを書いています。
     - [「いまのアプリ」の作り方｜小さく・登録なし・毎日1問](https://imaimaha.com/guide/ima-apps-kangaekata/)
     - [毎日の1問を、みんなとのバトルにした理由｜ランキングのしくみ](https://imaimaha.com/guide/ranking-battle/)
     - [広告の出し方で気をつけていること｜遊んでいる間は出さない](https://imaimaha.com/guide/koukoku-dashikata/)

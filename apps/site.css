@@ -790,3 +790,5 @@ html[lang="en"] .hhero h1 { font-size: clamp(34px, 9.6vw, 60px); }
 .readlist .st { display: block; font-size: 14px; color: var(--orange-d); }
 .readlist .gd { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--dim); }
 .dateline { font-size: 13px; color: var(--dim); }
+/* 読み物（/guide/）のまとまりへのリンク */
+.zjump.gj a { min-height: 44px; padding: 0 16px; box-shadow: none; }
