@@ -544,3 +544,123 @@ body { line-break: strict; }
 .playbtn { margin: 14px 0 0; font-size: 13px; font-weight: 700; color: var(--d); }
 .acard .acts { flex-wrap: wrap; row-gap: 8px; }
 .acard .acts .go.sm2 { white-space: nowrap; padding: 0 12px; font-size: 13.5px; }
+
+/* ---------- 2026-11-20: どれが合う？・今日のまとめ・アドベントカレンダー・404・タップの大きさ ---------- */
+[hidden] { display: none !important; }
+/* タップの大きさ（44px 以上）: 紹介ページの「ジャンル」「今日の問題」・ことばの「くわしく」・よくある質問の文の中のリンク */
+.facts a, .gl dd a { min-height: 44px; }
+.support .card p a { padding: 14px 0; }
+/* トップ・アプリ一覧から /start/ へ */
+.startlink { margin: 10px 0 0; }
+.startbar { margin: 0 0 14px; }
+.startbar a { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 16px; border-radius: 18px; background: var(--yellow); color: var(--ink);
+  text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 0 #e0b900; }
+.startbar a span:first-child { font-size: 24px; }
+.startbar a:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0b900; }
+/* /start/ */
+.qbox { background: #fff; border-radius: 26px; border: 2px solid var(--line); box-shadow: 0 6px 0 var(--line); padding: 18px; }
+.qbox .steps { display: flex; gap: 6px; margin: 0 0 14px; }
+.qbox .steps i { flex: 1; height: 8px; border-radius: 4px; background: #f0e2cc; }
+.qbox .steps i.on { background: var(--orange); }
+.qbox .q h2 { font-size: 21px; margin: 0 0 12px; outline: none; }
+.qbox .opts { display: grid; gap: 10px; }
+.qbox .opts button { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 0 18px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg);
+  color: var(--ink); font: inherit; font-weight: 800; font-size: 17px; text-align: left; cursor: pointer; box-shadow: 0 4px 0 var(--line); }
+.qbox .opts button span { font-size: 24px; }
+.qbox .opts button:hover { border-color: #e2c9a6; }
+.qbox .opts button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
+.qbox .res .k { margin: 0 0 8px; font-weight: 800; color: var(--orange-d); font-size: 14px; outline: none; }
+.qbox .also-h { margin: 14px 0 6px; font-size: 13px; font-weight: 800; color: var(--dim); }
+.qbox .also { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.qbox .also a { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 14px 4px 6px; border-radius: 14px; background: var(--bg);
+  border: 2px solid var(--line); text-decoration: none; color: var(--ink); font-weight: 800; font-size: 14px; }
+.qbox .also img { width: 36px; height: 36px; border-radius: 9px; }
+.qbox .again { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; padding: 0 4px; background: none; border: 0; color: var(--orange-d);
+  font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; }
+.cap { font-size: 12.5px; color: var(--dim); margin: 12px 0 0; }
+.cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+@media (min-width: 760px) { .cands:not(.one) { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .cands:not(.one) { grid-template-columns: repeat(3, 1fr); } }
+.cand { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; padding: 16px; border-radius: 22px; background: var(--p); border: 2px solid rgba(59,43,31,.06); }
+.cand .ic { width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+.cand h3 { margin: 0 0 2px; font-size: 18px; }
+.cand h3 a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+.cand p { margin: 0 0 4px; font-size: 14px; text-wrap: wrap; }
+.cand .pl { font-size: 12.5px; font-weight: 700; color: var(--d); }
+.cand .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cands.one .cand { background: var(--p); border: 3px solid var(--a); }
+.cands.one .cand h3 { font-size: 22px; }
+.more-life { margin: 18px 0 0; font-size: 14px; color: var(--dim); }
+.more-life a { display: inline-flex; align-items: center; min-height: 44px; }
+/* 今日のまとめ（/play/digest.js が #digest の中を作る） */
+.dgwrap { max-width: 720px; }
+.digest > p { margin: 0; }
+.digest > p a { display: inline-flex; align-items: center; min-height: 44px; margin-left: 4px; font-weight: 800; }
+.dg-card { background: #fff; border: 3px solid var(--ink); border-radius: 26px; padding: 14px 16px 12px; box-shadow: 6px 8px 0 var(--ink); }
+.dg-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 2px dashed var(--line); padding-bottom: 8px; }
+.dg-hd b { font-family: var(--round); font-size: 18px; }
+.dg-hd small { color: var(--dim); font-weight: 700; font-size: 12px; white-space: nowrap; }
+.dg-list { list-style: none; margin: 0; padding: 0; }
+.dg-list li { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; min-height: 54px; border-bottom: 1px solid #f5ecdc; line-height: 1.35; }
+.dg-list .e { font-size: 24px; text-align: center; }
+.dg-list .n { font-weight: 800; font-size: 15px; }
+.dg-list .n small { display: block; font-weight: 600; color: var(--dim); font-size: 11.5px; }
+.dg-list .st { font-weight: 800; font-size: 14px; color: #2b7a1a; font-variant-numeric: tabular-nums; }
+.dg-list li.ok { background: linear-gradient(90deg, #effbe8, transparent); }
+.dg-list .go { min-height: 44px; padding: 0 14px; font-size: 13px; border-radius: 14px; box-shadow: 0 3px 0 var(--orange-d); }
+.dg-prog { display: flex; gap: 4px; margin: 12px 0 10px; }
+.dg-prog i { flex: 1; height: 10px; border-radius: 5px; background: #f0e2cc; }
+.dg-prog i.on { background: #56b33a; }
+.dg-sum { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dg-sum p { margin: 0; font-weight: 800; }
+.dg-share { display: inline-flex; align-items: center; min-height: 46px; padding: 0 16px; border-radius: 14px; background: #2a2019; color: #fff; font: inherit; font-weight: 800;
+  font-size: 14px; border: 0; box-shadow: 0 3px 0 #000; cursor: pointer; }
+.dg-share:disabled { opacity: .4; cursor: default; box-shadow: none; }
+.dg-msg { margin: 6px 0 0; font-size: 13px; color: var(--dim); white-space: pre-line; }
+.dg-msg:empty { display: none; }
+.dg-cap { margin: 6px 0 0; font-size: 12px; color: var(--dim); line-height: 1.6; }
+.dg-buf { position: fixed; left: -9999px; top: 0; }
+/* アドベントカレンダー（クリスマスの期間のトップ） */
+.advent { position: relative; overflow: hidden; margin: 0 0 30px; padding: 18px 16px 16px; border-radius: 26px; background: linear-gradient(#1f4d36, #173b2a); color: #fff; }
+.advent .snow { position: absolute; inset: 0; pointer-events: none; opacity: .3;
+  background-image: radial-gradient(#fff 1.5px, transparent 2px), radial-gradient(#fff 1px, transparent 1.5px); background-size: 60px 60px, 37px 37px; background-position: 0 0, 20px 15px; }
+.advent > * { position: relative; }
+.advent h3 { margin: 0 0 4px; color: #fff; font-size: clamp(22px, 6vw, 30px); }
+.advent .s { margin: 0 0 14px; color: #d5ead9; font-size: 14.5px; }
+.doors { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-flow: dense; gap: 7px; }
+@media (min-width: 760px) { .doors { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .advent { display: grid; grid-template-columns: 1fr 600px; column-gap: 32px; grid-template-rows: auto 1fr auto; align-items: start; padding: 26px 28px; }
+  .advent .doors { grid-column: 2; grid-row: 1 / span 3; } .advent h3, .advent .s, .advent .note2 { grid-column: 1; } }
+.doors li { position: relative; aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; font-family: var(--round); font-weight: 800;
+  font-size: clamp(16px, 4.6vw, 22px); background: #c8372d; border: 2px solid #e6b84a; box-shadow: 0 4px 0 #8e2119; color: #fff; }
+.doors li:nth-child(3n) { background: #2f7a52; box-shadow: 0 4px 0 #1b4f33; }
+.doors li:nth-child(4n) { background: #e6b84a; color: #5a3b06; box-shadow: 0 4px 0 #a37c22; }
+.doors li.past { opacity: .5; }
+.doors li.past.opened { opacity: .8; }
+.doors li.past.opened::after { content: "✓"; position: absolute; right: 4px; bottom: 0; font-size: 12px; }
+.doors li .pe { position: absolute; left: 3px; top: 1px; font-size: 13px; }
+.doors li.fut { filter: saturate(.55); opacity: .85; }
+.doors li.fut::after { content: "🔒"; position: absolute; right: 3px; bottom: 1px; font-size: 10px; }
+.doors li.now { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; align-content: center; gap: 2px; padding: 8px 6px; text-align: center;
+  background: #fff; color: #173b2a; border: 3px solid #e6b84a; box-shadow: 0 4px 0 #a37c22; line-height: 1.3; }
+.doors li.now b { font-size: 12.5px; }
+.doors li.now .em { font-size: clamp(28px, 8vw, 40px); line-height: 1.1; }
+.doors li.now .nm { font-size: 13px; }
+.doors li.now .open { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; margin-top: 2px; padding: 0 10px; border-radius: 12px;
+  background: #c8372d; color: #fff; font-size: 13px; text-decoration: none; box-shadow: 0 3px 0 #8e2119; white-space: nowrap; }
+.doors li.now .open:active { transform: translateY(2px); box-shadow: 0 1px 0 #8e2119; }
+.advent .note2 { margin: 12px 0 0; font-size: 12px; color: #b5d6bf; }
+.season-sub { margin-bottom: 14px; }
+.season-sub h3 { margin: 0; font-size: 21px; }
+/* 404 */
+.nf .nf-e { margin: 10px 0 0; font-size: 52px; line-height: 1.1; }
+/* 数字で見る（本当の数だけ） */
+.facts2 { background: #2a2019; color: #fff7e8; }
+.facts2 .sec-h h2 { color: #fff; }
+.facts2 .sec-h p { color: #d8c6ad; }
+.fg { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 900px) { .fg { grid-template-columns: repeat(3, 1fr); } }
+.fg li { padding: 14px; border-radius: 20px; background: #3b2e24; border: 1px solid #574536; }
+.fg b { font-family: var(--round); font-size: clamp(30px, 9vw, 44px); line-height: 1.05; color: var(--yellow); font-variant-numeric: tabular-nums; }
+.fg small { margin-left: 3px; font-size: 14px; font-weight: 800; }
+.fg li > span { display: block; margin-top: 4px; font-size: 13px; line-height: 1.55; color: #e6d6c0; }

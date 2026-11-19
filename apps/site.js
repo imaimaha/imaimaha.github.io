@@ -102,6 +102,99 @@
     hero.appendChild(rb);
   })();
 
+  /* 「数字で見る」の日数（はじめてのアプリの公開日から。日本時間の今日で数えなおす） */
+  $$('[data-since]').forEach(function (e) {
+    var p = e.getAttribute('data-since').split('-'), n = Math.floor((jst().n - Date.UTC(+p[0], +p[1] - 1, +p[2])) / 864e5);
+    if (n >= 0) e.textContent = n;
+  });
+
+  /* アドベントカレンダー（クリスマスの期間だけ出る section の中。12/1〜12/25・日本時間）。
+     開くのは今日のとびらだけ（その日のアプリの /play/ へ）。すぎた日は、この端末で開けた日にだけ ✓ と絵文字。?xmasPreview=1 のとき12月でなければ 12/1 として見せる（&advDay=9 で日をえらべる） */
+  (function () {
+    var adv = d.querySelector('[data-advent]');
+    if (!adv || !root.classList.contains('season-xmas')) return;
+    var t = jst().x, y = t.getUTCFullYear(), mo = t.getUTCMonth() + 1, today = t.getUTCDate();
+    var key = y + '-' + p2(mo) + '-' + p2(today);
+    var day = mo === 12 ? today : 1;
+    var m = /[?&]advDay=(\d{1,2})(?:&|$)/.exec(location.search || '');
+    if (m && /[?&]xmasPreview=1/.test(location.search)) day = Math.min(25, Math.max(1, +m[1]));
+    var SK = 'site.advent.' + y, opened = {};
+    try { (JSON.parse(localStorage.getItem(SK) || '[]') || []).forEach(function (k) { opened[k] = 1; }); } catch (e) {}
+    function done(g) {
+      var subs = g === 'suji' ? ['a', 'b'] : [''];
+      return subs.some(function (s) { try { var r = JSON.parse(localStorage.getItem('web.' + g + '.today' + s) || 'null'); return r && r.day === key; } catch (e) { return false; } });
+    }
+    $$('li[data-day]', adv).forEach(function (li) {
+      var k = +li.getAttribute('data-day'), g = li.getAttribute('data-d'), e = li.getAttribute('data-e');
+      if (k < day) {
+        li.className = 'past' + (opened[k] ? ' opened' : '');
+        if (opened[k]) { var s = d.createElement('span'); s.className = 'pe'; s.setAttribute('aria-hidden', 'true'); s.textContent = e; li.appendChild(s); }
+      } else if (k > day) {
+        li.className = 'fut';
+      } else {
+        li.className = 'now';
+        li.textContent = '';
+        var b = d.createElement('b'); b.textContent = '12/' + k + ' のとびら';
+        var em = d.createElement('span'); em.className = 'em'; em.setAttribute('aria-hidden', 'true'); em.textContent = e;
+        var nm = d.createElement('b'); nm.className = 'nm'; nm.textContent = li.getAttribute('data-t');
+        var a = d.createElement('a'); a.href = '/play/' + g + '/'; a.className = 'open';
+        a.textContent = done(g) ? '✅ クリアずみ・もう一度' : '▶ あけて遊ぶ';
+        a.setAttribute('aria-label', '12月' + k + '日のとびら：' + li.getAttribute('data-n') + 'の' + li.getAttribute('data-t') + 'をブラウザで遊ぶ');
+        a.addEventListener('click', function () {
+          opened[k] = 1;
+          try { localStorage.setItem(SK, JSON.stringify(Object.keys(opened).map(Number))); } catch (e2) {}
+        });
+        li.appendChild(b); li.appendChild(em); li.appendChild(nm); li.appendChild(a);
+      }
+    });
+  })();
+
+  /* どれが合う？（/start/）。3つの質問の点数をたして、いちばん高いアプリ＋つぎの2本。答えはこの画面の中だけ */
+  (function () {
+    var box = d.getElementById('chooser');
+    if (!box) return;
+    box.hidden = false;
+    var qs = $$('.q', box), st = $$('.steps i', box), res = d.getElementById('res'), sc = {}, k = 0;
+    var order = $$('#cands li[data-app]').map(function (li) { return li.getAttribute('data-app'); });
+    function show() {
+      qs.forEach(function (q, i) { q.hidden = i !== k; });
+      st.forEach(function (s, i) { s.classList.toggle('on', i <= k); });
+    }
+    function card(dd) { var c = d.querySelector('#cands li[data-app="' + dd + '"]'); return c ? c.cloneNode(true) : null; }
+    function result() {
+      qs.forEach(function (q) { q.hidden = true; });
+      var ds = order.slice().sort(function (a, b) { return (sc[b] || 0) - (sc[a] || 0) || order.indexOf(a) - order.indexOf(b); });
+      var top = d.getElementById('res-top'), also = d.getElementById('res-also');
+      top.textContent = ''; also.textContent = '';
+      var c0 = card(ds[0]); if (c0) top.appendChild(c0);
+      ds.slice(1, 3).forEach(function (x) {
+        var src = d.querySelector('#cands li[data-app="' + x + '"]'); if (!src) return;
+        var li = d.createElement('li'), a = d.createElement('a'), im = d.createElement('img'), sp = d.createElement('span');
+        a.href = '/' + x + '/'; im.src = '/' + x + '/icon-256.webp'; im.alt = ''; im.width = 36; im.height = 36;
+        sp.textContent = src.querySelector('h3').textContent;
+        a.appendChild(im); a.appendChild(sp); li.appendChild(a); also.appendChild(li);
+      });
+      res.hidden = false;
+      var h = d.getElementById('res-k'); if (h) h.focus({ preventScroll: true });
+      var r = box.getBoundingClientRect(); if (r.top < 70) window.scrollBy({ top: r.top - 80, behavior: still ? 'auto' : 'smooth' });
+    }
+    qs.forEach(function (q) {
+      $$('button', q).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var w = {}; try { w = JSON.parse(b.getAttribute('data-w')) || {}; } catch (e) {}
+          for (var x in w) sc[x] = (sc[x] || 0) + w[x];
+          k++;
+          if (k < qs.length) { show(); var h2 = qs[k].querySelector('h2'); if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus({ preventScroll: true }); } }
+          else result();
+        });
+      });
+    });
+    d.getElementById('res-again').addEventListener('click', function () {
+      sc = {}; k = 0; res.hidden = true; show(); var h2 = qs[0].querySelector('h2'); if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus(); }
+    });
+    show();
+  })();
+
   /* プレイ動画: 見えるところに来たら読みこんで再生（動きを減らす設定のときは、ポスターのまま。押すと再生） */
   $$('video[data-vsrc]').forEach(function (v) {
     var src = v.getAttribute('data-vsrc');

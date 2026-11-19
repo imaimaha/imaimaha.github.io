@@ -15,3 +15,23 @@ h1{font-size:24px;margin:8px 0 4px}
 h2{font-size:17px;margin:22px 0 6px}
 p,li{font-size:14px;line-height:1.75}
 a{color:#3b2f25}
+.nw{white-space:nowrap}
+/* 今日のまとめ（digest.js） */
+.digest{margin:0 0 6px}
+.dg-card{background:#fff;border-radius:20px;padding:12px 14px 10px;box-shadow:0 3px 0 #f0dcc4}
+.dg-hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:2px dashed #f0dcc4;padding-bottom:6px}
+.dg-hd b{font-size:15px}.dg-hd small{font-size:12px;opacity:.7}
+.dg-list{list-style:none;margin:0;padding:0}
+.dg-list li{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:50px;border-bottom:1px solid #f7ecdd;line-height:1.35}
+.dg-list .e{font-size:22px;text-align:center}
+.dg-list .n{font-weight:800;font-size:14px}.dg-list .n small{display:block;font-weight:600;font-size:11px;opacity:.7}
+.dg-list .st{font-weight:800;font-size:13px;color:#2b7a1a;font-variant-numeric:tabular-nums}
+.dg-list li.ok{background:linear-gradient(90deg,#effbe8,transparent)}
+.dg-list .go{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;background:#e8604c;color:#fff;font-weight:800;font-size:13px;text-decoration:none}
+.dg-prog{display:flex;gap:4px;margin:10px 0 8px}.dg-prog i{flex:1;height:8px;border-radius:4px;background:#f0e2cc}.dg-prog i.on{background:#56b33a}
+.dg-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.dg-sum p{margin:0;font-weight:800}
+.dg-share{min-height:44px;padding:0 16px;border-radius:14px;border:0;background:#2a2019;color:#fff;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.dg-share:disabled{opacity:.4;cursor:default}
+.dg-msg{margin:6px 0 0;font-size:13px;min-height:1em;white-space:pre-line}
+.dg-cap{margin:4px 0 0;font-size:12px;line-height:1.6;opacity:.75}
+.dg-buf{position:fixed;left:-9999px;top:0}

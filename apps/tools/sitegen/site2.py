@@ -25,7 +25,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261124'
+V = '20261125'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -49,7 +49,7 @@ def logo_svg(uid, size=34):
 
 NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ', '🌐'), ('/apps/', 'アプリ一覧', '📱'), ('/ranking/', 'ランキング', '🏆'), ('/news/', 'お知らせ', '📣'),
        ] + ([('/note/', 'note', '📝')] if NOTE_ON else []) + [('/about/', '作っている人', '🙋')]
-MENU = [('/', 'ホーム', '🏠')] + NAV + [('/now/', 'いま やっていること', '🛠️'), ('/faq/', 'よくある質問', '💬'), ('/contact/', 'お問い合わせ', '✉️'), ('/apps/sitemap/', 'サイトマップ', '🗺️')]
+MENU = [('/', 'ホーム', '🏠'), ('/start/', 'どれから遊ぶ？3問で診断', '🧭')] + NAV + [('/now/', 'いま やっていること', '🛠️'), ('/faq/', 'よくある質問', '💬'), ('/contact/', 'お問い合わせ', '✉️'), ('/apps/sitemap/', 'サイトマップ', '🗺️')]
 
 def header(cur):
     def a(u, t, e=None, with_e=False):
@@ -65,7 +65,7 @@ def footer(privacy=None):
     sup = [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ')]
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
     sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ')]
-    cols = [('あそぶ', [('/', 'ホーム'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
+    cols = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
             ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
     def li(u, t):
@@ -291,14 +291,64 @@ def season_card(d, label, text):
             f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY else '<span class="more" aria-hidden="true">くわしく →</span>')
             + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '') + '</div></li>')
 
+# 12/1〜12/25 のアドベントカレンダー（クリスマスの期間だけ出る section の中）。とびらは日がわりで、ブラウザで遊べる今日の1問（/play/<app>/）へ。
+# 開くのは「今日」のとびらだけ（前の日の問題はブラウザ版にないので、すぎた日はリンクなし）。どの日がどのアプリかはここで決める（site.js が今日のとびらを開く）
+ADVENT_ROT = ['yudetamago', 'suji', 'hitofude', 'okazu', 'jimidrive', 'kakezan']   # 12/1 と 12/25 は クリスマスのたまご
+ADVENT_EMO = {'hitofude': '🐛', 'suji': '🏠', 'okazu': '🍱', 'jimidrive': '🚗', 'kakezan': '🏃', 'yudetamago': '🥚'}
+
+def advent():
+    assert all(d in PLAY and d in DAILY for d in ADVENT_ROT)
+    lis = ''
+    for k in range(1, 26):
+        d = ADVENT_ROT[(k - 1) % len(ADVENT_ROT)]
+        t = DAILY_LINE[d].split('：', 1)[0].split('・')[0]
+        lis += (f'<li data-day="{k}" data-d="{d}" data-e="{ADVENT_EMO[d]}" data-t="{esc(t)}" data-n="{esc(NAMES[d][0])}">'
+                f'<span class="dn" aria-label="12月{k}日">{k}</span></li>')
+    return ('<div class="advent" data-advent><div class="snow" aria-hidden="true"></div><h3>まいにち1まい、とびらをあけよう</h3>'
+            '<p class="s">アドベントカレンダーのとびらの中は、その日の「今日の1問」。あけるアプリは日がわりで、ブラウザでそのまま遊べます。</p>'
+            f'<ol class="doors" aria-label="12月1日から25日のとびら">{lis}</ol>'
+            '<p class="note2">とびらが開くのは その日だけです（日本時間）。開けた日は この端末に✓がつきます（どこにも送りません）。</p></div>')
+
 def season_secs():
-    return [f'<section class="sec season {k}" data-season="{k}" aria-labelledby="h-{k}" hidden><div class="wrap"><div class="sec-h"><h2 id="h-{k}">{e} {esc(t)}</h2>'
-            f'<p>{esc(lead)}</p></div><ul class="rail" aria-labelledby="h-{k}">{"".join(season_card(*c) for c in cards)}</ul></div></section>'
-            for k, e, t, lead, cards in SEASONS]
+    out = []
+    for k, e, t, lead, cards in SEASONS:
+        if k == 'xmas':   # 見出しのすぐ下にアドベントカレンダー。アプリのクリスマスの見た目はその下
+            top = (f'<div class="sec-h"><h2 id="h-{k}">{e} {esc(t)}</h2></div>{advent()}'
+                   f'<div class="sec-h season-sub"><h3 id="h-{k}-apps">アプリの中も、クリスマス</h3><p>{esc(lead)}</p></div>')
+            lab = f'h-{k}-apps'
+        else:
+            top = f'<div class="sec-h"><h2 id="h-{k}">{e} {esc(t)}</h2><p>{esc(lead)}</p></div>'
+            lab = f'h-{k}'
+        out.append(f'<section class="sec season {k}" data-season="{k}" aria-labelledby="h-{k}" hidden><div class="wrap">{top}'
+                   f'<ul class="rail" aria-labelledby="{lab}">{"".join(season_card(*c) for c in cards)}</ul></div></section>')
+    return out
 
 HERO_SHOTS = [('suji', '4_daily', 'すうじのへやの「今日のへや割り」の画面'),
               ('hitofude', '5_daily', 'ひとふでいもむしの「今日のいもむし」の画面'),
               ('okazu', '5_daily', 'おかず詰めパズルの「今日のおべんとう」の画面')]
+
+# 本当の数だけ（site_lab 10_real_facts）。どれもここで数える: 公開中のアプリ（App Store の id があるもの）・毎日の1問・ブラウザで遊べる今日の1問・
+# 紹介文（content.py の SEO）に書いてあるステージ数と詰将棋の問題数・はじめてのアプリの公開日からの日数（site.js が表示の日に数えなおす）。人数・評価はのせない
+SHORT = {'hitofude': 'いもむし', 'suji': 'すうじ', 'okazu': 'おかず'}
+
+def facts():
+    pub = [d for d in ALL if NAMES[d][1]]
+    stages = {d: int(m.group(1)) for d in ALL for m in [re.search(r'全(\d+)ステージ', SEO[d][1])] if m}
+    tsume = [int(m.group(1)) for d in ALL for m in [re.search(r'詰将棋(\d+)問', SEO[d][1])] if m]
+    first = min(RELEASE_FIX_N.get(d) or jst_date(r['releaseDate']) for d, r in LOOKUP_T.items())
+    y, m, dd = map(int, first.split('-'))
+    days = (datetime.date.today() - datetime.date(y, m, dd)).days
+    soon = len(ALL) - len(pub)
+    lis = [(len(pub), '本', f'App Store で公開中の iPhone アプリ' + (f'（ほかに近日公開 {soon}本）' if soon else '')),
+           (len(DAILY), '本', 'で、毎日みんな同じ1問'),
+           (len([d for d in PLAY if d in DAILY]), 'つ', 'の今日の1問が、ブラウザでも遊べる（登録なし）'),
+           (sum(stages.values()), 'ステージ', '・'.join(f'{SHORT.get(d, NAMES[d][0])} {n}' for d, n in stages.items()))]
+    if tsume: lis.append((tsume[0], '問', '変則将棋対戦の変則詰将棋'))
+    lis.append((days, '日', f'はじめてのアプリを公開してから（{NAMES[min(LOOKUP_T, key=lambda d: RELEASE_FIX_N.get(d) or jst_date(LOOKUP_T[d]["releaseDate"]))][0]}・{y}/{m}/{dd}）'))
+    body = ''.join(f'<li><b' + (f' data-since="{first}"' if u == '日' else '') + f'>{n}</b><small>{u}</small><span>{esc(t)}</span></li>' for n, u, t in lis)
+    return ('<section class="sec facts2" aria-labelledby="h-facts"><div class="wrap"><div class="sec-h"><h2 id="h-facts">🔢 数字で見る いまのアプリ</h2>'
+            '<p>ぜんぶ本当の数です（遊んでいる人の数や評価の数はのせていません）。</p></div>'
+            f'<ul class="fg">{body}</ul></div></section>')
 
 def page_home():
     g = {"@context": "https://schema.org", "@graph": [ORG,
@@ -314,6 +364,7 @@ def page_home():
              '<p class="lead">いもむし、お弁当、ゆでたまご、納豆……。毎日みんなと同じ1問で勝負できる、ちいさな iPhone アプリたちです。</p>'
              f'<div class="emo" aria-hidden="true">{emo}</div>'
              '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ ブラウザで今すぐ遊ぶ</a><a class="ghost" href="/today/">今日の問題を見る</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
+             '<p class="startlink"><a class="more-link" href="/start/">🧭 どれから遊ぶ？3問で診断 →</a></p>'
              f'<p class="ctanote">いもむし・すうじ・おかずなど{len([d for d in PLAY if d in DAILY])}つの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
              f'<ul class="stats"><li><b data-n="{len(ALL)}">{len(ALL)}</b>本のアプリ</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b>本で毎日ランキング</li><li><b>全部</b>無料</li></ul></div>'
              f'<div class="stage" aria-label="アプリの画面"><span class="sticker s1" aria-hidden="true">今日の1問！</span>{phones}<span class="sticker s2" aria-hidden="true">みんな同じ問題</span></div>'
@@ -331,6 +382,7 @@ def page_home():
              '<h2 id="h-maker">ひとりで作っています</h2><p>企画・デザイン・プログラム・App Store への申請まで、ひとりで作っています。'
              '毎日の1問は、だれでも同じ条件でくらべられるようにしています。</p>'
              '<p class="links2"><a class="more-link" href="/about/">作っている人 →</a><a class="more-link" href="/now/">いま やっていること →</a></p></div></div></div></section>')
+    L.append(facts())
     # genres + others
     tiles = ''.join(f'<li class="ctile tilt rv"><span class="e" aria-hidden="true">{CAT_EMO[cid]}</span><h3><a class="stretch" href="/apps/#{cid}">{esc(lb)}</a></h3>'
                     f'<p>{CAT_SUB[cid]}・{len(ds)}本</p><div class="ics" aria-hidden="true">' + ''.join(f'<img src="/{d}/icon-256.webp" width="28" height="28" alt="" loading="lazy">' for d in ds) + '</div></li>'
@@ -368,7 +420,8 @@ def page_apps():
     secs = ''.join(f'<section class="sec" id="{cid}" data-sec="{cid}" aria-labelledby="h-{cid}" style="padding:14px 0 26px"><div class="wrap">'
                    f'<div class="sec-h"><h2 id="h-{cid}" style="font-size:24px">{CAT_EMO[cid]} {esc(lb)}</h2><span class="n">{len(ds)}本</span></div>'
                    f'<ul class="grid">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>' for cid, lb, ds in CATS)
-    body = ('<div class="wrap"><div class="filters" id="filters" role="group" aria-label="ジャンルで絞りこむ" hidden>' + chips + '</div>'
+    body = ('<div class="wrap"><p class="startbar"><a href="/start/"><span aria-hidden="true">🧭</span><span>どれが合うか迷ったら、<b>3問で診断</b> →</span></a></p>'
+            '<div class="filters" id="filters" role="group" aria-label="ジャンルで絞りこむ" hidden>' + chips + '</div>'
             '<label class="search" hidden><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="アプリの名前やことばでさがす" aria-label="アプリをさがす"></label>'
             '<p class="empty" id="empty" hidden>見つかりませんでした。ほかのことばでさがしてみてください。</p></div>' + secs)
     g = {"@context": "https://schema.org", "@graph": [ORG, itemlist()]}
@@ -388,7 +441,12 @@ def page_today():
             '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>今日の問題があるアプリ</h2>'
             '<p>どのアプリも、今日の問題はみんな同じ。アプリをひらいて「今日の〜」から挑戦できます。</p></div>'
             f'<ol class="dlist">{lis}</ol></div></section>'
-            '<section class="sec white"><div class="wrap"><div class="sec-h rv"><h2>今日の問題のしくみ</h2></div><div class="cols c3">'
+            '<section class="sec tint" aria-labelledby="h-dg"><div class="wrap dgwrap"><div class="sec-h"><h2 id="h-dg">🧾 今日のまとめ</h2>'
+            '<p>ブラウザで遊んだ今日の1問を、1まいにまとめます。✅ と ⬜ だけのシェアの文も作れます（答えはのせません）。</p></div>'
+            '<div id="digest" class="digest"><p>ブラウザで遊んだ今日の1問が、ここにまとまります（記録はこの端末の中だけ）。'
+            '<a href="/play/">ブラウザで遊ぶ →</a></p></div></div></section>'
+            f'<script src="/play/digest.js?v={V}" defer></script>'
+            '<section class="sec white"><div class="wrap"><div class="sec-h rv"><h2>今日の問題のしくみ</h2><div class="cols c3">'
             '<div class="box rv"><span class="e" aria-hidden="true">🗓️</span><h3>日付で決まる1問</h3><p>問題は日本時間の日付から作られます。だれの iPhone でも、その日は同じ問題です。</p></div>'
             '<div class="box rv"><span class="e" aria-hidden="true">🕛</span><h3>0時に新しい問題</h3><p>毎日 0時（日本時間）に次の問題になります。ランキングも日ごとに新しくなります。</p></div>'
             '<div class="box rv"><span class="e" aria-hidden="true">🔔</span><h3>夜7時のお知らせ</h3><p>はじめて今日の問題を遊んだときに、毎日夜7時のお知らせを受け取るか聞きます。設定でいつでもオフにできます。</p></div>'
@@ -715,7 +773,7 @@ def page_now():
              'いま作っているものと、つぎにやること。ときどき書きかえます。', body, og='now')
 
 def page_sitemap():
-    groups = [('あそぶ', [('/', 'ホーム'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
+    groups = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
               ('アプリ', [('/apps/', 'アプリ一覧')] + [(f'/apps/{c}/', l) for c, l, _ in CATS]),
               ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事')] if NOTE_ON else [])),
               ('サポート', [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ'), ('/apps/sitemap/', 'サイトマップ')])]
@@ -953,6 +1011,88 @@ def fix_privacy_nav(d):
     s2 = re.sub(r'<nav>(?:(?!</nav>).)*</nav>', new, s, count=1, flags=re.S)
     if s2 != s: open(fn, 'w', encoding='utf-8').write(s2)
 
+# ---------------- /start/ どれが合う？（3つの質問で、さいしょの1本） ----------------
+# 2026-11-20 site_lab の 09_start_chooser から。点数の計算は site.js（#chooser）。答えはこの画面の中だけ（どこにも送らない）
+START_WHY = {
+    'hitofude': 'なぞるのが気持ちいい一筆書き。毎日の盤でタイム勝負',
+    'okazu': 'おかずをつめて列をそろえる、お弁当のブロックパズル',
+    'suji': '数字をヒントに、じっくりへやを分ける数字パズル',
+    'jimidrive': '車のナンバー4桁で10を作る、テンポのいい暗算',
+    'kakezan': '計算ゲートをくぐって数をふやす、走る暗算',
+    'yudetamago': '殻をツルッとむく手ざわり。毎日のたまごでスコア勝負',
+    'nattofilm': '納豆のフィルムを、きれいにはがす。毎日の納豆でタイム勝負',
+    'madoshizuku': '雨の窓でしずくを集める、ぼーっとできる時間',
+    'hensokushogi': '安南将棋・トランプ将棋などを友達とオンライン対戦',
+    'gekokujo': '1が9に勝つ、数字カードの読み合い。CPU とも',
+    'pokerstudy': 'ポーカーのプリフロップを、クイズでおぼえる練習帳',
+}
+START_QS = [
+    ('Q1. どんなときに あそぶ？', [('⏱️', 'すきまの1分', {'jimidrive': 2, 'yudetamago': 2, 'nattofilm': 2, 'hitofude': 1, 'kakezan': 1}),
+                                ('☕', 'のんびり10分', {'suji': 2, 'okazu': 2, 'madoshizuku': 2, 'pokerstudy': 1}),
+                                ('👥', '友達と', {'hensokushogi': 3, 'gekokujo': 3})]),
+    ('Q2. すきなのは？', [('✍️', 'なぞる・つめる', {'hitofude': 3, 'okazu': 3}), ('🔢', '数字・計算', {'suji': 2, 'jimidrive': 3, 'kakezan': 3}),
+                       ('🫧', 'さわって気持ちいい', {'yudetamago': 3, 'nattofilm': 3, 'madoshizuku': 3}), ('🧠', '読み合い', {'gekokujo': 3, 'hensokushogi': 2, 'pokerstudy': 3})]),
+    ('Q3. 勝負したい？', [('🏆', 'みんなとランキング', {d: 2 for d in DAILY}), ('🌿', '自分のペースで', {'madoshizuku': 2, 'pokerstudy': 2, 'suji': 1}),
+                       ('⚔️', '1対1で', {'gekokujo': 2, 'hensokushogi': 2})]),
+]
+
+def why_html(t):   # さいごの「、」「。」のあとは折り返さない（1〜2文字だけの行を作らない）
+    k = max(t.rfind('、'), t.rfind('。')) + 1
+    return esc(t[:k]) + f'<span class="nw">{esc(t[k:])}</span>' if 0 < k and len(t) - k <= 16 else esc(t)
+
+def start_cand(d):
+    name, i, _ = NAMES[d]
+    acts = (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY else '') + \
+           f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' + \
+           f'<a class="ghost sm2" href="/{d}/">くわしく</a>'
+    return (f'<li class="cand" data-app="{d}" style="{cv(d)}"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+            f'<div class="tx"><h3><a href="/{d}/">{esc(name)}</a></h3><p>{why_html(START_WHY[d])}</p>'
+            + ('<p class="pl">ブラウザでも遊べます（登録なし）</p>' if d in PLAY else '') + f'<div class="acts">{acts}</div></div></li>')
+
+def page_start():
+    assert all(NAMES[d][1] for d in START_WHY)
+    qh = ''
+    for k, (q, opts) in enumerate(START_QS):
+        btns = ''.join(f'<button type="button" data-w="{esc(json.dumps(w, separators=(",", ":")))}"><span aria-hidden="true">{e}</span>{esc(t)}</button>' for e, t, w in opts)
+        qh += f'<div class="q" data-q="{k}"{"" if k == 0 else " hidden"}><h2 id="q{k}">{esc(q)}</h2><div class="opts" role="group" aria-labelledby="q{k}">{btns}</div></div>'
+    steps = ''.join(f'<i{" class=on" if k == 0 else ""}></i>' for k in range(len(START_QS)))
+    quiz = (f'<div class="qbox" id="chooser" hidden><div class="steps" aria-hidden="true">{steps}</div>{qh}'
+            '<div class="res" id="res" hidden><p class="k" tabindex="-1" id="res-k">あなたに合いそうなのは</p><ul class="cands one" id="res-top"></ul>'
+            '<p class="also-h">こっちも合いそう</p><ul class="also" id="res-also"></ul>'
+            '<button class="again" id="res-again" type="button">↺ もう一度えらぶ</button></div></div>'
+            '<p class="cap">答えはこの画面の中だけで決めています（どこにも送りません）。</p>')
+    cands = ''.join(start_cand(d) for d in START_WHY)
+    life = '・'.join(f'<a href="/{d}/">{esc(NAMES[d][0])}</a>' for d in dict(((c, x) for c, _, x in CATS))['life'])
+    body = (f'<section class="sec white" style="padding-top:26px"><div class="narrow">{quiz}</div></section>'
+            '<section class="sec" aria-labelledby="h-cands"><div class="wrap"><div class="sec-h"><h2 id="h-cands">🎮 えらべるアプリ</h2>'
+            f'<p>診断にでてくる {len(START_WHY)} 本です。ブラウザで遊べるものは、アプリを入れなくても今日の1問へ。</p></div>'
+            f'<ul class="cands" id="cands">{cands}</ul>'
+            f'<p class="more-life">毎日の記録に使うアプリ（{life}）は、<a href="/apps/life/">くらし・記録のアプリ</a>へ。</p></div></section>')
+    items = [{"@type": "ListItem", "position": k + 1, "url": f"{BASE}/{d}/", "name": NAMES[d][0]} for k, d in enumerate(START_WHY)]
+    desc = ('パズル・のんびりゲーム・対戦。いまのアプリの iPhone アプリから、3つの質問に答えるだけで合いそうな1本をえらびます。ブラウザで遊べるものは、そのまま今日の1問へ。')
+    wp = {"@context": "https://schema.org", "@type": "WebPage", "@id": BASE + "/start/#page", "url": BASE + "/start/", "name": "どれが合う？3問で診断",
+          "description": desc, "inLanguage": "ja", "isPartOf": {"@type": "WebSite", "@id": BASE + "/#website", "name": BRAND, "url": BASE + "/"},
+          "mainEntity": {"@type": "ItemList", "name": "診断にでてくるアプリ", "numberOfItems": len(items), "itemListElement": items}}
+    sub_page('/start/', 'どれが合う？', f'どれが合う？3問で診断｜さいしょの1本をえらぶ｜{BRAND}', desc,
+             f'アプリが {len(ALL)} 本あって迷ったら。3つの質問に答えると、合いそうな1本をえらびます。',
+             body, [wp], crumbs=[('/', 'ホーム'), (None, 'どれが合う？')], og='start')
+
+# ---------------- 404（GitHub Pages が、ないページのときに出す /404.html） ----------------
+def page_404():
+    out = head('/404.html', f'ページが見つかりません｜{BRAND}', 'お探しのページは見つかりませんでした。今日の問題・アプリ一覧・ブラウザで遊べる今日の1問へどうぞ。')
+    out = re.sub(r'<link rel="canonical"[^>]*>\n', '', out)
+    out = re.sub(r'<meta property="og:url"[^>]*>\n?', '', out)
+    out = out.replace('<meta name="theme-color"', '<meta name="robots" content="noindex">\n<meta name="theme-color"', 1)
+    links = [('/', '🏠', 'ホーム'), ('/today/', '📅', '今日の問題'), ('/play/', '🌐', 'ブラウザで遊ぶ'), ('/apps/', '📱', 'アプリ一覧'), ('/start/', '🧭', 'どれが合う？3問で診断')]
+    lis = ''.join(f'<li><a href="{u}"><span aria-hidden="true" style="font-size:24px">{e}</span><span>{t}</span></a></li>' for u, e, t in links)
+    body = ('<section class="phero nf"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div><div class="wrap">'
+            '<p class="nf-e" aria-hidden="true">🐛❓</p><h1>ページが<span class="nw">見つかりません</span><span class="nw">でした</span></h1>'
+            '<p class="lead2">URL がちがうか、ページが引っこしたのかもしれません。下のページからどうぞ。</p>'
+            '<div class="ctas" style="margin-top:18px"><a class="go" href="/play/">▶ 今日の1問をブラウザで遊ぶ</a><a class="ghost" href="/">ホームへ</a></div></div></section>'
+            f'<section class="sec white"><div class="narrow"><ul class="linklist" style="padding:0">{lis}</ul></div></section>')
+    out = out + '\n' + header(None) + '\n<main id="main">\n' + body + '\n</main>\n' + tail()
+    open(f'{R}/404.html', 'w', encoding='utf-8').write(nowrap_text(out))
+
 # ---------------- OG 画像・llms.txt ----------------
 def make_og():
     from playwright.sync_api import sync_playwright
@@ -975,6 +1115,7 @@ def make_og():
 def llms():
     L = [f'# {BRAND}', '', '> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。', '',
          '## ページ', f'- [ホーム]({BASE}/): サイトのトップ', f'- [今日の問題]({BASE}/today/): 毎日0時（日本時間）にかわる、みんな同じ1問',
+         f'- [どれが合う？]({BASE}/start/): 3つの質問で、合いそうなアプリをえらぶ',
          f'- [ランキングのしくみ]({BASE}/ranking/): サインインなし、ニックネームだけで参加', f'- [アプリ一覧]({BASE}/apps/): すべてのアプリ',
          f'- [お知らせ]({BASE}/news/): アップデートとリリース', f'- [よくある質問]({BASE}/faq/): 無料・広告・データ・通知・機種変更',
          f'- [作っている人]({BASE}/about/): いま（将棋・ポーカー・アプリ開発が好き）', f'- [いま やっていること]({BASE}/now/)', f'- [お問い合わせ]({BASE}/contact/)', '', '## アプリ']
@@ -988,7 +1129,7 @@ def llms():
 
 if __name__ == '__main__':
     page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
-    page_now(); page_sitemap()
+    page_now(); page_sitemap(); page_start(); page_404()
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     for d in JOIN: page_join(d)
