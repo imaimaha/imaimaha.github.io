@@ -30,6 +30,7 @@
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":["VideoGame","WebApplication"],"name":"今日のおべんとう（ブラウザ版）","alternateName":"おかず詰めパズル 今日の問題","description":"決まった順に出てくるおかずを、6×6のお弁当箱にすきまなく詰める毎日1問のパズル。iPhoneアプリ「おかず詰めパズル」と同じ問題を、ブラウザで無料で遊べます。","url":"https://imaimaha.github.io/play/okazu/","image":"https://imaimaha.github.io/okazu/og.jpg","inLanguage":"ja","genre":["パズル","ブロックパズル"],"gamePlatform":"Web browser","applicationCategory":"GameApplication","operatingSystem":"Web browser","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"sameAs":["https://apps.apple.com/jp/app/id6823270044","https://imaimaha.github.io/okazu/"],"author":{"@type":"Organization","name":"いまのアプリ","url":"https://imaimaha.github.io/"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://imaimaha.github.io/"},{"@type":"ListItem","position":2,"name":"ブラウザで遊ぶ","item":"https://imaimaha.github.io/play/"},{"@type":"ListItem","position":3,"name":"今日のおべんとう","item":"https://imaimaha.github.io/play/okazu/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"登録はいりますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。登録も、アプリを入れることもいりません。スマホやパソコンのブラウザで、このページを開くだけで遊べます。"}},{"@type":"Question","name":"前の日の問題は遊べますか？","acceptedAnswer":{"@type":"Answer","text":"ブラウザで遊べるのは、その日の「今日のおべんとう」だけです。日本時間の0時に次の問題にかわります。前の日の問題は、アプリで遊べます。"}},{"@type":"Question","name":"アプリだと何が増えますか？","acceptedAnswer":{"@type":"Answer","text":"200ステージと過去の問題、ニックネームだけで参加できるランキングが使えます。ブラウザ版の記録はランキングに送られません。"}}]}</script>
 </head>
 <body class="wp">
 <main>
@@ -44,8 +45,7 @@
   <div id="board"><canvas id="cv"></canvas><div id="toast" hidden></div></div>
   <div id="bar"><button id="btn-rot" class="btn" type="button">↻ まわす</button><button id="btn-undo" class="btn" type="button">↺ さいしょから</button><button id="btn-hint" class="btn hidden" type="button">💡 ヒント</button></div>
   <span id="pl-title" hidden></span>
-  <p class="wp-foot"><a href="https://apps.apple.com/jp/app/id6823270044" rel="noopener">📱 アプリ版（200ステージ・ランキング）</a>　<a href="../">ほかのパズル</a></p>
-  <p class="wp-scroll">▼ このページについて</p>
+    <p class="wp-scroll">▼ このページについて</p>
 </div>
 <section class="wp-about">
   <h2>このページについて</h2>
@@ -56,6 +56,14 @@
     <li>お皿のおかずをタップ（クリック）すると回せます。右の小皿に1つだけ とっておけます。</li>
     <li>6×6のお弁当箱を すきまなく ぜんぶ詰めたらクリア。入らなくなったら「さいしょから」でやりなおせます（やりなおしの回数も記録に入ります）。</li>
   </ul>
+  <h2>こんな人に</h2>
+<p>ブロックを置いて、すきまなく詰めるパズルが好きな人に<span class="nw">向いています。</span></p>
+<h2>よくある質問</h2>
+<dl class="wp-faq">
+<dt>登録はいりますか？</dt><dd>いいえ。登録も、アプリを入れることもいりません。スマホやパソコンのブラウザで、このページを開くだ<span class="nw">けで遊べます。</span></dd>
+<dt>前の日の問題は遊べますか？</dt><dd>ブラウザで遊べるのは、その日の「今日のおべんとう」だけです。日本時間の0時に次の問題にかわります。前の日の問題は、アプ<span class="nw">リで遊べます。</span></dd>
+<dt>アプリだと何が増えますか？</dt><dd>200ステージと過去の問題、ニックネームだけで参加できるランキングが使えます。ブラウザ版の記録はランキングに<span class="nw">送られません。</span></dd>
+</dl>
   <a class="apps" href="../../okazu/"><img src="../../okazu/icon-256.webp" alt="おかず詰めパズル のアイコン" width="56" height="56" loading="lazy" decoding="async"><span>おかず詰めパズル（iPhone・無料）<br>200ステージ・過去の問題・ランキングはアプリで</span></a>
   <p><a href="../">ほかの「今日の問題」も遊ぶ ›</a></p>
 </section>

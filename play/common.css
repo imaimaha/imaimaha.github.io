@@ -54,3 +54,9 @@ html,body{height:auto;min-height:100%}
 .wp-about .apps img{width:56px;height:56px;border-radius:13px;flex:0 0 auto}
 .wp-about .apps span{font-weight:700;color:var(--wp-ink);line-height:1.5}
 .wp-scroll{flex:0 0 auto;text-align:center;font-size:12px;opacity:.6;padding:0 0 4px}
+
+/* よくある質問（2026-11-19） */
+.wp-about .wp-faq{margin:6px 0 12px}
+.wp-about .wp-faq dt{font-weight:700;margin-top:10px}
+.wp-about .wp-faq dd{margin:2px 0 0}
+.wp-about .nw{white-space:nowrap}
