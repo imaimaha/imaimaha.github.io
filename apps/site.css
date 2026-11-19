@@ -301,7 +301,7 @@ h1, h2, h3 { font-family: var(--round); line-height: 1.35; letter-spacing: .02em
 .empty { color: var(--dim); }
 
 /* ---------- footer ---------- */
-.ft { margin-top: 10px; padding: 40px 0 34px; background: #3b2b1f; color: #f6e9d6; font-size: 14px; }
+.ft { margin-top: 10px; padding: 0 0 34px; background: #3b2b1f; color: #f6e9d6; font-size: 14px; }
 .ft .wrap { display: grid; gap: 22px; }
 .ft .logo { color: #fff; }
 .ft .logo i { color: #ffb08f; }
@@ -696,3 +696,22 @@ body { line-break: strict; }
 .zfx div > span { display: block; font-size: 12.5px; line-height: 1.55; color: var(--dim); }
 .zlinks { display: flex; flex-wrap: wrap; gap: 0 18px; margin: 12px 0 0; }
 .zklink { margin: 14px 0 0; }
+/* フッター「また あした。」（カウントダウン・アイコンの壁・丘の上のキャラ） */
+.ft > .wrap { padding-top: 34px; }
+.ft .bye { position: relative; margin-top: 62px; padding: 26px 0 30px; text-align: center; border-bottom: 1px solid #574536; }
+.ft .bye::before { content: ""; position: absolute; left: 0; right: 0; top: -40px; height: 42px; pointer-events: none;
+  background: radial-gradient(70px 42px at 10% 100%, #3b2b1f 98%, transparent), radial-gradient(100px 42px at 38% 100%, #3b2b1f 98%, transparent),
+  radial-gradient(80px 42px at 68% 100%, #3b2b1f 98%, transparent), radial-gradient(90px 42px at 94% 100%, #3b2b1f 98%, transparent); }
+.ft .crew { position: absolute; left: 0; right: 0; top: -66px; display: flex; justify-content: space-around; font-size: 34px; line-height: 1; pointer-events: none; }
+.ft .crew span:nth-child(2n) { transform: translateY(9px); }
+.ft .bye-h { margin: 0; font-family: var(--round); font-weight: 800; font-size: clamp(26px, 7vw, 36px); color: #fff; }
+.ft .bye-s { margin: 4px 0 0; color: #e3cfb5; }
+.ft .bye-t { display: block; font-family: var(--round); font-size: clamp(32px, 9vw, 46px); line-height: 1.2; color: var(--yellow); font-variant-numeric: tabular-nums; }
+.ft .bye-go { margin: 12px 0 18px; }
+.ft .wall { list-style: none; margin: 0 auto; padding: 0; max-width: 560px; display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 10px; justify-items: center; }
+.ft .wall a { display: block; width: 48px; height: 48px; border-radius: 12px; overflow: hidden; box-shadow: 0 3px 0 rgba(0,0,0,.35); transition: transform .15s ease; }
+.ft .wall a:hover { transform: translateY(-3px); }
+.ft .wall img { display: block; width: 48px; height: 48px; }
+@media (prefers-reduced-motion: reduce) { .ft .wall a { transition: none; } }
+.ft .bye-in { max-width: 600px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 600px) { .ft .wall { grid-template-columns: repeat(8, 48px); justify-content: center; gap: 12px; } }

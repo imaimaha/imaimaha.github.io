@@ -23,8 +23,9 @@
   function tick() {
     var j = jst(), r = Math.ceil((864e5 - j.n % 864e5) / 1e3) % 86400, day = j.x.getUTCDate() + '';
     if (day !== lastDay) { lastDay = day; paintDate(); }
-    if (!hh) return;
     var v = [p2(Math.floor(r / 3600)), p2(Math.floor(r / 60) % 60), p2(r % 60)];
+    $$('[data-cdf]').forEach(function (e) { e.textContent = v.join(':'); });   // フッターの「また あした。」
+    if (!hh) return;
     [hh, mm, ss].forEach(function (e, i) {
       if (e.textContent !== v[i]) { e.textContent = v[i]; if (!still) { e.classList.remove('tick'); void e.offsetWidth; e.classList.add('tick'); } }
     });

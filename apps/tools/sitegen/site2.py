@@ -25,7 +25,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261125'
+V = '20261126'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -72,7 +72,12 @@ def footer(privacy=None):
         rel = ' rel="me noopener"' if u == NOTE else ''
         return f'<li><a href="{u}"{rel}>{t}</a></li>'
     body = ''.join(f'<div><h2>{h}</h2><ul>' + ''.join(li(u, t) for u, t in ls) + '</ul></div>' for h, ls in cols)
-    return (f'<footer class="ft"><div class="wrap"><div><a class="logo" href="/">{logo_svg("lg-f")}<span>いまの<i>アプリ</i></span></a>'
+    wall = ''.join(f'<li><a href="/{d}/" aria-label="{esc(NAMES[d][0])}"><img src="/{d}/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li>' for d in ALL)
+    bye = ('<div class="bye"><div class="crew" aria-hidden="true"><span>🐛</span><span>🍱</span><span>🥚</span><span>🫘</span><span>🚗</span><span>💧</span></div><div class="bye-in">'
+           '<p class="bye-h">また あした。</p><p class="bye-s">次の1問まで <b class="bye-t" data-cdf>--:--:--</b></p>'
+           '<div class="bye-go"><a class="go sm" href="/play/">▶ 今日の1問をあそぶ</a></div>'
+           f'<ul class="wall" aria-label="ぜんぶのアプリ">{wall}</ul></div></div>')
+    return (f'<footer class="ft">{bye}<div class="wrap"><div><a class="logo" href="/">{logo_svg("lg-f")}<span>いまの<i>アプリ</i></span></a>'
             '<p class="tag">すきま時間に、ちょっとあそぼ。<br>iPhone 向けの小さなアプリを、ひとりで作っています。</p></div>'
             f'<div class="cols3">{body}</div><small>Apple、App Store、iPhone は Apple Inc. の商標です。</small></div></footer>')
 
