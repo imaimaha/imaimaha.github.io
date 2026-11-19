@@ -34,6 +34,7 @@ Allow: /note/
 Allow: /play/
 Allow: /now/
 Allow: /start/
+Allow: /zukan/
 Allow: /404.html
 Allow: /sitemap.xml
 Disallow: /
