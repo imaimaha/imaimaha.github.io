@@ -10,7 +10,7 @@
   プレイ動画: vid/rec.py <アプリ>（vid/enc.swift を swiftc でビルドしてから）
   招待ページ /<app>/join/?c=部屋コード（page_join。対戦アプリの「招待を送る」のリンク。ナビなし・noindex）
   サポートページ /<app>/support/（page_support。App Store の「サポート」とアプリの「お問い合わせ」から来る。ナビなし・noindex）も、ここで一緒に作る
-  App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまは ふたり大富豪）は、App Store のボタンのかわりに「近日公開」
+  App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまはなし）は、App Store のボタンのかわりに「近日公開」
   英語のページ（/en/・/en/apps/・/en/apps/<app>/・/en/play/・/en/about/・/en/faq/）も、ここで一緒に作る（lang='en'。文は content_en.py）。
   日本語のページとは hreflang（ja・en・x-default=日本語）で結ぶ。対応は EN_ALT"""
 import os, sys, json, html, datetime
@@ -679,11 +679,12 @@ def demo_section(d):
 
 # 見どころの短い動画（広告用に作った r2 のご褒美カードの 720x1280 版・本物の画面・音なし・約4秒のループ）。/<app>/media/midokoro.mp4 と .jpg（ポスター）。
 # 元: ~/Developer/promo/ads/r2/reward/<key>_720.mp4（ポスターは同じ名前の .jpg を 360x640 に）。季節もの・英語・招待リンクのものは使わない。
-# ふたり大富豪は App Store にまだないので出さない（動画の下に「App Store で見る」の絵があるため）
+# ふたり大富豪は r4 の futaridaifugo_r4a_kakumei_720.mp4（2026-11-19 公開後に追加）
 MIDOKORO = {'hitofude': '一筆で ぜんぶ食べられる？', 'suji': 'このへや 何秒で分けられる？', 'okazu': '1列そろうと ぱくっ！',
             'kakezan': '+20 と ×2 どっちが大きい？', 'jimidrive': '作れる？ 無理？ 一瞬で判断', 'yudetamago': 'ゆっくり… ツルンッ',
             'nattofilm': 'クルクル… ねばーっ', 'madoshizuku': '雨の窓を なぞるだけ', 'hensokushogi': 'いつもの将棋が まるでちがう',
-            'gekokujo': '次は 何を出す？', 'pokerstudy': 'この席なら どうする？', 'sanpobingo': 'いつもの道が ビンゴになる', 'tsundoku': '何冊 積んでる？'}
+            'gekokujo': '次は 何を出す？', 'pokerstudy': 'この席なら どうする？', 'sanpobingo': 'いつもの道が ビンゴになる', 'tsundoku': '何冊 積んでる？',
+            'futaridaifugo': '同じ数字4枚で 革命！'}
 def midokoro_section(d):
     if d not in MIDOKORO or not NAMES[d][1] or not os.path.exists(f'{R}/{d}/media/midokoro.mp4'): return ''
     name = NAMES[d][0]; hook = MIDOKORO[d]
@@ -797,7 +798,7 @@ def page_now():
             '<p><a class="more-link" href="/news/">お知らせをぜんぶ見る →</a></p>'
             '<p class="small">このページは「いま やっていること」をときどき書きかえる、Now ページです。</p></div></section>')
     sub_page('/now/', 'いま やっていること', f'いま やっていること｜{BRAND}',
-             '「いま」がいま作っているもの・つぎにやること・さいきんの更新。ふたり大富豪の公開準備、クリスマスとお正月の期間限定、友達を招待するリンク、ブラウザで遊べる今日の1問など。',
+             '「いま」がいま作っているもの・つぎにやること・さいきんの更新。ふたり大富豪の公開、クリスマスとお正月の期間限定、友達を招待するリンク、ブラウザで遊べる今日の1問など。',
              'いま作っているものと、つぎにやること。ときどき書きかえます。', body, og='now')
 
 def page_sitemap():
@@ -931,7 +932,7 @@ ul{{padding-left:22px}}
 JOIN = {  # dir -> (URL スキーム, 部屋コードの文字数, App Store の id（NAMES にまだないとき）, アプリでコードを入れる場所)
     'hensokushogi': ('hensokushogi', 6, None, '「友達とネット対戦」の「コードで招待された人」'),
     'gekokujo': ('gekokujo', 5, None, '「オンライン」の「コード」'),
-    'futaridaifugo': ('futaridaifugo', 5, '6836394499', '「オンライン対戦」の「コード」'),   # 審査中（id はもう決まっている。公開されればリンクが生きる）
+    'futaridaifugo': ('futaridaifugo', 5, '6836394499', '「オンライン対戦」の「コード」'),
 }
 
 def page_join(d):
@@ -1053,15 +1054,16 @@ START_WHY = {
     'hensokushogi': '安南将棋・トランプ将棋などを友達とオンライン対戦',
     'gekokujo': '1が9に勝つ、数字カードの読み合い。CPU とも',
     'pokerstudy': 'ポーカーのプリフロップを、クイズでおぼえる練習帳',
+    'futaridaifugo': '赤と黒に分けて、1対1で遊ぶ大富豪。CPU とも',
 }
 START_QS = [
     ('Q1. どんなときに あそぶ？', [('⏱️', 'すきまの1分', {'jimidrive': 2, 'yudetamago': 2, 'nattofilm': 2, 'hitofude': 1, 'kakezan': 1}),
                                 ('☕', 'のんびり10分', {'suji': 2, 'okazu': 2, 'madoshizuku': 2, 'pokerstudy': 1}),
-                                ('👥', '友達と', {'hensokushogi': 3, 'gekokujo': 3})]),
+                                ('👥', '友達と', {'hensokushogi': 3, 'gekokujo': 3, 'futaridaifugo': 3})]),
     ('Q2. すきなのは？', [('✍️', 'なぞる・つめる', {'hitofude': 3, 'okazu': 3}), ('🔢', '数字・計算', {'suji': 2, 'jimidrive': 3, 'kakezan': 3}),
-                       ('🫧', 'さわって気持ちいい', {'yudetamago': 3, 'nattofilm': 3, 'madoshizuku': 3}), ('🧠', '読み合い', {'gekokujo': 3, 'hensokushogi': 2, 'pokerstudy': 3})]),
+                       ('🫧', 'さわって気持ちいい', {'yudetamago': 3, 'nattofilm': 3, 'madoshizuku': 3}), ('🧠', '読み合い', {'gekokujo': 3, 'hensokushogi': 2, 'pokerstudy': 3, 'futaridaifugo': 2})]),
     ('Q3. 勝負したい？', [('🏆', 'みんなとランキング', {d: 2 for d in DAILY}), ('🌿', '自分のペースで', {'madoshizuku': 2, 'pokerstudy': 2, 'suji': 1}),
-                       ('⚔️', '1対1で', {'gekokujo': 2, 'hensokushogi': 2})]),
+                       ('⚔️', '1対1で', {'gekokujo': 2, 'hensokushogi': 2, 'futaridaifugo': 2})]),
 ]
 
 def why_html(t):   # さいごの「、」「。」のあとは折り返さない（1〜2文字だけの行を作らない）
