@@ -6,6 +6,8 @@
   var d = document, root = d.documentElement;
   var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var W = '日月火水木金土';
+  var EN = root.lang === 'en', MON = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' '),
+      DAY = 'Sunday Monday Tuesday Wednesday Thursday Friday Saturday'.split(' ');
   function p2(n) { return (n < 10 ? '0' : '') + n; }
   function $$(s, el) { return Array.prototype.slice.call((el || d).querySelectorAll(s)); }
 
@@ -13,6 +15,14 @@
   function jst() { var n = Date.now() + 324e5; return { n: n, x: new Date(n) }; }
   function paintDate() {
     var t = jst().x, y = t.getUTCFullYear(), m = t.getUTCMonth() + 1, dd = t.getUTCDate(), w = W[t.getUTCDay()];
+    if (EN) {   /* 英語のページ（/en/）: 「Nov 2026」「20」「Thursday」 */
+      $$('[data-cal-m]').forEach(function (e) { e.textContent = MON[m - 1] + ' ' + y; });
+      $$('[data-cal-d]').forEach(function (e) { e.textContent = dd; });
+      $$('[data-cal-w]').forEach(function (e) { e.textContent = DAY[t.getUTCDay()]; });
+      $$('[data-today]').forEach(function (e) { e.textContent = DAY[t.getUTCDay()].slice(0, 3) + ', ' + MON[m - 1] + ' ' + dd; });
+      $$('time[data-today], time[data-cal]').forEach(function (e) { e.setAttribute('datetime', y + '-' + p2(m) + '-' + p2(dd)); });
+      return;
+    }
     $$('[data-cal-m]').forEach(function (e) { e.textContent = y + '年 ' + m + '月'; });
     $$('[data-cal-d]').forEach(function (e) { e.textContent = dd; });
     $$('[data-cal-w]').forEach(function (e) { e.textContent = w + '曜日'; });

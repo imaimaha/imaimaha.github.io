@@ -43,12 +43,21 @@ for u, s in sorted(pages.items()):
         if issues: probs.append((u, issues))
         print(f'{u:28s} t{len(t):3d} standalone {"OK" if not issues else issues}')
         continue
-    if len(t) > 32: issues.append(f'title {len(t)}')
-    if not d or len(d) > 110: issues.append(f'desc {len(d)}')
+    en = u.startswith('/en/')   # 英語のページは文字数の目安がちがう（title 65・description 160 まで）
+    if len(t) > (65 if en else 32): issues.append(f'title {len(t)}')
+    if not d or len(d) > (160 if en else 110): issues.append(f'desc {len(d)}')
+    if en and '<html lang="en">' not in s: issues.append('lang')
+    alts = dict(re.findall(r'<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">', s))
+    if alts:   # hreflang: 自分が入っていて、相手のページにも同じ3行があること
+        if BASE + u not in alts.values() or set(alts) != {'ja', 'en', 'x-default'}: issues.append(f'hreflang {alts}')
+        for h in alts.values():
+            st2, b2, _ = get(h[len(BASE):])
+            if st2 != 200 or dict(re.findall(r'<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">', b2.decode('utf-8', 'replace'))) != alts: issues.append(f'hreflang pair {h}')
+    elif en: issues.append('no hreflang')
     if not can or can.group(1) != BASE + u: issues.append(f'canonical {can.group(1) if can else None}')
     if h1 != 1: issues.append(f'h1 x{h1}')
     if not okld or not lds: issues.append('jsonld')
-    if u != '/' and not crumb: issues.append('no crumb')
+    if u not in ('/', '/en/') and not crumb: issues.append('no crumb')
     if not ogi or not ogi.group(1).startswith('https://'): issues.append('og:image')
     elif get(ogi.group(1)[len(BASE):].split('?')[0])[0] != 200: issues.append('og:image 404')
     if issues: probs.append((u, issues))

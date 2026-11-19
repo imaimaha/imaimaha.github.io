@@ -9,7 +9,9 @@
   プレイ動画: vid/rec.py <アプリ>（vid/enc.swift を swiftc でビルドしてから）
   招待ページ /<app>/join/?c=部屋コード（page_join。対戦アプリの「招待を送る」のリンク。ナビなし・noindex）
   サポートページ /<app>/support/（page_support。App Store の「サポート」とアプリの「お問い合わせ」から来る。ナビなし・noindex）も、ここで一緒に作る
-  App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまは ふたり大富豪）は、App Store のボタンのかわりに「近日公開」"""
+  App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまは ふたり大富豪）は、App Store のボタンのかわりに「近日公開」
+  英語のページ（/en/・/en/apps/・/en/apps/<app>/・/en/play/・/en/about/・/en/faq/）も、ここで一緒に作る（lang='en'。文は content_en.py）。
+  日本語のページとは hreflang（ja・en・x-default=日本語）で結ぶ。対応は EN_ALT"""
 import os, sys, json, html, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = HERE   # gen.py・apps_data.py・orig/・data/ も同じフォルダ
@@ -25,7 +27,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261126'
+V = '20261127'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -43,6 +45,18 @@ def play_label(d): return '▶ ブラウザで1問あそぶ' if d in DAILY else 
 PLAY_NOTE = {'gekokujo': 'CPU と1試合・登録なし'}   # 今日の問題のないアプリの「ブラウザで遊ぶ」のよこの文
 CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
+# 英語のページ（/en/）。英語のページがあるのは、ゲーム12本（くらしのアプリ以外）とホーム・一覧・ブラウザで遊ぶ・作っている人・よくある質問
+from content_en import BRAND_EN
+EN_GAMES = [d for cid, _, ds in CATS if cid != 'life' for d in ds]
+EN_ALT = {'/': '/en/', '/apps/': '/en/apps/', '/play/': '/en/play/', '/about/': '/en/about/', '/faq/': '/en/faq/', **{f'/{d}/': f'/en/apps/{d}/' for d in EN_GAMES}}
+JA_ALT = {v: k for k, v in EN_ALT.items()}
+
+def hreflang_links(path):   # 日本語と英語の両方のページに同じ3行（ja・en・x-default は日本語）
+    ja = path if path in EN_ALT else JA_ALT.get(path)
+    if not ja: return ''
+    return (f'<link rel="alternate" hreflang="ja" href="{BASE}{ja}">\n<link rel="alternate" hreflang="en" href="{BASE}{EN_ALT[ja]}">\n'
+            f'<link rel="alternate" hreflang="x-default" href="{BASE}{ja}">')
+
 def logo_svg(uid, size=34):
     from icons import mark
     return mark().replace('<svg xmlns="http://www.w3.org/2000/svg" ', f'<svg width="{size}" height="{size}" aria-hidden="true" ').replace('id="g"', f'id="{uid}"').replace('url(#g)', f'url(#{uid})')
@@ -51,25 +65,26 @@ NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ
        ] + ([('/note/', 'note', '📝')] if NOTE_ON else []) + [('/about/', '作っている人', '🙋')]
 MENU = [('/', 'ホーム', '🏠'), ('/start/', 'どれから遊ぶ？3問で診断', '🧭')] + NAV + [('/now/', 'いま やっていること', '🛠️'), ('/faq/', 'よくある質問', '💬'), ('/contact/', 'お問い合わせ', '✉️'), ('/apps/sitemap/', 'サイトマップ', '🗺️')]
 
-def header(cur):
+def header(cur, alt=None):   # alt: 英語のページ（「English」のリンク先。なければ /en/）
     def a(u, t, e=None, with_e=False):
         ac = ' aria-current="page"' if u == cur else ''
         return f'<a href="{u}"{ac}>' + (f'<span aria-hidden="true">{e}</span>' if with_e else '') + f'{t}</a>'
     return ('<a class="skip" href="#main">本文へ</a>'
             f'<header class="hd"><div class="wrap"><a class="logo" href="/" aria-label="{BRAND} ホーム">{logo_svg("lg-h")}<span>いまの<i>アプリ</i></span></a>'
             '<nav class="gnav" aria-label="メインメニュー">' + ''.join(a(u, t) for u, t, e in NAV) + '</nav>'
+            f'<a class="lang" href="{alt or EN_ALT.get(cur, "/en/")}" hreflang="en" lang="en">English</a>'
             '<details class="mnav"><summary aria-label="メニューを開く"><span></span></summary><nav aria-label="メニュー">' +
             ''.join(a(u, t, e, True) for u, t, e in MENU) + '</nav></details></div></header>')
 
 def footer(privacy=None):
     sup = [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ')]
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
-    sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ')]
+    sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ'), ('/en/', 'English')]
     cols = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/zukan/', 'あそびかた図鑑'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
             ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
     def li(u, t):
-        rel = ' rel="me noopener"' if u == NOTE else ''
+        rel = ' rel="me noopener"' if u == NOTE else (' hreflang="en" lang="en"' if u == '/en/' else '')
         return f'<li><a href="{u}"{rel}>{t}</a></li>'
     body = ''.join(f'<div><h2>{h}</h2><ul>' + ''.join(li(u, t) for u, t in ls) + '</ul></div>' for h, ls in cols)
     wall = ''.join(f'<li><a href="/{d}/" aria-label="{esc(NAMES[d][0])}"><img src="/{d}/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li>' for d in ALL)
@@ -93,20 +108,27 @@ ICON_LINKS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n<link rel="i
               '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n<link rel="manifest" href="/apps/site.webmanifest">\n'
               '<meta name="apple-mobile-web-app-title" content="いまのアプリ">\n<meta name="color-scheme" content="light">\n<meta name="format-detection" content="telephone=no">')
 
-def head(path, title, desc, extra_ld=(), og_img=None, preload=None):
+def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', og_alt=None, extra_head=''):
     url = BASE + path
     og_img = og_img or f'{BASE}/apps/og.jpg'
-    L = ['<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">',
-         f'<title>{esc(title)}</title>', f'<meta name="description" content="{esc(desc)}">', f'<link rel="canonical" href="{url}">',
-         '<meta name="theme-color" content="#fff7e8">',
-         f'<meta property="og:type" content="website">\n<meta property="og:site_name" content="{BRAND}">\n<meta property="og:locale" content="ja_JP">',
+    en = lang == 'en'
+    brand = BRAND_EN if en else BRAND
+    og_alt = og_alt or (f'{BRAND_EN} app icons' if en else f'{BRAND}のアイコン一覧')
+    loc = ('<meta property="og:locale" content="en_US">\n<meta property="og:locale:alternate" content="ja_JP">' if en else
+           '<meta property="og:locale" content="ja_JP">' + ('\n<meta property="og:locale:alternate" content="en_US">' if path in EN_ALT else ''))
+    L = [f'<!doctype html>\n<html lang="{lang}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">',
+         f'<title>{esc(title)}</title>', f'<meta name="description" content="{esc(desc)}">', f'<link rel="canonical" href="{url}">']
+    if hreflang_links(path): L.append(hreflang_links(path))
+    L += ['<meta name="theme-color" content="#fff7e8">',
+         f'<meta property="og:type" content="website">\n<meta property="og:site_name" content="{brand}">\n{loc}',
          f'<meta property="og:title" content="{esc(title)}">\n<meta property="og:description" content="{esc(desc)}">\n<meta property="og:url" content="{url}">',
-         f'<meta property="og:image" content="{og_img}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{BRAND}のアイコン一覧">',
+         f'<meta property="og:image" content="{og_img}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{esc(og_alt)}">',
          f'<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="{esc(title)}">\n<meta name="twitter:description" content="{esc(desc)}">\n<meta name="twitter:image" content="{og_img}">',
-         ICON_LINKS]
+         ICON_LINKS.replace('content="いまのアプリ"', f'content="{BRAND_EN}"') if en else ICON_LINKS]
     if preload: L.append(f'<link rel="preload" as="image" href="{preload}">')
     L.append(f'<link rel="stylesheet" href="/apps/site.css?v={V}">')
-    if NOTE_ON: L.append(f'<link rel="me" href="{NOTE}">')
+    if extra_head: L.append(extra_head)
+    if NOTE_ON and not en: L.append(f'<link rel="me" href="{NOTE}">')
     for o in extra_ld: L.append(ld(o))
     L.append('</head>\n<body>')
     return '\n'.join(L)
@@ -134,7 +156,7 @@ def nowrap_text(out):
     return head + ''.join(parts)
 
 def write(path, out):
-    out = nowrap_text(out)
+    if '<html lang="en">' not in out[:200]: out = nowrap_text(out)   # 英語のページは日本語の折り返しの調整をしない
     fn = R + path + 'index.html'
     os.makedirs(os.path.dirname(fn), exist_ok=True)
     open(fn, 'w', encoding='utf-8').write(out)
@@ -685,7 +707,7 @@ def aeo_section(d):
 def landing(d):
     name, i, _ = NAMES[d]; a = APPS[d]; cid, clb = CAT_OF[d]
     seo_t, seo_d = SEO[d]
-    gen.topbar = lambda: header('/apps/')
+    gen.topbar = lambda: header('/apps/', alt=EN_ALT.get(f'/{d}/'))
     gen.footer = lambda extra=(): footer('privacy.html')
     out = gen.page(d)
     # タイトルと説明（短く）
@@ -715,6 +737,10 @@ def landing(d):
     howto = {"@context": "https://schema.org", "@type": "HowTo", "name": f"{name} の遊び方", "step": [
         {"@type": "HowToStep", "position": k + 1, "name": t, "text": x} for k, (t, x) in enumerate(a['steps'])]}
     out = out.replace('</head>', ld(crumb_ld(cr, f'/{d}/')) + '\n' + ld(howto) + '\n</head>', 1)
+    if hreflang_links(f'/{d}/'):   # 英語のページがあるアプリ
+        k = out.index('<link rel="canonical"'); k = out.index('\n', k) + 1
+        out = out[:k] + hreflang_links(f'/{d}/') + '\n' + out[k:]
+        out = out.replace('<meta property="og:locale" content="ja_JP">', '<meta property="og:locale" content="ja_JP">\n<meta property="og:locale:alternate" content="en_US">', 1)
     out = out.replace('<main>', '<main id="main">\n' + crumb(cr), 1)
     # 入れる場所
     k = out.index('<section class="shots"'); out = out[:k] + demo_section(d) + '\n' + out[k:]
@@ -1147,8 +1173,346 @@ def llms():
         for d in ds:
             L.append(f'- [{NAMES[d][0]}]({BASE}/{d}/): {SEO[d][1]} ' + (f'App Store: {store(NAMES[d][1])}' if NAMES[d][1] else 'App Store: 近日公開'))
     L += ['', '## そのほか', f'- App Store の開発者ページ: {DEV}', f'- 連絡先: {MAIL}', '']
+    L += llms_en() + ['']   # 英語のページ（/en/）
     for fn in (f'{R}/apps/llms.txt', f'{R}/llms.txt'):   # /llms.txt も同じ中身
         open(fn, 'w', encoding='utf-8').write('\n'.join(L))
+
+# =====================================================================
+# 英語のページ（/en/）。文は content_en.py（アプリの名前・説明は App Store の英語の文）。
+# App Store のリンクは国を入れない形（https://apps.apple.com/app/id…）。いまは日本の App Store だけで配信・アプリの中は日本語、を正直に書く。
+# 日本語のページとは hreflang で結ぶ（EN_ALT）。英語のページがないもの（くらしのアプリ・ブラウザ版の画面）は日本語のページへリンク（hreflang="ja"）
+# =====================================================================
+import content_en as EN
+DEV_EN = DEV.replace('/jp/', '/')
+def store_en(i): return f'https://apps.apple.com/app/id{i}'
+def en_name(d): return EN.STORE_EN[d]['name'] if d in EN.STORE_EN else EN.LIFE_EN[d][0]
+def en_url(d): return f'/en/apps/{d}/' if d in EN_GAMES else f'/{d}/'
+def ja_attr(u): return '' if u.startswith('/en/') or not u.startswith('/') else ' hreflang="ja"'
+ORG_EN = {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND_EN, "alternateName": BRAND, "url": BASE + "/en/",
+          "logo": BASE + "/apps/logo.png", "email": MAIL, "sameAs": [DEV_EN],
+          "description": "Small iPhone games made by one person, Ima, who likes shogi, poker and making apps."}
+JST_NOTE = 'midnight Japan time (15:00 UTC)'
+
+def header_en(cur):
+    ja = JA_ALT.get(cur, '/')
+    def a(u, t):
+        ac = ' aria-current="page"' if u == cur or u == '/en/apps/' and cur.startswith(u) else ''
+        return f'<a href="{u}"{ac}>{esc(t)}</a>'
+    return ('<a class="skip" href="#main">Skip to content</a>'
+            f'<header class="hd"><div class="wrap"><a class="logo" href="/en/" aria-label="{BRAND_EN} home">{logo_svg("lg-h")}<span>Ima <i>Apps</i></span></a>'
+            '<nav class="gnav" aria-label="Main menu">' + ''.join(a(u, t) for u, t in EN.NAV_EN) + '</nav>'
+            f'<a class="lang" href="{ja}" hreflang="ja" lang="ja">日本語</a>'
+            '<details class="mnav"><summary aria-label="Open menu"><span></span></summary><nav aria-label="Menu">' +
+            ''.join(a(u, t) for u, t in EN.NAV_EN) + f'<a href="{ja}" hreflang="ja" lang="ja">日本語のサイト</a></nav></details></div></header>')
+
+def footer_en():
+    cols = [('Play', [('/en/', 'Home'), ('/en/play/', 'Play in your browser'), ('/en/apps/', 'All games')]),
+            ('About', [('/en/about/', 'About the maker'), ('/en/faq/', 'FAQ'), (DEV_EN, 'All apps on the App Store')]),
+            ('Support', [(f'mailto:{MAIL}', 'Contact (email)'), ('/contact/#privacy', 'Privacy policies (in Japanese)'), ('/', '日本語のサイト')])]
+    def li(u, t):
+        at = ' hreflang="ja" lang="ja"' if u == '/' else ja_attr(u)
+        return f'<li><a href="{u}"{at}>{esc(t)}</a></li>'
+    body = ''.join(f'<div><h2>{h}</h2><ul>' + ''.join(li(u, t) for u, t in ls) + '</ul></div>' for h, ls in cols)
+    wall = ''.join(f'<li><a href="{en_url(d)}"{ja_attr(en_url(d))} aria-label="{esc(en_name(d))}"><img src="/{d}/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li>' for d in ALL)
+    bye = ('<div class="bye"><div class="crew" aria-hidden="true"><span>🐛</span><span>🍱</span><span>🥚</span><span>🫘</span><span>🚗</span><span>💧</span></div><div class="bye-in">'
+           '<p class="bye-h">See you tomorrow.</p><p class="bye-s">Next puzzle in <b class="bye-t" data-cdf>--:--:--</b></p>'
+           '<div class="bye-go"><a class="go sm" href="/en/play/">▶ Play today\'s puzzle</a></div>'
+           f'<ul class="wall" aria-label="All apps">{wall}</ul></div></div>')
+    return (f'<footer class="ft">{bye}<div class="wrap"><div><a class="logo" href="/en/">{logo_svg("lg-f")}<span>Ima <i>Apps</i></span></a>'
+            f'<p class="tag">{EN.TAGLINE_EN}.<br>Small iPhone games, made by one person.</p></div>'
+            f'<div class="cols3">{body}</div><small>Apple, the Apple logo, App Store and iPhone are trademarks of Apple Inc.</small></div></footer>')
+
+def tail_en():
+    return footer_en() + f'\n<script src="/apps/site.js?v={V}" defer></script>\n</body>\n</html>\n'
+
+def crumb_en(items):
+    lis = ''.join((f'<li><a href="{u}">{esc(t)}</a></li>' if u else f'<li aria-current="page">{esc(t)}</li>') for u, t in items)
+    return f'<nav class="crumb wrap" aria-label="Breadcrumb"><ol>{lis}</ol></nav>'
+
+def calendar_en(big=False):
+    return (f'<div class="cal{" big" if big else ""}" aria-label="Today\'s date in Japan"><span class="cm" data-cal-m>Today</span>'
+            '<time class="cd2" data-cal data-cal-d>–</time><span class="cw" data-cal-w>in Japan</span></div>')
+
+def countdown_en():
+    return ('<div class="count" role="timer" aria-label="Time until the next puzzle"><p class="lbl">⏰ Next puzzle in</p><div class="digits">'
+            '<span><b id="cd-h">--</b><small>hours</small></span><i>:</i><span><b id="cd-m">--</b><small>min</small></span><i>:</i>'
+            f'<span><b id="cd-s">--</b><small>sec</small></span></div><p class="sub">New puzzles every day at {JST_NOTE}.</p></div>')
+
+def sub_page_en(path, h1, title, desc, lead, body, extra_ld=(), crumbs=None, og_img=None):
+    cr = crumbs or [('/en/', 'Home'), (None, h1)]
+    L = [head(path, title, desc, [crumb_ld(cr, path)] + list(extra_ld), og_img=og_img, lang='en'), header_en(path), '<main id="main">',
+         '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb_en(cr) +
+         f'<div class="wrap"><h1>{esc(h1)}</h1><p class="lead2">{lead}</p></div></section>', body, '</main>', tail_en()]
+    write(path, '\n'.join(L))
+
+def store_pill_en(d):
+    i = NAMES[d][1]
+    return (f'<a class="pill" href="{store_en(i)}" aria-label="{esc(en_name(d))} on the App Store">App Store</a>' if i else '<span class="pill soon">Coming soon</span>')
+
+def en_card(d):
+    st = EN.STORE_EN[d]; cid = CAT_OF[d][0]
+    tag = '<span class="tagd">Daily puzzle</span>' if d in DAILY else ''
+    pl = '▶ Play today\'s puzzle' if d in DAILY else '▶ Play in browser'
+    acts = (f'<a class="go sm2" href="/play/{d}/" hreflang="ja">{pl}</a>' if d in PLAY else '<span class="more" aria-hidden="true">Details →</span>') + store_pill_en(d)
+    return (f'<li class="acard tilt rv" style="{cv(d)}">{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+            f'<div><span class="cat">{CAT_EMO[cid]} {EN.CAT_EN[cid]}</span><h3><a class="stretch" href="/en/apps/{d}/">{esc(st["name"])}</a></h3></div></div>'
+            f'<p>{esc(st["sub"])}</p><div class="acts">{acts}</div></li>')
+
+def en_life_card(d):
+    nm, txt = EN.LIFE_EN[d]
+    return (f'<li class="acard tilt rv" style="{cv(d)}"><div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+            f'<div><span class="cat">{CAT_EMO["life"]} In Japanese only</span><h3><a class="stretch" href="/{d}/" hreflang="ja">{esc(nm)}</a></h3></div></div>'
+            f'<p>{esc(txt)} <span lang="ja">（{esc(NAMES[d][0])}）</span></p><div class="acts"><span class="more" aria-hidden="true">Page in Japanese →</span>{store_pill_en(d)}</div></li>')
+
+def shot_alt_en(d, f):
+    return EN.SHOT_ALT_EN[d].get(f, f'{en_name(d)} screen') + ' (the app is in Japanese)'
+
+def en_daily_card(d):
+    st = EN.STORE_EN[d]; k, w = EN.DAILY_EN[d]; f, _ = shot_for(d)
+    media = (f'<video class="vclip" muted loop playsinline preload="none" poster="/{d}/clip.jpg" data-vsrc="/{d}/clip.mp4" data-card width="300" height="650" aria-label="{esc(st["name"])} gameplay"></video>'
+             if os.path.exists(f'{R}/{d}/clip.mp4') else scr(d, f, shot_alt_en(d, f)))
+    return (f'<li class="dcard tilt rv" style="{cv(d)}"><div class="top"><img class="ic" src="/{d}/icon-256.webp" width="52" height="52" alt="" loading="lazy">'
+            f'<h3><a class="stretch" href="/en/apps/{d}/">{esc(st["name"])}</a></h3></div><span class="badge">{esc(k)}</span><p class="what">{esc(w)}</p>'
+            f'<div class="frame">{media}</div><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/" hreflang="ja">▶ Play in browser</a>' if d in PLAY else '') +
+            store_pill_en(d) + ('' if d in PLAY else '<span class="more" aria-hidden="true">Details →</span>') + '</div></li>')
+
+def itemlist_en():
+    items = []
+    for k, d in enumerate(EN_GAMES):
+        st = EN.STORE_EN[d]; i = NAMES[d][1]; a = APPS[d]
+        items.append({"@type": "ListItem", "position": k + 1, "item": {
+            "@type": "MobileApplication", "name": st['name'], "alternateName": NAMES[d][0], "description": st['sub'], "url": f"{BASE}/en/apps/{d}/",
+            "image": f"{BASE}/{d}/icon-256.webp", "applicationCategory": a['cat'], "operatingSystem": f"iOS {a.get('minos', '18')}.0 or later",
+            **({"downloadUrl": store_en(i)} if i else {}), "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}}})
+    return {"@type": "ItemList", "name": f"Games by {BRAND_EN}", "numberOfItems": len(items), "itemListElement": items}
+
+def notice_en(extra=''):
+    return (f'<div class="box rv notice"><h2>🌏 Good to know</h2><ul><li>{esc(EN.AVAIL_EN)}</li><li>{esc(EN.LANG_EN)}</li>'
+            f'<li>Daily puzzles change at {JST_NOTE}, the same for every player.</li>{extra}</ul></div>')
+
+HERO_ALT_EN = {'suji': "Number Rooms' daily puzzle screen", 'hitofude': "Caterpillar's daily puzzle screen", 'okazu': "Bento Pack's daily bento screen"}
+
+def page_en_home():
+    n_browser = len([d for d in PLAY if d in DAILY])
+    g = {"@context": "https://schema.org", "@graph": [ORG_EN,
+         {"@type": "WebSite", "@id": BASE + "/en/#website", "url": BASE + "/en/", "name": BRAND_EN, "alternateName": BRAND, "inLanguage": "en", "publisher": {"@id": BASE + "/#org"}},
+         itemlist_en()]}
+    desc = ('Small, free iPhone games by one maker: a one-line puzzle, a bento block puzzle, egg peeling, make-10 math and shogi variants. New daily puzzles for everyone.')
+    L = [head('/en/', f'{BRAND_EN} – {EN.TAGLINE_EN} | Free iPhone games', desc, [g], preload='/hitofude/shots/5_daily.webp', lang='en'), header_en('/en/'), '<main id="main">']
+    phones = ''.join(f'<div class="phone p{k}">{scr(d, f, HERO_ALT_EN[d] + " (in Japanese)", lazy=False)}</div>' for k, (d, f, alt) in enumerate(HERO_SHOTS))
+    emo = ''.join(f'<span style="--d:{k * -0.6}s;--r:{r}deg">{e}</span>' for k, (e, r) in enumerate([('🐛', -8), ('🍱', 6), ('🥚', -4), ('🫘', 8), ('♟️', -6)]))
+    L.append('<section class="hhero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div><div class="wrap"><div>'
+             '<p class="kicker">📱 Free iPhone games</p>'
+             '<h1><span class="ln"><span class="w" style="--d:.05s">One small</span> <span class="w" style="--d:.15s">puzzle</span></span>'
+             '<span class="ln"><span class="w mark" style="--d:.3s">a day.</span></span></h1>'
+             '<p class="lead">A caterpillar, a lunch box, a boiled egg, a pack of natto… Small iPhone games where everyone gets the same puzzle each day and compares results in a ranking.</p>'
+             f'<div class="emo" aria-hidden="true">{emo}</div>'
+             '<div class="ctas"><a class="go" href="/en/play/" data-confetti>▶ Play in your browser</a><a class="ghost" href="/en/apps/">See the games</a></div>'
+             f'<p class="ctanote">{n_browser} daily puzzles can be played in your browser - no install, no sign-up. The game screens are in Japanese.</p>'
+             f'<ul class="stats"><li><b data-n="{len(EN_GAMES)}">{len(EN_GAMES)}</b> games</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b> with a daily ranking</li><li><b>All</b> free</li></ul></div>'
+             f'<div class="stage" aria-label="App screens"><span class="sticker s1" aria-hidden="true">Today\'s puzzle!</span>{phones}<span class="sticker s2" aria-hidden="true">Same for everyone</span></div>'
+             '</div></section>')
+    L.append(f'<section class="sec" style="padding-top:8px"><div class="narrow">{notice_en()}</div></section>')
+    L.append('<section class="sec white" aria-labelledby="h-today"><div class="wrap"><div class="sec-h rv"><h2 id="h-today">📅 Today\'s puzzle</h2>'
+             '<a class="more-link" href="/en/play/">Play in your browser →</a><p>One puzzle a day, the same for everyone. Join the ranking with just a nickname - no sign-in.</p></div>'
+             f'<div class="today">{calendar_en()}{countdown_en()}</div></div></section>')
+    L.append('<section class="sec" id="games" aria-labelledby="h-daily"><div class="wrap"><div class="sec-h rv"><h2 id="h-daily">🏆 A new puzzle every day</h2>'
+             '<a class="more-link" href="/en/apps/">All games →</a></div>'
+             f'<ul class="rail" aria-label="Games with a daily puzzle">{"".join(en_daily_card(d) for d in DAILY)}</ul><p class="swipe" aria-hidden="true">← Swipe →</p></div></section>')
+    others = [d for d in EN_GAMES if d not in DAILY]
+    life = [d for d in ALL if d not in EN_GAMES]
+    L.append('<section class="sec tint" aria-labelledby="h-more"><div class="wrap"><div class="sec-h rv"><h2 id="h-more">✨ More games</h2><p>Relaxing games, shogi variants, card games and a poker study quiz.</p></div>'
+             f'<ul class="grid">{"".join(en_card(d) for d in others)}</ul>'
+             '<div class="sec-h rv" style="margin-top:34px"><h2 id="h-life" style="font-size:22px">📒 Also by Ima (in Japanese only)</h2><p>Everyday apps whose pages are in Japanese.</p></div>'
+             f'<ul class="grid" aria-labelledby="h-life">{"".join(en_life_card(d) for d in life)}</ul></div></section>')
+    L.append(f'<section class="sec white" aria-labelledby="h-me"><div class="wrap">{me_card_en("h2")}</div></section>')
+    L.append('</main>'); L.append(tail_en())
+    write('/en/', '\n'.join(L))
+
+def me_card_en(h='h3', full=False):
+    btns = (f'<a class="ghost" href="{DEV_EN}">All apps on the App Store</a>' + ('' if full else '<a class="ghost" href="/en/about/">More about me</a>') +
+            f'<a class="ghost" href="mailto:{MAIL}">Email me</a>')
+    likes = ''.join(f'<li>{e} {esc(t)}</li>' for e, t in EN.ABOUT_EN['likes'])
+    hid = ' id="h-me"' if h == 'h2' else ''
+    return (f'<div class="me rv"><div class="av" aria-hidden="true">🐛</div><div><{h}{hid}>The maker: Ima</{h}>'
+            f'<p>{esc(EN.ABOUT_EN["lead"])} {esc(EN.ABOUT_EN["paras"][0])}</p>'
+            f'<ul class="likes" aria-label="Things I like">{likes}</ul><div class="btns">{btns}</div></div></div>')
+
+def page_en_apps():
+    secs = ''
+    for cid, lb, ds in CATS:
+        if cid == 'life': continue
+        secs += (f'<section class="sec" id="{cid}" aria-labelledby="h-{cid}" style="padding:14px 0 26px"><div class="wrap">'
+                 f'<div class="sec-h"><h2 id="h-{cid}" style="font-size:24px">{CAT_EMO[cid]} {EN.CAT_EN[cid]}</h2><span class="n">{len(ds)}</span></div>'
+                 f'<ul class="grid">{"".join(en_card(d) for d in ds)}</ul></div></section>')
+    life = [d for d in ALL if d not in EN_GAMES]
+    secs += ('<section class="sec white" id="life" aria-labelledby="h-life"><div class="wrap"><div class="sec-h"><h2 id="h-life" style="font-size:24px">📒 Everyday apps (in Japanese only)</h2>'
+             f'<p>These apps and their pages are in Japanese.</p></div><ul class="grid">{"".join(en_life_card(d) for d in life)}</ul></div></section>')
+    body = f'<section class="sec" style="padding:16px 0 0"><div class="narrow">{notice_en()}</div></section>' + secs
+    sub_page_en('/en/apps/', 'All games', f'All games | {BRAND_EN} (free iPhone games)',
+                f'{len(EN_GAMES)} free iPhone games: daily logic puzzles, mental math, relaxing peeling games, shogi variants, card games and a poker study quiz.',
+                f'Puzzles, relaxing games and versus games - {len(EN_GAMES)} in all, every one free.', body,
+                [{"@context": "https://schema.org", **itemlist_en()}], crumbs=[('/en/', 'Home'), (None, 'Games')])
+
+def desc_parts(txt):   # App Store の説明文 → (はじめの段落, [(見出し, 中身)], LANGUAGE の文)
+    def head_en(t): return EN.HEAD_EN.get(t) or (t[0] + t[1:].lower())
+    def render(lines):
+        out, ul = '', []
+        for l in lines + ['']:
+            l = l.strip()
+            if l.startswith('• '): ul.append(l[2:]); continue
+            if ul: out += '<ul>' + ''.join(f'<li>{esc(x)}</li>' for x in ul) + '</ul>'; ul = []
+            if l: out += f'<p>{esc(l)}</p>'
+        return out
+    intro, secs, lang = '', [], ''
+    for b in re.split(r'\n\s*\n', txt.strip()):
+        lines = b.split('\n'); first = lines[0].strip()
+        if first == first.upper() and re.search('[A-Z]', first) and len(first) < 50:
+            if first == 'LANGUAGE': lang = ' '.join(x.strip() for x in lines[1:]); continue
+            secs.append([head_en(first), render(lines[1:])])
+        elif secs: secs[-1][1] += render(lines)
+        else: intro += render(lines)
+    return intro, secs, lang
+
+def page_en_app(d):
+    st = EN.STORE_EN[d]; name = st['name']; i = NAMES[d][1]; a = APPS[d]; cid = CAT_OF[d][0]
+    acc, soft, deep = colors(a['accent'])
+    intro, secs, lang = desc_parts(st['desc'])
+    path = f'/en/apps/{d}/'
+    t = f'{name} – {st["sub"]}'
+    title = t if len(t) <= 60 else f'{name} | {BRAND_EN}'
+    desc = ''
+    for sent in re.split(r'(?<=[.!?])\s+', st['promo']):
+        if len(desc) + len(sent) + 1 > 160: break
+        desc = (desc + ' ' + sent).strip()
+    r = LOOKUP.get(d)
+    app_ld = {"@context": "https://schema.org", "@type": "MobileApplication", "name": name, "alternateName": NAMES[d][0], "description": st['promo'],
+              "url": BASE + path, "image": f"{BASE}/{d}/icon-256.webp", "applicationCategory": a['cat'], "operatingSystem": f"iOS {a.get('minos', '18')}.0 or later",
+              "inLanguage": "ja", "countriesSupported": "JP", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"},
+              "screenshot": [f"{BASE}/{d}/shots/{f}.webp" for f, _ in SHOTS[d][:4]],
+              "publisher": {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND_EN, "url": BASE + "/en/"}}
+    if i: app_ld['downloadUrl'] = app_ld['installUrl'] = store_en(i)
+    if r: app_ld['softwareVersion'] = r['version']; app_ld['datePublished'] = rel_date(d)
+    cr = [('/en/', 'Home'), ('/en/apps/', 'Games'), (None, name)]
+    chips = ['Free'] + (['Daily puzzle & ranking'] if d in DAILY else []) + (['Playable in your browser'] if d in PLAY else []) + ['Japanese UI']
+    storebtn = (f'<a class="store" href="{store_en(i)}"><span class="s1">Download on the</span><span class="s2">App Store</span></a>' if i else
+                '<span class="store soon"><span class="s2">Coming soon</span></span>')
+    avail = 'Available on the App Store in Japan' if i else 'Coming soon to the App Store in Japan'
+    playbtn = (f'<p class="playbtn" style="margin-top:14px"><a class="go sm" href="/play/{d}/" hreflang="ja">' + ("▶ Play today's puzzle in your browser" if d in DAILY else '▶ Play in your browser') +
+               '</a></p>' if d in PLAY else '')
+    L = [head(path, title, desc, [app_ld, crumb_ld(cr, path)], og_img=f'{BASE}/{d}/og.jpg' if os.path.exists(f'{R}/{d}/og.jpg') else None, lang='en',
+              og_alt=f'{name} icon and screens', extra_head=f'<style>:root{{--accent:{acc};--soft:{soft};--deep:{deep}}}</style>'),
+         header_en(path), '<main id="main">', crumb_en(cr)]
+    L.append(f'<section class="hero"><div class="wrap"><img class="icon" src="/{d}/icon-256.webp" width="120" height="120" alt="{esc(name)} icon">'
+             f'<p class="eyebrow">{CAT_EMO[cid]} {EN.CAT_EN[cid]} · iPhone</p><h1>{esc(name)}</h1><p class="catch">{esc(st["sub"])}</p><p class="lead">{esc(st["promo"])}</p>'
+             '<ul class="chips" aria-label="Features">' + ''.join(f'<li>{esc(c)}</li>' for c in chips) + f'</ul>{storebtn}'
+             f'<p class="price">Free with ads · iPhone (iOS {a.get("minos", "18")} or later) · {avail}</p>{playbtn}</div></section>')
+    extra = f'<li>{esc(lang)}</li>' if lang else ''
+    L.append(f'<section class="block" style="padding-top:6px"><div class="narrow"><div class="box rv notice"><h2>🌏 Language &amp; availability</h2><ul>{extra}'
+             f'<li>{esc(EN.AVAIL_EN)}</li></ul><p><a class="more-link" href="/{d}/" hreflang="ja" lang="ja">日本語のページ →</a></p></div></div></section>')
+    shots = ''.join(f'<li><img src="/{d}/shots/{f}.webp" width="480" height="1043" alt="{esc(shot_alt_en(d, f))}"' + (' loading="lazy"' if k > 1 else '') + '></li>'
+                    for k, (f, _) in enumerate(SHOTS[d]))
+    L.append(f'<section class="shots" aria-label="Screenshots"><ul>{shots}</ul><p class="hint">← Scroll sideways →</p></section>')
+    if d in DAILY:
+        k, w = EN.DAILY_EN[d]
+        pl = f'<a class="go sm" href="/play/{d}/" hreflang="ja">▶ Play in browser</a>' if d in PLAY else ''
+        sb = f'<a class="go sm" href="{store_en(i)}">Play in the app</a>' if i else ''
+        L.append(f'<section class="block todaymini" aria-labelledby="h-tm"><div class="wrap"><div class="today">{calendar_en()}{countdown_en()}'
+                 f'<div class="tmtext rv"><h2 id="h-tm">📅 {esc(k)}</h2><p>{esc(w)}. A new puzzle every day at {JST_NOTE}.</p>'
+                 f'<div class="btns">{sb}{pl}<a class="ghost" href="/en/play/">Other daily puzzles</a></div></div></div></div></section>')
+    body = f'<div class="box rv"><h2>What is {esc(name)}?</h2>{intro}</div>' + ''.join(f'<div class="box rv"><h2>{esc(h)}</h2>{x}</div>' for h, x in secs)
+    L.append(f'<section class="block" aria-label="About the game"><div class="narrow">{body}'
+             f'<p class="small" style="color:var(--dim)">Text from the English App Store description. Questions? <a href="mailto:{MAIL}">{MAIL}</a> · '
+             f'<a href="/{d}/privacy.html" hreflang="ja">Privacy policy (in Japanese)</a></p></div></section>')
+    rel = [x for x in EN_GAMES if CAT_OF[x][0] == cid and x != d][:3]
+    if len(rel) < 3: rel += [x for x in DAILY if x != d and x not in rel][:3 - len(rel)]
+    L.append(f'<section class="sec tint" aria-labelledby="h-rel"><div class="wrap"><div class="sec-h"><h2 id="h-rel" style="font-size:22px">✨ More games</h2>'
+             f'<a class="more-link" href="/en/apps/">All games →</a></div><ul class="grid">{"".join(en_card(x) for x in rel)}</ul></div></section>')
+    L.append('</main>'); L.append(tail_en())
+    write(path, '\n'.join(L))
+
+def page_en_play():
+    lis = ''
+    for k, d in enumerate(PLAY):
+        t, x = EN.PLAY_EN[d]
+        lis += (f'<li class="rv" style="{cv(d)}"><span class="no">{k + 1:02d}</span><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+                f'<div><p class="nm">{esc(en_name(d))}</p><h3>{esc(t)}</h3><p class="w">{esc(x)}</p></div>'
+                f'<div class="acts"><a class="go sm" href="/play/{d}/" hreflang="ja">▶ Play</a><a class="ghost" href="/en/apps/{d}/">About the game</a></div></li>')
+    howto = ('<div class="box rv"><h2>How it works</h2><ul><li>No install and no sign-up. Just open a game and play.</li>'
+             '<li>The game screens are in Japanese. The one-line tips above each game are all you need to start.</li>'
+             f'<li>The daily puzzles are the same as in the iPhone apps and change at {JST_NOTE}.</li>'
+             '<li>Your results are kept in this browser on this device only.</li></ul></div>')
+    body = (f'<section class="sec white" style="padding-top:26px"><div class="wrap"><div class="today">{calendar_en(big=True)}{countdown_en()}</div></div></section>'
+            '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>Games you can play in your browser</h2>'
+            '<p>Each "Play" button opens the game page (in Japanese).</p></div>'
+            f'<ol class="dlist">{lis}</ol></div></section>'
+            f'<section class="sec white"><div class="narrow">{howto}{notice_en()}</div></section>')
+    items = [{"@type": "ListItem", "position": k + 1, "name": f'{en_name(d)}: {EN.PLAY_EN[d][0]}', "url": f"{BASE}/play/{d}/"} for k, d in enumerate(PLAY)]
+    cp = {"@context": "https://schema.org", "@type": "CollectionPage", "name": "Play in your browser", "url": BASE + "/en/play/", "inLanguage": "en",
+          "isAccessibleForFree": True, "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}}
+    n = len([d for d in PLAY if d in DAILY])
+    sub_page_en('/en/play/', 'Play in your browser', f'Play daily puzzles in your browser | {BRAND_EN}',
+                f'{n} free daily puzzles from our iPhone games - one-line, room split, bento packing, make-10 and more - plus a card game vs CPU. No install, no sign-up.',
+                f'{n} daily puzzles and a card game against the CPU. No install, no sign-up - the game screens are in Japanese.', body, [cp],
+                crumbs=[('/en/', 'Home'), (None, 'Play in your browser')])
+
+def page_en_about():
+    A = EN.ABOUT_EN
+    counts = ''.join(f'<li><a href="/en/apps/#{cid}"><span aria-hidden="true" style="font-size:24px">{CAT_EMO[cid]}</span><span>{EN.CAT_EN[cid]} · {len(ds)}</span></a></li>'
+                     for cid, _, ds in CATS if cid != 'life')
+    first_d = min(LOOKUP_T, key=lambda d: RELEASE_FIX_N.get(d) or jst_date(LOOKUP_T[d]['releaseDate']))
+    fy, fm, fd = map(int, (RELEASE_FIX_N.get(first_d) or jst_date(LOOKUP_T[first_d]['releaseDate'])).split('-'))
+    first = datetime.date(fy, fm, fd).strftime('%B %-d, %Y')
+    pub = len([d for d in ALL if NAMES[d][1]])
+    body = (f'<section class="sec white" style="padding-top:28px"><div class="narrow">{me_card_en("h2", full=True)}</div></section>'
+            '<section class="sec"><div class="narrow">'
+            f'<div class="box rv"><h2>👋 Hello</h2>' + ''.join(f'<p>{esc(p)}</p>' for p in A['paras'][1:]) +
+            f'<p>My first app, <a href="{en_url(first_d)}">{esc(en_name(first_d))}</a>, came out on {first}. There are now {pub} apps on the App Store in Japan.</p></div>'
+            f'<div class="box rv"><h2>🎮 Games</h2><p>Puzzles, relaxing games and versus games. The apps are in Japanese for now.</p><ul class="linklist" style="padding:0">{counts}</ul></div>'
+            '<div class="box rv"><h2>🌱 What I care about</h2><ul>' + ''.join(f'<li>{esc(v)}</li>' for v in A['values']) + '</ul></div>'
+            f'<div class="box rv"><h2>✉️ Contact</h2><p>Bug reports, ideas and questions are welcome by email: <a href="mailto:{MAIL}">{MAIL}</a>. English or Japanese is fine.</p></div>'
+            '</div></section>')
+    pp = {"@context": "https://schema.org", "@type": "ProfilePage", "url": BASE + "/en/about/", "name": "About the maker: Ima", "inLanguage": "en",
+          "mainEntity": {"@type": "Person", "@id": BASE + "/about/#ima", "name": "Ima", "alternateName": "いま", "url": BASE + "/en/about/",
+                         "knowsAbout": ["Shogi", "Poker", "iPhone app development"]}}
+    sub_page_en('/en/about/', 'About the maker', f'About the maker: Ima | {BRAND_EN}',
+                'Ima makes small iPhone games alone - daily puzzles, relaxing games and shogi variants. Likes shogi, poker and making apps.',
+                'Hi, I\'m Ima - the person who makes these games.', body, [pp, dict(ORG_EN, **{"@context": "https://schema.org"})])
+
+def page_en_faq():
+    qa = ''.join(f'<details class="qa rv"{" open" if k == 0 else ""}><summary>{esc(q)}</summary><div class="a">' + ''.join(f'<p>{x}</p>' for x in ans) + '</div></details>'
+                 for k, (q, ans) in enumerate(EN.FAQ_EN))
+    links = ''.join(f'<li><a href="/en/apps/{d}/"><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>{esc(en_name(d))}</span></a></li>' for d in EN_GAMES)
+    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{qa}'
+            f'<div class="box rv" style="margin-top:22px"><h2>📱 Game pages</h2><p>Rules and details for each game.</p><ul class="linklist" style="padding:0">{links}</ul></div></div></section>')
+    fl = {"@context": "https://schema.org", "@type": "FAQPage", "inLanguage": "en", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": re.sub('<[^>]+>', '', ' '.join(ans))}} for q, ans in EN.FAQ_EN]}
+    sub_page_en('/en/faq/', 'FAQ', f'FAQ | {BRAND_EN}',
+                'Free? Available outside Japan? In English? When does the daily puzzle change? Answers to common questions about our iPhone games.',
+                'Common questions about the games, languages and availability.', body, [fl], crumbs=[('/en/', 'Home'), (None, 'FAQ')])
+
+def llms_en():
+    L = ['', '## English', '', f'> {BRAND_EN} (いまのアプリ): small, free iPhone games made by one person, Ima. Daily puzzles that are the same for every player, relaxing games, shogi variants and card games. '
+         'The apps are available on the App Store in Japan only for now, and their menus are in Japanese.', '',
+         '### Pages', f'- [Home]({BASE}/en/)', f'- [All games]({BASE}/en/apps/)', f'- [Play in your browser]({BASE}/en/play/): daily puzzles with no install (game screens in Japanese)',
+         f'- [About the maker]({BASE}/en/about/)', f'- [FAQ]({BASE}/en/faq/)', '', '### Games']
+    for d in EN_GAMES:
+        st = EN.STORE_EN[d]; i = NAMES[d][1]
+        L.append(f'- [{st["name"]}]({BASE}/en/apps/{d}/): {st["sub"]}. {st["promo"]} ' + (f'App Store (Japan): {store_en(i)}' if i else 'App Store: coming soon'))
+    return L
+
+def fix_play_hreflang():   # /play/ は手で書いたページ（生成しない）。hreflang だけ足す（何度やっても同じ）
+    fn = f'{R}/play/index.html'
+    s = open(fn, encoding='utf-8').read()
+    s2 = re.sub(r'<link rel="alternate" hreflang="[^"]+" href="[^"]+">\n', '', s)
+    k = s2.index('<link rel="canonical"'); k = s2.index('\n', k) + 1
+    s2 = s2[:k] + hreflang_links('/play/') + '\n' + s2[k:]
+    if s2 != s: open(fn, 'w', encoding='utf-8').write(s2)
+
+def build_en():
+    page_en_home(); page_en_apps(); page_en_play(); page_en_about(); page_en_faq()
+    for d in EN_GAMES: page_en_app(d)
+    fix_play_hreflang()
 
 if __name__ == '__main__':
     page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
@@ -1156,6 +1520,7 @@ if __name__ == '__main__':
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     for d in JOIN: page_join(d)
+    build_en()
     llms()
     if '--og' in sys.argv: make_og()
     print('ok', sorted(OG_PAGES))

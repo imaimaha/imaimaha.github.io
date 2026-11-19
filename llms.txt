@@ -40,3 +40,29 @@
 ## そのほか
 - App Store の開発者ページ: https://apps.apple.com/jp/developer/id6818812575
 - 連絡先: imaimaha.apps@gmail.com
+
+
+## English
+
+> Ima Apps (いまのアプリ): small, free iPhone games made by one person, Ima. Daily puzzles that are the same for every player, relaxing games, shogi variants and card games. The apps are available on the App Store in Japan only for now, and their menus are in Japanese.
+
+### Pages
+- [Home](https://imaimaha.github.io/en/)
+- [All games](https://imaimaha.github.io/en/apps/)
+- [Play in your browser](https://imaimaha.github.io/en/play/): daily puzzles with no install (game screens in Japanese)
+- [About the maker](https://imaimaha.github.io/en/about/)
+- [FAQ](https://imaimaha.github.io/en/faq/)
+
+### Games
+- [Caterpillar: One Line Puzzle](https://imaimaha.github.io/en/apps/hitofude/): Eat every leaf in one stroke. Trace a path and help the caterpillar eat every leaf exactly once - then watch it turn into a butterfly. 200 stages with new twists each chapter, plus a new daily puzzle. App Store (Japan): https://apps.apple.com/app/id6823269398
+- [Number Rooms: Rectangle Puzzle](https://imaimaha.github.io/en/apps/suji/): Split rooms, place residents. Split the grid into rectangular rooms that match their numbers, then place residents - one per row and column. Cute residents move in when you're right. 365 stages. App Store (Japan): https://apps.apple.com/app/id6825416177
+- [Bento Pack: Food Block Puzzle](https://imaimaha.github.io/en/apps/okazu/): Fill rows in your lunch box. Pack food into a Japanese lunch box in a set order. Complete a row or column and it gets eaten - yum! New twists across 200 stages, plus a daily bento for everyone. App Store (Japan): https://apps.apple.com/app/id6823270044
+- [Mental Math Runner: Gate Rush](https://imaimaha.github.io/en/apps/kakezan/): Add & multiply in 200 stages. Left or right? Is ×2 or +13 bigger right now? Do quick mental math on the run, grow your number and reach the goal. 200 stages, plus a new daily course with a ranking. App Store (Japan): https://apps.apple.com/app/id6821955613
+- [Make 10 Drive: License Plates](https://imaimaha.github.io/en/apps/jimidrive/): Mental math on a night highway. Can the 4 digits on a passing car's license plate make 10? Decide in seconds on a night expressway across Japan. Prime mode, time attack and a new daily drive. App Store (Japan): https://apps.apple.com/app/id6818812573
+- [Boiled Egg Peeling: Tsurutto](https://imaimaha.github.io/en/apps/yudetamago/): Crack the shell, peel it clean. A perfectly peeled boiled egg feels so good. Crack the shell, peel slowly, keep the white intact. Collect 18 eggs - quail, dinosaur, golden and more - plus a daily egg. App Store (Japan): https://apps.apple.com/app/id6821884836
+- [Natto Peel: Sticky Strings](https://imaimaha.github.io/en/apps/nattofilm/): Peel slowly, wind every string. Can you peel the film off a natto pack without snapping the sticky strings? Lift it slowly, pull them tight, then wind them all up. 10 kinds of natto and a daily natto. App Store (Japan): https://apps.apple.com/app/id6821884133
+- [Window Drops: Relaxing Rain](https://imaimaha.github.io/en/apps/madoshizuku/): Merge raindrops with a finger. Trace a rainy car window to gather drops and merge them into a big one. Mix rain, thunder, engine and music-box sounds, or just watch the window with a sleep timer. App Store (Japan): https://apps.apple.com/app/id6821822966
+- [Shogi Variants: Play Online](https://imaimaha.github.io/en/apps/hensokushogi/): Annan, card rules & 2250 tsume. Play variant shogi online with friends via a room code - no account needed. Annan, card shogi, restriction shogi and more, plus a CPU from 10-kyu to 5-dan. App Store (Japan): https://apps.apple.com/app/id6821822985
+- [Gekokujo Duel: 1 Beats 9](https://imaimaha.github.io/en/apps/gekokujo/): Number card mind game for two. Play cards 1-9 one by one - the higher number wins, but 1 beats 9! Your opponent's cards stay hidden, so read them and pick your moments. Quick matches vs CPU or friends. App Store (Japan): https://apps.apple.com/app/id6821823101
+- [Futari Daifugo: 1v1 Daihinmin](https://imaimaha.github.io/en/apps/futaridaifugo/): President card game for two. Split a deck into red and black for one-on-one Daifugo. Read what's left from the cards played. 5 Skip, 7 Pass, 8 Cut, 10 Discard, Revolution and more - vs CPU or online. App Store: coming soon
+- [Poker Preflop Practice Quiz](https://imaimaha.github.io/en/apps/pokerstudy/): Learn Texas Hold'em decisions. See your two cards and your seat, then choose fold, call or raise. Each answer shows the reason and a 13×13 range chart. Flop, turn and river quizzes and CPU tables too. App Store (Japan): https://apps.apple.com/app/id6823270157
