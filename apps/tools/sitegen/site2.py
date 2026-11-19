@@ -65,7 +65,7 @@ def footer(privacy=None):
     sup = [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ')]
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
     sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ')]
-    cols = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
+    cols = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/zukan/', 'あそびかた図鑑'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
             ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
     def li(u, t):
@@ -560,7 +560,7 @@ def page_faq():
     links = ''.join(f'<li><a href="/{d}/#faq"><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>{esc(NAMES[d][0])}</span></a></li>' for d in ALL)
     body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{qa}'
             f'<div class="box rv" style="margin-top:22px"><h2>📱 アプリごとのよくある質問</h2><p>遊び方や、そのアプリだけの質問は、各アプリのページにまとめています。</p><ul class="linklist" style="padding:0">{links}</ul></div>'
-            '<div class="box rv" id="glossary"><h2>📖 ことばの説明</h2><dl class="gloss">' +
+            '<div class="box rv" id="glossary"><h2>📖 ことばの説明</h2><p>ゲームの中の しかけ（石・ワープ・バラン・安南将棋など）は、絵つきの<a href="/zukan/">あそびかた図鑑</a>にまとめています。</p><dl class="gloss">' +
             ''.join(f'<div class="gl"><dt><dfn>{esc(t)}</dfn></dt><dd>{esc(x)} <a href="{u}">くわしく</a></dd></div>' for t, (x, u) in GLOSS_ALL.items()) +
             '</dl></div></div></section>')
     import re
@@ -605,39 +605,15 @@ def rel_date(d):
     r = LOOKUP.get(d)
     return RELEASE_FIX.get(d) or (jst_date(r['releaseDate']) if r else None)
 
-def hf_svg(spec, label):
-    m, path = spec['map'], spec['path']; W = len(m[0]); H = len(m); C = 34; G = 4
-    w = W * C + (W + 1) * G; h = H * C + (H + 1) * G
-    def xy(i): return (G + (i % W) * (C + G) + C / 2, G + (i // W) * (C + G) + C / 2)
-    out = [f'<svg class="hfb" viewBox="0 0 {w} {h}" width="{w * 2}" height="{h * 2}" role="img" aria-label="{esc(label)}"><rect width="{w}" height="{h}" rx="8" fill="#f1f8e9"/>']
-    wc = 0
-    for i in range(W * H):
-        ch = m[i // W][i % W]; x, y = xy(i); x0, y0 = x - C / 2, y - C / 2
-        fill = {'#': '#b0b0a8', 'G': '#a1887f', 'B': '#43a047', 'w': '#7b1fa2'}.get(ch, '#9ccc65')
-        out.append(f'<rect x="{x0}" y="{y0}" width="{C}" height="{C}" rx="7" fill="{fill}"/>')
-        if ch == '>': out.append(f'<path d="M{x - 8} {y}h14m-6 -6l6 6l-6 6" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>')
-        if ch == 'B': out.append(f'<text x="{x}" y="{y + 5}" font-size="15" text-anchor="middle" fill="#fff" font-weight="700">2</text>')
-        if ch == 'w': out.append(f'<circle cx="{x}" cy="{y}" r="9" fill="#2a0b3d"/>')
-        if ch == 'M': out.append(f'<circle cx="{x}" cy="{y - 2}" r="9" fill="#e53935"/><circle cx="{x - 3}" cy="{y - 4}" r="2" fill="#fff"/><rect x="{x - 3}" y="{y + 4}" width="6" height="7" fill="#fff3e0"/>')
-        if ch in '123': out.append(f'<circle cx="{x}" cy="{y}" r="10" fill="#f4511e"/><text x="{x}" y="{y + 5}" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">{ch}</text>')
-        if ch == 'G': out.append(f'<path d="M{x - 10} {y + 6}l20 -12" stroke="#5d4037" stroke-width="4" stroke-linecap="round"/>')
-    pts = ' '.join(f'{xy(i)[0]},{xy(i)[1]}' for i in path)
-    out.append(f'<polyline points="{pts}" fill="none" stroke="#2e7d32" stroke-opacity=".55" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>')
-    sx, sy = xy(path[0]); ex, ey = xy(path[-1])
-    out.append(f'<circle cx="{sx}" cy="{sy}" r="11" fill="#ffb74d" stroke="#e65100" stroke-width="2"/><circle cx="{sx - 4}" cy="{sy - 2}" r="2" fill="#3b2b1f"/><circle cx="{sx + 4}" cy="{sy - 2}" r="2" fill="#3b2b1f"/>')
-    out.append(f'<circle cx="{ex}" cy="{ey}" r="5" fill="#1b5e20"/></svg>')
-    return ''.join(out)
+import zukan as ZK
+def hf_svg(spec, label):   # 盤と道の絵（zukan.py と同じ絵）。ワープで飛んだところは線を切る
+    w, h, inner = ZK.hf_inner(spec['map'], spec['path'])
+    return f'<svg class="hfb" viewBox="0 0 {w} {h}" width="{w * 2}" height="{h * 2}" role="img" aria-label="{esc(label)}">{inner}</svg>'
 
 def heya_svg():
-    C = 40; rooms = [((0, 0, 1, 3), '3', 1, '#ffe0b2'), ((1, 0, 2, 2), '4', 4, '#c8e6c9'), ((1, 2, 2, 1), '2', 5, '#bbdefb')]
-    out = ['<svg class="hfb" viewBox="0 0 128 128" width="256" height="256" role="img" aria-label="へや割りの例：3×3 の盤を、3・4・2 のへやに分けたところ"><rect width="128" height="128" rx="8" fill="#fff"/>']
-    for (r, c, h, w), num, cell, col in rooms:
-        out.append(f'<rect x="{4 + c * C + 2}" y="{4 + r * C + 2}" width="{w * C - 4}" height="{h * C - 4}" rx="8" fill="{col}" stroke="#3b2b1f" stroke-width="2"/>')
-        rr, cc = divmod(cell, 3)
-        out.append(f'<text x="{4 + cc * C + C / 2}" y="{4 + rr * C + C / 2 + 7}" font-size="20" text-anchor="middle" font-weight="700" fill="#3b2b1f">{num}</text>')
-    out.append('</svg>')
-    return ''.join(out)
+    return ZK.heya().replace('<svg ', '<svg class="hfb" width="256" height="256" ', 1)
 
+ZUKAN_APPS = [x[0] for x in ZK.sections()]
 def rules_section(d):
     rs = RULES.get(d)
     if not rs: return ''
@@ -648,8 +624,9 @@ def rules_section(d):
         elif ill == 'heya': art = f'<div class="rart">{heya_svg()}</div>'
         lis += f'<li class="rule rv">{art}<span class="e" aria-hidden="true">{e}</span><h3>{esc(t)}</h3><p>{esc(x)}</p></li>'
     head_t = 'ルールとしかけ' if d in ('hitofude', 'okazu', 'kakezan') else ('ルール' if d not in ('pokerstudy',) else '練習のしかた')
+    zk = (f'<p class="zklink"><a class="more-link" href="/zukan/#{d}">📖 しかけを絵で見る（あそびかた図鑑） →</a></p>' if d in ZUKAN_APPS else '')
     return (f'<section class="block rules" id="rules" aria-labelledby="h-rules"><div class="wrap"><h2 id="h-rules">📘 {head_t}</h2>'
-            f'<ul class="rulelist">{lis}</ul></div></section>')
+            f'<ul class="rulelist">{lis}</ul>{zk}</div></section>')
 
 def demo_section(d):
     name = NAMES[d][0]; a = APPS[d]
@@ -773,7 +750,7 @@ def page_now():
              'いま作っているものと、つぎにやること。ときどき書きかえます。', body, og='now')
 
 def page_sitemap():
-    groups = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
+    groups = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/zukan/', 'あそびかた図鑑（しかけとルール）'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
               ('アプリ', [('/apps/', 'アプリ一覧')] + [(f'/apps/{c}/', l) for c, l, _ in CATS]),
               ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事')] if NOTE_ON else [])),
               ('サポート', [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ'), ('/apps/sitemap/', 'サイトマップ')])]
@@ -1078,6 +1055,40 @@ def page_start():
              body, [wp], crumbs=[('/', 'ホーム'), (None, 'どれが合う？')], og='start')
 
 # ---------------- 404（GitHub Pages が、ないページのときに出す /404.html） ----------------
+# ---------------- /zukan/ あそびかた図鑑（しかけ・ルールを絵でひとつずつ） ----------------
+def page_zukan():
+    secs = ZK.sections()
+    url = BASE + '/zukan/'
+    terms = []; n = 0; body = ''
+    jump = ''.join(f'<li><a href="#{d}"><img src="/{d}/icon-256.webp" width="28" height="28" alt="" loading="lazy"><span>{esc(t)}</span></a></li>' for d, t, _, _ in secs)
+    for d, t, intro, items in secs:
+        cards = ''
+        for zid, term, text, art in items:
+            n += 1
+            cards += (f'<li class="zc rv" id="{zid}"><div class="zart">{art}</div><span class="no">No.{n:02d}</span>'
+                      f'<h3><dfn>{esc(term)}</dfn></h3><p>{esc(text)}</p></li>')
+            terms.append({"@type": "DefinedTerm", "@id": f"{url}#{zid}", "name": term, "description": text, "url": f"{url}#{zid}", "inDefinedTermSet": {"@id": url + "#set"}})
+        extra = ''
+        if d == 'hensokushogi':
+            extra = ('<h3 class="zsub" id="sg-cards">🃏 特殊効果将棋の13まいのカード</h3><ul class="zfx">' +
+                     ''.join(f'<li id="sg-fx-{k + 1}"><span class="e" aria-hidden="true">{e}</span><div><b><dfn>{esc(nm)}</dfn></b><span>{esc(x)}</span></div></li>' for k, (e, nm, x) in enumerate(ZK.FX)) + '</ul>')
+            for k, (e, nm, x) in enumerate(ZK.FX):
+                terms.append({"@type": "DefinedTerm", "@id": f"{url}#sg-fx-{k + 1}", "name": f"{nm}（特殊効果将棋）", "description": x, "url": f"{url}#sg-fx-{k + 1}", "inDefinedTermSet": {"@id": url + "#set"}})
+        links = f'<a class="more-link" href="/{d}/">{esc(t)}のページ →</a>'
+        if d in PLAY: links += f'<a class="more-link" href="/play/{d}/">{play_label(d)}</a>'
+        body += (f'<section class="sec zsec" id="{d}" aria-labelledby="h-{d}" style="{cv(d)}"><div class="wrap"><div class="zh">'
+                 f'<img src="/{d}/icon-256.webp" width="56" height="56" alt="" loading="lazy"><div><h2 id="h-{d}">{esc(t)}</h2><p>{esc(intro)}</p></div></div>'
+                 f'<ul class="zg">{cards}</ul>{extra}<p class="zlinks">{links}</p></div></section>')
+    body = (f'<section class="sec" style="padding:8px 0 0"><div class="wrap"><nav aria-label="アプリをえらぶ"><ul class="zjump">{jump}</ul></nav></div></section>' + body +
+            '<section class="sec white"><div class="narrow"><div class="box rv"><h2>📖 ほかのことば</h2><p>「今日の問題」「ランキング」「テンパズル」などのことばは、'
+            '<a href="/faq/#glossary">よくある質問の「ことばの説明」</a>にあります。遊び方の動画や画面は、各アプリのページでどうぞ。</p></div></div></section>')
+    dts = {"@context": "https://schema.org", "@type": "DefinedTermSet", "@id": url + "#set", "name": "あそびかた図鑑", "url": url, "inLanguage": "ja",
+           "description": "いまのアプリのゲームに出てくる しかけ・ルールの説明", "hasDefinedTerm": terms}
+    sub_page('/zukan/', '📖 あそびかた図鑑', f'あそびかた図鑑｜一筆書き・へや割り・変則将棋・大富豪のしかけとルール｜{BRAND}',
+             '石・矢印の葉・ワープ・キノコ・木の実（ひとふでいもむし）、へや割り・住人さがし、おかず詰めのごはん・バラン・こおり・小皿、安南・トランプ・王手・影武者・縛り将棋、ふたり大富豪のルールを絵でひとつずつ。',
+             'アプリに出てくる しかけやルールを、小さな絵でひとつずつ。わからないマスや駒があったら、ここを見てね。', body, [dts],
+             crumbs=[('/', 'ホーム'), (None, 'あそびかた図鑑')], og='zukan')
+
 def page_404():
     out = head('/404.html', f'ページが見つかりません｜{BRAND}', 'お探しのページは見つかりませんでした。今日の問題・アプリ一覧・ブラウザで遊べる今日の1問へどうぞ。')
     out = re.sub(r'<link rel="canonical"[^>]*>\n', '', out)
@@ -1116,6 +1127,7 @@ def llms():
     L = [f'# {BRAND}', '', '> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。', '',
          '## ページ', f'- [ホーム]({BASE}/): サイトのトップ', f'- [今日の問題]({BASE}/today/): 毎日0時（日本時間）にかわる、みんな同じ1問',
          f'- [どれが合う？]({BASE}/start/): 3つの質問で、合いそうなアプリをえらぶ',
+         f'- [あそびかた図鑑]({BASE}/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ',
          f'- [ランキングのしくみ]({BASE}/ranking/): サインインなし、ニックネームだけで参加', f'- [アプリ一覧]({BASE}/apps/): すべてのアプリ',
          f'- [お知らせ]({BASE}/news/): アップデートとリリース', f'- [よくある質問]({BASE}/faq/): 無料・広告・データ・通知・機種変更',
          f'- [作っている人]({BASE}/about/): いま（将棋・ポーカー・アプリ開発が好き）', f'- [いま やっていること]({BASE}/now/)', f'- [お問い合わせ]({BASE}/contact/)', '', '## アプリ']
@@ -1129,7 +1141,7 @@ def llms():
 
 if __name__ == '__main__':
     page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
-    page_now(); page_sitemap(); page_start(); page_404()
+    page_now(); page_sitemap(); page_start(); page_zukan(); page_404()
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     for d in JOIN: page_join(d)

@@ -6,6 +6,7 @@
 - [ホーム](https://imaimaha.github.io/): サイトのトップ
 - [今日の問題](https://imaimaha.github.io/today/): 毎日0時（日本時間）にかわる、みんな同じ1問
 - [どれが合う？](https://imaimaha.github.io/start/): 3つの質問で、合いそうなアプリをえらぶ
+- [あそびかた図鑑](https://imaimaha.github.io/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ
 - [ランキングのしくみ](https://imaimaha.github.io/ranking/): サインインなし、ニックネームだけで参加
 - [アプリ一覧](https://imaimaha.github.io/apps/): すべてのアプリ
 - [お知らせ](https://imaimaha.github.io/news/): アップデートとリリース
