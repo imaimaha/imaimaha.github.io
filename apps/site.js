@@ -207,10 +207,12 @@
   })();
 
   /* プレイ動画: 見えるところに来たら読みこんで再生（動きを減らす設定のときは、ポスターのまま。押すと再生） */
-  $$('video[data-vsrc]').forEach(function (v) {
+  /* データ節約モードのときも、動きを減らす設定と同じく自動では読みこまない。読みこみはページの load のあと（はじめの表示とぶつけない） */
+  var lite = still || !!(navigator.connection && navigator.connection.saveData);
+  function vids() { $$('video[data-vsrc]').forEach(function (v) {
     var src = v.getAttribute('data-vsrc');
     function load() { if (!v.getAttribute('src')) { v.src = src; } }
-    if (still || !('IntersectionObserver' in window)) { if (v.hasAttribute('data-card')) return; v.controls = true; v.preload = 'none'; load(); return; }
+    if (lite || !('IntersectionObserver' in window)) { if (v.hasAttribute('data-card')) return; v.controls = true; v.preload = 'none'; load(); return; }
     var vo = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
         if (e.isIntersecting) { load(); var pr = v.play(); if (pr && pr.catch) pr.catch(function () { v.controls = true; }); }
@@ -218,7 +220,8 @@
       });
     }, { rootMargin: '200px 0px' });
     vo.observe(v);
-  });
+  }); }
+  if (d.readyState === 'complete') vids(); else window.addEventListener('load', vids);
 
   /* 電話の画面のゆるい視差 */
   var stage = d.querySelector('.stage');

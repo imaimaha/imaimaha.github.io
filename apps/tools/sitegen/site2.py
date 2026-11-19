@@ -28,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261128'
+V = '20261129'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -126,7 +126,7 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', o
          f'<meta property="og:image" content="{og_img}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{esc(og_alt)}">',
          f'<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="{esc(title)}">\n<meta name="twitter:description" content="{esc(desc)}">\n<meta name="twitter:image" content="{og_img}">',
          ICON_LINKS.replace('content="いまのアプリ"', f'content="{BRAND_EN}"') if en else ICON_LINKS]
-    if preload: L.append(f'<link rel="preload" as="image" href="{preload}">')
+    if preload: L.append(f'<link rel="preload" as="image" href="{preload}" fetchpriority="high">')
     L.append(f'<link rel="stylesheet" href="/apps/site.css?v={V}">')
     if extra_head: L.append(extra_head)
     if NOTE_ON and not en: L.append(f'<link rel="me" href="{NOTE}">')
@@ -203,8 +203,8 @@ def countdown():
             '<span><b id="cd-h">--</b><small>時間</small></span><i>:</i><span><b id="cd-m">--</b><small>分</small></span><i>:</i>'
             '<span><b id="cd-s">--</b><small>秒</small></span></div><p class="sub">毎日 0時（日本時間）に、新しい問題になります。</p></div>')
 
-def rsample():
-    return ('<div class="rsample rv"><h3>🏆 今日のランキング <small>例</small></h3><ol>'
+def rsample(h='h3'):   # /today/ は上に h2 がないので h2
+    return (f'<div class="rsample rv"><{h}><span>🏆 今日のランキング</span> <small>例</small></{h}><ol>'
             '<li><span class="md" aria-hidden="true">🥇</span><span class="nm">ねこまる</span><span class="tm">0:41</span></li>'
             '<li><span class="md" aria-hidden="true">🥈</span><span class="nm">たろう</span><span class="tm">0:47</span></li>'
             '<li class="you"><span class="md" aria-hidden="true">🥉</span><span class="nm">？？？？ あなた？</span><span class="tm">-:--</span></li></ol>'
@@ -467,7 +467,7 @@ def page_today():
                 f'<div><p class="nm">{esc(name)}</p><h3>{esc(t)}</h3><p class="w">{esc(w)}</p></div>'
                 f'<div class="acts"><a class="go sm" href="{store(i)}">アプリで挑戦</a>' + (f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
                 f'<a class="ghost" href="/{d}/">くわしく</a></div></li>')
-    body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap"><div class="today">{calendar(big=True)}{countdown()}{rsample()}</div></div></section>'
+    body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap"><div class="today">{calendar(big=True)}{countdown()}{rsample("h2")}</div></div></section>'
             '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>今日の問題があるアプリ</h2>'
             '<p>どのアプリも、今日の問題はみんな同じ。アプリをひらいて「今日の〜」から挑戦できます。</p></div>'
             f'<ol class="dlist">{lis}</ol></div></section>'

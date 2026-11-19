@@ -168,7 +168,7 @@ def page(d):
       f'<p class="price">{esc(price)}／iPhone（iOS {minos} 以降）</p>'
       f'</div></section>')
     # shots
-    lis = ''.join(f'<li><img src="shots/{f}.webp" width="480" height="1043" alt="{esc(alt)}"{"" if k < 2 else LAZY}></li>'
+    lis = ''.join(f'<li><img src="shots/{f}.webp" width="480" height="1043" alt="{esc(alt)}"{LAZY} decoding="async"></li>'
                   for k, (f, alt) in enumerate(shots))
     w(f'<section class="shots" aria-label="スクリーンショット"><ul>{lis}</ul><p class="hint">← 横にスクロールできます →</p></section>')
     # ranking / versus
@@ -196,7 +196,7 @@ def page(d):
       ''.join(f'<li><span class="big">{esc(b)}</span><span class="lbl">{esc(l)}</span><span class="sub">{esc(s)}</span></li>' for b, l, s in a['feats']) +
       f'</ul>{notice}</div></section>')
     # CTA
-    w(f'<section class="block cta"><div class="wrap"><img class="icon-s" src="icon-256.webp" width="72" height="72" alt="">'
+    w(f'<section class="block cta"><div class="wrap"><img class="icon-s" src="icon-256.webp" width="72" height="72" alt="" loading="lazy">'
       f'<p class="t">{esc(name)} を無料で遊んでみる</p>{store_btn(i)}<p class="price">{esc(price)}／iPhone（iOS {minos} 以降）</p></div></section>')
     # support (original content)
     w(f'<section class="block support" id="support" aria-label="サポート"><div class="narrow">\n  {support}\n</div></section>')
