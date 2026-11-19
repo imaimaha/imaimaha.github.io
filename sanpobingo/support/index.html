@@ -44,7 +44,7 @@ h2{font-size:18px;margin:0 0 8px;line-height:1.4;text-wrap:balance}
 .qa .a p{margin:0 0 8px}
 a{color:var(--d)}
 ul{padding-left:22px}
-.links a{display:inline-flex;align-items:center;min-height:44px;font-weight:700}
+.links a{display:inline-block;padding:10px 0;line-height:1.5;font-weight:700}
 .ft{text-align:center;margin-top:26px;font-size:13px}
 .ft a{color:var(--dim);display:inline-flex;align-items:center;min-height:44px}
 .nw{white-space:nowrap}
@@ -64,7 +64,7 @@ ul{padding-left:22px}
 <section class="card" aria-labelledby="h-faq"><h2 id="h-faq">よくある質問</h2><details class="qa"><summary><span class="qt">歩数が表示されない</span></summary><div class="a"><p>設定アプリの「プライバシーとセキュリティ」→「モーションとフィットネス」で、<span class="nw">おさんぽ日記</span>をオンにしてください。iPhone の歩数計は7日前までしかさかのぼれないため、それより前の日は、アプリを開いたときに控えた歩数だけが表示されます。</p></div></details><details class="qa"><summary><span class="qt">行った場所が日記に出ない</span></summary><div class="a"><p>設定タブの「行った場所を自動で日記に残す」をオンにして、位置情報を「常に」にしてください（設定アプリの「位置情報」→「<span class="nw">おさんぽ日記</span>」）。iPhone の省電力のしくみ（訪問の検出・大きな移動の検出）を使うため、しばらくいた場所だけが記録され、数分おくれて届くことがあります。「正確な位置情報」がオフだと、場所がずれたり見つからないことがあります。</p></div></details><details class="qa"><summary><span class="qt">電池の減りが心配</span></summary><div class="a"><p>行った場所の記録には、GPS をずっと動かすのではなく、iPhone がもともと持っている省電力のしくみだけを使っています。気になるときは、設定タブでいつでもオフにできます。</p></div></details><details class="qa"><summary><span class="qt">近くの場所ビンゴのお店がまちがっている・ない</span></summary><div class="a"><p>近くの場所は OpenPOI API（日本の施設データ）と Apple のマップから探しています。名前から種類を見分けているため、まれにちがう種類の場所が入ることがあります。「いまの場所で作り直す」で作り直せます。データは約500m四方ごとに24時間保存しているので、設定タブの「調べた場所の一時データを消す」で消すと最新のデータで作り直せます。</p></div></details><details class="qa"><summary><span class="qt">データを消したい・引き継ぎたい</span></summary><div class="a"><p>日記・写真・行った場所の記録は、この iPhone の中にだけ保存しています。アプリを削除すると記録も消えます。ほかの端末への引き継ぎにはまだ対応していません。</p></div></details></section>
 <section class="card"><h2>場所のデータ</h2><p>近くの場所の名前と位置は <a href="https://openpoiapi.com/attribution.html">OpenPOI API</a> のデータを使っています（出典の詳細はリンク先をご覧ください）。地図・場所の名前の一部は Apple のマップを使っています。</p></section><section class="card" aria-labelledby="h-priv"><h2 id="h-priv">プライバシー</h2>
 <p>このアプリで扱う情報や、データの消し方は、<span class="nw">プライバシーポリシー</span>にまとめています。</p>
-<p class="links"><a href="/sanpobingo/privacy.html"><span class="nw">おさんぽ日記</span> の<span class="nw">プライバシーポリシー</span></a></p></section>
+<p class="links"><a href="/sanpobingo/privacy.html"><span class="nw">おさんぽ日記</span> の<wbr><span class="nw">プライバシーポリシー</span></a></p></section>
 <p class="ft"><a href="/sanpobingo/">アプリの紹介ページ</a></p>
 </main>
 </body>

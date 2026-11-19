@@ -1068,7 +1068,7 @@ h2{{font-size:18px;margin:0 0 8px;line-height:1.4;text-wrap:balance}}
 .qa .a p{{margin:0 0 8px}}
 a{{color:var(--d)}}
 ul{{padding-left:22px}}
-.links a{{display:inline-flex;align-items:center;min-height:44px;font-weight:700}}
+.links a{{display:inline-block;padding:10px 0;line-height:1.5;font-weight:700}}
 .ft{{text-align:center;margin-top:26px;font-size:13px}}
 .ft a{{color:var(--dim);display:inline-flex;align-items:center;min-height:44px}}
 .nw{{white-space:nowrap}}
@@ -1088,7 +1088,7 @@ ul{{padding-left:22px}}
 <section class="card" aria-labelledby="h-faq"><h2 id="h-faq">💬 よくある質問</h2>{qa}</section>
 {ex}<section class="card" aria-labelledby="h-priv"><h2 id="h-priv">🔒 プライバシー</h2>
 <p>このアプリで扱う情報や、データの消し方は、プライバシーポリシーにまとめています。</p>
-<p class="links"><a href="/{d}/privacy.html">{esc(name)} のプライバシーポリシー</a></p></section>
+<p class="links"><a href="/{d}/privacy.html">{esc(name)} の<wbr>プライバシーポリシー</a></p></section>
 <p class="ft"><a href="/{d}/">アプリの紹介ページ</a></p>
 </main>
 </body>
