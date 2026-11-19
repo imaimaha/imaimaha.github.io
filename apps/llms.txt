@@ -1,14 +1,18 @@
 # いまのアプリ
 
-> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。
+> 「いま」の個人のホームページ。いまがひとりで作っている iPhone アプリ（いまのアプリ）と読み物。アプリは、毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。
 
 ## ページ
-- [ホーム](https://imaimaha.github.io/): サイトのトップ
+- [ホーム](https://imaimaha.github.io/): いまのホームページ（アプリ・読み物・note の記事）
 - [今日の問題](https://imaimaha.github.io/today/): 毎日0時（日本時間）にかわる、みんな同じ1問
 - [どれが合う？](https://imaimaha.github.io/start/): 3つの質問で、合いそうなアプリをえらぶ
 - [あそびかた図鑑](https://imaimaha.github.io/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ
 - [ランキングのしくみ](https://imaimaha.github.io/ranking/): サインインなし、ニックネームだけで参加
 - [アプリ一覧](https://imaimaha.github.io/apps/): すべてのアプリ
+- [読み物](https://imaimaha.github.io/guide/): パズルのコツと遊び方のメモ
+  - [一筆書きパズルのコツ｜行き止まりを先に見つける考え方](https://imaimaha.github.io/guide/hitofude-kotsu/)
+  - [毎日1問のパズルアプリの選び方｜5つの見るポイント](https://imaimaha.github.io/guide/mainichi-1mon-puzzle/)
+  - [4つの数字で10を作る暗算のコツ｜5つの考え方](https://imaimaha.github.io/guide/make-10-anzan/)
 - [お知らせ](https://imaimaha.github.io/news/): アップデートとリリース
 - [よくある質問](https://imaimaha.github.io/faq/): 無料・広告・データ・通知・機種変更
 - [作っている人](https://imaimaha.github.io/about/): いま（将棋・ポーカー・アプリ開発が好き）

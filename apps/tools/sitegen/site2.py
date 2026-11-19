@@ -62,7 +62,7 @@ def logo_svg(uid, size=34):
     from icons import mark
     return mark().replace('<svg xmlns="http://www.w3.org/2000/svg" ', f'<svg width="{size}" height="{size}" aria-hidden="true" ').replace('id="g"', f'id="{uid}"').replace('url(#g)', f'url(#{uid})')
 
-NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ', '🌐'), ('/apps/', 'アプリ一覧', '📱'), ('/ranking/', 'ランキング', '🏆'), ('/news/', 'お知らせ', '📣'),
+NAV = [('/today/', '今日の問題', '📅'), ('/play/', 'ブラウザで遊ぶ', '🌐'), ('/apps/', 'アプリ一覧', '📱'), ('/guide/', '読み物', '📖'), ('/ranking/', 'ランキング', '🏆'), ('/news/', 'お知らせ', '📣'),
        ] + ([('/note/', 'note', '📝')] if NOTE_ON else []) + [('/about/', '作っている人', '🙋')]
 MENU = [('/', 'ホーム', '🏠'), ('/start/', 'どれから遊ぶ？3問で診断', '🧭')] + NAV + [('/now/', 'いま やっていること', '🛠️'), ('/faq/', 'よくある質問', '💬'), ('/contact/', 'お問い合わせ', '✉️'), ('/apps/sitemap/', 'サイトマップ', '🗺️')]
 
@@ -82,7 +82,7 @@ def footer(privacy=None):
     sup += [(privacy, 'このアプリのプライバシーポリシー')] if privacy else []
     sup += [('/contact/#privacy', 'プライバシーポリシー'), ('/apps/sitemap/', 'サイトマップ'), ('/en/', 'English')]
     cols = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/apps/', 'アプリ一覧'), ('/zukan/', 'あそびかた図鑑'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
-            ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
+            ('いまのこと', [('/about/', '作っている人'), ('/guide/', '読み物'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事'), (NOTE, 'note（いまのページ）')] if NOTE_ON else []) + [(DEV, 'App Store で全部のアプリを見る')]),
             ('サポート', sup)]
     def li(u, t):
         rel = ' rel="me noopener"' if u == NOTE else (' hreflang="en" lang="en"' if u == '/en/' else '')
@@ -109,7 +109,7 @@ ICON_LINKS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n<link rel="i
               '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n<link rel="manifest" href="/apps/site.webmanifest">\n'
               '<meta name="apple-mobile-web-app-title" content="いまのアプリ">\n<meta name="color-scheme" content="light">\n<meta name="format-detection" content="telephone=no">')
 
-def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', og_alt=None, extra_head=''):
+def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', og_alt=None, extra_head='', og_type='website'):
     url = BASE + path
     og_img = og_img or f'{BASE}/apps/og.jpg'
     en = lang == 'en'
@@ -121,7 +121,7 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', o
          f'<title>{esc(title)}</title>', f'<meta name="description" content="{esc(desc)}">', f'<link rel="canonical" href="{url}">']
     if hreflang_links(path): L.append(hreflang_links(path))
     L += ['<meta name="theme-color" content="#fff7e8">',
-         f'<meta property="og:type" content="website">\n<meta property="og:site_name" content="{brand}">\n{loc}',
+         f'<meta property="og:type" content="{og_type}">\n<meta property="og:site_name" content="{brand}">\n{loc}',
          f'<meta property="og:title" content="{esc(title)}">\n<meta property="og:description" content="{esc(desc)}">\n<meta property="og:url" content="{url}">',
          f'<meta property="og:image" content="{og_img}">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{esc(og_alt)}">',
          f'<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="{esc(title)}">\n<meta name="twitter:description" content="{esc(desc)}">\n<meta name="twitter:image" content="{og_img}">',
@@ -154,7 +154,10 @@ def nowrap_text(out):
     parts = re.split(r'(<script\b.*?</script>|<style\b.*?</style>|<[^>]+>)', body, flags=re.S)
     for k in range(0, len(parts), 2):
         if parts[k]: parts[k] = pat.sub(wrap, parts[k])
-    return head + ''.join(parts)
+    body = ''.join(parts)
+    # よくある質問の見出し（summary は flex）: 文字と <span class="nw"> がべつべつの列にならないよう、1つの span にまとめる
+    body = re.sub(r'(<details class="qa[^"]*"[^>]*><summary>)(?!<span class="qt">)(.*?)(</summary>)', r'\1<span class="qt">\2</span>\3', body, flags=re.S)
+    return head + body
 
 def write(path, out):
     if '<html lang="en">' not in out[:200]: out = nowrap_text(out)   # 英語のページは日本語の折り返しの調整をしない
@@ -190,7 +193,7 @@ def app_card(d, k=None):
     tag = '<span class="tagd">毎日ランキング</span>' if d in DAILY else ''
     key = f' data-k="{esc(name + " " + text + " " + lb)}"' if k else ''
     return (f'<li class="acard tilt rv" style="{cv(d)}"{key}>{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
-            f'<div><span class="cat">{CAT_EMO[cid]} {esc(lb)}</span><h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
+            '<div>' + ('' if k else f'<span class="cat">{CAT_EMO[cid]} {esc(lb)}</span>') + f'<h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
             f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY and d not in DAILY else '<span class="more" aria-hidden="true">くわしく →</span>')
             + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '<span class="pill soon">近日公開</span>') + '</div></li>')
 
@@ -378,42 +381,35 @@ def facts():
             '<p>ぜんぶ本当の数です（遊んでいる人の数や評価の数はのせていません）。</p></div>'
             f'<ul class="fg">{body}</ul></div></section>')
 
+# トップ（/）＝「いま」の個人のホームページ（2026-11-19 ユーザー承認: 根本の案・案A）。
+# サイトの名前（WebSite・Organization）は「いまのアプリ」のまま。作っている人の名前は「いま」。
+# 前のトップにしかなかったものの移り先: 「ここで1問」（今日のいもむし）→ /today/、「数字で見る」→ /apps/、カレンダー・カウントダウン・ランキングの例 → /today/（もとからある）
+CREW = [('01_imomushi', 'いもむしのキャラクター'), ('02_bento', 'お弁当のキャラクター'), ('03_tamago', 'ゆでたまごのキャラクター'),
+        ('04_natto', '納豆のキャラクター'), ('05_shogi', '将棋の駒のキャラクター')]   # /apps/home/*.webp（256px。元は zip の 04_images/characters_and_banners_v2）
+GUIDE = [('hitofude-kotsu', '一筆書きパズルのコツ｜行き止まりを先に見つける考え方', '2026-11-19'),
+         ('mainichi-1mon-puzzle', '毎日1問のパズルアプリの選び方｜5つの見るポイント', '2026-11-19'),
+         ('make-10-anzan', '4つの数字で10を作る暗算のコツ｜5つの考え方', '2026-11-19')]   # /guide/ の読み物（手で書いたページ）。新しい順
+DESC_TOP = ('将棋・ポーカー・アプリ開発が好きな「いま」のホームページ。毎日1問のパズルなど無料のiPhoneアプリ「いまのアプリ」と、'
+            'パズルのコツの読み物、noteの記事をまとめています。')
+
 def page_home():
     g = {"@context": "https://schema.org", "@graph": [ORG,
          {"@type": "WebSite", "@id": BASE + "/#website", "url": BASE + "/", "name": BRAND, "alternateName": "imaimaha のアプリ", "inLanguage": "ja", "publisher": {"@id": BASE + "/#org"}},
          itemlist()]}
-    L = [head('/', f'{BRAND}｜毎日1問のパズルで勝負できるiPhoneアプリ', DESC_HOME, [g], preload='/hitofude/shots/5_daily.webp'), header('/'), '<main id="main">']
-    phones = ''.join(f'<div class="phone p{k}">{scr(d, f, alt, lazy=False)}</div>' for k, (d, f, alt) in enumerate(HERO_SHOTS))
-    emo = ''.join(f'<span style="--d:{k * -0.6}s;--r:{r}deg">{e}</span>' for k, (e, r) in enumerate([('🐛', -8), ('🍱', 6), ('🥚', -4), ('🫘', 8), ('♟️', -6)]))
-    L.append('<section class="hhero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div><div class="wrap"><div>'
-             '<p class="kicker">📱 iPhone アプリ ・ どれも無料</p>'
-             '<h1><span class="ln"><span class="w" style="--d:.05s">すきま</span><span class="w" style="--d:.15s">時間に、</span></span>'
-             '<span class="ln"><span class="w mark" style="--d:.3s">ちょっと</span><span class="w" style="--d:.45s">あそぼ。</span></span></h1>'
-             '<p class="lead">いもむし、お弁当、ゆでたまご、納豆……。毎日みんなと同じ1問で勝負できる、ちいさな iPhone アプリたちです。</p>'
-             f'<div class="emo" aria-hidden="true">{emo}</div>'
-             '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ ブラウザで今すぐ遊ぶ</a><a class="ghost" href="/today/">今日の問題を見る</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
-             '<p class="startlink"><a class="more-link" href="/start/">🧭 どれから遊ぶ？3問で診断 →</a></p>'
-             f'<div class="hpm" id="hpm"><div class="hpm-hd"><p><b>🐛 今日のいもむしを ここで1問</b><small>アプリと同じ今日の盤・登録なし</small></p>'
-             f'<button type="button" class="go sm" data-hp="{V}">▶ ここで遊ぶ</button></div><div id="hpm-body" hidden></div></div>'
-             f'<p class="ctanote">いもむし・すうじ・おかずなど{len([d for d in PLAY if d in DAILY])}つの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
-             f'<ul class="stats"><li><b data-n="{len(ALL)}">{len(ALL)}</b>本のアプリ</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b>本で毎日ランキング</li><li><b>全部</b>無料</li></ul></div>'
-             f'<div class="stage" aria-label="アプリの画面"><span class="sticker s1" aria-hidden="true">今日の1問！</span>{phones}<span class="sticker s2" aria-hidden="true">みんな同じ問題</span></div>'
-             '</div></section>')
-    # today band
-    L.append('<section class="sec white" id="ranking" aria-labelledby="h-today"><div class="wrap"><div class="sec-h rv"><h2 id="h-today">📅 今日の1問</h2>'
-             '<a class="more-link" href="/today/">今日の問題をぜんぶ見る →</a><p>毎日、みんなに同じ問題。サインインなし、ニックネームを決めるだけでランキングに参加できます。</p></div>'
-             f'<div class="today">{calendar()}{countdown()}{rsample()}</div></div></section>')
+    L = [head('/', f'{BRAND}｜「いま」が作る小さなiPhoneアプリと読み物', DESC_TOP, [g], preload='/apps/home/01_imomushi.webp'), header('/'), '<main id="main">']
+    crew = ''.join(f'<img src="/apps/home/{f}.webp" width="110" height="110" alt="{esc(alt)}">' for f, alt in CREW)
+    L.append('<section class="homehero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div><div class="wrap"><div>'
+             '<h1><span class="nw">小さなアプリを</span><span class="nw">つくって、</span><br><span class="nw">ときどき書いて</span><span class="nw">います。</span></h1>'
+             f'<p class="lead">「いま」のホームページです。毎日1問のパズルなど、無料の iPhone アプリ「{BRAND}」をひとりで作っています。アプリのことも、ふだんのことも、ここに書いていきます。</p>'
+             '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ 今日の1問をあそぶ</a><a class="ghost" href="/apps/">アプリ一覧</a></div></div>'
+             f'<div class="crew" role="img" aria-label="アプリのキャラクターたち（いもむし・お弁当・ゆでたまご・納豆・将棋の駒）">{crew}</div></div></section>')
     L.extend(season_secs())
-    # daily apps
-    L.append('<section class="sec" aria-labelledby="h-daily"><div class="wrap"><div class="sec-h rv"><h2 id="h-daily">🏆 毎日、みんなで勝負</h2>'
-             '<a class="more-link" href="/ranking/">ランキングのしくみ →</a></div>'
-             f'<ul class="rail" aria-label="今日の問題で勝負できるアプリ">{"".join(daily_card(d) for d in DAILY)}</ul><p class="swipe" aria-hidden="true">← 横にスワイプ →</p></div></section>')
-    L.append('<section class="sec maker" aria-labelledby="h-maker"><div class="wrap"><div class="makerbox rv"><span class="e" aria-hidden="true">🧑‍💻</span><div>'
-             '<h2 id="h-maker">ひとりで作っています</h2><p>企画・デザイン・プログラム・App Store への申請まで、ひとりで作っています。'
-             '毎日の1問は、だれでも同じ条件でくらべられるようにしています。</p>'
-             '<p class="links2"><a class="more-link" href="/about/">作っている人 →</a><a class="more-link" href="/now/">いま やっていること →</a></p></div></div></div></section>')
-    L.append(facts())
-    # genres + others
+    L.append('<section class="sec white" aria-labelledby="h-daily"><div class="wrap"><div class="sec-h rv"><h2 id="h-daily">📅 今日の1問</h2>'
+             '<a class="more-link" href="/today/">今日の問題をぜんぶ見る →</a><p>みんな同じ問題。サインインなし、ニックネームだけでランキングに参加できます。</p></div>'
+             f'<ul class="rail" aria-label="今日の問題で勝負できるアプリ">{"".join(daily_card(d) for d in DAILY)}</ul></div></section>')
+    reads = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE)
+    L.append('<section class="sec" aria-labelledby="h-read"><div class="wrap"><div class="sec-h rv"><h2 id="h-read">📖 読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div>'
+             f'<ul class="readlist rv">{reads}</ul></div></section>')
     tiles = ''.join(f'<li class="ctile tilt rv"><span class="e" aria-hidden="true">{CAT_EMO[cid]}</span><h3><a class="stretch" href="/apps/#{cid}">{esc(lb)}</a></h3>'
                     f'<p>{CAT_SUB[cid]}・{len(ds)}本</p><div class="ics" aria-hidden="true">' + ''.join(f'<img src="/{d}/icon-256.webp" width="28" height="28" alt="" loading="lazy">' for d in ds) + '</div></li>'
                     for cid, lb, ds in CATS)
@@ -421,8 +417,7 @@ def page_home():
     L.append('<section class="sec tint" aria-labelledby="h-genre"><div class="wrap"><div class="sec-h rv"><h2 id="h-genre">🔎 ジャンルからさがす</h2>'
              f'<a class="more-link" href="/apps/">アプリ一覧 →</a></div><ul class="ctiles">{tiles}</ul>'
              '<div class="sec-h rv" style="margin-top:34px"><h2 id="h-more" style="font-size:22px">✨ ほかにも、こんなアプリ</h2></div>'
-             f'<ul class="rail" aria-labelledby="h-more">{"".join(app_card(d) for d in others)}</ul><p class="swipe" aria-hidden="true">← 横にスワイプ →</p></div></section>')
-    # news + note
+             f'<ul class="rail" aria-labelledby="h-more">{"".join(app_card(d) for d in others)}</ul></div></section>')
     ns = news_items()[:4]
     L.append('<section class="sec" aria-labelledby="h-news"><div class="wrap"><div class="cols c2"><div>'
              '<div class="sec-h rv"><h2 id="h-news" style="font-size:24px">📣 お知らせ</h2><a class="more-link" href="/news/">ぜんぶ見る →</a></div>'
@@ -433,6 +428,10 @@ def page_home():
     L.append(f'<section class="sec white" id="profile" aria-labelledby="h-me"><div class="wrap">{mc}</div></section>')
     L.append('</main>'); L.append(tail())
     write('/', '\n'.join(L))
+
+def here_play():   # 前のトップの「今日のいもむしを ここで1問」（/today/ に移した）。押したときだけ /play/hitofude/logic.js と /apps/hero-play.js を読む（site.js）
+    return (f'<div class="hpm" id="hpm"><div class="hpm-hd"><p><b>🐛 今日のいもむしを ここで1問</b><small>アプリと同じ今日の盤・登録なし</small></p>'
+            f'<button type="button" class="go sm" data-hp="{V}">▶ ここで遊ぶ</button></div><div id="hpm-body" hidden></div></div>')
 
 OG_PAGES = {}
 def sub_page(path, title_short, title, desc, lead, body, extra_ld=(), crumbs=None, og=None):
@@ -455,9 +454,9 @@ def page_apps():
             '<label class="search" hidden><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="アプリの名前やことばでさがす" aria-label="アプリをさがす"></label>'
             '<p class="empty" id="empty" hidden>見つかりませんでした。ほかのことばでさがしてみてください。</p></div>' + secs)
     g = {"@context": "https://schema.org", "@graph": [ORG, itemlist()]}
-    sub_page('/apps/', 'アプリ一覧', f'アプリ一覧｜{BRAND}（iPhone・無料）',
-             'パズル・のんびりゲーム・対戦・くらしの記録。いまのアプリの iPhone アプリをジャンルごとにまとめました。どれも無料で使えます。',
-             f'パズル・のんびり・対戦・くらしの記録。ぜんぶで {len(ALL)} 本、どれも無料で使えます。', body, [g])
+    body += facts()   # 前のトップの「数字で見る いまのアプリ」
+    sub_page('/apps/', 'アプリ一覧', f'{BRAND}｜毎日1問のパズルなど無料のiPhoneアプリ一覧', DESC_HOME,
+             f'ぜんぶで {len(ALL)} 本、どれも無料で使えます。', body, [g])
 
 def page_today():
     lis = ''
@@ -467,7 +466,7 @@ def page_today():
                 f'<div><p class="nm">{esc(name)}</p><h3>{esc(t)}</h3><p class="w">{esc(w)}</p></div>'
                 f'<div class="acts"><a class="go sm" href="{store(i)}">アプリで挑戦</a>' + (f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
                 f'<a class="ghost" href="/{d}/">くわしく</a></div></li>')
-    body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap"><div class="today">{calendar(big=True)}{countdown()}{rsample("h2")}</div></div></section>'
+    body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap">{here_play()}<div class="today">{calendar(big=True)}{countdown()}{rsample("h2")}</div></div></section>'
             '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>今日の問題があるアプリ</h2>'
             '<p>どのアプリも、今日の問題はみんな同じ。アプリをひらいて「今日の〜」から挑戦できます。</p></div>'
             f'<ol class="dlist">{lis}</ol></div></section>'
@@ -555,7 +554,7 @@ def page_about():
     body = (f'<section class="sec white" style="padding-top:28px"><div class="narrow">{me_card("h2", full=True)}</div></section>'
             '<section class="sec"><div class="narrow"><div class="box rv"><h2>🛠️ 作っているもの</h2>'
             '<p>すきま時間に1問だけ遊べるパズル、指を動かすだけのんびりできるゲーム、友達と遊べる対戦、毎日の記録に使うアプリ。'
-            '毎日の問題は、だれでも同じ盤でくらべられるようにしています。</p>'
+            '毎日の問題は、だれでも同じ盤でくらべられるようにしています。企画・デザイン・プログラム・App Store への申請まで、ひとりで作っています。</p>'
             f'<ul class="linklist" style="padding:0">{counts}</ul></div>'
             '<div class="box rv"><h2>🌱 たいせつにしていること</h2><ul><li>1回が短く、すきま時間に遊べること</li><li>サインインなしで、名前を決めるだけで参加できること</li>'
             '<li>集めるデータは少なく。記録はなるべく iPhone の中に</li></ul></div>'
@@ -567,7 +566,7 @@ def page_about():
     del person_page['mainEntity']['worksFor']
     sub_page('/about/', '作っている人', f'作っている人：いま｜{BRAND}',
              '将棋・ポーカー・アプリ開発が好きな「いま」が、毎日ちょっと遊べる iPhone アプリをひとりで作っています。' + ('note の記事もこちらから。' if NOTE_ON else ''),
-             'いまのアプリを作っている「いま」のページです。', body, [person_page, ORG_LD])
+             '「いま」は作っている人の名前、「いまのアプリ」は いまが作っているアプリのまとまりの名前です。', body, [person_page, ORG_LD])
 
 from content import GLOSS as GLOSS_ALL
 FAQ = [
@@ -662,7 +661,6 @@ def demo_section(d):
     name = NAMES[d][0]; a = APPS[d]
     seo_t, seo_d = SEO[d]
     what = f'<p class="what-a"><b>{esc(name)}</b>は、{esc(a["desc"])}</p>'
-    who = f'<p class="what-b">こんな人に：{esc(a["osusume"][0])}。</p>'
     if d in VIDEO:
         media = (f'<div class="vphone"><video muted loop playsinline preload="none" poster="play.jpg" width="390" height="844" data-vsrc="play.mp4" '
                  f'aria-label="{esc(name)} のプレイのようす（音なし）"></video></div><p class="vcap">▶ プレイのようす（音なし）</p>')
@@ -670,7 +668,7 @@ def demo_section(d):
         imgs = ''.join(f'<div class="slide" style="--k:{k}">{scr(d, f, alt)}</div>' for k, (f, alt) in enumerate(SHOTS[d][:4]))
         media = f'<div class="vphone slides" aria-label="{esc(name)} の画面">{imgs}</div><p class="vcap">アプリの画面</p>'
     return (f'<section class="block demo" aria-labelledby="h-what"><div class="wrap demo-in"><div class="media rv">{media}</div>'
-            f'<div class="whatbox rv"><h2 id="h-what">{esc(name)}とは？</h2>{what}{who}'
+            f'<div class="whatbox rv"><h2 id="h-what">{esc(name)}とは？</h2>{what}'
             f'<ul class="facts"><li><b>料金</b>{esc(a.get("ads", ADS))}</li><li><b>対応</b>iPhone（iOS {a.get("minos", "18")} 以降）</li>'
             f'<li><b>ジャンル</b><a href="/apps/{CAT_OF[d][0]}/">{CAT_EMO[CAT_OF[d][0]]} {esc(CAT_OF[d][1])}</a></li>' +
             (f'<li><b>今日の問題</b><a href="/today/">毎日0時（日本時間）にかわる</a></li>' if d in DAILY else '') +
@@ -692,7 +690,6 @@ def midokoro_section(d):
             f'<video muted loop playsinline preload="none" poster="media/midokoro.jpg" width="360" height="640" data-vsrc="media/midokoro.mp4" '
             f'aria-label="{esc(name)} の見どころ「{esc(hook)}」（音なし・約4秒）"></video></div>'
             f'<div class="mdk-t rv"><h2 id="h-mdk">✨ 見どころ</h2><p class="mdk-hook">{esc(hook)}</p>'
-            f'<p>アプリの本物の画面で作った、4秒ほどの短い動画です（音なし）。</p>'
             f'<p><a class="more-link" href="{store(NAMES[d][1])}">App Store で見る →</a></p></div></div></section>')
 
 def today_mini(d):
@@ -700,7 +697,7 @@ def today_mini(d):
     name, i, _ = NAMES[d]; k, w = DAILY_LINE[d].split('：', 1)
     play = f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else ''
     return (f'<section class="block todaymini" aria-labelledby="h-tm"><div class="wrap"><div class="today">{calendar()}{countdown()}'
-            f'<div class="tmtext rv"><h2 id="h-tm">📅 {esc(k)}</h2><p>{esc(w)}。毎日0時（日本時間）に新しい問題になります。</p>'
+            f'<div class="tmtext rv"><h2 id="h-tm">📅 {esc(k)}</h2><p>{esc(w)}。</p>'
             f'<div class="btns"><a class="go sm" href="{store(i)}" data-confetti>アプリで挑戦</a>{play}<a class="ghost" href="/today/">ほかの今日の問題</a></div></div></div></div></section>')
 
 def updates_section(d):
@@ -773,13 +770,72 @@ def landing(d):
     out = nowrap_text(out)
     open(f'{R}/{d}/index.html', 'w', encoding='utf-8').write(out)
 
+# ---------------- 読み物（/guide/） ----------------
+# 本文は guide/<slug>.html（1行目の <!-- {...} --> に title・short・desc・lead・published・modified）。このファイルが head・ヘッダー・フッター・JSON-LD をつける。
+# よくある質問（<details class="qa">）は、本文から FAQPage の JSON-LD も作る。一覧（トップ・/guide/）の順は GUIDE（新しい順）
+def gtitle(t):   # 「本題｜サブ」→ サブを2行目に（一覧で「｜」が行の頭に来ないように）
+    a, _, b = t.partition('｜')
+    return esc(a) + (f'<span class="st">{esc(b)}</span>' if b else '')
+
+def guide_meta(slug):
+    s = open(f'{HERE}/guide/{slug}.html', encoding='utf-8').read()
+    m = re.match(r'<!-- (\{.*?\}) -->\n', s)
+    return json.loads(m.group(1)), s[m.end():]
+
+def jp_date(iso):
+    y, m, d = map(int, iso.split('-')); return f'{y}年{m}月{d}日'
+
+PERSON = {"@type": "Person", "@id": BASE + "/about/#ima", "name": "いま", "url": BASE + "/about/"}
+
+def page_guide_article(slug):
+    meta, body = guide_meta(slug)
+    path = f'/guide/{slug}/'; og = 'guide-' + slug
+    OG_PAGES[og] = (meta['short'], meta['desc'])
+    cr = [('/', 'ホーム'), ('/guide/', '読み物'), (None, meta['short'])]
+    art = {"@context": "https://schema.org", "@type": "Article", "headline": meta['title'], "description": meta['desc'],
+           "datePublished": meta['published'], "dateModified": meta['modified'], "inLanguage": "ja", "mainEntityOfPage": BASE + path,
+           "image": f'{BASE}/apps/og/{og}.jpg', "author": PERSON,
+           "publisher": {"@type": "Organization", "@id": BASE + "/#org", "name": BRAND, "logo": {"@type": "ImageObject", "url": BASE + "/apps/logo.png"}}}
+    qa = re.findall(r'<details class="qa[^"]*"><summary>(.*?)</summary><div class="a">(.*?)</div></details>', body, re.S)
+    lds = [crumb_ld(cr, path), art]
+    if qa:
+        lds.append({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": re.sub('<[^>]+>', '', q), "acceptedAnswer": {"@type": "Answer", "text": re.sub('<[^>]+>', '', a).strip()}} for q, a in qa]})
+    dl = (f'<p class="rv dateline"><time datetime="{meta["published"]}">{jp_date(meta["published"])}</time> 公開' +
+          (f'・<time datetime="{meta["modified"]}">{jp_date(meta["modified"])}</time> 更新' if meta['modified'] != meta['published'] else '') + '　')
+    body = body.replace('<p class="rv dateline">', dl, 1)
+    others = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t, _ in GUIDE if s != slug)
+    h = head(path, meta['title'], meta['desc'], lds, og_img=f'{BASE}/apps/og/{og}.jpg', og_type='article')
+    h = h.replace('<meta property="og:type" content="article">', f'<meta property="og:type" content="article">\n<meta property="article:published_time" content="{meta["published"]}">', 1)
+    L = [h, header('/guide/'), '<main id="main">',
+         '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb(cr) +
+         f'<div class="wrap"><h1>{esc(meta["title"])}</h1><p class="lead2">{meta["lead"]}</p></div></section>',
+         f'<article class="sec" style="padding-top:20px"><div class="narrow">{body}'
+         f'<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">📖 ほかの読み物</h2><a class="more-link" href="/guide/">ぜんぶ見る →</a></div><ul class="readlist rv">{others}</ul>'
+         '</div></article>', '</main>', tail()]
+    write(path, '\n'.join(L))
+
+def page_guide():
+    for s, _, _ in GUIDE: page_guide_article(s)
+    lis = ''
+    for s, t, dt in GUIDE:
+        meta, _ = guide_meta(s)
+        lis += f'<li><a href="/guide/{s}/">{gtitle(t)}<small class="gd">{esc(meta["desc"])}</small></a></li>'
+    items = {"@context": "https://schema.org", "@type": "ItemList", "name": "読み物", "itemListElement": [
+        {"@type": "ListItem", "position": k + 1, "url": f'{BASE}/guide/{s}/', "name": t} for k, (s, t, _) in enumerate(GUIDE)]}
+    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow"><ul class="readlist">{lis}</ul>'
+            '<p class="rv" style="margin-top:18px">パズルのコツや、作っていて気づいたことなどを、ゆっくり増やしていきます。</p></div></section>')
+    sub_page('/guide/', '読み物', f'読み物｜パズルのコツと遊び方のメモ｜{BRAND}',
+             'パズルのコツや遊び方のメモをまとめています。毎日1問のパズルアプリをつくる「いま」が書いています。',
+             'パズルのコツや遊び方のメモです。', body, [items])
+
 # ---------------- 新しいページ ----------------
 def page_category(cid):
     lb = dict((c, l) for c, l, _ in CATS)[cid]; ds = dict((c, x) for c, _, x in CATS)[cid]
     h1, intro = CAT_INTRO[cid]
     items = [{"@type": "ListItem", "position": k + 1, "url": f"{BASE}/{d}/", "name": NAMES[d][0]} for k, d in enumerate(ds)]
     others = ''.join(f'<li><a href="/apps/{c}/"><span aria-hidden="true" style="font-size:24px">{CAT_EMO[c]}</span><span>{esc(l)}</span></a></li>' for c, l, _ in CATS if c != cid)
-    body = (f'<section class="sec" style="padding-top:16px"><div class="wrap"><ul class="grid">{"".join(app_card(d) for d in ds)}</ul></div></section>'
+    body = (f'<section class="sec" style="padding-top:16px"><div class="wrap"><ul class="grid">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>'
             f'<section class="sec white"><div class="wrap"><div class="sec-h"><h2 style="font-size:22px">ほかのジャンル</h2></div><ul class="linklist">{others}'
             '<li><a href="/apps/"><span aria-hidden="true" style="font-size:24px">📱</span><span>すべてのアプリ</span></a></li></ul></div></section>')
     sub_page(f'/apps/{cid}/', f'{CAT_EMO[cid]} {h1}', f'{h1}｜{BRAND}', intro[:110], esc(intro), body,
@@ -804,7 +860,7 @@ def page_now():
 def page_sitemap():
     groups = [('あそぶ', [('/', 'ホーム'), ('/start/', 'どれが合う？3問で診断'), ('/today/', '今日の問題'), ('/play/', 'ブラウザで遊ぶ'), ('/zukan/', 'あそびかた図鑑（しかけとルール）'), ('/ranking/', 'ランキングのしくみ'), ('/news/', 'お知らせ・更新情報')]),
               ('アプリ', [('/apps/', 'アプリ一覧')] + [(f'/apps/{c}/', l) for c, l, _ in CATS]),
-              ('いまのこと', [('/about/', '作っている人'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事')] if NOTE_ON else [])),
+              ('いまのこと', [('/about/', '作っている人'), ('/guide/', '読み物'), ('/now/', 'いま やっていること')] + ([('/note/', 'note の記事')] if NOTE_ON else [])),
               ('サポート', [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ'), ('/apps/sitemap/', 'サイトマップ')])]
     body = '<section class="sec" style="padding-top:16px"><div class="narrow">'
     for h, ls in groups:
@@ -1162,13 +1218,14 @@ def page_404():
     open(f'{R}/404.html', 'w', encoding='utf-8').write(nowrap_text(out))
 
 # ---------------- OG 画像・llms.txt ----------------
-def make_og():
+def make_og(only=None):   # only: 作る画像の名前（OG_PAGES のキー）だけ。None なら全部
     from playwright.sync_api import sync_playwright
     os.makedirs(f'{R}/apps/og', exist_ok=True)
     icons = ''.join(f"<img src='file://{R}/{d}/icon-256.webp'>" for d in ALL[:10])
     with sync_playwright() as p:
         b = p.webkit.launch(); pg = b.new_page(viewport={'width': 1200, 'height': 630})
         for key, (t, desc) in OG_PAGES.items():
+            if only is not None and key not in only: continue
             h = (f"<html><head><meta charset='utf-8'><style>body{{margin:0;width:1200px;height:630px;background:#fff7e8;font-family:'Hiragino Maru Gothic ProN','Hiragino Sans',sans-serif;color:#3b2b1f;position:relative;overflow:hidden}}"
                  ".b1{position:absolute;width:520px;height:520px;border-radius:50%;background:#bde0fe;right:-160px;top:-200px}.b2{position:absolute;width:300px;height:300px;border-radius:50%;background:#caffbf;left:-100px;bottom:-120px}"
                  ".in{position:absolute;left:80px;top:90px;right:80px}.lg{font-size:34px;font-weight:800}.lg i{font-style:normal;color:#d9512b}"
@@ -1219,11 +1276,12 @@ def make_og_en():
     os.remove(f'{HERE}/og_tmp.html')
 
 def llms():
-    L = [f'# {BRAND}', '', '> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。', '',
-         '## ページ', f'- [ホーム]({BASE}/): サイトのトップ', f'- [今日の問題]({BASE}/today/): 毎日0時（日本時間）にかわる、みんな同じ1問',
+    L = [f'# {BRAND}', '', '> 「いま」の個人のホームページ。いまがひとりで作っている iPhone アプリ（いまのアプリ）と読み物。アプリは、毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。', '',
+         '## ページ', f'- [ホーム]({BASE}/): いまのホームページ（アプリ・読み物・note の記事）', f'- [今日の問題]({BASE}/today/): 毎日0時（日本時間）にかわる、みんな同じ1問',
          f'- [どれが合う？]({BASE}/start/): 3つの質問で、合いそうなアプリをえらぶ',
          f'- [あそびかた図鑑]({BASE}/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ',
          f'- [ランキングのしくみ]({BASE}/ranking/): サインインなし、ニックネームだけで参加', f'- [アプリ一覧]({BASE}/apps/): すべてのアプリ',
+         f'- [読み物]({BASE}/guide/): パズルのコツと遊び方のメモ'] + [f'  - [{t}]({BASE}/guide/{s}/)' for s, t, _ in GUIDE] + [
          f'- [お知らせ]({BASE}/news/): アップデートとリリース', f'- [よくある質問]({BASE}/faq/): 無料・広告・データ・通知・機種変更',
          f'- [作っている人]({BASE}/about/): いま（将棋・ポーカー・アプリ開発が好き）', f'- [いま やっていること]({BASE}/now/)', f'- [お問い合わせ]({BASE}/contact/)', '', '## アプリ']
     for cid, lb, ds in CATS:
@@ -1583,12 +1641,13 @@ def build_en():
 
 if __name__ == '__main__':
     page_home(); page_apps(); page_today(); page_ranking(); page_news(); (page_note() if NOTE_ON else None); page_about(); page_faq(); page_contact()
-    page_now(); page_sitemap(); page_start(); page_zukan(); page_404()
+    page_now(); page_sitemap(); page_start(); page_zukan(); page_404(); page_guide()
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     for d in JOIN: page_join(d)
     build_en()
     llms()
     if '--og' in sys.argv: make_og()
+    elif '--og-new' in sys.argv: make_og([k for k in OG_PAGES if not os.path.exists(f'{R}/apps/og/{k}.jpg')] + [a[10:] for a in sys.argv if a.startswith('--og-also=')])   # まだない画像だけ（--og-also=apps で作りなおすものを足せる）
     if '--og-en' in sys.argv: make_og_en(); build_en()   # 画像ができてから英語のページを作りなおす（og:image を画像に向ける）
     print('ok', sorted(OG_PAGES))

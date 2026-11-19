@@ -156,21 +156,20 @@ def page(d):
     w(topbar())
     w('<main>')
     # hero
-    chips = ''.join(f'<li>{esc(c)}</li>' for c in a['chips'])
+    # a['chips'] は出さない（2026-11-19 補足を減らす: リード文・「とは？」・特徴と同じことの言いかえ）
     w(f'<section class="hero"><div class="wrap">'
       f'<img class="icon" src="icon-256.webp" width="120" height="120" alt="{esc(name)} のアイコン">'
       f'<p class="eyebrow">{esc(a["eyebrow"])}（iPhone）</p>'
       f'<h1>{esc(name)}</h1>'
       f'<p class="catch">{a["catch"]}</p>'
       f'<p class="lead">{esc(a["lead"])}</p>'
-      f'<ul class="chips" aria-label="特長">{chips}</ul>'
       f'{store_btn(i)}'
       f'<p class="price">{esc(price)}／iPhone（iOS {minos} 以降）</p>'
       f'</div></section>')
     # shots
     lis = ''.join(f'<li><img src="shots/{f}.webp" width="480" height="1043" alt="{esc(alt)}"{LAZY} decoding="async"></li>'
                   for k, (f, alt) in enumerate(shots))
-    w(f'<section class="shots" aria-label="スクリーンショット"><ul>{lis}</ul><p class="hint">← 横にスクロールできます →</p></section>')
+    w(f'<section class="shots" aria-label="スクリーンショット"><ul>{lis}</ul></section>')
     # ranking / versus
     rk = a.get('rank')
     if rk:
@@ -181,7 +180,7 @@ def page(d):
         rshot = (f'<img class="rshot" src="shots/{rs[0][0]}.webp" width="480" height="1043" alt="{esc(rs[0][1])}" loading="lazy">' if rs else '')
         pts = ''.join(f'<li><b>{esc(t)}</b><span>{esc(x)}</span></li>' for t, x in rk['points'])
         note = f'<p class="note">{esc(rk["note"])}</p>' if rk.get('note') else ''
-        w(f'<section class="block rank" id="ranking"><div class="wrap">{VS if versus else TROPHY}<span class="tag">{tag}</span>'
+        w(f'<section class="block rank" id="ranking"><div class="wrap">{VS if versus else TROPHY}'
           f'<h2>{esc(rk["h"])}</h2><div class="{rcls}">{rshot}<div><ol>{pts}</ol>{note}</div></div>'
           f'<div class="cta-in">{store_btn(i, "App Store（無料）で", "勝負してみる" if not versus else "対局してみる")}</div></div></section>')
     # osusume

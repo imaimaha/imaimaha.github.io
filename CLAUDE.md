@@ -1,4 +1,5 @@
 > **2026-11-19 更新: サイトのトップ（/index.html）はアプリの紹介（ポートフォリオ）になった。**
+> **2026-11-19 夜: トップは「いま」の個人のホームページ（アプリ・読み物 /guide/・note）に。サイト名は「いまのアプリ」のまま。トップ・/apps/・/today/・各アプリの紹介ページ・/guide/ は apps/tools/sitegen/site2.py が作る（HTML を直接直すと作りなおしで消える）。読み物の本文は apps/tools/sitegen/guide/<slug>.html。サイトの住所は gen.py の BASE の1か所。/play/* は手で書いたページ。**
 > Notre の Web ポータルは 2026-11-19 に閉じた（Notre は iOS アプリで使う）。古い Notre のページ（login.html・diary.html など）はファイルだけ残しているが、どこからもリンクしていない。
 > sw.js は「キャッシュを消して自分を登録解除する」だけの Service Worker にした（ホーム画面に追加した古い PWA が古い画面を出し続けないように）。
 > トップ・/apps/・各アプリの紹介ページ（<アプリ>/index.html）はふつうの静的 HTML なので、直接編集してよい。共通 CSS は /apps/site.css。アプリの一覧データ /apps/list.json はアプリが読むので形を変えない。
