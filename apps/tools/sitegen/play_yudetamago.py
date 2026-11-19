@@ -220,7 +220,7 @@ head = r'''/* つるっと ゆでたまご剥き — ブラウザ版「今日の
   // 今日のたまご（クリスマス期間は、見た目だけクリスマスのたまご。中身は同じ。アプリの startDailyPre と同じ）
   var DAILY_ID = L.dailyEgg(dstr(DAY)).id;
   if (window.Xmas && Xmas.active()) DAILY_ID = 'xmas:' + DAILY_ID;
-  WP.init({ ns: 'yudetamago', day: DAY, name: '今日のたまご', tag: '今日のたまご', emoji: '🥚', url: 'https://imaimaha.github.io/play/yudetamago/',
+  WP.init({ ns: 'yudetamago', day: DAY, name: '今日のたまご', tag: '今日のたまご', emoji: '🥚', url: 'https://imaimaha.com/play/yudetamago/',
     appId: '6821884836', appLabel: 'アプリなら 図鑑とランキングで勝負', landing: '../../yudetamago/', landingName: 'つるっと ゆでたまご剥き',
     today: jstDay });
   // 遊ぶところ（#yd-game）の中の位置。アプリは画面いっぱいなので window の大きさを使っていた
@@ -229,7 +229,7 @@ head = r'''/* つるっと ゆでたまご剥き — ブラウザ版「今日の
   function ex(e) { return e.clientX - (e.clientX || e.clientY ? el.stage.getBoundingClientRect().left : 0); }
   function ey(e) { return e.clientY - (e.clientX || e.clientY ? el.stage.getBoundingClientRect().top : 0); }
 '''
-head = head.replace('https://imaimaha.github.io', BASE)   # サイトの住所は gen.py の BASE
+head = head.replace('https://imaimaha.com', BASE)   # サイトの住所は gen.py の BASE
 # 本体の先頭3行（(function () { / if (...) return; / var L = YudeLogic;）をとりかえる
 bl = body.split('\n')
 assert bl[0].startswith('(function () {') and 'typeof THREE' in bl[1] and 'var L = YudeLogic' in bl[2]

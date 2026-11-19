@@ -8,7 +8,7 @@
   var WP = root.WebPlay, J = JDDaily, D = JimiData, C = J.CONFIG;
   var $ = function (id) { return document.getElementById(id); };
   var DAY = J.dayKey();
-  WP.init({ ns: 'jimidrive', day: DAY, name: '今日のドライブ', tag: '今日のドライブ', emoji: '🚗', url: 'https://imaimaha.github.io/play/jimidrive/',
+  WP.init({ ns: 'jimidrive', day: DAY, name: '今日のドライブ', tag: '今日のドライブ', emoji: '🚗', url: 'https://imaimaha.com/play/jimidrive/',
     appId: '6818812573', appLabel: 'アプリなら 5路線とランキングで勝負', landing: '../../jimidrive/', landingName: 'ナンバー暗算ドライブ',
     today: function () { return J.dayKey(); } });
 

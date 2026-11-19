@@ -7,7 +7,7 @@
   var WP = root.WebPlay;
   var $ = function (id) { return document.getElementById(id); };
   var DAY = SJ.dayKey();
-  WP.init({ ns: 'suji', day: DAY, name: '今日のすうじのへや', emoji: '🏠', url: 'https://imaimaha.github.io/play/suji/',
+  WP.init({ ns: 'suji', day: DAY, name: '今日のすうじのへや', emoji: '🏠', url: 'https://imaimaha.com/play/suji/',
     appId: '6825416177', appLabel: 'アプリなら 365ステージとランキングで勝負', landing: '../../suji/', landingName: 'すうじのへや',
     today: function () { return SJ.dayKey(); } });
 

@@ -12,7 +12,7 @@ PROFILE = f'https://note.com/{USER}'
 API = f'https://note.com/api/v2/creators/{USER}/contents?kind=note&page='
 RSS = f'https://note.com/{USER}/rss'
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'note.json')
-UA = {'User-Agent': 'imanoapp-site/1.0 (+https://imaimaha.github.io/)'}
+UA = {'User-Agent': 'imanoapp-site/1.0 (+https://imaimaha.com/)'}
 
 def get(url):
     with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=20) as r:

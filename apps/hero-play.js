@@ -120,7 +120,7 @@
     if (!DEMO && a.indexOf(DAY) < 0) { a.push(DAY); a.sort(); st.hitofude = a.slice(-40); lset('web.stamps', st); }
     var n = 1, lim = [45, 90, 150, 240]; for (var q = 0; q < lim.length; q++) if (sec <= lim[q]) { n = lim.length + 1 - q; break; }
     var row = ''; for (q = 0; q < 5; q++) row += q < n ? '🍃' : '🤍'; row = '🐛' + row + '🦋';
-    var p = DAY.split('-'), text = '今日のいもむし ' + (+p[1]) + '/' + (+p[2]) + ' ' + row + ' ' + fmt(sec) + ' #今日のいもむし https://imaimaha.github.io/play/hitofude/';
+    var p = DAY.split('-'), text = '今日のいもむし ' + (+p[1]) + '/' + (+p[2]) + ' ' + row + ' ' + fmt(sec) + ' #今日のいもむし https://imaimaha.com/play/hitofude/';
     win.textContent = '';
     win.appendChild(el('p', 'hpm-wh', '🦋 ちょうちょになった！'));
     win.appendChild(el('p', 'hpm-wt', fmt(sec)));

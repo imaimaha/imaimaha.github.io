@@ -2047,7 +2047,7 @@
   // 設定（Supabase の URL と、公開してよい publishable キー）は config.js。ないときはオンラインだけ「準備中」
   var NETCFG = window.SHOGI_CONFIG || window.DUEL_CONFIG || null;
   var APP_STORE_URL = '';      // TODO: 変則将棋を App Store に出したら、ここに URL を入れる（ブラウザ版の「アプリが遊びやすいよ」にボタンが出る）
-  var INVITE_BASE = 'https://imaimaha.github.io/shogi/';
+  var INVITE_BASE = 'https://imaimaha.com/shogi/';
   var ON = { client: null, ch: null, net: null, code: null, host: false, oppHere: false, joinTimer: null, cfgPending: null, clk: null, turnStart: 0, tick: null, lowBeep: -1, claimAt: 0, claimed: false, pick: false };
   var CLOCK = ShogiNet.Clock;
   function onlineReady() { return typeof supabase !== 'undefined' && NETCFG && NETCFG.SUPABASE_URL && NETCFG.SUPABASE_ANON_KEY; }

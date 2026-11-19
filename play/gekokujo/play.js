@@ -7,7 +7,7 @@
   'use strict';
   var WP = root.WebPlay, C = DuelCore;
   var $ = function (id) { return document.getElementById(id); };
-  WP.init({ ns: 'gekokujo', day: '', name: '下剋上デュエル', emoji: '⚔️', url: 'https://imaimaha.github.io/play/gekokujo/',
+  WP.init({ ns: 'gekokujo', day: '', name: '下剋上デュエル', emoji: '⚔️', url: 'https://imaimaha.com/play/gekokujo/',
     appId: '6821823101', appLabel: '下剋上デュエル', landing: '../../gekokujo/', landingName: '下剋上デュエル' });
 
   var CFG = { CPU_THINK: [550, 1100], FLIP_SHOW: 1700, FX_SHOW: 2200 };   // アプリの game.js の CFG と同じ
@@ -296,7 +296,7 @@
     // シェア（数字の並びは出さない。勝敗と点数だけ）
     var row = s.history.map(function (h) { return h.winner === me ? (h.gekokujo ? '💥' : '🟢') : h.winner === -1 ? '⚪' : '🔴'; }).join('');
     var text = '下剋上デュエルで CPU（' + LEVEL_NAMES[A.level] + '）に' + (res === me ? '勝った！ ' : res === -1 ? '引き分け ' : '負けた… ') + s.score[me] + '-' + s.score[1 - me] +
-      (gk ? '（下剋上 ' + gk + '回）' : '') + ' ' + row + ' #下剋上デュエル https://imaimaha.github.io/play/gekokujo/';
+      (gk ? '（下剋上 ' + gk + '回）' : '') + ' ' + row + ' #下剋上デュエル https://imaimaha.com/play/gekokujo/';
     var msg = el('p', 'copied', '');
     var ag = el('button', 'btn main', 'もう一回'); ag.type = 'button'; ag.id = 'gk-again';
     ag.addEventListener('click', function () { WP.closeClear(); start(); });

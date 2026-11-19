@@ -18,7 +18,7 @@
     ['yudetamago', '', '🥚', '今日のたまご', 'つるっと ゆでたまご剥き']
   ];
   var WD = '日月火水木金土';
-  var URL = 'https://imaimaha.github.io/play/';
+  var URL = 'https://imaimaha.com/play/';
 
   function dayKey() {
     var t = new Date(Date.now() + 324e5), m = t.getUTCMonth() + 1, d = t.getUTCDate();

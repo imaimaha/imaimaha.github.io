@@ -9,7 +9,7 @@
   var WP = root.WebPlay, KZ = root.KZ;
   var $ = function (id) { return document.getElementById(id); };
   var DAY = KZ.dayKey();
-  WP.init({ ns: 'kakezan', day: DAY, name: '今日のステージ', tag: '暗算ランナー', emoji: '🏃', url: 'https://imaimaha.github.io/play/kakezan/',
+  WP.init({ ns: 'kakezan', day: DAY, name: '今日のステージ', tag: '暗算ランナー', emoji: '🏃', url: 'https://imaimaha.com/play/kakezan/',
     appId: '6821955613', appLabel: 'アプリなら 200ステージとランキングで勝負', landing: '../../kakezan/', landingName: '暗算ランナー',
     today: function () { return KZ.dayKey(); } });
 

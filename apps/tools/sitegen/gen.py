@@ -8,7 +8,7 @@ from apps_data import APPS, NAMES, SHOTS, ADS, DAILY, DAILY_LINE, CATS
 
 S = os.path.dirname(os.path.abspath(__file__))
 R = os.path.expanduser('~/Developer/imaimaha.github.io')
-BASE = 'https://imaimaha.github.io'   # サイトの住所はここ1か所だけ（site2.py・crawl.py・play_yudetamago.py もここを使う）。独自ドメインにしたらここを変える
+BASE = 'https://imaimaha.com'   # サイトの住所はここ1か所だけ（site2.py・crawl.py・play_yudetamago.py もここを使う）。独自ドメインにしたらここを変える
 NOTE = 'https://note.com/redemarrage22'
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 BRAND = 'いまのアプリ'

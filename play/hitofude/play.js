@@ -7,7 +7,7 @@
   var WP = root.WebPlay;
   var $ = function (id) { return document.getElementById(id); };
   var DAY = HF.dayKey();
-  WP.init({ ns: 'hitofude', day: DAY, name: '今日のいもむし', tag: '今日のいもむし', emoji: '🦋', url: 'https://imaimaha.github.io/play/hitofude/',
+  WP.init({ ns: 'hitofude', day: DAY, name: '今日のいもむし', tag: '今日のいもむし', emoji: '🦋', url: 'https://imaimaha.com/play/hitofude/',
     appId: '6823269398', appLabel: 'アプリなら 200ステージとランキングで勝負', landing: '../../hitofude/', landingName: 'ひとふでいもむし',
     today: function () { return HF.dayKey(); } });
 

@@ -41,4 +41,4 @@ Disallow: /scripts/
 Disallow: /mac-app/
 Disallow: /apps/tools/
 
-Sitemap: https://imaimaha.github.io/sitemap.xml
+Sitemap: https://imaimaha.com/sitemap.xml

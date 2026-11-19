@@ -9,7 +9,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var FOODS = OB.FOODS;
   var DAY = OB.dayKey();
-  WP.init({ ns: 'okazu', day: DAY, name: '今日のおべんとう', tag: '今日のおべんとう', emoji: '🍱', url: 'https://imaimaha.github.io/play/okazu/',
+  WP.init({ ns: 'okazu', day: DAY, name: '今日のおべんとう', tag: '今日のおべんとう', emoji: '🍱', url: 'https://imaimaha.com/play/okazu/',
     appId: '6823270044', appLabel: 'アプリなら 200ステージとランキングで勝負', landing: '../../okazu/', landingName: 'おかず詰めパズル',
     today: function () { return OB.dayKey(); } });
 

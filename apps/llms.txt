@@ -3,43 +3,43 @@
 > 「いま」の個人のホームページ。いまがひとりで作っている iPhone アプリ（いまのアプリ）と読み物。アプリは、毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。
 
 ## ページ
-- [ホーム](https://imaimaha.github.io/): いまのホームページ（アプリ・読み物・note の記事）
-- [今日の問題](https://imaimaha.github.io/today/): 毎日0時（日本時間）にかわる、みんな同じ1問
-- [どれが合う？](https://imaimaha.github.io/start/): 3つの質問で、合いそうなアプリをえらぶ
-- [あそびかた図鑑](https://imaimaha.github.io/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ
-- [ランキングのしくみ](https://imaimaha.github.io/ranking/): サインインなし、ニックネームだけで参加
-- [アプリ一覧](https://imaimaha.github.io/apps/): すべてのアプリ
-- [読み物](https://imaimaha.github.io/guide/): パズルのコツと遊び方のメモ
-  - [一筆書きパズルのコツ｜行き止まりを先に見つける考え方](https://imaimaha.github.io/guide/hitofude-kotsu/)
-  - [毎日1問のパズルアプリの選び方｜5つの見るポイント](https://imaimaha.github.io/guide/mainichi-1mon-puzzle/)
-  - [4つの数字で10を作る暗算のコツ｜5つの考え方](https://imaimaha.github.io/guide/make-10-anzan/)
-- [お知らせ](https://imaimaha.github.io/news/): アップデートとリリース
-- [よくある質問](https://imaimaha.github.io/faq/): 無料・広告・データ・通知・機種変更
-- [作っている人](https://imaimaha.github.io/about/): いま（将棋・ポーカー・アプリ開発が好き）
-- [いま やっていること](https://imaimaha.github.io/now/)
-- [お問い合わせ](https://imaimaha.github.io/contact/)
+- [ホーム](https://imaimaha.com/): いまのホームページ（アプリ・読み物・note の記事）
+- [今日の問題](https://imaimaha.com/today/): 毎日0時（日本時間）にかわる、みんな同じ1問
+- [どれが合う？](https://imaimaha.com/start/): 3つの質問で、合いそうなアプリをえらぶ
+- [あそびかた図鑑](https://imaimaha.com/zukan/): ゲームのしかけとルール（ひとふでいもむし・すうじのへや・おかず詰めパズル・変則将棋・ふたり大富豪・下剋上デュエル）を絵でひとつずつ
+- [ランキングのしくみ](https://imaimaha.com/ranking/): サインインなし、ニックネームだけで参加
+- [アプリ一覧](https://imaimaha.com/apps/): すべてのアプリ
+- [読み物](https://imaimaha.com/guide/): パズルのコツと遊び方のメモ
+  - [一筆書きパズルのコツ｜行き止まりを先に見つける考え方](https://imaimaha.com/guide/hitofude-kotsu/)
+  - [毎日1問のパズルアプリの選び方｜5つの見るポイント](https://imaimaha.com/guide/mainichi-1mon-puzzle/)
+  - [4つの数字で10を作る暗算のコツ｜5つの考え方](https://imaimaha.com/guide/make-10-anzan/)
+- [お知らせ](https://imaimaha.com/news/): アップデートとリリース
+- [よくある質問](https://imaimaha.com/faq/): 無料・広告・データ・通知・機種変更
+- [作っている人](https://imaimaha.com/about/): いま（将棋・ポーカー・アプリ開発が好き）
+- [いま やっていること](https://imaimaha.com/now/)
+- [お問い合わせ](https://imaimaha.com/contact/)
 
 ## アプリ
 ### パズル・脳トレ
-- [ひとふでいもむし](https://imaimaha.github.io/hitofude/): いもむしを指でなぞって葉っぱを食べる一筆書きパズル。毎日の「今日のいもむし」はみんな同じ盤でタイム勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823269398
-- [すうじのへや](https://imaimaha.github.io/suji/): 数字をヒントに盤をへやに分ける「へや割り」と、住人を入れる「住人さがし」。今日の問題はみんな同じでタイム勝負。全365ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6825416177
-- [おかず詰めパズル](https://imaimaha.github.io/okazu/): おかずをお弁当箱につめて、たてかよこを1列そろえるブロックパズル。毎日の「今日のおべんとう」はみんな同じ問題で勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823270044
-- [暗算ランナー](https://imaimaha.github.io/kakezan/): 左右の計算ゲートの得なほうをくぐって数をふやす暗算ランゲーム。毎日の「今日のステージ」はみんな同じコースで、どこまで行けるか勝負。全200ステージ。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821955613
-- [ナンバー暗算ドライブ](https://imaimaha.github.io/jimidrive/): すれ違う車のナンバー4桁で10を作れるかを数秒で判断する暗算ゲーム。毎日の「今日のドライブ」はみんな同じナンバーでランキング勝負。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6818812573
+- [ひとふでいもむし](https://imaimaha.com/hitofude/): いもむしを指でなぞって葉っぱを食べる一筆書きパズル。毎日の「今日のいもむし」はみんな同じ盤でタイム勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823269398
+- [すうじのへや](https://imaimaha.com/suji/): 数字をヒントに盤をへやに分ける「へや割り」と、住人を入れる「住人さがし」。今日の問題はみんな同じでタイム勝負。全365ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6825416177
+- [おかず詰めパズル](https://imaimaha.com/okazu/): おかずをお弁当箱につめて、たてかよこを1列そろえるブロックパズル。毎日の「今日のおべんとう」はみんな同じ問題で勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823270044
+- [暗算ランナー](https://imaimaha.com/kakezan/): 左右の計算ゲートの得なほうをくぐって数をふやす暗算ランゲーム。毎日の「今日のステージ」はみんな同じコースで、どこまで行けるか勝負。全200ステージ。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821955613
+- [ナンバー暗算ドライブ](https://imaimaha.com/jimidrive/): すれ違う車のナンバー4桁で10を作れるかを数秒で判断する暗算ゲーム。毎日の「今日のドライブ」はみんな同じナンバーでランキング勝負。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6818812573
 ### のんびり
-- [つるっと ゆでたまご剥き](https://imaimaha.github.io/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
-- [ねばっと 納豆フィルム剥がし](https://imaimaha.github.io/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
-- [まどのしずく](https://imaimaha.github.io/madoshizuku/): 雨の日の車の窓で、指でしずくを集めて大きくする、のんびりゲーム。5つの雨と12の景色、眠る前の雨音タイマー、60秒チャレンジのランキングつき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821822966
+- [つるっと ゆでたまご剥き](https://imaimaha.com/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
+- [ねばっと 納豆フィルム剥がし](https://imaimaha.com/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
+- [まどのしずく](https://imaimaha.com/madoshizuku/): 雨の日の車の窓で、指でしずくを集めて大きくする、のんびりゲーム。5つの雨と12の景色、眠る前の雨音タイマー、60秒チャレンジのランキングつき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821822966
 ### 対戦
-- [変則将棋対戦](https://imaimaha.github.io/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
-- [下剋上デュエル](https://imaimaha.github.io/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
-- [ふたり大富豪](https://imaimaha.github.io/futaridaifugo/): ジョーカーなしの52枚を赤と黒に分けて、ふたりで遊ぶ大富豪。5スキップ・7わたし・8切り・10すて・イレブンバック・革命。CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6836394499
-- [ポーカー プリフロ練習](https://imaimaha.github.io/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
+- [変則将棋対戦](https://imaimaha.com/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
+- [下剋上デュエル](https://imaimaha.com/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
+- [ふたり大富豪](https://imaimaha.com/futaridaifugo/): ジョーカーなしの52枚を赤と黒に分けて、ふたりで遊ぶ大富豪。5スキップ・7わたし・8切り・10すて・イレブンバック・革命。CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6836394499
+- [ポーカー プリフロ練習](https://imaimaha.com/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
 ### くらし・記録
-- [おさんぽ日記](https://imaimaha.github.io/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
-- [積読記録](https://imaimaha.github.io/tsundoku/): まだ読んでいない本（積読）を背表紙のタワーにして見せる読書記録アプリ。バーコードで登録、読書タイマー、図書館の返却日のお知らせつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821840892
-- [居候お掃除マン](https://imaimaha.github.io/osouji/): いっしょに住む人と家のおそうじを分担するアプリ。やったら報告、もう1人が確認して OK。予定のお知らせやごほうびポイントつき。会員登録なし・広告なしの無料アプリ。 App Store: https://apps.apple.com/jp/app/id6829721534
-- [Notre Endroit](https://imaimaha.github.io/notre-app/): 恋人や夫婦など、ふたりだけで使うアプリ。交換日記、帰る時間と今のきもちの共有、記念日のカウントダウン、毎日のクイズ。会員登録なし・広告なしの無料iPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821843630
+- [おさんぽ日記](https://imaimaha.com/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
+- [積読記録](https://imaimaha.com/tsundoku/): まだ読んでいない本（積読）を背表紙のタワーにして見せる読書記録アプリ。バーコードで登録、読書タイマー、図書館の返却日のお知らせつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821840892
+- [居候お掃除マン](https://imaimaha.com/osouji/): いっしょに住む人と家のおそうじを分担するアプリ。やったら報告、もう1人が確認して OK。予定のお知らせやごほうびポイントつき。会員登録なし・広告なしの無料アプリ。 App Store: https://apps.apple.com/jp/app/id6829721534
+- [Notre Endroit](https://imaimaha.com/notre-app/): 恋人や夫婦など、ふたりだけで使うアプリ。交換日記、帰る時間と今のきもちの共有、記念日のカウントダウン、毎日のクイズ。会員登録なし・広告なしの無料iPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821843630
 
 ## そのほか
 - App Store の開発者ページ: https://apps.apple.com/jp/developer/id6818812575
@@ -51,22 +51,22 @@
 > Ima Apps (いまのアプリ): small, free iPhone games made by one person, Ima. Daily puzzles that are the same for every player, relaxing games, shogi variants and card games. The apps are available on the App Store in Japan only for now, and their menus are in Japanese.
 
 ### Pages
-- [Home](https://imaimaha.github.io/en/)
-- [All games](https://imaimaha.github.io/en/apps/)
-- [Play in your browser](https://imaimaha.github.io/en/play/): daily puzzles with no install (game screens in Japanese)
-- [About the maker](https://imaimaha.github.io/en/about/)
-- [FAQ](https://imaimaha.github.io/en/faq/)
+- [Home](https://imaimaha.com/en/)
+- [All games](https://imaimaha.com/en/apps/)
+- [Play in your browser](https://imaimaha.com/en/play/): daily puzzles with no install (game screens in Japanese)
+- [About the maker](https://imaimaha.com/en/about/)
+- [FAQ](https://imaimaha.com/en/faq/)
 
 ### Games
-- [Caterpillar: One Line Puzzle](https://imaimaha.github.io/en/apps/hitofude/): Eat every leaf in one stroke. Trace a path and help the caterpillar eat every leaf exactly once - then watch it turn into a butterfly. 200 stages with new twists each chapter, plus a new daily puzzle. App Store (Japan): https://apps.apple.com/app/id6823269398
-- [Number Rooms: Rectangle Puzzle](https://imaimaha.github.io/en/apps/suji/): Split rooms, place residents. Split the grid into rectangular rooms that match their numbers, then place residents - one per row and column. Cute residents move in when you're right. 365 stages. App Store (Japan): https://apps.apple.com/app/id6825416177
-- [Bento Pack: Food Block Puzzle](https://imaimaha.github.io/en/apps/okazu/): Fill rows in your lunch box. Pack food into a Japanese lunch box in a set order. Complete a row or column and it gets eaten - yum! New twists across 200 stages, plus a daily bento for everyone. App Store (Japan): https://apps.apple.com/app/id6823270044
-- [Mental Math Runner: Gate Rush](https://imaimaha.github.io/en/apps/kakezan/): Add & multiply in 200 stages. Left or right? Is ×2 or +13 bigger right now? Do quick mental math on the run, grow your number and reach the goal. 200 stages, plus a new daily course with a ranking. App Store (Japan): https://apps.apple.com/app/id6821955613
-- [Make 10 Drive: License Plates](https://imaimaha.github.io/en/apps/jimidrive/): Mental math on a night highway. Can the 4 digits on a passing car's license plate make 10? Decide in seconds on a night expressway across Japan. Prime mode, time attack and a new daily drive. App Store (Japan): https://apps.apple.com/app/id6818812573
-- [Boiled Egg Peeling: Tsurutto](https://imaimaha.github.io/en/apps/yudetamago/): Crack the shell, peel it clean. A perfectly peeled boiled egg feels so good. Crack the shell, peel slowly, keep the white intact. Collect 18 eggs - quail, dinosaur, golden and more - plus a daily egg. App Store (Japan): https://apps.apple.com/app/id6821884836
-- [Natto Peel: Sticky Strings](https://imaimaha.github.io/en/apps/nattofilm/): Peel slowly, wind every string. Can you peel the film off a natto pack without snapping the sticky strings? Lift it slowly, pull them tight, then wind them all up. 10 kinds of natto and a daily natto. App Store (Japan): https://apps.apple.com/app/id6821884133
-- [Window Drops: Relaxing Rain](https://imaimaha.github.io/en/apps/madoshizuku/): Merge raindrops with a finger. Trace a rainy car window to gather drops and merge them into a big one. Mix rain, thunder, engine and music-box sounds, or just watch the window with a sleep timer. App Store (Japan): https://apps.apple.com/app/id6821822966
-- [Shogi Variants: Play Online](https://imaimaha.github.io/en/apps/hensokushogi/): Annan, card rules & 2250 tsume. Play variant shogi online with friends via a room code - no account needed. Annan, card shogi, restriction shogi and more, plus a CPU from 10-kyu to 5-dan. App Store (Japan): https://apps.apple.com/app/id6821822985
-- [Gekokujo Duel: 1 Beats 9](https://imaimaha.github.io/en/apps/gekokujo/): Number card mind game for two. Play cards 1-9 one by one - the higher number wins, but 1 beats 9! Your opponent's cards stay hidden, so read them and pick your moments. Quick matches vs CPU or friends. App Store (Japan): https://apps.apple.com/app/id6821823101
-- [Futari Daifugo: 1v1 Daihinmin](https://imaimaha.github.io/en/apps/futaridaifugo/): President card game for two. Split a deck into red and black for one-on-one Daifugo. Read what's left from the cards played. 5 Skip, 7 Pass, 8 Cut, 10 Discard, Revolution and more - vs CPU or online. App Store (Japan): https://apps.apple.com/app/id6836394499
-- [Poker Preflop Practice Quiz](https://imaimaha.github.io/en/apps/pokerstudy/): Learn Texas Hold'em decisions. See your two cards and your seat, then choose fold, call or raise. Each answer shows the reason and a 13×13 range chart. Flop, turn and river quizzes and CPU tables too. App Store (Japan): https://apps.apple.com/app/id6823270157
+- [Caterpillar: One Line Puzzle](https://imaimaha.com/en/apps/hitofude/): Eat every leaf in one stroke. Trace a path and help the caterpillar eat every leaf exactly once - then watch it turn into a butterfly. 200 stages with new twists each chapter, plus a new daily puzzle. App Store (Japan): https://apps.apple.com/app/id6823269398
+- [Number Rooms: Rectangle Puzzle](https://imaimaha.com/en/apps/suji/): Split rooms, place residents. Split the grid into rectangular rooms that match their numbers, then place residents - one per row and column. Cute residents move in when you're right. 365 stages. App Store (Japan): https://apps.apple.com/app/id6825416177
+- [Bento Pack: Food Block Puzzle](https://imaimaha.com/en/apps/okazu/): Fill rows in your lunch box. Pack food into a Japanese lunch box in a set order. Complete a row or column and it gets eaten - yum! New twists across 200 stages, plus a daily bento for everyone. App Store (Japan): https://apps.apple.com/app/id6823270044
+- [Mental Math Runner: Gate Rush](https://imaimaha.com/en/apps/kakezan/): Add & multiply in 200 stages. Left or right? Is ×2 or +13 bigger right now? Do quick mental math on the run, grow your number and reach the goal. 200 stages, plus a new daily course with a ranking. App Store (Japan): https://apps.apple.com/app/id6821955613
+- [Make 10 Drive: License Plates](https://imaimaha.com/en/apps/jimidrive/): Mental math on a night highway. Can the 4 digits on a passing car's license plate make 10? Decide in seconds on a night expressway across Japan. Prime mode, time attack and a new daily drive. App Store (Japan): https://apps.apple.com/app/id6818812573
+- [Boiled Egg Peeling: Tsurutto](https://imaimaha.com/en/apps/yudetamago/): Crack the shell, peel it clean. A perfectly peeled boiled egg feels so good. Crack the shell, peel slowly, keep the white intact. Collect 18 eggs - quail, dinosaur, golden and more - plus a daily egg. App Store (Japan): https://apps.apple.com/app/id6821884836
+- [Natto Peel: Sticky Strings](https://imaimaha.com/en/apps/nattofilm/): Peel slowly, wind every string. Can you peel the film off a natto pack without snapping the sticky strings? Lift it slowly, pull them tight, then wind them all up. 10 kinds of natto and a daily natto. App Store (Japan): https://apps.apple.com/app/id6821884133
+- [Window Drops: Relaxing Rain](https://imaimaha.com/en/apps/madoshizuku/): Merge raindrops with a finger. Trace a rainy car window to gather drops and merge them into a big one. Mix rain, thunder, engine and music-box sounds, or just watch the window with a sleep timer. App Store (Japan): https://apps.apple.com/app/id6821822966
+- [Shogi Variants: Play Online](https://imaimaha.com/en/apps/hensokushogi/): Annan, card rules & 2250 tsume. Play variant shogi online with friends via a room code - no account needed. Annan, card shogi, restriction shogi and more, plus a CPU from 10-kyu to 5-dan. App Store (Japan): https://apps.apple.com/app/id6821822985
+- [Gekokujo Duel: 1 Beats 9](https://imaimaha.com/en/apps/gekokujo/): Number card mind game for two. Play cards 1-9 one by one - the higher number wins, but 1 beats 9! Your opponent's cards stay hidden, so read them and pick your moments. Quick matches vs CPU or friends. App Store (Japan): https://apps.apple.com/app/id6821823101
+- [Futari Daifugo: 1v1 Daihinmin](https://imaimaha.com/en/apps/futaridaifugo/): President card game for two. Split a deck into red and black for one-on-one Daifugo. Read what's left from the cards played. 5 Skip, 7 Pass, 8 Cut, 10 Discard, Revolution and more - vs CPU or online. App Store (Japan): https://apps.apple.com/app/id6836394499
+- [Poker Preflop Practice Quiz](https://imaimaha.com/en/apps/pokerstudy/): Learn Texas Hold'em decisions. See your two cards and your seat, then choose fold, call or raise. Each answer shows the reason and a 13×13 range chart. Flop, turn and river quizzes and CPU tables too. App Store (Japan): https://apps.apple.com/app/id6823270157

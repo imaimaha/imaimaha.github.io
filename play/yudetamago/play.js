@@ -18,7 +18,7 @@
   // 今日のたまご（クリスマス期間は、見た目だけクリスマスのたまご。中身は同じ。アプリの startDailyPre と同じ）
   var DAILY_ID = L.dailyEgg(dstr(DAY)).id;
   if (window.Xmas && Xmas.active()) DAILY_ID = 'xmas:' + DAILY_ID;
-  WP.init({ ns: 'yudetamago', day: DAY, name: '今日のたまご', tag: '今日のたまご', emoji: '🥚', url: 'https://imaimaha.github.io/play/yudetamago/',
+  WP.init({ ns: 'yudetamago', day: DAY, name: '今日のたまご', tag: '今日のたまご', emoji: '🥚', url: 'https://imaimaha.com/play/yudetamago/',
     appId: '6821884836', appLabel: 'アプリなら 図鑑とランキングで勝負', landing: '../../yudetamago/', landingName: 'つるっと ゆでたまご剥き',
     today: jstDay });
   // 遊ぶところ（#yd-game）の中の位置。アプリは画面いっぱいなので window の大きさを使っていた
