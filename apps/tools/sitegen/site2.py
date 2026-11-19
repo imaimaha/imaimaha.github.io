@@ -3,6 +3,7 @@
 使い方（このフォルダで）:
   python3 site2.py          … ぜんぶのページを作りなおす（アプリの紹介ページ・トップ・各ページ・llms.txt）
   ~/Developer/asc-tools/pwvenv/bin/python site2.py --og   … ページごとの OGP 画像も作る
+  ~/Developer/asc-tools/pwvenv/bin/python site2.py --og-en … 英語のページ（/en/）の OGP 画像（/apps/og/en-*.jpg）も作る
   lookup.json は App Store の公開中の情報（curl "https://itunes.apple.com/lookup?id=...&country=jp" で取りなおす）
   文の中身は content.py（短いタイトル・説明・質問・ルール・いまやっていること）と apps_data.py
   確認: python3 -m http.server でサイトを出して crawl.py（リンク切れ・h1・タイトル長さ・JSON-LD）、check2.py（スクショ）
@@ -27,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261127'
+V = '20261128'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -676,6 +677,23 @@ def demo_section(d):
             '</ul>' + (f'<p class="playbtn"><a class="go sm" href="/play/{d}/">{play_label(d)}</a>　<span>{esc(PLAY_NOTE.get(d, "登録なし"))}</span></p>' if d in PLAY and d not in DAILY else '') +
             '</div></div></section>')
 
+# 見どころの短い動画（広告用に作った r2 のご褒美カードの 720x1280 版・本物の画面・音なし・約4秒のループ）。/<app>/media/midokoro.mp4 と .jpg（ポスター）。
+# 元: ~/Developer/promo/ads/r2/reward/<key>_720.mp4（ポスターは同じ名前の .jpg を 360x640 に）。季節もの・英語・招待リンクのものは使わない。
+# ふたり大富豪は App Store にまだないので出さない（動画の下に「App Store で見る」の絵があるため）
+MIDOKORO = {'hitofude': '一筆で ぜんぶ食べられる？', 'suji': 'このへや 何秒で分けられる？', 'okazu': '1列そろうと ぱくっ！',
+            'kakezan': '+20 と ×2 どっちが大きい？', 'jimidrive': '作れる？ 無理？ 一瞬で判断', 'yudetamago': 'ゆっくり… ツルンッ',
+            'nattofilm': 'クルクル… ねばーっ', 'madoshizuku': '雨の窓を なぞるだけ', 'hensokushogi': 'いつもの将棋が まるでちがう',
+            'gekokujo': '次は 何を出す？', 'pokerstudy': 'この席なら どうする？', 'sanpobingo': 'いつもの道が ビンゴになる', 'tsundoku': '何冊 積んでる？'}
+def midokoro_section(d):
+    if d not in MIDOKORO or not NAMES[d][1] or not os.path.exists(f'{R}/{d}/media/midokoro.mp4'): return ''
+    name = NAMES[d][0]; hook = MIDOKORO[d]
+    return (f'<section class="block midokoro" aria-labelledby="h-mdk"><div class="wrap mdk-in"><div class="mdk-v rv">'
+            f'<video muted loop playsinline preload="none" poster="media/midokoro.jpg" width="360" height="640" data-vsrc="media/midokoro.mp4" '
+            f'aria-label="{esc(name)} の見どころ「{esc(hook)}」（音なし・約4秒）"></video></div>'
+            f'<div class="mdk-t rv"><h2 id="h-mdk">✨ 見どころ</h2><p class="mdk-hook">{esc(hook)}</p>'
+            f'<p>アプリの本物の画面で作った、4秒ほどの短い動画です（音なし）。</p>'
+            f'<p><a class="more-link" href="{store(NAMES[d][1])}">App Store で見る →</a></p></div></div></section>')
+
 def today_mini(d):
     if d not in DAILY: return ''
     name, i, _ = NAMES[d]; k, w = DAILY_LINE[d].split('：', 1)
@@ -743,7 +761,7 @@ def landing(d):
         out = out.replace('<meta property="og:locale" content="ja_JP">', '<meta property="og:locale" content="ja_JP">\n<meta property="og:locale:alternate" content="en_US">', 1)
     out = out.replace('<main>', '<main id="main">\n' + crumb(cr), 1)
     # 入れる場所
-    k = out.index('<section class="shots"'); out = out[:k] + demo_section(d) + '\n' + out[k:]
+    k = out.index('<section class="shots"'); out = out[:k] + demo_section(d) + '\n' + midokoro_section(d) + '\n' + out[k:]
     if d in DAILY:
         k = out.index('<section class="block rank"'); k = out.index('</section>', k) + len('</section>'); out = out[:k] + '\n' + today_mini(d) + out[k:]
     k = out.index('<h2>遊び方は3ステップ</h2>'); k = out.index('</section>', k) + len('</section>'); out = out[:k] + '\n' + rules_section(d) + out[k:]
@@ -1160,6 +1178,44 @@ def make_og():
             pg.screenshot(path=f'{R}/apps/og/{key}.jpg', type='jpeg', quality=82)
         b.close()
 
+def make_og_en():
+    """英語のページの OGP 画像（1200x630）。日本語の make_og と同じ絵（クリーム色・青と緑の丸・ロゴ・見出し・説明・アイコン）を英語の文で。
+    トップは /apps/og.jpg と同じ「アイコンのならび＋名前」の形。ゲームのページは右にそのアプリの大きいアイコン"""
+    from playwright.sync_api import sync_playwright
+    os.makedirs(f'{R}/apps/og', exist_ok=True)
+    pub = [d for d in ALL if NAMES[d][1]]
+    icons = ''.join(f"<img src='file://{R}/{d}/icon-256.webp'>" for d in ALL[:10])
+    css = ("body{margin:0;width:1200px;height:630px;background:#fff7e8;font-family:'Hiragino Maru Gothic ProN','Hiragino Sans',sans-serif;color:#3b2b1f;position:relative;overflow:hidden}"
+           ".b1{position:absolute;width:520px;height:520px;border-radius:50%;background:#bde0fe;right:-160px;top:-200px}.b2{position:absolute;width:300px;height:300px;border-radius:50%;background:#caffbf;left:-100px;bottom:-120px}"
+           ".in{position:absolute;left:80px;top:90px;right:80px}.lg{font-size:34px;font-weight:800}.lg i{font-style:normal;color:#d9512b}"
+           "h1{font-size:74px;line-height:1.15;margin:34px 0 18px}p{font-size:28px;line-height:1.5;color:#6b5848;margin:0;max-width:960px}"
+           ".ic{position:absolute;left:80px;bottom:56px;display:flex;gap:16px}.ic img{width:70px;height:70px;border-radius:17px;box-shadow:0 4px 10px rgba(0,0,0,.15)}"
+           ".app .in{right:440px}.app h1{font-size:60px}.app p{font-size:30px}.big{position:absolute;right:90px;top:150px;width:300px;height:300px;border-radius:68px;box-shadow:0 10px 30px rgba(0,0,0,.2)}"
+           ".tag{position:absolute;left:80px;bottom:62px;font-size:26px;font-weight:800;color:#fff;background:var(--a);padding:12px 26px;border-radius:999px}"
+           ".home{background:linear-gradient(135deg,#f4f6ff,#fff7ec)}.grid{position:absolute;left:0;right:0;top:100px;display:flex;flex-wrap:wrap;justify-content:center;gap:22px;padding:0 100px}"
+           ".grid img{width:104px;height:104px;border-radius:24px;box-shadow:0 6px 14px rgba(0,0,0,.14)}.hn{position:absolute;left:0;right:0;top:380px;text-align:center}"
+           ".hn h1{font-size:86px;color:#1f2d5c;margin:0}.hn p{max-width:none;font-size:32px;font-weight:800;color:#7a4a12;margin-top:22px}")
+    def lg(): return f"<div class='lg'>Ima <i>Apps</i></div>"
+    with sync_playwright() as p:
+        b = p.webkit.launch(); pg = b.new_page(viewport={'width': 1200, 'height': 630})
+        for key, (t, desc, d) in OG_EN.items():
+            if key == 'home':
+                grid = ''.join(f"<img src='file://{R}/{x}/icon-256.webp'>" for x in pub[:16])
+                body = f"<body class='home'><div class='grid'>{grid}</div><div class='hn'><h1>{esc(BRAND_EN)}</h1><p>{esc(desc)} (iPhone · free)</p></div></body>"
+            elif d:
+                acc = APPS[d]['accent']; deep = colors(acc)[2]
+                tag = 'Free iPhone game · App Store (Japan)' if NAMES[d][1] else 'Coming soon · App Store (Japan)'
+                body = (f"<body class='app' style='--a:{deep}'><div class='b1'></div><div class='b2'></div><div class='in'>{lg()}<h1>{esc(t)}</h1><p>{esc(desc)}</p></div>"
+                        f"<img class='big' src='file://{R}/{d}/icon-256.webp'><div class='tag'>{esc(tag)}</div></body>")
+            else:
+                short = desc if len(desc) <= 110 else desc[:desc.rfind(' ', 0, 108)] + '…'
+                body = (f"<body><div class='b1'></div><div class='b2'></div><div class='in'>{lg()}<h1>{esc(t)}</h1><p>{esc(short)}</p></div><div class='ic'>{icons}</div></body>")
+            open(f'{HERE}/og_tmp.html', 'w').write(f"<html lang='en'><head><meta charset='utf-8'><style>{css}</style></head>{body}</html>")
+            pg.goto(f'file://{HERE}/og_tmp.html'); pg.wait_for_timeout(300)
+            pg.screenshot(path=f'{R}/apps/og/en-{key}.jpg', type='jpeg', quality=82)
+        b.close()
+    os.remove(f'{HERE}/og_tmp.html')
+
 def llms():
     L = [f'# {BRAND}', '', '> 「いま」がひとりで作っている iPhone アプリのサイト。毎日みんなと同じ1問でランキング勝負できるパズルや、のんびりゲーム、変則将棋などの対戦、くらしの記録アプリ。どれも無料。', '',
          '## ページ', f'- [ホーム]({BASE}/): サイトのトップ', f'- [今日の問題]({BASE}/today/): 毎日0時（日本時間）にかわる、みんな同じ1問',
@@ -1238,9 +1294,16 @@ def countdown_en():
             '<span><b id="cd-h">--</b><small>hours</small></span><i>:</i><span><b id="cd-m">--</b><small>min</small></span><i>:</i>'
             f'<span><b id="cd-s">--</b><small>sec</small></span></div><p class="sub">New puzzles every day at {JST_NOTE}.</p></div>')
 
+OG_EN = {}   # 英語のページの OGP 画像: key -> (見出し, 説明, アプリ or None)。/apps/og/en-<key>.jpg（site2.py --og-en で作る）
+def og_en(key):
+    return f'{BASE}/apps/og/en-{key}.jpg' if os.path.exists(f'{R}/apps/og/en-{key}.jpg') else None
+
 def sub_page_en(path, h1, title, desc, lead, body, extra_ld=(), crumbs=None, og_img=None):
     cr = crumbs or [('/en/', 'Home'), (None, h1)]
-    L = [head(path, title, desc, [crumb_ld(cr, path)] + list(extra_ld), og_img=og_img, lang='en'), header_en(path), '<main id="main">',
+    key = path.strip('/').split('/')[-1]
+    plain = re.sub(r'<[^>]+>', '', html.unescape(lead))
+    OG_EN[key] = (h1, plain if len(plain) <= 120 else desc, None)   # 画像の説明は短い lead（長ければ description）
+    L = [head(path, title, desc, [crumb_ld(cr, path)] + list(extra_ld), og_img=og_img or og_en(key), lang='en', og_alt=f'{h1} - {BRAND_EN}' if og_en(key) else None), header_en(path), '<main id="main">',
          '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb_en(cr) +
          f'<div class="wrap"><h1>{esc(h1)}</h1><p class="lead2">{lead}</p></div></section>', body, '</main>', tail_en()]
     write(path, '\n'.join(L))
@@ -1298,7 +1361,8 @@ def page_en_home():
          {"@type": "WebSite", "@id": BASE + "/en/#website", "url": BASE + "/en/", "name": BRAND_EN, "alternateName": BRAND, "inLanguage": "en", "publisher": {"@id": BASE + "/#org"}},
          itemlist_en()]}
     desc = ('Small, free iPhone games by one maker: a one-line puzzle, a bento block puzzle, egg peeling, make-10 math and shogi variants. New daily puzzles for everyone.')
-    L = [head('/en/', f'{BRAND_EN} – {EN.TAGLINE_EN} | Free iPhone games', desc, [g], preload='/hitofude/shots/5_daily.webp', lang='en'), header_en('/en/'), '<main id="main">']
+    OG_EN['home'] = (BRAND_EN, EN.TAGLINE_EN, None)
+    L = [head('/en/', f'{BRAND_EN} – {EN.TAGLINE_EN} | Free iPhone games', desc, [g], preload='/hitofude/shots/5_daily.webp', lang='en', og_img=og_en('home')), header_en('/en/'), '<main id="main">']
     phones = ''.join(f'<div class="phone p{k}">{scr(d, f, HERO_ALT_EN[d] + " (in Japanese)", lazy=False)}</div>' for k, (d, f, alt) in enumerate(HERO_SHOTS))
     emo = ''.join(f'<span style="--d:{k * -0.6}s;--r:{r}deg">{e}</span>' for k, (e, r) in enumerate([('🐛', -8), ('🍱', 6), ('🥚', -4), ('🫘', 8), ('♟️', -6)]))
     L.append('<section class="hhero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div><div class="wrap"><div>'
@@ -1379,6 +1443,7 @@ def page_en_app(d):
     acc, soft, deep = colors(a['accent'])
     intro, secs, lang = desc_parts(st['desc'])
     path = f'/en/apps/{d}/'
+    OG_EN[d] = (name, st['sub'], d)
     t = f'{name} – {st["sub"]}'
     title = t if len(t) <= 60 else f'{name} | {BRAND_EN}'
     desc = ''
@@ -1400,8 +1465,8 @@ def page_en_app(d):
     avail = 'Available on the App Store in Japan' if i else 'Coming soon to the App Store in Japan'
     playbtn = (f'<p class="playbtn" style="margin-top:14px"><a class="go sm" href="/play/{d}/" hreflang="ja">' + ("▶ Play today's puzzle in your browser" if d in DAILY else '▶ Play in your browser') +
                '</a></p>' if d in PLAY else '')
-    L = [head(path, title, desc, [app_ld, crumb_ld(cr, path)], og_img=f'{BASE}/{d}/og.jpg' if os.path.exists(f'{R}/{d}/og.jpg') else None, lang='en',
-              og_alt=f'{name} icon and screens', extra_head=f'<style>:root{{--accent:{acc};--soft:{soft};--deep:{deep}}}</style>'),
+    L = [head(path, title, desc, [app_ld, crumb_ld(cr, path)], og_img=og_en(d) or (f'{BASE}/{d}/og.jpg' if os.path.exists(f'{R}/{d}/og.jpg') else None), lang='en',
+              og_alt=f'{name} icon and title' if og_en(d) else f'{name} icon', extra_head=f'<style>:root{{--accent:{acc};--soft:{soft};--deep:{deep}}}</style>'),
          header_en(path), '<main id="main">', crumb_en(cr)]
     L.append(f'<section class="hero"><div class="wrap"><img class="icon" src="/{d}/icon-256.webp" width="120" height="120" alt="{esc(name)} icon">'
              f'<p class="eyebrow">{CAT_EMO[cid]} {EN.CAT_EN[cid]} · iPhone</p><h1>{esc(name)}</h1><p class="catch">{esc(st["sub"])}</p><p class="lead">{esc(st["promo"])}</p>'
@@ -1523,4 +1588,5 @@ if __name__ == '__main__':
     build_en()
     llms()
     if '--og' in sys.argv: make_og()
+    if '--og-en' in sys.argv: make_og_en(); build_en()   # 画像ができてから英語のページを作りなおす（og:image を画像に向ける）
     print('ok', sorted(OG_PAGES))
