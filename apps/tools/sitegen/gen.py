@@ -121,8 +121,7 @@ def page(d):
     w = lines.append
     w('<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">')
     if d == 'pokerstudy':
-        w('<!-- TODO: 次の版でストア名が「ポーカー プリフロ練習」に変わったら、title・h1・og:title・JSON-LD の name を新しい名前にする。'
-          'このページでは「キャッシュ／お金／賭け／カジノ／ギャンブル／賞金／円／所持金／バイイン／レーキ／手数料」を使わない -->')
+        w('<!-- このページでは「キャッシュ／お金／賭け／カジノ／ギャンブル／賞金／円／所持金／バイイン／レーキ／手数料」を使わない -->')
     w(f'<title>{esc(a["title"])}</title>')
     w(f'<meta name="description" content="{esc(a["desc"])}">')
     w(f'<link rel="canonical" href="{url}">')
