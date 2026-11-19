@@ -1,5 +1,7 @@
 # /play/yudetamago/logic.js と play.js を、アプリ（~/Developer/apps/YudeTamago/game.js）から作りなおす。three.min.js・xmas.js はアプリからコピーして、three.min.js の fetch 2か所だけ Promise.reject にする
-import os, re
+import os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gen import BASE   # サイトの住所（gen.py の1か所）
 SRC = os.path.expanduser('~/Developer/apps/YudeTamago/game.js')
 OUT = os.path.expanduser('~/Developer/imaimaha.github.io/play/yudetamago/')
 lines = open(SRC, encoding='utf-8').read().split('\n')
@@ -227,6 +229,7 @@ head = r'''/* つるっと ゆでたまご剥き — ブラウザ版「今日の
   function ex(e) { return e.clientX - (e.clientX || e.clientY ? el.stage.getBoundingClientRect().left : 0); }
   function ey(e) { return e.clientY - (e.clientX || e.clientY ? el.stage.getBoundingClientRect().top : 0); }
 '''
+head = head.replace('https://imaimaha.github.io', BASE)   # サイトの住所は gen.py の BASE
 # 本体の先頭3行（(function () { / if (...) return; / var L = YudeLogic;）をとりかえる
 bl = body.split('\n')
 assert bl[0].startswith('(function () {') and 'typeof THREE' in bl[1] and 'var L = YudeLogic' in bl[2]

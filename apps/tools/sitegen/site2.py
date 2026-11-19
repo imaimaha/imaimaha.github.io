@@ -22,7 +22,7 @@ from apps_data import APPS, NAMES, SHOTS, DAILY, DAILY_LINE, CATS, ADS
 from gen import colors, mix
 
 R = os.path.expanduser('~/Developer/imaimaha.github.io')
-BASE = 'https://imaimaha.github.io'
+BASE = gen.BASE   # サイトの住所は gen.py の BASE 1か所だけ
 NOTE = 'https://note.com/redemarrage22'
 NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移はきろう。後で復活させる」→ True にもどせば全部もどる
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'

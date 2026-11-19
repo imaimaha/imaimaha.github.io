@@ -1,6 +1,7 @@
 # ローカルのサーバーでサイトをたどって、リンク切れ・h1・タイトル・説明・canonical・JSON-LD・パンくずを確かめる
 import re, json, html, urllib.request, urllib.parse, collections
-B = 'http://127.0.0.1:8790'; BASE = 'https://imaimaha.github.io'
+import os
+B = 'http://127.0.0.1:8790'; BASE = re.search(r"^BASE = '([^']+)'", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gen.py'), encoding='utf-8').read(), re.M).group(1)   # gen.py の BASE
 seen, queue, bad, pages = set(), collections.deque(['/']), [], {}
 def get(u):
     try:
