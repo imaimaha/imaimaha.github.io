@@ -25,7 +25,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261123'
+V = '20261124'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -314,7 +314,7 @@ def page_home():
              '<p class="lead">いもむし、お弁当、ゆでたまご、納豆……。毎日みんなと同じ1問で勝負できる、ちいさな iPhone アプリたちです。</p>'
              f'<div class="emo" aria-hidden="true">{emo}</div>'
              '<div class="ctas"><a class="go" href="/play/" data-confetti>▶ ブラウザで今すぐ遊ぶ</a><a class="ghost" href="/today/">今日の問題を見る</a><a class="ghost" href="/apps/">アプリを見る</a></div>'
-             '<p class="ctanote">いもむし・すうじ・おかずの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
+             f'<p class="ctanote">いもむし・すうじ・おかずなど{len([d for d in PLAY if d in DAILY])}つの今日の1問は、アプリを入れなくてもブラウザで遊べます。</p>'
              f'<ul class="stats"><li><b data-n="{len(ALL)}">{len(ALL)}</b>本のアプリ</li><li><b data-n="{len(DAILY)}">{len(DAILY)}</b>本で毎日ランキング</li><li><b>全部</b>無料</li></ul></div>'
              f'<div class="stage" aria-label="アプリの画面"><span class="sticker s1" aria-hidden="true">今日の1問！</span>{phones}<span class="sticker s2" aria-hidden="true">みんな同じ問題</span></div>'
              '</div></section>')

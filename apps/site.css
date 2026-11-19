@@ -478,6 +478,8 @@ section.block .narrow > h2::after { margin-left: 0; }
 
 /* ---------- 段落ち対策 ---------- */
 .nw { white-space: nowrap; }
+/* ボタン・メニュー・フッターのリンク（flex）の中の .nw は、ばらばらの flex の子にならないように（「ブラウザ で遊ぶ」のすきま・メニューの文字の重なり・フッターの変な折り返しを防ぐ） */
+a .nw { display: contents; }
 h1, h2, h3, .catch, .badge, .what, .dk, .nt, .kicker, .sticker { text-wrap: balance; }
 p, li, dd, .lead, .lead2, .what-a, .what-b { text-wrap: pretty; }
 body { line-break: strict; }
