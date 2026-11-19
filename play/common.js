@@ -75,6 +75,14 @@
     var r = { day: cfg.day, sec: Math.round(sec * 10) / 10 };
     if (extra) for (var k in extra) r[k] = extra[k];
     lset('web.' + cfg.ns + '.today' + (sub || ''), r);
+    WP.stamp(cfg.ns, cfg.day);
+  };
+  // 今週のチャレンジ（/play/ の weekly.js）用: 遊んだ日をゲームごとに残す（この端末だけ・さいきんの 40 日）
+  WP.stamp = function (ns, day) {
+    if (!ns || !day) return;
+    var st = lget('web.stamps') || {}, a = Array.isArray(st[ns]) ? st[ns] : [];
+    if (a.indexOf(day) < 0) a.push(day);
+    a.sort(); st[ns] = a.slice(-40); lset('web.stamps', st);
   };
 
   // 次の問題（日本時間の 0 時）まで
