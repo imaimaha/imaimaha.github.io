@@ -60,3 +60,30 @@ html,body{height:auto;min-height:100%}
 .wp-about .wp-faq dt{font-weight:700;margin-top:10px}
 .wp-about .wp-faq dd{margin:2px 0 0}
 .wp-about .nw{white-space:nowrap}
+
+/* 2026-11-20 上の細いヘッダー（ロゴ・パンくず・メニュー）。site2.py の fix_play_pages() が入れる。JS なし */
+.wp-top{flex:0 0 auto;position:relative;z-index:30;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 6px 0 8px}
+.wp-logo{flex:0 0 auto;display:grid;place-items:center;width:40px;height:44px}
+.wp-logo svg{display:block;border-radius:8px}
+.wp-top .wp-crumb,.wp-top .crumb{flex:1 1 auto;min-width:0;margin:0;padding:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.wp-top .wp-crumb ol{display:inline;list-style:none;margin:0;padding:0}
+.wp-top .wp-crumb li{display:inline}
+.wp-top .wp-crumb li+li:before{content:" › "}
+.wp-top .wp-crumb a{display:inline-flex;align-items:center;min-height:44px;color:inherit;font-weight:700}
+.wp-menu{flex:0 0 auto;position:relative}
+.wp-menu summary{list-style:none;display:grid;place-items:center;width:44px;height:40px;border-radius:12px;background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12);cursor:pointer}
+.wp-menu summary::-webkit-details-marker{display:none}
+.wp-menu summary span,.wp-menu summary span:before,.wp-menu summary span:after{display:block;width:18px;height:2.5px;border-radius:2px;background:#3b2f25;position:relative}
+.wp-menu summary span:before,.wp-menu summary span:after{content:"";position:absolute;left:0}
+.wp-menu summary span:before{top:-6px}.wp-menu summary span:after{top:6px}
+.wp-menu[open] summary span{background:transparent}
+.wp-menu[open] summary span:before{top:0;transform:rotate(45deg)}
+.wp-menu[open] summary span:after{top:0;transform:rotate(-45deg)}
+.wp-menu nav{position:absolute;right:0;top:46px;width:min(340px,calc(100vw - 20px));display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:8px;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.wp-menu nav a{display:flex;align-items:center;min-height:44px;padding:0 10px;border-radius:12px;color:#3b2f25;text-decoration:none;font-weight:700;font-size:14px}
+.wp-menu nav a:hover{background:#fff4e2}
+.wp-menu nav a[href="/"],.wp-menu nav a[href="/start/"]{grid-column:1/-1}
+/* ルールのボタン: 押せる範囲を広げる（見た目の大きさと盤の広さはそのまま） */
+#legend{gap:8px 6px}
+#legend button{position:relative;padding:5px 10px}
+#legend button::before{content:"";position:absolute;inset:-4px -3px}

@@ -35,7 +35,7 @@
   var lg = el('p', 'hpm-legend');
   Object.keys(kinds).forEach(function (k) { var x = INFO[k], a = el('a', null, x[0] + ' ' + x[1]); a.href = '/zukan/#' + x[2]; lg.appendChild(a); });
   if (lg.childNodes.length) { lg.insertBefore(el('span', null, 'この盤のしかけ：'), lg.firstChild); body.appendChild(lg); }
-  var bar = el('div', 'hpm-bar'), rs = el('button', 'ghost', '🔄 さいしょから'); rs.type = 'button';
+  var bar = el('div', 'hpm-bar'), rs = el('button', 'ghost', 'さいしょから'); rs.type = 'button';
   var big = el('a', 'more-link', '大きな画面であそぶ →'); big.href = '/play/hitofude/';
   bar.appendChild(rs); bar.appendChild(big); body.appendChild(bar);
   var win = el('div', 'hpm-win'); win.hidden = true; body.appendChild(win);

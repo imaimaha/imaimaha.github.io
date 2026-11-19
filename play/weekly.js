@@ -38,7 +38,7 @@
 
     var card = el('div', 'wk-card');
     var hd = el('div', 'wk-hd');
-    hd.appendChild(el('span', 'wk-e', g[2])).setAttribute('aria-hidden', 'true');
+    var ic = el('img', 'wk-e'); ic.src = '/' + g[0] + '/icon-256.webp'; ic.alt = ''; ic.width = ic.height = 32; hd.appendChild(ic);   // 絵文字のかわりにアプリのアイコン（2026-11-20）
     var t = el('div');
     var b = el('b', null, '今週は「' + g[1] + '」を'); b.appendChild(el('span', 'nw', '7日つづけよう')); t.appendChild(b);
     var m1 = new Date(mon), s1 = new Date(mon + 6 * D);
@@ -51,13 +51,15 @@
       if (done) n++;
       var li = el('li', cls);
       li.appendChild(el('span', 'd', WD[i]));
-      li.appendChild(el('span', 's', done ? g[2] : i === wd ? '今日' : '・')).setAttribute('aria-hidden', 'true');
+      var st = el('span', 's', done ? '' : i === wd ? '今日' : '・'); st.setAttribute('aria-hidden', 'true');
+      if (done) { var im = el('img', 'wk-st'); im.src = '/' + g[0] + '/icon-256.webp'; im.alt = ''; im.width = im.height = 22; st.appendChild(im); }
+      li.appendChild(st);
       li.setAttribute('aria-label', WD[i] + '曜日 ' + (done ? 'スタンプあり' : i < wd ? 'スタンプなし' : i === wd ? '今日・まだ' : 'これから'));
       ul.appendChild(li);
     }
     card.appendChild(ul);
     var ft = el('div', 'wk-ft');
-    ft.appendChild(el('p', 'wk-n', n === 7 ? '🎉 7日ぜんぶ！ ' + n + ' / 7' : n + ' / 7 日'));
+    ft.appendChild(el('p', 'wk-n', n === 7 ? '7日ぜんぶ！ ' + n + ' / 7' : n + ' / 7 日'));
     if (!days[todayKey]) { var go = el('a', 'wk-go', '▶ 今日のぶんを遊ぶ'); go.href = g[0] + '/'; ft.appendChild(go); }
     else ft.appendChild(el('p', 'wk-ok', '今日のスタンプ OK！ また あした。'));
     card.appendChild(ft);

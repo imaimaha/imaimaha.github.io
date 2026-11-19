@@ -13,7 +13,7 @@
   App Store のアプリがまだないもの（apps_data.py の NAMES の id が None。いまはなし）は、App Store のボタンのかわりに「近日公開」
   英語のページ（/en/・/en/apps/・/en/apps/<app>/・/en/play/・/en/about/・/en/faq/）も、ここで一緒に作る（lang='en'。文は content_en.py）。
   日本語のページとは hreflang（ja・en・x-default=日本語）で結ぶ。対応は EN_ALT"""
-import os, sys, json, html, datetime
+import os, sys, json, html, datetime, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = HERE   # gen.py・apps_data.py・orig/・data/ も同じフォルダ
 sys.path.insert(0, SITE)
@@ -28,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261130'
+V = '20261201'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -75,7 +75,7 @@ def header(cur, alt=None):   # alt: 英語のページ（「English」のリン�
             '<nav class="gnav" aria-label="メインメニュー">' + ''.join(a(u, t) for u, t, e in NAV) + '</nav>'
             f'<a class="lang" href="{alt or EN_ALT.get(cur, "/en/")}" hreflang="en" lang="en">English</a>'
             '<details class="mnav"><summary aria-label="メニューを開く"><span></span></summary><nav aria-label="メニュー">' +
-            ''.join(a(u, t, e, True) for u, t, e in MENU) + '</nav></details></div></header>')
+            ''.join(a(u, t) for u, t, e in MENU) + '</nav></details></div></header>')
 
 def footer(privacy=None):
     sup = [('/faq/', 'よくある質問'), ('/contact/', 'お問い合わせ')]
@@ -89,7 +89,8 @@ def footer(privacy=None):
         return f'<li><a href="{u}"{rel}>{t}</a></li>'
     body = ''.join(f'<div><h2>{h}</h2><ul>' + ''.join(li(u, t) for u, t in ls) + '</ul></div>' for h, ls in cols)
     wall = ''.join(f'<li><a href="/{d}/" aria-label="{esc(NAMES[d][0])}"><img src="/{d}/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li>' for d in ALL)
-    bye = ('<div class="bye"><div class="crew" aria-hidden="true"><span>🐛</span><span>🍱</span><span>🥚</span><span>🫘</span><span>🚗</span><span>💧</span></div><div class="bye-in">'
+    crew = ''.join(f'<img src="/apps/home/{f}.webp" width="44" height="44" alt="" loading="lazy">' for f, _ in CREW)
+    bye = (f'<div class="bye"><div class="crew" aria-hidden="true">{crew}</div><div class="bye-in">'
            '<p class="bye-h">また あした。</p><p class="bye-s">次の1問まで <b class="bye-t" data-cdf>--:--:--</b></p>'
            '<div class="bye-go"><a class="go sm" href="/play/">▶ 今日の1問をあそぶ</a></div>'
            f'<ul class="wall" aria-label="ぜんぶのアプリ">{wall}</ul></div></div>')
@@ -137,6 +138,26 @@ def head(path, title, desc, extra_ld=(), og_img=None, preload=None, lang='ja', o
 def tail(privacy=None):
     return footer(privacy) + f'\n<script src="/apps/site.js?v={V}" defer></script>\n</body>\n</html>\n'
 
+# 絵文字を使わない（2026-11-20 ユーザー「絵文字はきらい」）: 見出し・メニュー・ラベルの飾りの絵文字は、ページを書き出すときにまとめて外す。
+# 外すのは、文字のかたまりの頭にある絵文字だけ。残すもの: 文のとちゅうの記号（アプリの画面のボタンの説明）、<script>・<style>・<svg> の中（シェアの文 ✅⬜、図鑑の絵）、属性の中、意味のある記号（★☆ ♠♥♦♣ ♪ ✓ ✕）
+EMOJI_RE = re.compile(r'(?:[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B50\u2B1C\u2B1B\u23E9-\u23FA\u231A\u231B][\uFE0F\u200D\U0001F3FB-\U0001F3FF]*)+[ \u3000]?')
+EMOJI_KEEP = set('★☆♠♥♦♣♤♡♢♧♪♫✓✔✕✖')
+def deemoji(out):
+    i = out.find('<body')
+    if i < 0: return out
+    head, body = out[:i], out[i:]
+    parts = re.split(r'(<script\b.*?</script>|<style\b.*?</style>|<svg\b.*?</svg>|<[^>]+>)', body, flags=re.S)
+    def sub(m):
+        t = m.group(0)
+        if all(c in EMOJI_KEEP or c in '\ufe0f\u200d \u3000' for c in t): return t
+        return ''.join(c for c in t if c in EMOJI_KEEP) + (' ' if any(c in EMOJI_KEEP for c in t) and t.endswith(' ') else '')
+    lead = re.compile(r'^(\s*)' + EMOJI_RE.pattern)
+    for k in range(0, len(parts), 2):   # 文のはじめ（ラベルの頭）の絵文字だけ。文のとちゅうの記号（「左上の ❚❚ を押す」「⚙️ 設定」など、アプリの画面のボタンの説明）はのこす
+        if parts[k]: parts[k] = lead.sub(lambda m: m.group(1) + sub(re.match(EMOJI_RE, m.group(0)[len(m.group(1)):])), parts[k], count=1)
+    body = ''.join(parts)
+    body = re.sub(r'<span(?: class="[^"]*")? aria-hidden="true"(?: style="[^"]*")?></span>', '', body)   # 絵文字だけだった飾りの span
+    return head + body
+
 # 段落ち対策: 本文のテキストの中のアプリ名などを、途中で折り返さない <span class="nw"> でかこむ（空白のところでは折り返してよい）
 NW_WORDS = None
 def nowrap_text(out):
@@ -160,6 +181,7 @@ def nowrap_text(out):
     return head + body
 
 def write(path, out):
+    out = deemoji(out)
     if '<html lang="en">' not in out[:200]: out = nowrap_text(out)   # 英語のページは日本語の折り返しの調整をしない
     fn = R + path + 'index.html'
     os.makedirs(os.path.dirname(fn), exist_ok=True)
@@ -186,15 +208,25 @@ def daily_card(d):
                                       if os.path.exists(f'{R}/{d}/clip.mp4') else scr(d, f, alt)) + '</div>'
             '<div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
             f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' +
-            ('' if d in PLAY else '<span class="more" aria-hidden="true">くわしく →</span>') + '</div></li>')
+            '</div></li>')
+
+# アプリの名前の折り返し: 名前の途中では切らない。切ってよいところ（ことばの切れ目）だけ <wbr>（スマホの1行カード用。2026-11-20）
+NAME_BREAK = {'ナンバー暗算ドライブ': 'ナンバー|暗算ドライブ', 'ポーカー プリフロ練習': 'ポーカー|プリフロ練習', 'つるっと ゆでたまご剥き': 'つるっと|ゆでたまご剥き',
+              'ねばっと 納豆フィルム剥がし': 'ねばっと|納豆フィルム剥がし', 'おかず詰めパズル': 'おかず詰め|パズル', '居候お掃除マン': '居候|お掃除マン',
+              '変則将棋対戦': '変則将棋|対戦', '下剋上デュエル': '下剋上|デュエル', 'ひとふでいもむし': 'ひとふで|いもむし', 'Notre Endroit': 'Notre|Endroit'}
+def name_html(name):
+    parts = NAME_BREAK.get(name, name).split('|')
+    return ('<wbr>' if ' ' not in name else ' ').join(f'<span class="nw">{esc(x)}</span>' for x in parts)
 
 def app_card(d, k=None):
     name, i, text = NAMES[d]; cid, lb = CAT_OF[d]
     tag = '<span class="tagd">毎日ランキング</span>' if d in DAILY else ''
     key = f' data-k="{esc(name + " " + text + " " + lb)}"' if k else ''
-    return (f'<li class="acard tilt rv" style="{cv(d)}"{key}>{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
-            '<div>' + ('' if k else f'<span class="cat">{CAT_EMO[cid]} {esc(lb)}</span>') + f'<h3><a class="stretch" href="/{d}/">{esc(name)}</a></h3></div></div>'
-            f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY and d not in DAILY else '<span class="more" aria-hidden="true">くわしく →</span>')
+    # カード全体がアプリのページへのリンク（h3 の a.stretch）。「くわしく →」は出さない（2026-11-20）。App Store とブラウザで遊ぶは、べつのボタン（リンクの中に入れない）
+    pl = d in PLAY and d not in DAILY
+    return (f'<li class="acard tilt rv{" has-play" if pl else ""}" style="{cv(d)}"{key}>{tag}<div class="top"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+            '<div>' + ('' if k else f'<span class="cat">{esc(lb)}</span>') + f'<h3><a class="stretch" href="/{d}/">{name_html(name)}</a></h3></div></div>'
+            f'<p>{esc(text)}</p><div class="acts">' + (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if pl else '')
             + (f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' if i else '<span class="pill soon">近日公開</span>') + '</div></li>')
 
 def calendar(big=False):
@@ -208,9 +240,9 @@ def countdown():
 
 def rsample(h='h3'):   # /today/ は上に h2 がないので h2
     return (f'<div class="rsample rv"><{h}><span>🏆 今日のランキング</span> <small>例</small></{h}><ol>'
-            '<li><span class="md" aria-hidden="true">🥇</span><span class="nm">ねこまる</span><span class="tm">0:41</span></li>'
-            '<li><span class="md" aria-hidden="true">🥈</span><span class="nm">たろう</span><span class="tm">0:47</span></li>'
-            '<li class="you"><span class="md" aria-hidden="true">🥉</span><span class="nm">？？？？ あなた？</span><span class="tm">-:--</span></li></ol>'
+            '<li><span class="md m1">1位</span><span class="nm">ねこまる</span><span class="tm">0:41</span></li>'
+            '<li><span class="md m2">2位</span><span class="nm">たろう</span><span class="tm">0:47</span></li>'
+            '<li class="you"><span class="md m3">3位</span><span class="nm">？？？？ あなた？</span><span class="tm">-:--</span></li></ol>'
             '<p class="cap">これは表示のイメージ（例）です。実際の順位はアプリの中で見られます。</p></div>')
 
 def note_items():
@@ -228,7 +260,7 @@ def note_list(n=None, thumbs=False):
                 src = re.sub(r'width=\d+', 'width=480', it['thumb'])
                 th = f'<img class="th" src="{esc(src)}" width="160" height="84" alt="" loading="lazy">'
             else:
-                th = '<span class="th" aria-hidden="true">📝</span>'
+                th = '<span class="th" aria-hidden="true">note</span>'
         lis += (f'<li class="rv"><a href="{esc(it["url"])}" rel="noopener">{th}<time datetime="{esc(it["date"])}">{esc(it["date"].replace("-", "."))}</time>'
                 f'<span class="nt">{esc(it["title"])}</span><span class="go2">note で読む →</span></a></li>')
     return f'<ul class="notes{" thumbs" if thumbs else ""}" id="notes"' + (f' data-max="{n}"' if n else '') + f'>{lis}</ul>'
@@ -237,7 +269,7 @@ def me_card(h='h3', full=False):
     btns = ((f'<a class="go sm" href="{NOTE}" rel="me noopener">📝 note を読む</a>' if NOTE_ON else '') +
             f'<a class="ghost" href="{DEV}">App Store で全部見る</a>' + '<a class="ghost" href="/now/">いま やっていること</a>' + ('' if full else '<a class="ghost" href="/about/">もっと見る</a>') +
             ('<a class="ghost" href="/contact/">お問い合わせ</a>' if full else ''))
-    return (f'<div class="me rv"><div class="av" aria-hidden="true">🐛</div><div><{h}>作っている人：いま</{h}>'
+    return (f'<div class="me rv"><div class="av" aria-hidden="true"><img src="/apps/home/01_imomushi.webp" width="84" height="84" alt="" loading="lazy"></div><div><{h}>作っている人：いま</{h}>'
             '<p>将棋・ポーカー・アプリ開発が好きな「いま」です。毎日ちょっと遊べる iPhone アプリを、ひとりで作っています。</p>'
             '<ul class="likes" aria-label="好きなもの"><li>♟️ 将棋</li><li>🃏 ポーカー</li><li>📱 アプリ開発</li></ul>'
             f'<div class="btns">{btns}</div></div></div>')
@@ -275,7 +307,7 @@ def news_items():
 
 def news_li(n, full=True):
     kind = {'site': ('site', 'サイト'), 'upd': ('', 'アップデート'), 'rel': ('rel', 'リリース')}[n['kind']]
-    ic = (f'<img class="ic" src="/{n["d"]}/icon-256.webp" width="48" height="48" alt="" loading="lazy">' if n['d'] else '<span class="ic site" aria-hidden="true">📣</span>')
+    ic = (f'<img class="ic" src="/{n["d"]}/icon-256.webp" width="48" height="48" alt="" loading="lazy">' if n['d'] else '<span class="ic site" aria-hidden="true"><img src="/favicon.svg" width="30" height="30" alt=""></span>')
     t = f'<a href="/{n["d"]}/">{esc(n["title"])}</a>' if n['d'] else esc(n['title'])
     y, m, dd = n['date'].split('-')
     lines = n['lines']
@@ -333,7 +365,7 @@ def advent():
     for k in range(1, 26):
         d = ADVENT_ROT[(k - 1) % len(ADVENT_ROT)]
         t = DAILY_LINE[d].split('：', 1)[0].split('・')[0]
-        lis += (f'<li data-day="{k}" data-d="{d}" data-e="{ADVENT_EMO[d]}" data-t="{esc(t)}" data-n="{esc(NAMES[d][0])}">'
+        lis += (f'<li data-day="{k}" data-d="{d}" data-t="{esc(t)}" data-n="{esc(NAMES[d][0])}">'
                 f'<span class="dn" aria-label="12月{k}日">{k}</span></li>')
     return ('<div class="advent" data-advent><div class="snow" aria-hidden="true"></div><h3>まいにち1まい、とびらをあけよう</h3>'
             '<p class="s">アドベントカレンダーのとびらの中は、その日の「今日の1問」。あけるアプリは日がわりで、ブラウザでそのまま遊べます。</p>'
@@ -490,10 +522,10 @@ def page_apps():
         f'<button type="button" data-f="{cid}" aria-pressed="false">{CAT_EMO[cid]} {esc(lb)}</button>' for cid, lb, _ in CATS)
     secs = ''.join(f'<section class="sec" id="{cid}" data-sec="{cid}" aria-labelledby="h-{cid}" style="padding:14px 0 26px"><div class="wrap">'
                    f'<div class="sec-h"><h2 id="h-{cid}" style="font-size:24px">{CAT_EMO[cid]} {esc(lb)}</h2><span class="n">{len(ds)}本</span></div>'
-                   f'<ul class="grid">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>' for cid, lb, ds in CATS)
+                   f'<ul class="grid rowcards">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>' for cid, lb, ds in CATS)
     body = ('<div class="wrap"><p class="startbar"><a href="/start/"><span aria-hidden="true">🧭</span><span>どれが合うか迷ったら、<b>3問で診断</b> →</span></a></p>'
             '<div class="filters" id="filters" role="group" aria-label="ジャンルで絞りこむ" hidden>' + chips + '</div>'
-            '<label class="search" hidden><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="アプリの名前やことばでさがす" aria-label="アプリをさがす"></label>'
+            '<label class="search" hidden><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="アプリの名前やことばでさがす" aria-label="アプリをさがす"></label>'
             '<p class="empty" id="empty" hidden>見つかりませんでした。ほかのことばでさがしてみてください。</p></div>' + secs)
     g = {"@context": "https://schema.org", "@graph": [ORG, itemlist()]}
     body += facts()   # 前のトップの「数字で見る いまのアプリ」
@@ -504,9 +536,10 @@ def page_today():
     lis = ''
     for k, d in enumerate(DAILY):
         name, i, _ = NAMES[d]; t, w = DAILY_LINE[d].split('：', 1)
-        lis += (f'<li class="rv" style="{cv(d)}"><span class="no">{k + 1:02d}</span><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+        lis += (f'<li class="rv" style="{cv(d)}" data-play="{d if d in PLAY else ""}"><span class="no">{k + 1:02d}</span><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
                 f'<div><p class="nm">{esc(name)}</p><h3>{esc(t)}</h3><p class="w">{esc(w)}</p></div>'
-                f'<div class="acts"><a class="go sm" href="{store(i)}">アプリで挑戦</a>' + (f'<a class="go sm" href="/play/{d}/">▶ ブラウザで1問あそぶ</a>' if d in PLAY else '') +
+                f'<div class="acts">' + (f'<a class="go sm main" href="/play/{d}/">▶ ブラウザで1問あそぶ</a><a class="pill" href="{store(i)}">アプリで挑戦</a>' if d in PLAY else
+                                          f'<a class="go sm main" href="{store(i)}">アプリで挑戦</a>') +
                 f'<a class="ghost" href="/{d}/">くわしく</a></div></li>')
     body = (f'<section class="sec white" style="padding-top:30px"><div class="wrap">{here_play()}<div class="today">{calendar(big=True)}{countdown()}{rsample("h2")}</div></div></section>'
             '<section class="sec"><div class="wrap"><div class="sec-h rv"><h2>今日の問題があるアプリ</h2>'
@@ -514,7 +547,7 @@ def page_today():
             f'<ol class="dlist">{lis}</ol></div></section>'
             '<section class="sec tint" aria-labelledby="h-dg"><div class="wrap dgwrap"><div class="sec-h"><h2 id="h-dg">🧾 今日のまとめ</h2>'
             '<p>ブラウザで遊んだ今日の1問を、1まいにまとめます。✅ と ⬜ だけのシェアの文も作れます（答えはのせません）。</p></div>'
-            '<div id="digest" class="digest"><p>ブラウザで遊んだ今日の1問が、ここにまとまります（記録はこの端末の中だけ）。'
+            '<div id="digest" class="digest" data-compact><p>ブラウザで遊んだ今日の1問が、ここにまとまります（記録はこの端末の中だけ）。'
             '<a href="/play/">ブラウザで遊ぶ →</a></p></div></div></section>'
             f'<script src="/play/digest.js?v={V}" defer></script>'
             '<section class="sec white"><div class="wrap"><div class="sec-h rv"><h2>今日の問題のしくみ</h2><div class="cols c3">'
@@ -642,16 +675,17 @@ def page_faq():
              'どのアプリにも共通の質問をまとめました。アプリごとの質問は下のリンクから。', body, [faq_ld])
 
 def page_contact():
-    sup = ''.join(f'<li><a href="/{d}/#contact"><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>{esc(NAMES[d][0])}</span></a></li>' for d in ALL)
-    priv = ''.join(f'<li><a href="/{d}/privacy.html"><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>{esc(NAMES[d][0])}</span></a></li>' for d in ALL)
+    # アプリごとのサポートとプライバシーポリシーは、1つの表に（前は同じ16本のリストが2回あった。2026-11-20）
+    rows = ''.join(f'<li><img src="/{d}/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span class="n">{esc(NAMES[d][0])}</span>'
+                   f'<a href="/{d}/#contact" aria-label="{esc(NAMES[d][0])} のサポート">サポート</a>'
+                   f'<a href="/{d}/privacy.html" aria-label="{esc(NAMES[d][0])} のプライバシーポリシー">プライバシー</a></li>' for d in ALL)
     body = ('<section class="sec white" style="padding-top:28px"><div class="narrow"><div class="box rv center"><span class="e" aria-hidden="true">✉️</span>'
             '<h2>メールでどうぞ</h2><p>不具合・ご要望・ご質問は、こちらのメールアドレスへ。</p>'
             f'<p><a class="mailbig" href="mailto:{MAIL}">{MAIL}</a></p></div>'
             '<div class="box rv"><h2>📝 書いてもらえると助かること</h2><ul><li>アプリの名前</li><li>iPhone の機種と iOS のバージョン</li>'
             '<li>何をしたら、どうなったか（できれば画面のスクリーンショットも）</li></ul><p>ひとりで作っているので、お返事に少し時間がかかることがあります。</p></div></div></section>'
             '<section class="sec"><div class="narrow">'
-            f'<div class="box rv"><h2>📱 アプリごとのサポート</h2><p>よくある質問や遊び方は、各アプリのページにもあります。</p><ul class="linklist" style="padding:0">{sup}</ul></div>'
-            f'<div class="box rv" id="privacy"><h2>🔒 プライバシーポリシー</h2><p>アプリごとにまとめています。</p><ul class="linklist" style="padding:0">{priv}</ul></div></div></section>')
+            f'<div class="box rv" id="privacy"><h2>アプリごとのサポートと<span class="nw">プライバシーポリシー</span></h2><p>よくある質問や遊び方は、各アプリのページにもあります。</p><ul class="applinks">{rows}</ul></div></div></section>')
     sub_page('/contact/', 'お問い合わせ', f'お問い合わせ｜{BRAND}',
              'いまのアプリへの不具合・ご要望・ご質問はメールでどうぞ。アプリごとのサポートとプライバシーポリシーへのリンクもあります。',
              '不具合やご要望、ご質問はメールで受け付けています。', body)
@@ -749,18 +783,33 @@ def updates_section(d):
     if not notes: return ''
     dt = jst_date(r['currentVersionReleaseDate']); y, m, dd = dt.split('-')
     return (f'<section class="block" aria-labelledby="h-upd"><div class="narrow"><h2 id="h-upd">🆕 さいきんのアップデート</h2>'
-            f'<div class="box rv"><p class="upd-h"><b>バージョン {esc(r["version"])}</b>（{int(y)}年{int(m)}月{int(dd)}日）</p><ul>' +
-            ''.join(f'<li>{esc(x)}</li>' for x in notes) + '</ul><p><a class="more-link" href="/news/">ほかのお知らせ・更新情報 →</a></p></div></div></section>')
+            f'<div class="box rv"><details class="upd"><summary class="upd-h"><b class="nw">バージョン {esc(r["version"])}</b><span class="nw">（{int(y)}年{int(m)}月{int(dd)}日）</span></summary><ul>' +
+            ''.join(f'<li>{esc(x)}</li>' for x in notes) + '</ul></details><p><a class="more-link" href="/news/">ほかのお知らせ・更新情報 →</a></p></div></div></section>')
 
 def aeo_section(d):
     qs = AEO.get(d, []); terms = GLOSS_OF.get(d, [])
     qa = ''.join(f'<details class="qa rv"><summary>{esc(q)}</summary><div class="a"><p>{esc(a)}</p></div></details>' for q, a in qs)
     gl = ''.join(f'<div class="gl rv"><dt><dfn>{esc(t)}</dfn></dt><dd>{esc(GLOSS[t][0])}' +
                  (f' <a href="{GLOSS[t][1]}">くわしく</a>' if GLOSS[t][1] != f'/{d}/' else '') + '</dd></div>' for t in terms)
-    body = ''
-    if qa: body += f'<h2 id="h-aeo">💬 よく聞かれること</h2>{qa}'
-    if gl: body += f'<h2 id="h-gloss" style="margin-top:30px">📖 ことばの説明</h2><dl class="gloss">{gl}</dl>'
-    return f'<section class="block" aria-label="よく聞かれること・ことばの説明"><div class="narrow">{body}</div></section>' if body else ''
+    # 「よく聞かれること」は、下の「よくある質問」に入れて1つにする（2026-11-20 同じような見出しが2つあった）→ merge_faq()
+    return f'<section class="block" aria-labelledby="h-gloss"><div class="narrow"><h2 id="h-gloss">ことばの説明</h2><dl class="gloss">{gl}</dl></div></section>' if gl else ''
+
+def merge_faq(out, d):
+    # アプリのページを短くする（2026-11-20）。文はけさない: たたむ（<details>）か、同じものを1つにまとめるだけ
+    #  ・「よくある質問」: サポートのカード（h3 と答え）を、たためる質問にして、「よく聞かれること」（AEO）の質問を先頭に足す。FAQPage の JSON-LD は前と同じ
+    #  ・「くわしい遊び方」: たたむ（3ステップとルールの下にあるので、ふだんは閉じておく）
+    qs = AEO.get(d, [])
+    aeo = ''.join(f'<details class="qa rv"><summary>{esc(q)}</summary><div class="a"><p>{esc(a)}</p></div></details>' for q, a in qs)
+    m = re.search(r'(<h2 id="faq">よくある質問</h2>)\s*<div class="card">(.*?)</div>', out, flags=re.S)
+    if m:
+        items = re.findall(r'<h3>(.*?)</h3>(.*?)(?=<h3>|$)', m.group(2), flags=re.S)
+        tail = lambda q: re.sub(r'([^<>]{1,5})$', r'<span class="nw">\1</span>', q) if len(re.sub('<[^>]+>', '', q)) > 8 else q   # さいごの数文字は折り返さない
+        own = ''.join(f'<details class="qa rv"><summary>{tail(q.strip())}</summary><div class="a">{a.strip()}</div></details>' for q, a in items)
+        out = out[:m.start()] + m.group(1) + aeo + own + out[m.end():]
+    m = re.search(r'<h2 id="howto">(くわしい(?:遊び方|使い方))</h2>(.*?)(?=<h2 id="faq">)', out, flags=re.S)
+    if m:
+        out = out[:m.start()] + f'<details class="more-sec"><summary><h2 id="howto">{m.group(1)}</h2></summary>{m.group(2).rstrip()}</details>\n\n  ' + out[m.end():]
+    return out
 
 def landing(d):
     name, i, _ = NAMES[d]; a = APPS[d]; cid, clb = CAT_OF[d]
@@ -806,10 +855,11 @@ def landing(d):
         k = out.index('<section class="block rank"'); k = out.index('</section>', k) + len('</section>'); out = out[:k] + '\n' + today_mini(d) + out[k:]
     k = out.index('<h2>遊び方は3ステップ</h2>'); k = out.index('</section>', k) + len('</section>'); out = out[:k] + '\n' + rules_section(d) + out[k:]
     k = out.index('<section class="block support"'); out = out[:k] + updates_section(d) + '\n' + aeo_section(d) + '\n' + out[k:]
+    out = merge_faq(out, d)
     out = out.replace('</body>', f'<script src="/apps/site.js?v={V}" defer></script>\n</body>', 1)
     out = out.replace('<link rel="icon" href="icon-256.webp" type="image/webp">\n<link rel="apple-touch-icon" href="icon.png">', ICON_LINKS, 1)
     assert ICON_LINKS in out
-    out = nowrap_text(out)
+    out = nowrap_text(deemoji(out))
     open(f'{R}/{d}/index.html', 'w', encoding='utf-8').write(out)
 
 # ---------------- 読み物（/guide/） ----------------
@@ -901,10 +951,11 @@ def page_category(cid):
     h1, intro = CAT_INTRO[cid]
     items = [{"@type": "ListItem", "position": k + 1, "url": f"{BASE}/{d}/", "name": NAMES[d][0]} for k, d in enumerate(ds)]
     others = ''.join(f'<li><a href="/apps/{c}/"><span aria-hidden="true" style="font-size:24px">{CAT_EMO[c]}</span><span>{esc(l)}</span></a></li>' for c, l, _ in CATS if c != cid)
-    body = (f'<section class="sec" style="padding-top:16px"><div class="wrap"><ul class="grid">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>'
+    body = (f'<section class="sec" style="padding-top:16px"><div class="wrap"><ul class="grid rowcards">{"".join(app_card(d, k=True) for d in ds)}</ul></div></section>'
             f'<section class="sec white"><div class="wrap"><div class="sec-h"><h2 style="font-size:22px">ほかのジャンル</h2></div><ul class="linklist">{others}'
             '<li><a href="/apps/"><span aria-hidden="true" style="font-size:24px">📱</span><span>すべてのアプリ</span></a></li></ul></div></section>')
-    sub_page(f'/apps/{cid}/', f'{CAT_EMO[cid]} {h1}', f'{h1}｜{BRAND}', intro[:110], esc(intro), body,
+    h1h = re.sub(r'^(.+?)(のアプリ|遊べるアプリ)$', r'<span class="nw">\1</span><span class="nw">\2</span>', h1)   # 「脳ト／レ」のように切れないように
+    sub_page(f'/apps/{cid}/', h1h, f'{h1}｜{BRAND}', intro[:110], esc(intro), body,
              [{"@context": "https://schema.org", "@type": "ItemList", "name": h1, "numberOfItems": len(items), "itemListElement": items}],
              crumbs=[('/', 'ホーム'), ('/apps/', 'アプリ一覧'), (None, lb)], og=f'cat-{cid}')
 
@@ -1276,12 +1327,12 @@ def page_404():
     links = [('/', '🏠', 'ホーム'), ('/today/', '📅', '今日の問題'), ('/play/', '🌐', 'ブラウザで遊ぶ'), ('/apps/', '📱', 'アプリ一覧'), ('/start/', '🧭', 'どれが合う？3問で診断')]
     lis = ''.join(f'<li><a href="{u}"><span aria-hidden="true" style="font-size:24px">{e}</span><span>{t}</span></a></li>' for u, e, t in links)
     body = ('<section class="phero nf"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div><div class="wrap">'
-            '<p class="nf-e" aria-hidden="true">🐛❓</p><h1>ページが<span class="nw">見つかりません</span><span class="nw">でした</span></h1>'
+            '<p class="nf-e" aria-hidden="true"><img src="/apps/home/01_imomushi.webp" width="96" height="96" alt=""></p><h1>ページが<span class="nw">見つかりません</span><span class="nw">でした</span></h1>'
             '<p class="lead2">URL がちがうか、ページが引っこしたのかもしれません。下のページからどうぞ。</p>'
             '<div class="ctas" style="margin-top:18px"><a class="go" href="/play/">▶ 今日の1問をブラウザで遊ぶ</a><a class="ghost" href="/">ホームへ</a></div></div></section>'
             f'<section class="sec white"><div class="narrow"><ul class="linklist" style="padding:0">{lis}</ul></div></section>')
     out = out + '\n' + header(None) + '\n<main id="main">\n' + body + '\n</main>\n' + tail()
-    open(f'{R}/404.html', 'w', encoding='utf-8').write(nowrap_text(out))
+    open(f'{R}/404.html', 'w', encoding='utf-8').write(nowrap_text(deemoji(out)))
 
 # ---------------- OG 画像・llms.txt ----------------
 def make_og(only=None):   # only: 作る画像の名前（OG_PAGES のキー）だけ。None なら全部
@@ -1396,7 +1447,8 @@ def footer_en():
         return f'<li><a href="{u}"{at}>{esc(t)}</a></li>'
     body = ''.join(f'<div><h2>{h}</h2><ul>' + ''.join(li(u, t) for u, t in ls) + '</ul></div>' for h, ls in cols)
     wall = ''.join(f'<li><a href="{en_url(d)}"{ja_attr(en_url(d))} aria-label="{esc(en_name(d))}"><img src="/{d}/icon-256.webp" width="48" height="48" alt="" loading="lazy"></a></li>' for d in ALL)
-    bye = ('<div class="bye"><div class="crew" aria-hidden="true"><span>🐛</span><span>🍱</span><span>🥚</span><span>🫘</span><span>🚗</span><span>💧</span></div><div class="bye-in">'
+    crew = ''.join(f'<img src="/apps/home/{f}.webp" width="44" height="44" alt="" loading="lazy">' for f, _ in CREW)
+    bye = (f'<div class="bye"><div class="crew" aria-hidden="true">{crew}</div><div class="bye-in">'
            '<p class="bye-h">See you tomorrow.</p><p class="bye-s">Next puzzle in <b class="bye-t" data-cdf>--:--:--</b></p>'
            '<div class="bye-go"><a class="go sm" href="/en/play/">▶ Play today\'s puzzle</a></div>'
            f'<ul class="wall" aria-label="All apps">{wall}</ul></div></div>')
@@ -1524,7 +1576,7 @@ def me_card_en(h='h3', full=False):
             f'<a class="ghost" href="mailto:{MAIL}">Email me</a>')
     likes = ''.join(f'<li>{e} {esc(t)}</li>' for e, t in EN.ABOUT_EN['likes'])
     hid = ' id="h-me"' if h == 'h2' else ''
-    return (f'<div class="me rv"><div class="av" aria-hidden="true">🐛</div><div><{h}{hid}>The maker: Ima</{h}>'
+    return (f'<div class="me rv"><div class="av" aria-hidden="true"><img src="/apps/home/01_imomushi.webp" width="84" height="84" alt="" loading="lazy"></div><div><{h}{hid}>The maker: Ima</{h}>'
             f'<p>{esc(EN.ABOUT_EN["lead"])} {esc(EN.ABOUT_EN["paras"][0])}</p>'
             f'<ul class="likes" aria-label="Things I like">{likes}</ul><div class="btns">{btns}</div></div></div>')
 
@@ -1700,6 +1752,28 @@ def fix_play_hreflang():   # /play/ は手で書いたページ（生成しな�
     s2 = s2[:k] + hreflang_links('/play/') + '\n' + s2[k:]
     if s2 != s: open(fn, 'w', encoding='utf-8').write(s2)
 
+def fix_play_pages():
+    # /play/ は手で書いたページ（生成しない）。上に細いヘッダー（ロゴ・パンくず・メニュー）を入れる（2026-11-20 スマホのUI）。何度やっても同じ。
+    # CSP（style 属性なし・外の読みこみなし）でも動くように: インラインの SVG と <details> だけ（JS なし）。見た目は common.css / hub.css
+    for fn in [f'{R}/play/index.html'] + sorted(f'{R}/play/{d}/index.html' for d in PLAY):
+        s = open(fn, encoding='utf-8').read()
+        s2 = re.sub(r'<!--wp-top-->.*?<!--/wp-top-->', '<nav class="wp-crumb" aria-label="パンくずリスト"><ol>@OL@</ol></nav>', s, count=1, flags=re.S) if '<!--wp-top-->' in s else s
+        m = re.search(r'<nav class="(?:wp-crumb|crumb)" aria-label="パンくずリスト"><ol>(.*?)</ol></nav>', s2, flags=re.S)
+        ol = re.search(r'<!--ol-->(.*?)<!--/ol-->', s, flags=re.S).group(1) if '<!--wp-top-->' in s else m.group(1)
+        menu = ''.join(f'<a href="{u}">{t}</a>' for u, t, e in MENU)
+        top = (f'<!--wp-top--><div class="wp-top"><a class="wp-logo" href="/" aria-label="{BRAND} ホーム">{logo_svg("lg-p", 28)}</a>'
+               f'<nav class="wp-crumb" aria-label="パンくずリスト"><ol><!--ol-->{ol}<!--/ol--></ol></nav>'
+               f'<details class="wp-menu"><summary aria-label="メニューを開く"><span></span></summary><nav aria-label="メニュー">{menu}</nav></details></div><!--/wp-top-->')
+        s2 = s2[:m.start()] + top + s2[m.end():]
+        s2 = re.sub(r'href="(\.\./common\.css|hub\.css)(?:\?v=\d+)?"', lambda mm: f'href="{mm.group(1)}?v={V}"', s2)
+        s2 = re.sub(r'src="(digest|weekly)\.js\?v=\d+"', lambda mm: f'src="{mm.group(1)}.js?v={V}"', s2)
+        # 見出し・ボタン・タブの飾りの絵文字だけ外す（ゲームの中の絵（住人・カードのしるし・⏱ などの数字のラベル・音のボタン）はそのまま）
+        strip_e = lambda mm: EMOJI_RE.sub(lambda e: ''.join(c for c in e.group(0) if c in EMOJI_KEEP), mm.group(0))
+        s2 = re.sub(r'<h1>[^<]*', strip_e, s2)
+        s2 = re.sub(r'<button id="(?:bReset|tab-a|tab-b)"[^>]*>[^<]*', strip_e, s2)
+        s2 = re.sub(r'<p class="tag">[^<]*', strip_e, s2)
+        if s2 != s: open(fn, 'w', encoding='utf-8').write(s2)
+
 def build_en():
     page_en_home(); page_en_apps(); page_en_play(); page_en_about(); page_en_faq()
     for d in EN_GAMES: page_en_app(d)
@@ -1711,6 +1785,7 @@ if __name__ == '__main__':
     for c, _, _ in CATS: page_category(c)
     for d in ALL: landing(d); page_support(d); fix_privacy_nav(d)
     for d in JOIN: page_join(d)
+    fix_play_pages()
     build_en()
     llms()
     if '--og' in sys.argv: make_og()

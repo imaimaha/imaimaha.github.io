@@ -109,7 +109,7 @@
     }
     hero.insertBefore(deco, hero.firstChild);
     var rb = d.createElement('p'); rb.className = 'sribbon ' + k;
-    rb.textContent = k === 'xmas' ? '🎄 クリスマス期間（12/25 まで）' : '🎍 あけましておめでとう';
+    rb.textContent = k === 'xmas' ? 'クリスマス期間（12/25 まで）' : 'あけましておめでとう';
     hero.appendChild(rb);
   })();
 
@@ -136,20 +136,21 @@
       return subs.some(function (s) { try { var r = JSON.parse(localStorage.getItem('web.' + g + '.today' + s) || 'null'); return r && r.day === key; } catch (e) { return false; } });
     }
     $$('li[data-day]', adv).forEach(function (li) {
-      var k = +li.getAttribute('data-day'), g = li.getAttribute('data-d'), e = li.getAttribute('data-e');
+      var k = +li.getAttribute('data-day'), g = li.getAttribute('data-d');
+      function icon(cls) { var im = d.createElement('img'); im.className = cls; im.src = '/' + g + '/icon-256.webp'; im.alt = ''; im.width = im.height = 40; return im; }   // 絵文字のかわりにアプリのアイコン（2026-11-20）
       if (k < day) {
         li.className = 'past' + (opened[k] ? ' opened' : '');
-        if (opened[k]) { var s = d.createElement('span'); s.className = 'pe'; s.setAttribute('aria-hidden', 'true'); s.textContent = e; li.appendChild(s); }
+        if (opened[k]) li.appendChild(icon('pe'));
       } else if (k > day) {
         li.className = 'fut';
       } else {
         li.className = 'now';
         li.textContent = '';
         var b = d.createElement('b'); b.textContent = '12/' + k + ' のとびら';
-        var em = d.createElement('span'); em.className = 'em'; em.setAttribute('aria-hidden', 'true'); em.textContent = e;
+        var em = icon('em');
         var nm = d.createElement('b'); nm.className = 'nm'; nm.textContent = li.getAttribute('data-t');
         var a = d.createElement('a'); a.href = '/play/' + g + '/'; a.className = 'open';
-        a.textContent = done(g) ? '✅ クリアずみ・もう一度' : '▶ あけて遊ぶ';
+        a.textContent = done(g) ? 'クリアずみ・もう一度' : '▶ あけて遊ぶ';
         a.setAttribute('aria-label', '12月' + k + '日のとびら：' + li.getAttribute('data-n') + 'の' + li.getAttribute('data-t') + 'をブラウザで遊ぶ');
         a.addEventListener('click', function () {
           opened[k] = 1;
@@ -234,14 +235,14 @@
   }
 
   /* 紙ふぶき */
-  var BITS = ['🎉', '✨', '⭐', '🐛', '🍱', '🥚', '🏆'];
+  var BITS = ['#ffcf3f', '#e05a3a', '#56b33a', '#5560c8', '#ff9a6b', '#2fa3c9', '#c94532'];   // 紙ふぶきは色の小さな四角（絵文字はやめた 2026-11-20）
   $$('[data-confetti]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       if (still || !a.animate) return;
       var r = a.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       for (var i = 0; i < 16; i++) {
         var s = d.createElement('span'); s.className = 'confetti'; s.setAttribute('aria-hidden', 'true');
-        s.textContent = BITS[i % BITS.length]; s.style.left = cx + 'px'; s.style.top = cy + 'px'; d.body.appendChild(s);
+        s.style.background = BITS[i % BITS.length]; s.style.left = cx + 'px'; s.style.top = cy + 'px'; d.body.appendChild(s);
         var ang = Math.random() * Math.PI * 2, dist = 70 + Math.random() * 110;
         s.animate([{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 1 },
           { transform: 'translate(calc(-50% + ' + Math.cos(ang) * dist + 'px), calc(-50% + ' + (Math.sin(ang) * dist - 40) + 'px)) rotate(' + (Math.random() * 360 - 180) + 'deg) scale(1)', opacity: 0 }],
@@ -266,7 +267,7 @@
         if (thumbs) {
           var th;
           if (it.thumb && /^https:\/\/assets\.st-note\.com\//.test(it.thumb)) { th = d.createElement('img'); th.src = it.thumb.replace(/width=\d+/, 'width=480'); th.alt = ''; th.loading = 'lazy'; th.width = 160; th.height = 84; }
-          else { th = d.createElement('span'); th.textContent = '📝'; th.setAttribute('aria-hidden', 'true'); }
+          else { th = d.createElement('span'); th.textContent = 'note'; th.setAttribute('aria-hidden', 'true'); }
           th.className = 'th'; a.appendChild(th);
         }
         t.dateTime = it.date; t.textContent = String(it.date).replace(/-/g, '.');

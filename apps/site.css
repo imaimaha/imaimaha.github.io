@@ -792,3 +792,99 @@ html[lang="en"] .hhero h1 { font-size: clamp(34px, 9.6vw, 60px); }
 .dateline { font-size: 13px; color: var(--dim); }
 /* 読み物（/guide/）のまとまりへのリンク */
 .zjump.gj a { min-height: 44px; padding: 0 16px; box-shadow: none; }
+/* ===== 2026-11-20 スマホのUI（site_lab/mobile_ui の提案。PC は変えないか、よくなるものだけ） ===== */
+/* 見出しの絵文字のかわりに、左に細い線（配置と色で「ここから新しい区切り」を伝える） */
+.sec-h h2::before, .box > h2::before, .h2s::before { content: ""; display: inline-block; width: 6px; height: .9em; border-radius: 3px; background: var(--orange); margin-right: 10px; vertical-align: -0.08em; }
+.facts2 .sec-h h2::before { background: var(--yellow); }
+.rsample li .md { font-size: 13px; font-weight: 800; width: 34px; height: 26px; display: grid; place-items: center; border-radius: 99px; background: #f3e6d3; color: var(--ink); }
+.rsample li .md.m1 { background: var(--yellow); }
+.me .av { overflow: hidden; background: #fff3d6; }
+.me .av img { width: 84px; height: 84px; display: block; }
+.news .ic.site img { display: block; }
+.notes.thumbs .th { font-family: var(--round); font-size: 15px; font-weight: 800; color: #2b8a68; }
+.nf .nf-e img { width: 96px; height: 96px; }
+.search svg { flex: none; color: var(--dim); }
+/* メニュー（≡）: 2列。上の2つは横いっぱい */
+.mnav nav { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: min(380px, calc(100vw - 32px)); }
+.mnav nav a { min-height: 46px; padding: 0 12px; font-size: 14.5px; }
+.mnav nav a[href="/"], .mnav nav a[href="/start/"] { grid-column: 1 / -1; }
+/* アプリのリスト（ランキング・よくある質問など）: 説明の文字が数文字で折り返していた（WebKit） */
+.linklist a > span { flex: 1; min-width: 0; }
+.linklist small { line-height: 1.45; }
+/* お問い合わせ: アプリごとの サポート と プライバシー を1つの表に */
+.applinks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.applinks li { display: grid; grid-template-columns: 36px auto auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 10px; padding: 8px 10px 2px 12px; border-radius: 16px; background: #fff; border: 2px solid var(--line); }
+.applinks img { width: 36px; height: 36px; border-radius: 10px; grid-row: 1 / 3; align-self: start; margin-top: 2px; }
+.applinks .n { grid-column: 2 / -1; font-weight: 700; font-size: 15px; line-height: 1.4; }
+.applinks a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; margin-left: -8px; border-radius: 12px; font-size: 14px; font-weight: 800; color: var(--orange-d); }
+.applinks a + a { margin-left: 4px; }
+.applinks a:hover { background: var(--bg); }
+@media (min-width: 760px) { .applinks { grid-template-columns: 1fr 1fr; } }
+/* 今日の問題: 主役のボタン1つ（ブラウザで1問 か アプリで挑戦）＋ そのすぐ下に App Store・くわしく */
+.dlist .acts .pill { min-height: 44px; }
+.dlist > li.dg-ok { box-shadow: 0 5px 0 rgba(59,43,31,.08), inset 0 0 0 3px #56b33a; }
+.dlist .dg-done { grid-column: 1 / -1; justify-self: start; font-size: 13px; font-weight: 800; color: #2b7a1a; }
+@media (max-width: 759px) {
+  .dlist > li { padding: 12px; gap: 4px 10px; }
+  .dlist .no { font-size: 20px; width: auto; min-width: 1.4em; white-space: nowrap; }
+  .dlist .ic { width: 52px; height: 52px; border-radius: 13px; }
+  .dlist .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dlist .acts a { display: inline-flex; justify-content: center; align-items: center; text-align: center; min-height: 44px; }
+  .dlist .acts .main { grid-column: 1 / -1; }
+}
+.dg-list .e { width: 28px; height: 28px; border-radius: 8px; display: block; }
+/* アプリのカード: 「くわしく →」はやめて、カード全体がリンク。スマホは1行型（アイコン・名前・App Store／その下に説明） */
+.acard .acts { justify-content: flex-end; }
+.acard.has-play .acts { justify-content: space-between; }
+@media (max-width: 759px) {
+  .rowcards > .acard { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; row-gap: 6px; align-items: center; padding: 12px 12px 12px 14px; }
+  .rowcards > .acard .top { grid-column: 1; grid-row: 1; margin: 0; min-width: 0; gap: 10px; }
+  .rowcards > .acard .top > div { min-width: 0; }
+  .rowcards > .acard .ic { width: 52px; height: 52px; border-radius: 13px; }
+  .rowcards > .acard h3 { font-size: 16px; line-height: 1.35; }
+  .rowcards > .acard p { grid-column: 1 / -1; grid-row: 2; margin: 0; font-size: 14px; }
+  .rowcards > .acard .acts { grid-column: 2; grid-row: 1; }
+  .rowcards > .acard.has-play .acts { grid-column: 1 / -1; grid-row: 3; }
+  .rowcards > .acard .tagd { top: -9px; right: auto; left: 76px; font-size: 11.5px; padding: 1px 8px; }
+}
+/* フッター: スマホでは短く（リンクを横にならべて折り返す。押せる高さ 44px はそのまま） */
+.ft .crew img { width: 44px; height: 44px; display: block; }
+.ft .crew img:nth-child(2n) { transform: translateY(9px); }
+@media (max-width: 759px) {
+  .ft .cols3 { grid-template-columns: 1fr; gap: 4px; }
+  .ft .cols3 ul { display: flex; flex-wrap: wrap; gap: 0 18px; margin: 0 0 6px; }
+  .ft h2 { margin: 6px 0 0; }
+  .ft .tag { display: none; }
+  .ft > .wrap { padding-top: 22px; gap: 12px; }
+  .ft .bye { margin-top: 48px; padding: 18px 0 22px; }
+  .ft .crew { top: -52px; }
+  .ft .crew img { width: 36px; height: 36px; }
+  .ft .bye-go { margin: 10px 0 14px; }
+  .ft .wall { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; }
+  .ft .wall a, .ft .wall img { width: 44px; height: 44px; }
+}
+/* PC: トップの「読み物」を2列に */
+@media (min-width: 900px) { .readlist { grid-template-columns: 1fr 1fr; } }
+/* 読ませたい注意書きは 13px に */
+.rsample .cap, .dg-cap, .wk-cap { font-size: 13px; }
+/* アプリのページ: たためる「くわしい遊び方」と、アップデートの中身 */
+.more-sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.more-sec > summary::-webkit-details-marker { display: none; }
+.more-sec > summary h2 { margin: 0 !important; flex: 1; }
+.more-sec > summary::after { content: "＋"; font-weight: 800; color: var(--dim); transition: transform .2s; }
+.more-sec[open] > summary::after { transform: rotate(45deg); }
+.support .more-sec { margin-bottom: 8px; border-bottom: 3px solid var(--line); }
+.support .more-sec > summary h2 { border-bottom: 0; }
+details.upd > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; }
+details.upd > summary::-webkit-details-marker { display: none; }
+details.upd > summary::after { content: "＋"; margin-left: auto; font-weight: 800; color: var(--dim); transition: transform .2s; }
+details.upd[open] > summary::after { transform: rotate(45deg); }
+.support .qa .a p { margin: 0 0 8px; }
+.confetti { width: 9px; height: 13px; border-radius: 2px; }
+.doors li .pe { width: 18px; height: 18px; border-radius: 5px; }
+.doors li.now .em { width: clamp(34px, 9vw, 44px); height: auto; border-radius: 10px; }
+section.block .more-sec > summary h2 { font-size: 20px; text-align: left; padding-bottom: 4px; }
+section.block .more-sec > summary h2::after { display: none; }
+.support .more-sec { margin-top: 32px; }
+section.block.support .more-sec + h2, section.block.support details.qa + h2 { margin-top: 36px; }
+section.block.support .more-sec { margin-top: 8px; }

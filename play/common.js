@@ -132,7 +132,7 @@
     if (o.note) box.appendChild(el('p', 'tip', o.note));
     (o.extra || []).forEach(function (x) { box.appendChild(x); });
     var msg = el('p', 'copied', '');
-    var sh = el('button', 'btn main', '📣 結果をシェア'); sh.type = 'button'; sh.id = 'wp-share';
+    var sh = el('button', 'btn main', '結果をシェア'); sh.type = 'button'; sh.id = 'wp-share';
     sh.addEventListener('click', function () { WP.share(shareText(o), msg); });
     box.appendChild(sh); box.appendChild(msg);
     var st = el('a', 'store'); st.href = 'https://apps.apple.com/jp/app/id' + cfg.appId; st.rel = 'noopener'; st.id = 'wp-store';
