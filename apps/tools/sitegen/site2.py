@@ -430,9 +430,12 @@ GUIDE = [('hitofude-zukei', '一筆書きができる図形の見分け方｜点
          ('make-10-anzan', '4つの数字で10を作る暗算のコツ｜5つの考え方', '2026-11-19'),   # anzan
          ('make10-dekinai', '4つの数字で10を作れない組み合わせ一覧｜1〜9なら48組', '2026-11-19'),   # anzan
          ('make10-nanmon', '分数がいる10の難問｜1158・1199・1337・3478', '2026-11-19'),   # anzan
+         ('make-24', '4つの数字で24を作る遊び｜1〜9なら作れないのは91組', '2026-11-20'),   # anzan
          ('sosuu-miwakekata', '4けたの素数を速く見分ける方法｜2・3・5・7・11の順', '2026-11-19'),   # anzan
          ('kakezan-gate-kotsu', '暗算ランナーのコツ｜＋と×、−と÷のどちらが得かを一瞬で決める', '2026-11-19'),   # anzan
          ('hensoku-shogi-rules', '変則将棋のルール一覧｜安南将棋・トランプ将棋・王手将棋など', '2026-11-19'),   # shogi
+         ('shogi-kakoi-ichiran', '将棋の囲いの種類一覧｜美濃・矢倉・穴熊など12種類の形', '2026-11-20'),   # shogi
+         ('shogi-senpou-ichiran', '将棋の戦法の種類一覧｜振り飛車・居飛車・奇襲の14種類', '2026-11-20'),   # shogi
          ('annan-shogi', '安南将棋のルールとコツ｜うしろの駒の動きを借りる将棋', '2026-11-19'),   # shogi
          ('trump-shogi', 'トランプ将棋のルールとコツ｜カードの数字の筋だけ動かせる将棋', '2026-11-19'),   # shogi
          ('oute-shogi', '王手将棋のルールとコツ｜先に王手をかけたら勝ち', '2026-11-19'),   # shogi
@@ -444,6 +447,8 @@ GUIDE = [('hitofude-zukei', '一筆書きができる図形の見分け方｜点
          ('daifugo-local-rules', '大富豪のローカルルール一覧｜8切り・革命・イレブンバック', '2026-11-19'),   # cards
          ('futari-daifugo-kotsu', 'ふたり大富豪のコツ｜相手の手札は、はじめは自分と同じ数字', '2026-11-19'),   # cards
          ('gekokujo-kotsu', '下剋上デュエルのコツ｜1が9に勝つ読み合いで、相手の残りを読む', '2026-11-19'),   # cards
+         ('futari-trump-games', '2人でできるトランプゲーム一覧｜ルールを短く9つ', '2026-11-20'),   # cards
+         ('poker-yaku-ichiran', 'ポーカーの役の一覧（強い順）｜10種類の役と出る確率', '2026-11-20'),   # cards
          ('poker-preflop-kihon', 'ポーカーのプリフロップとは｜席の順番で、参加する手が変わる理由', '2026-11-19'),   # cards
          ('poker-range-hyou', '13×13のレンジ表の読み方｜ペア・スーテッド・オフスート', '2026-11-19'),   # cards
          ('sanpo-tsuzukeru', '散歩を続けるコツ5つ｜「目的」と「記録」を小さく作る', '2026-11-19'),   # sanpo
@@ -452,14 +457,14 @@ GUIDE = [('hitofude-zukei', '一筆書きができる図形の見分け方｜点
          ('ranking-battle', '毎日の1問を、みんなとのバトルにした理由｜ランキングのしくみ', '2026-11-19'),   # ima
          ('koukoku-dashikata', '広告の出し方で気をつけていること｜遊んでいる間は出さない', '2026-11-19'),   # ima
          ]   # /guide/ の読み物（手で書いたページ）。まとまり（GUIDE_GROUPS）ごとに、はじめがハブの記事
-GUIDE_GROUPS = [('puzzle', 'パズルのコツ', ['hitofude-zukei', 'hitofude-kotsu', 'hitofude-reidai', 'hitofude-shikake', 'heyawari-tokikata', 'jyunin-sagashi-kotsu', 'okazu-kotsu', 'mainichi-1mon-puzzle']), ('anzan', '暗算と数あそび', ['anzan-kotsu', 'make-10-anzan', 'make10-dekinai', 'make10-nanmon', 'sosuu-miwakekata', 'kakezan-gate-kotsu']), ('shogi', '変則将棋', ['hensoku-shogi-rules', 'annan-shogi', 'trump-shogi', 'oute-shogi', 'kagemusha-shogi', 'tokushu-kouka-shogi', 'shibari-shogi', 'hensoku-tsume-kotsu', 'online-taisen']), ('cards', 'カードゲーム', ['daifugo-local-rules', 'futari-daifugo-kotsu', 'gekokujo-kotsu', 'poker-preflop-kihon', 'poker-range-hyou']), ('sanpo', '散歩と記録', ['sanpo-tsuzukeru', 'sanpo-bingo']), ('ima', 'いまのアプリについて', ['ima-apps-kangaekata', 'ranking-battle', 'koukoku-dashikata'])]
+GUIDE_GROUPS = [('puzzle', 'パズルのコツ', ['hitofude-zukei', 'hitofude-kotsu', 'hitofude-reidai', 'hitofude-shikake', 'heyawari-tokikata', 'jyunin-sagashi-kotsu', 'okazu-kotsu', 'mainichi-1mon-puzzle']), ('anzan', '暗算と数あそび', ['anzan-kotsu', 'make-10-anzan', 'make10-dekinai', 'make10-nanmon', 'make-24', 'sosuu-miwakekata', 'kakezan-gate-kotsu']), ('shogi', '変則将棋', ['hensoku-shogi-rules', 'shogi-kakoi-ichiran', 'shogi-senpou-ichiran', 'annan-shogi', 'trump-shogi', 'oute-shogi', 'kagemusha-shogi', 'tokushu-kouka-shogi', 'shibari-shogi', 'hensoku-tsume-kotsu', 'online-taisen']), ('cards', 'カードゲーム', ['daifugo-local-rules', 'futari-daifugo-kotsu', 'gekokujo-kotsu', 'futari-trump-games', 'poker-yaku-ichiran', 'poker-preflop-kihon', 'poker-range-hyou']), ('sanpo', '散歩と記録', ['sanpo-tsuzukeru', 'sanpo-bingo']), ('ima', 'いまのアプリについて', ['ima-apps-kangaekata', 'ranking-battle', 'koukoku-dashikata'])]
 GUIDE_GROUP = {s: gid for gid, _, ss in GUIDE_GROUPS for s in ss}
 GUIDE_GROUP_LB = {gid: lb for gid, lb, _ in GUIDE_GROUPS}
 GUIDE_GROUP_INTRO = {   # /guide/<group>/ のはじめの文（1〜2文）
     'puzzle': '一筆書き・へや割り・住人さがし・おかず詰めの解き方とコツです。例題の盤を見ながら、決まるところから順に解く考え方をまとめています。',
-    'anzan': '暗算を速くするコツと、4つの数字で10を作るあそび、4けたの素数の見分け方です。きりのいい数を作るのが、いちばんの近道です。',
-    'shogi': '安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。友達とオンラインで対戦するしかたも書いています。',
-    'cards': '大富豪のローカルルールと、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーのプリフロップとレンジ表の読み方です。',
+    'anzan': '暗算を速くするコツと、4つの数字で10や24を作るあそび、4けたの素数の見分け方です。きりのいい数を作るのが、いちばんの近道です。',
+    'shogi': '安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。囲いと戦法の種類の一覧もあります。友達とオンラインで対戦するしかたも書いています。',
+    'cards': '大富豪のローカルルールと、2人でできるトランプゲーム、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーの役の一覧とプリフロップ・レンジ表の読み方です。',
     'sanpo': '散歩を続けるコツと、散歩ビンゴの遊び方です。目的と記録を小さく作ると、毎日の散歩が少し楽しくなります。',
     'ima': '「いまのアプリ」をどんな考えで作っているかです。毎日の1問をランキングにした理由や、広告の出し方で気をつけていることを書いています。'}
 HOME_READS = [ss[0] for _, _, ss in GUIDE_GROUPS]   # トップに出す読み物（まとまりごとのハブ）

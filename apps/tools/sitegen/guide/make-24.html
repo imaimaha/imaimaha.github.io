@@ -1,0 +1,74 @@
+<!-- {"title": "4つの数字で24を作る遊び｜1〜9なら作れないのは91組", "short": "4つの数字で24を作る遊び", "desc": "4つの数字を＋−×÷とカッコで24にする遊びの、ルール・コツ・例題と、作れない組の一覧です。1〜9の4つなら495組のうち91組、トランプの1〜13なら1820組のうち458組が作れません。", "lead": "4つの数字で10を作る遊びに慣れたら、次は24を作ってみましょう。24はわり切れる数が多いので、10とはちがう考え方が役に立ちます。作れない組み合わせも、プログラムでぜんぶ調べました。", "published": "2026-11-20", "modified": "2026-11-20"} -->
+<p class="rv dateline">この記事は、AIで下書きしたあと、作者が確かめて公開しています。</p>
+
+<h2 class="rv">結論：1〜9なら、作れないのは91組</h2>
+<p class="rv">4つの数字を1回ずつ使い、並べかえてよく、＋−×÷とカッコを使って24を作る、というルールで調べました。とちゅうで分数や、マイナスの数になってもよいことにしています。</p>
+<ul class="rv">
+<li><b>1〜9の数字4つ</b>（同じ数字をふくむ、並び順は区別しない）：495組のうち、<b>404組は作れて、91組は作れません</b>。</li>
+<li><b>トランプの1〜13</b>（A＝1、J＝11、Q＝12、K＝13）：1820組のうち、1362組は作れて、458組は作れません。</li>
+<li><b>トランプ52枚から4枚を引いたとき</b>：24を作れる確率は約80%です。A〜9の36枚だけで引くなら、約91%になります。</li>
+</ul>
+<p class="rv">数え方：数字の組ごとに、2つを選んで計算し、1つの数にまとめる、をくりかえして、出てくる答えをすべて調べました。分数は、わり切れなくても分数のまま正確に計算しています。</p>
+
+<h2 class="rv">遊び方</h2>
+<p class="rv">4つの数字を見て、24になる式を考えます。4つの数字は、どれも1回ずつ使います。使わない数字があってはいけません。トランプなら、よく切って4枚めくり、早く式を言えた人がその4枚をもらう、という遊び方ができます。</p>
+<p class="rv">10を作る遊びとルールは同じで、ゴールの数だけがちがいます。10を作る遊びは「<a href="/guide/make-10-anzan/">4つの数字で10を作る暗算のコツ</a>」にまとめています。</p>
+
+<h2 class="rv">例題と答え</h2>
+<div class="rv" style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse">
+<tr><th style="text-align:left;padding:4px 8px">4つの数字</th><th style="text-align:left;padding:4px 8px">答えの例</th></tr>
+<tr><td style="padding:4px 8px">1・2・3・4</td><td style="padding:4px 8px">1×2×3×4</td></tr>
+<tr><td style="padding:4px 8px">3・4・5・6</td><td style="padding:4px 8px">(3＋5−4)×6</td></tr>
+<tr><td style="padding:4px 8px">1・6・7・9</td><td style="padding:4px 8px">(9−6)×(7＋1)</td></tr>
+<tr><td style="padding:4px 8px">3・5・7・9</td><td style="padding:4px 8px">(7−5)×(9＋3)</td></tr>
+<tr><td style="padding:4px 8px">1・6・9・9</td><td style="padding:4px 8px">(9＋9＋6)×1</td></tr>
+<tr><td style="padding:4px 8px">4・4・10・10</td><td style="padding:4px 8px">(10×10−4)÷4</td></tr>
+<tr><td style="padding:4px 8px">1・5・5・5</td><td style="padding:4px 8px">(5−1÷5)×5</td></tr>
+<tr><td style="padding:4px 8px">3・3・8・8</td><td style="padding:4px 8px">8÷(3−8÷3)</td></tr>
+</table></div>
+<p class="rv">答えは1つとはかぎりません。たとえば 1・2・3・4 は、(1＋2＋3)×4 でも24になります。下の2つ（1・5・5・5 と 3・3・8・8）は、とちゅうで分数を使わないと作れない、むずかしい組です。</p>
+
+<h2 class="rv">24を作るコツ4つ</h2>
+<p class="rv"><b>1. かけ算の形を先に思いうかべる。</b>24は、1×24・2×12・3×8・4×6 の4つのかけ算で作れます。4つの数字のうち2つで「3」を作り、のこりの2つで「8」を作る、というように、半分ずつに分けて考えると見つけやすくなります。</p>
+<p class="rv"><b>2. 足し算・引き算で近くまで行く。</b>9＋9＋6＝24 のように、足すだけで作れる組もあります。大きい数字が多いときは、20＋4・30−6・25−1 のような形も考えます。</p>
+<p class="rv"><b>3. 1は「×1」で消すか、「＋1」「−1」で合わせる。</b>1がひとつあまったら、×1 や ÷1 にすれば、数を変えずに使い切れます。7＋1＝8 のように、ほかの数をととのえるのにも使えます。</p>
+<p class="rv"><b>4. どうしても見つからないときは、分数をうたがう。</b>3・3・8・8 は、8÷3 で分数を作り、3−8÷3＝1/3、8÷(1/3)＝24 となります。小さい分数でわると、大きな数になる、という考え方です。</p>
+
+<h2 class="rv">作れない91組（1〜9）</h2>
+<p class="rv">小さい順に並べた4つの数字です。</p>
+<div class="rv" style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums">
+<tr><th style="text-align:left;padding:4px 8px;white-space:nowrap">いちばん<br>小さい数字</th><th style="text-align:left;padding:4px 8px">作れない組</th></tr>
+<tr><td style="padding:4px 8px">1</td><td style="padding:4px 8px">1111・1112・1113・1114・1115・1116・1117・1119・1122・1123・1124・1125・1133・1159・1167・1177・1178・1179・1189・1199・1222・1223・1299・1355・1499・1557・1558・1577・1667・1677・1678・1777・1778・1899・1999<span class="nw">（35組）</span></td></tr>
+<tr><td style="padding:4px 8px">2</td><td style="padding:4px 8px">2222・2226・2279・2299・2334・2555・2556・2599・2677・2777・2779・2799・2999<span class="nw">（13組）</span></td></tr>
+<tr><td style="padding:4px 8px">3</td><td style="padding:4px 8px">3358・3467・3488・3555・3577<span class="nw">（5組）</span></td></tr>
+<tr><td style="padding:4px 8px">4</td><td style="padding:4px 8px">4459・4466・4467・4499・4779・4999<span class="nw">（6組）</span></td></tr>
+<tr><td style="padding:4px 8px">5</td><td style="padding:4px 8px">5557・5558・5569・5579・5777・5778・5799・5899・5999<span class="nw">（9組）</span></td></tr>
+<tr><td style="padding:4px 8px">6</td><td style="padding:4px 8px">6667・6677・6678・6699・6777・6778・6779・6788・6999<span class="nw">（9組）</span></td></tr>
+<tr><td style="padding:4px 8px">7</td><td style="padding:4px 8px">7777・7778・7779・7788・7789・7799・7888・7899・7999<span class="nw">（9組）</span></td></tr>
+<tr><td style="padding:4px 8px">8</td><td style="padding:4px 8px">8888・8889・8899・8999<span class="nw">（4組）</span></td></tr>
+<tr><td style="padding:4px 8px">9</td><td style="padding:4px 8px">9999<span class="nw">（1組）</span></td></tr>
+</table></div>
+
+<h2 class="rv">一覧から見える3つの特徴</h2>
+<p class="rv"><b>1. 1や2が多いと、作りにくい。</b>1111〜1117 は、どう組み合わせても24に届きません。1と2だけの組（1112・1122・1222・2222）も、ぜんぶ作れません。</p>
+<p class="rv"><b>2. 大きい数字ばかりも、作りにくい。</b>7・8・9だけでできる組は15組ありますが、作れるのは 7889（8＋8×(9−7)）の1組だけです。</p>
+<p class="rv"><b>3. 同じ数字4つで作れるのは、3・4・5・6だけ。</b>3333（3×3×3−3）、4444（4×4＋4＋4）、5555（5×5−5÷5）、6666（6＋6＋6＋6）は作れます。1111・2222・7777・8888・9999は作れません。</p>
+<p class="rv">10を作る遊びとくらべると、1〜9で作れない組は、10では48組、24では91組です。どちらも作れない組は28組あります（1111・1177・6777・8899 など）。10を作れない組は「<a href="/guide/make10-dekinai/">4つの数字で10を作れない組み合わせ一覧</a>」にあります。</p>
+
+<h2 class="rv">分数を使わないと作れない組</h2>
+<p class="rv">1〜9の数字で、とちゅうに分数を使わないと24にならない組は、次の7組です。</p>
+<div class="rv" style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse">
+<tr><th style="text-align:left;padding:4px 8px">4つの数字</th><th style="text-align:left;padding:4px 8px">答えの例</th></tr>
+<tr><td style="padding:4px 8px">1・3・4・6</td><td style="padding:4px 8px">6÷(1−3÷4)</td></tr>
+<tr><td style="padding:4px 8px">1・4・5・6</td><td style="padding:4px 8px">6÷(5÷4−1)</td></tr>
+<tr><td style="padding:4px 8px">1・5・5・5</td><td style="padding:4px 8px">(5−1÷5)×5</td></tr>
+<tr><td style="padding:4px 8px">1・6・6・8</td><td style="padding:4px 8px">6÷(1−6÷8)</td></tr>
+<tr><td style="padding:4px 8px">3・3・7・7</td><td style="padding:4px 8px">(3＋3÷7)×7</td></tr>
+<tr><td style="padding:4px 8px">3・3・8・8</td><td style="padding:4px 8px">8÷(3−8÷3)</td></tr>
+<tr><td style="padding:4px 8px">4・4・7・7</td><td style="padding:4px 8px">(4−4÷7)×7</td></tr>
+</table></div>
+<p class="rv">トランプの1〜13まで広げると、分数がいる組は16組になります（2・2・11・11 の (2＋2÷11)×11 など）。どれも「わり算で分数を作り、かけるか、わるかして、分母を消す」形です。10の場合の分数がいる組は「<a href="/guide/make10-nanmon/">分数がいる10の難問</a>」で解説しています。</p>
+
+<div class="box rv" style="margin-top:22px"><h2>暗算で遊べるアプリ</h2><p>24を作るアプリではありませんが、4つの数字で10を作る暗算や、＋と×のどちらが得かを一瞬で決める暗算を、毎日1問ずつ遊べます。この記事を書いている「いま」が作っている、無料（広告あり）の iPhone アプリで、ブラウザでも今日の1問を遊べます。</p><ul class="linklist" style="padding:0"><li><a href="/jimidrive/"><img src="/jimidrive/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>ナンバー暗算ドライブ</span></a></li><li><a href="/kakezan/"><img src="/kakezan/icon-256.webp" width="36" height="36" alt="" loading="lazy"><span>暗算ランナー</span></a></li></ul><div class="btns"><a class="go sm" href="/play/">ブラウザで今日の問題を遊ぶ</a></div></div>
+<h2 class="rv">よくある質問</h2>
+<details class="qa rv"><summary><span class="qt">10を作る遊びと、どちらがむずかし<span class="nw">いですか？</span></span></summary><div class="a"><p>1〜9の数字4つで作れない組は、10では48組、24では91組です。作れない組が多いぶん、24のほうが「作れるかどうか」の判断はむずかしくなります。</p></div></details><details class="qa rv"><summary><span class="qt">トランプの絵札（J・Q・K）はどう<span class="nw">しますか？</span></span></summary><div class="a"><p>この記事では、J＝11、Q＝12、K＝13 として数えました。絵札を使わず A〜10 だけで遊ぶなら、715組のうち566組が作れて、149組が作れません。</p></div></details><details class="qa rv"><summary><span class="qt">4つの数字を2けたの数（12など）にしてもいい<span class="nw">のですか？</span></span></summary><div class="a"><p>この記事では、数字をつなげて2けたにすることは、なしで数えています。つなげてよいルールなら、作れる組はふえます。</p></div></details><details class="qa rv"><summary><span class="qt">いちばんむずかしい組はど<span class="nw">れですか？</span></span></summary><div class="a"><p>よく難問としてあげられるのは 3・3・8・8 です。答えは 8÷(3−8÷3) で、分数の 1/3 を作ってからわる、という思いつきにくい形です。</p></div></details>
