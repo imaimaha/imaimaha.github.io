@@ -40,7 +40,7 @@ if __name__ == '__main__':
     from playwright.sync_api import sync_playwright
     open(f'{R}/favicon.svg', 'w').write(favicon_svg())
     open(f'{R}/icon.svg', 'w').write(mark(full=True))
-    # apps/logo.svg・apps/logo.png（サイトの上のロゴ）は時計のまま。ファビコンとホーム画面のアイコンだけ案 E（2026-11-21）
+    open(f'{R}/apps/logo.svg', 'w').write(mark())   # サイトの上のロゴも案 E（2026-11-21 ユーザー「全部アイコンかえていいよ」）
     with sync_playwright() as p:
         b = p.webkit.launch(); pg = b.new_page()
         tmp = '/tmp/imaapp_icons'; os.makedirs(tmp, exist_ok=True)
@@ -49,5 +49,6 @@ if __name__ == '__main__':
         png(pg, mark(), 192, f'{R}/icon-192.png'); png(pg, mark(), 512, f'{R}/icon-512.png')
         png(pg, mark(), 192, f'{R}/apps/icon-192.png'); png(pg, mark(), 512, f'{R}/apps/icon-512.png')
         png(pg, mark(full=True), 512, f'{R}/apps/icon-maskable-512.png', bg='#ff8a45')
+        png(pg, mark(), 180, f'{R}/apps/logo.png')
         b.close()
     print('ok')
