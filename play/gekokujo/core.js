@@ -7,9 +7,9 @@
  *  - 後手は、先手が伏せたのを見てから出す（数字は見えない）
  *  - 特殊カード（1試合に1回ずつ）
  *      👁 透視  … 後手だけ。出す前に、先手の伏せたカードの数字を見る。1ラウンド目は使えない
- *      ✖️2 倍がけ … 出すときにこっそり使う。このラウンドの勝者は2点
+ *      ✖️2 勝負札 … 出すときにこっそり使う。このラウンドの勝者は2点
  *      🛡 ガード … 出すときにこっそり使う。負けても引き分けになる
- *  - 特殊カードを使ったかどうかは、試合中は相手にわからない（透視されたことも、倍がけ・ガードも）。
+ *  - 特殊カードを使ったかどうかは、試合中は相手にわからない（透視されたことも、勝負札・ガードも）。
  *    だから試合中は得点を出さず、ラウンドごとの「勝ち・負け・引き分け」だけを見せる。試合が終わったら全部を発表する
  *  - 9ラウンドの合計点が多いほうの勝ち。同点は引き分け
  *  - 相手が出した数字は見えない（わかるのは勝敗だけ。透視を使ったときだけ見える）
@@ -19,8 +19,8 @@ var DuelCore = (function () {
 
   var CARDS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   var ROUNDS = 9;
-  var SKILLS = { peek: '透視', double: '倍がけ', guard: 'ガード' };
-  var PROTOCOL = 2;   // 2: 倍がけ・ガードを伏せたまま送る（めくるときに見せる）
+  var SKILLS = { peek: '透視', double: '勝負札', guard: 'ガード' };
+  var PROTOCOL = 2;   // 2: 勝負札・ガードを伏せたまま送る（めくるときに見せる）
 
   // a が b に勝つか（1 は 9 にだけ勝つ）
   function beats(a, b) {
@@ -67,16 +67,16 @@ var DuelCore = (function () {
     opts = opts || {};
     if (toPlay(s) !== p) return '今は出せない';
     if (!hasCard(s, p, value)) return 'そのカードはない';
-    if (opts.double && !s.skills[p].double) return '倍がけはもう使った';
+    if (opts.double && !s.skills[p].double) return '勝負札はもう使った';
     if (opts.guard && !s.skills[p].guard) return 'ガードはもう使った';
-    if (opts.double && opts.guard) return '倍がけとガードは同時に使えない';
+    if (opts.double && opts.guard) return '勝負札とガードは同時に使えない';
     s.play[p] = { value: value, double: !!opts.double, guard: !!opts.guard, hash: opts.hash || null, salt: opts.salt || null };
     if (opts.double) s.skills[p].double = false;
     if (opts.guard) s.skills[p].guard = false;
     return null;
   }
 
-  // オンラインで相手が伏せた（数字も、倍がけ・ガードを使ったかも、まだ分からない）
+  // オンラインで相手が伏せた（数字も、勝負札・ガードを使ったかも、まだ分からない）
   // hash = 数字の封筒、fhash = 特殊カードの封筒。めくるときに revealHidden で中身を確かめる
   function placeHidden(s, p, hash, fhash) {
     if (toPlay(s) !== p) return '今は出せない';
@@ -91,8 +91,8 @@ var DuelCore = (function () {
     if (!hasCard(s, p, value)) return 'もう使った札を出している';
     var d = !!(flags && flags.double), g = !!(flags && flags.guard);
     if (pp.fhash !== null && !verifyFlags(pp.fhash, d, g, fsalt)) return '特殊カードが、伏せたときと合わない';
-    if (d && g) return '倍がけとガードは同時に使えない';
-    if (d && !s.skills[p].double) return '倍がけはもう使った';
+    if (d && g) return '勝負札とガードは同時に使えない';
+    if (d && !s.skills[p].double) return '勝負札はもう使った';
     if (g && !s.skills[p].guard) return 'ガードはもう使った';
     pp.value = value; pp.salt = salt; pp.double = d; pp.guard = g; pp.hidden = false;
     if (d) s.skills[p].double = false;
@@ -180,7 +180,7 @@ var DuelCore = (function () {
       var t = s.peeked, winners = hand.filter(function (v) { return beats(v, t); }).sort(function (a, b) { return a - b; });
       if (winners.length) {
         value = winners[0];
-        if (sk.double) opts.double = true; // 確実に勝てるので倍がけ
+        if (sk.double) opts.double = true; // 確実に勝てるので勝負札
       } else {
         value = Math.min.apply(null, hand);
         if (sk.guard) opts.guard = level === 2 ? true : rnd() < 0.5;
@@ -201,7 +201,7 @@ var DuelCore = (function () {
       var strong = hand.filter(function (v) { return v >= 7; }).length;
       if (sk.double && value >= 8 && rnd() < (level === 2 ? 0.55 : 0.3) * mDbl) opts.double = true;
       else if (sk.guard && value <= 3 && rnd() < (level === 2 ? 0.45 : 0.25) * mGrd) opts.guard = true;
-      // 相手が倍がけを使ったかは見えないルールなので、CPU もそれを見て決めたりしない
+      // 相手が勝負札を使ったかは見えないルールなので、CPU もそれを見て決めたりしない
       if (strong === 0 && sk.guard && left <= 2) opts.guard = true;
     }
     if (opts.double && opts.guard) opts.guard = false;
@@ -292,7 +292,7 @@ var DuelCore = (function () {
   // 伏せた札の「封筒」: 数字とランダムな塩からハッシュを作る。めくるときに数字と塩を見せて、相手が確かめる
   function commit(value, salt) { return sha256(PROTOCOL + ':' + value + ':' + salt); }
   function verify(hash, value, salt) { return typeof hash === 'string' && commit(value, salt) === hash; }
-  // 特殊カード（倍がけ・ガード）も別の封筒に入れて送る。透視で数字だけ見せても、特殊カードはばれない
+  // 特殊カード（勝負札・ガード）も別の封筒に入れて送る。透視で数字だけ見せても、特殊カードはばれない
   function commitFlags(double, guard, salt) { return sha256(PROTOCOL + ':flags:' + (double ? 1 : 0) + (guard ? 1 : 0) + ':' + salt); }
   function verifyFlags(hash, double, guard, salt) { return typeof hash === 'string' && commitFlags(double, guard, salt) === hash; }
 

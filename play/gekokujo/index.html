@@ -28,7 +28,7 @@
 <link rel="apple-touch-icon" href="../../gekokujo/icon.png">
 <link rel="stylesheet" href="../common.css?v=20261203">
 <link rel="stylesheet" href="style.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":["VideoGame","WebApplication"],"name":"下剋上デュエル vs CPU（ブラウザ版）","alternateName":"下剋上デュエル CPU対戦","description":"1〜9の数字カードを1枚ずつ伏せて出し、大きいほうが勝つ読み合いのカードゲーム。ただし1だけは9に勝つ。透視・倍がけ・ガードの特殊カードつき。iPhoneアプリ「下剋上デュエル」のCPU対戦を、ブラウザで無料で1試合遊べます。","url":"https://imaimaha.com/play/gekokujo/","image":"https://imaimaha.com/gekokujo/og.jpg","inLanguage":"ja","genre":["カードゲーム","対戦","読み合い"],"gamePlatform":"Web browser","applicationCategory":"GameApplication","operatingSystem":"Web browser","playMode":"SinglePlayer","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"sameAs":["https://apps.apple.com/jp/app/id6821823101","https://imaimaha.com/gekokujo/"],"author":{"@type":"Organization","name":"いまのアプリ","url":"https://imaimaha.com/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":["VideoGame","WebApplication"],"name":"下剋上デュエル vs CPU（ブラウザ版）","alternateName":"下剋上デュエル CPU対戦","description":"1〜9の数字カードを1枚ずつ伏せて出し、大きいほうが勝つ読み合いのカードゲーム。ただし1だけは9に勝つ。透視・勝負札・ガードの特殊カードつき。iPhoneアプリ「下剋上デュエル」のCPU対戦を、ブラウザで無料で1試合遊べます。","url":"https://imaimaha.com/play/gekokujo/","image":"https://imaimaha.com/gekokujo/og.jpg","inLanguage":"ja","genre":["カードゲーム","対戦","読み合い"],"gamePlatform":"Web browser","applicationCategory":"GameApplication","operatingSystem":"Web browser","playMode":"SinglePlayer","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"sameAs":["https://apps.apple.com/jp/app/id6821823101","https://imaimaha.com/gekokujo/"],"author":{"@type":"Organization","name":"いまのアプリ","url":"https://imaimaha.com/"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://imaimaha.com/"},{"@type":"ListItem","position":2,"name":"ブラウザで遊ぶ","item":"https://imaimaha.com/play/"},{"@type":"ListItem","position":3,"name":"下剋上デュエル vs CPU","item":"https://imaimaha.com/play/gekokujo/"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"登録はいりますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。登録も、アプリを入れることもいりません。スマホやパソコンのブラウザで、このページを開くだけで遊べます。"}},{"@type":"Question","name":"友達と対戦できますか？","acceptedAnswer":{"@type":"Answer","text":"ブラウザ版は CPU との対戦だけです。友達との対戦（2人で1台・オンライン対戦）は、アプリで遊べます。"}},{"@type":"Question","name":"アプリだと何が増えますか？","acceptedAnswer":{"@type":"Answer","text":"段位戦と今日のお題、2人で1台、オンライン対戦が遊べます。"}}]}</script>
 </head>
@@ -60,7 +60,7 @@
       <div class="hand" id="m-hand"></div>
       <div class="actions">
         <button class="skill" id="b-peek" type="button" disabled>👁透視</button>
-        <button class="skill" id="b-double" type="button" disabled>✖️2倍がけ</button>
+        <button class="skill" id="b-double" type="button" disabled>✖️2 勝負札</button>
         <button class="skill" id="b-guard" type="button" disabled>🛡ガード</button>
         <button class="btn main go" id="b-go" type="button" disabled>出す</button>
       </div>
@@ -71,7 +71,7 @@
       <p class="ch">CPU の強さ</p>
       <div class="seg" id="gk-level" role="group" aria-label="CPU の強さ"><button type="button" data-v="0">かんたん</button><button type="button" data-v="1">ふつう</button><button type="button" data-v="2">つよい</button></div>
       <button class="btn main big" id="b-start" type="button">勝負！</button>
-      <p class="note">特殊カード（1試合に1回ずつ）: 👁透視・✖️2倍がけ・🛡ガード。くわしくは右上の「？」</p>
+      <p class="note">特殊カード（1試合に1回ずつ）: 👁透視・✖️2 勝負札・🛡ガード。くわしくは右上の「？」</p>
     </div>
   </section>
     <p class="wp-scroll">▼ このページについて</p>
@@ -83,7 +83,7 @@
   <ul>
     <li>2人とも 1〜9 のカードを1枚ずつ持ちます。毎ラウンド1枚ずつ出して、大きいほうが勝ち。ただし 1 は 9 に勝ちます（下剋上）。同じ数字は引き分け。</li>
     <li>前のラウンドの勝者が先に伏せて出し、後手はそれを見てから出します（数字は見えません）。使ったカードは戻りません。</li>
-    <li>特殊カードは1試合に1回ずつ。👁透視（後手だけ・2ラウンド目から。先手の伏せた数字を見る）、✖️2倍がけ（このラウンドの勝者は2点）、🛡ガード（負けても引き分け）。</li>
+    <li>特殊カードは1試合に1回ずつ。👁透視（後手だけ・2ラウンド目から。先手の伏せた数字を見る）、✖️2 勝負札（このラウンドの勝者は2点）、🛡ガード（負けても引き分け）。</li>
     <li>特殊カードを使ったかどうかは試合中はひみつ。だから試合中は勝ったラウンドの数（○）だけを出し、点数と全部の手は試合のあとに発表します。9ラウンドの合計点で勝負。</li>
   </ul>
   <h2>こんな人に</h2>
@@ -107,7 +107,7 @@
     ・使ったカードは戻りません。<b>相手が出した数字は見えません</b>（わかるのは勝ち負けだけ。透視を使ったときだけ見える）。<br>
     ・特殊カード（1試合に1回ずつ）<br>
     　👁 <b>透視</b>：後手だけ。出す前に、先手が伏せたカードの数字を見る（<b>2ラウンド目から</b>）<br>
-    　✖️2 <b>倍がけ</b>：出すときにこっそり使う。このラウンドの勝者は2点<br>
+    　✖️2 <b>勝負札</b>：出すときにこっそり使う。このラウンドの勝者は2点<br>
     　🛡 <b>ガード</b>：出すときにこっそり使う。負けても引き分けになる<br>
     ・特殊カードを使ったかどうかは、<b>試合中は相手にひみつ</b>。だから試合中は点数を出さず、勝ったラウンドの数（○）だけを出す。<br>
     ・9ラウンドで、点数の多いほうの勝ち。点数と、だれがどこで特殊カードを使ったかは、試合のあとに全部発表。<br>

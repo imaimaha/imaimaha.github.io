@@ -206,7 +206,7 @@
         if (A.s !== s || A.seq !== seq) return;
         var lv = A.level;
         var d = C.cpuDecide(s, 1, lv);
-        // 透視・倍がけ・ガードを使っても、こちらの画面には何も出さない（試合が終わったら発表）
+        // 透視・勝負札・ガードを使っても、こちらの画面には何も出さない（試合が終わったら発表）
         if (d.peek) { C.usePeek(s, 1); C.setPeeked(s, s.play[s.leader].value); d = C.cpuDecide(s, 1, lv); if (d.peek) d = { value: s.hands[1][0] }; }
         C.place(s, 1, d.value, d);
         Snd.place(); A.busy = false; step();
@@ -268,14 +268,14 @@
       [me, op].forEach(function (p) {
         var who = p === me ? nameMe : nameOp, used = [];
         if (h.peek && h.peek[p]) used.push('👁透視');
-        if (h.double[p]) used.push('✖️2倍がけ');
+        if (h.double[p]) used.push('✖️2 勝負札');
         if (h.guard[p]) used.push('🛡ガード');
         if (used.length) notes.push(h.round + 'R: ' + who + ' が ' + used.join('・') + (h.guard[p] && h.guarded ? '（負けを引き分けに）' : h.double[p] && h.winner >= 0 ? '（' + (h.winner === p ? '2点ゲット' : '相手に2点') + '）' : ''));
       });
     });
     var notesHtml = '<tr><td colspan="4" class="reveal"><b>特殊カードの発表</b><br>' + (notes.length ? notes.map(esc).join('<br>') : 'どちらも使わなかった') + '</td></tr>';
     var t = document.createElement('table'); t.className = 'rtable';
-    t.innerHTML = html + notesHtml + '<tr><td colspan="4" class="legend">先＝先手　👁＝透視　✖️2＝倍がけ　🛡＝ガード（試合中は相手にひみつ）</td></tr>';
+    t.innerHTML = html + notesHtml + '<tr><td colspan="4" class="legend">先＝先手　👁＝透視　✖️2＝勝負札　🛡＝ガード（試合中は相手にひみつ）</td></tr>';
     var wrap = document.createElement('div'); wrap.className = 'rtable-wrap'; wrap.appendChild(t);
     return wrap;
   }
