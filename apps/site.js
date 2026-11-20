@@ -320,3 +320,21 @@
     $$('button', fl).forEach(function (b) { if (b.getAttribute('data-f') === h) b.click(); });
   }
 })();
+
+// 読み物: 目次で、いま読んでいる見出しに色をつける（記事の右の列・/guide/ の左の列）
+(function () {
+  var links = document.querySelectorAll('.tocs a, .gside a');
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var map = {}, cur = null;
+  links.forEach(function (a) { var id = a.getAttribute('href').slice(1); var el = document.getElementById(id); if (el) map[id] = { a: a, el: el }; });
+  var ids = Object.keys(map);
+  function pick() {
+    var best = ids[0];
+    ids.forEach(function (id) { if (map[id].el.getBoundingClientRect().top < 140) best = id; });
+    if (best !== cur) { if (cur) map[cur].a.classList.remove('on'); map[best].a.classList.add('on'); cur = best; }
+  }
+  var io = new IntersectionObserver(pick, { rootMargin: '-80px 0px -60% 0px' });
+  ids.forEach(function (id) { io.observe(map[id].el); });
+  window.addEventListener('scroll', function () { window.requestAnimationFrame(pick); }, { passive: true });
+  pick();
+})();

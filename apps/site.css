@@ -888,3 +888,56 @@ section.block .more-sec > summary h2::after { display: none; }
 .support .more-sec { margin-top: 32px; }
 section.block.support .more-sec + h2, section.block.support details.qa + h2 { margin-top: 36px; }
 section.block.support .more-sec { margin-top: 8px; }
+/* 読み物: 記事の目次（スマホは本文の上の箱、PC は右の列）と、/guide/ の目次 */
+.artwrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+.artmain { min-width: 0; }
+.arttoc, .gside { display: none; }
+.toc-m { margin: 14px 0 26px; padding: 4px 18px 10px; background: #fff; border: 2px solid var(--line); border-radius: 18px; }
+.toc-m summary { display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 800; cursor: pointer; }
+.toc-m summary span { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--dim); }
+.toc-m ol, .tocs { margin: 0; padding: 0; list-style: none; counter-reset: t; }
+.toc-m li, .tocs li { counter-increment: t; }
+.toc-m li a { display: flex; gap: 10px; padding: 9px 0; border-top: 1px dashed var(--line); color: var(--ink); text-decoration: none; font-weight: 600; line-height: 1.5; }
+.toc-m li a::before, .tocs li a::before { content: counter(t); flex: none; min-width: 1.4em; font-weight: 800; color: var(--orange-d); }
+.arttoc-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: .06em; color: var(--dim); }
+.arttoc-h span { margin-left: auto; font-weight: 600; letter-spacing: 0; }
+.tocs { border-left: 2px solid var(--line); }
+.tocs li a { display: flex; gap: 8px; margin-left: -2px; padding: 7px 0 7px 12px; border-left: 2px solid transparent; font-size: 14px; line-height: 1.5; color: var(--dim); text-decoration: none; }
+.tocs li a:hover { color: var(--ink); }
+.tocs li a.on { border-left-color: var(--orange); color: var(--ink); font-weight: 700; }
+.tocrel { margin: 0 0 4px; padding: 0; list-style: none; }
+.tocrel a { display: block; padding: 7px 0; font-size: 14px; line-height: 1.5; color: var(--ink); text-decoration: none; border-bottom: 1px dashed var(--line); }
+.tocrel a:hover { color: var(--orange-d); }
+.arttoc .in > .arttoc-h + .tocrel, .arttoc .tocs + .arttoc-h { margin-top: 26px; }
+.gidx { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+.gmain { min-width: 0; }
+.gchips { margin-bottom: 8px; }
+.zjump.gj .n, .gside .n { margin-left: 6px; font-size: 12px; font-weight: 700; color: var(--dim); }
+.gsec { padding-top: 26px; scroll-margin-top: 72px; }
+.gh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 4px; }
+.gh h2 { margin: 0; font-size: 22px; }
+.gh .n { font-size: 13px; font-weight: 700; color: var(--dim); }
+.gh .more-link { margin-left: auto; font-size: 14px; }
+.gintro { margin: 0 0 10px; font-size: 14px; color: var(--dim); }
+.toclist { margin: 0; padding: 0; list-style: none; background: #fff; border: 2px solid var(--line); border-radius: 18px; overflow: hidden; }
+.toclist li + li { border-top: 1px solid var(--line); }
+.toclist a { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; color: var(--ink); text-decoration: none; }
+.toclist a:hover { background: var(--bg); }
+.toclist .no { flex: none; width: 2em; padding-top: 1px; font-family: var(--round); font-weight: 800; font-size: 15px; color: var(--orange-d); }
+.toclist .tt { font-weight: 700; line-height: 1.5; }
+.toclist small { display: block; margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--dim); }
+.gtotal { margin: 14px 0 0; font-size: 13px; color: var(--dim); }
+@media (min-width: 1100px) {
+  .artwrap { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 760px) 270px; gap: 56px; justify-content: center; }
+  .arttoc { display: block; }
+  .arttoc .in, .gside .in { position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow: auto; padding-bottom: 10px; }
+  .toc-m { display: none; }
+  .gidx { max-width: 1040px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; }
+  .gside { display: block; }
+  .gside ul { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--line); }
+  .gside li a { display: flex; align-items: baseline; margin-left: -2px; padding: 8px 0 8px 14px; border-left: 2px solid transparent; font-weight: 700; color: var(--ink); text-decoration: none; }
+  .gside li a:hover, .gside li a.on { border-left-color: var(--orange); color: var(--orange-d); }
+  .gside .n { margin-left: auto; }
+  .gchips { display: none; }
+  .toclist a { padding: 12px 20px; }
+}

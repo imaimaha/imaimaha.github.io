@@ -28,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261201'
+V = '20261202'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -902,6 +902,16 @@ def page_guide_article(slug):
     dl = (f'<p class="rv dateline"><time datetime="{meta["published"]}">{jp_date(meta["published"])}</time> 公開' +
           (f'・<time datetime="{meta["modified"]}">{jp_date(meta["modified"])}</time> 更新' if meta['modified'] != meta['published'] else '') + '　')
     body = body.replace('<p class="rv dateline">', dl, 1)
+    toc = []   # 目次: 本文の見出し（h2 class="rv"）に番号の id をつける
+    def _h2(m):
+        toc.append(re.sub('<[^>]+>', '', m.group(1)).strip()); return f'<h2 class="rv" id="s{len(toc)}">{m.group(1)}</h2>'
+    body = re.sub(r'<h2 class="rv">(.*?)</h2>', _h2, body, flags=re.S)
+    mins = max(1, round(len(re.sub(r'<svg.*?</svg>|<[^>]+>|\s', '', body, flags=re.S)) / 500))
+    tl = ''.join(f'<li><a href="#s{k+1}">{esc(t)}</a></li>' for k, t in enumerate(toc))
+    if len(toc) >= 3:
+        m = re.search(r'<p class="rv dateline">.*?</p>', body, re.S)
+        box = f'<details class="toc-m rv" open><summary>目次<span>約{mins}分で読めます</span></summary><ol>{tl}</ol></details>'
+        body = body[:m.end()] + box + body[m.end():] if m else box + body
     # ほかの読み物: 同じまとまりの記事（なければ、ほかのまとまりのハブ）
     near = [(s, t) for s, t, _ in GUIDE if s != slug and GUIDE_GROUP.get(s) == grp][:6] or [(s, t) for s, t, _ in GUIDE if s != slug and s in HOME_READS]
     others = ''.join(f'<li><a href="/guide/{s}/">{gtitle(t)}</a></li>' for s, t in near)
@@ -911,9 +921,11 @@ def page_guide_article(slug):
     L = [h, header('/guide/'), '<main id="main">',
          '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb(cr) +
          f'<div class="wrap"><h1>{esc(meta["title"])}</h1><p class="lead2">{meta["lead"]}</p></div></section>',
-         f'<article class="sec" style="padding-top:20px"><div class="narrow">{body}'
+         f'<article class="sec" style="padding-top:20px"><div class="artwrap"><div class="artmain">{body}'
          f'<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">ほかの読み物</h2><a class="more-link" href="{more}">ぜんぶ見る →</a></div><ul class="readlist rv">{others}</ul>'
-         '</div></article>', '</main>', tail()]
+         '</div>' + (f'<aside class="arttoc" aria-label="目次"><div class="in"><p class="arttoc-h">目次<span>約{mins}分</span></p><ol class="tocs">{tl}</ol>'
+         + (f'<p class="arttoc-h">{esc(GUIDE_GROUP_LB[grp])}の記事</p><ul class="tocrel">' + ''.join(f'<li><a href="/guide/{s}/">{esc(t.partition("｜")[0])}</a></li>' for s, t in near) + f'</ul><a class="more-link" href="{more}">ぜんぶ見る →</a>' if grp else '')
+         + '</div></aside>' if len(toc) >= 3 else '') + '</div></article>', '</main>', tail()]
     write(path, '\n'.join(L))
 
 def guide_lis(ss):   # 読み物の一覧（題・説明）
@@ -938,14 +950,25 @@ def page_guide_group(gid):   # /guide/<group>/: まとまりごとのページ�
 def page_guide():
     for s, _, _ in GUIDE: page_guide_article(s)
     for gid, _, _ in GUIDE_GROUPS: page_guide_group(gid)
-    chips = ''.join(f'<li><a href="#g-{gid}">{esc(lb)}</a></li>' for gid, lb, _ in GUIDE_GROUPS)
-    secs = f'<nav aria-label="読み物のまとまり"><ul class="zjump gj">{chips}</ul></nav>'
-    for gid, lb, ss in GUIDE_GROUPS:   # まとまりごとに見出しと一覧（はじめがハブの記事）
-        secs += f'<h2 id="g-{gid}" class="rv" style="margin:30px 0 12px">{esc(lb)}</h2><ul class="readlist">{guide_lis(ss)}</ul>'
+    chips = ''.join(f'<li><a href="#g-{gid}">{esc(lb)}<span class="n">{len(ss)}</span></a></li>' for gid, lb, ss in GUIDE_GROUPS)
+    side = ''.join(f'<li><a href="#g-{gid}">{esc(lb)}<span class="n">{len(ss)}</span></a></li>' for gid, lb, ss in GUIDE_GROUPS)
+    def row(k, s):   # 目次の1行: 番号・題・サブ
+        t = next(x for q, x, _ in GUIDE if q == s); a, _, b = t.partition('｜')
+        return (f'<li><a href="/guide/{s}/"><span class="no">{k:02d}</span><span class="tt">{esc(a)}'
+                + (f'<small>{esc(b)}</small>' if b else '') + '</span></a></li>')
+    newest = sorted(GUIDE, key=lambda g: (guide_meta(g[0])[0]['published'], [x[0] for x in GUIDE].index(g[0])), reverse=True)[:5]
+    secs = (f'<nav class="gchips" aria-label="読み物のカテゴリ"><ul class="zjump gj">{chips}</ul></nav>'
+            '<section class="gsec" id="g-new"><div class="gh"><h2>新しい記事</h2></div><ol class="toclist">'
+            + ''.join(row(k + 1, g[0]) for k, g in enumerate(newest)) + '</ol></section>')
+    for gid, lb, ss in GUIDE_GROUPS:   # カテゴリごとに見出しと目次（はじめがハブの記事）
+        secs += (f'<section class="gsec" id="g-{gid}"><div class="gh"><h2>{esc(lb)}</h2><span class="n">{len(ss)}本</span>'
+                 f'<a class="more-link" href="/guide/{gid}/">カテゴリのページ →</a></div><p class="gintro">{esc(GUIDE_GROUP_INTRO[gid])}</p>'
+                 f'<ol class="toclist">{"".join(row(k + 1, x) for k, x in enumerate(ss))}</ol></section>')
     items = {"@context": "https://schema.org", "@type": "ItemList", "name": "読み物", "itemListElement": [
         {"@type": "ListItem", "position": k + 1, "url": f'{BASE}/guide/{s}/', "name": t} for k, (s, t, _) in enumerate(GUIDE)]}
-    body = (f'<section class="sec" style="padding-top:20px"><div class="narrow">{secs}'
-            '<p class="rv" style="margin-top:18px">パズルのコツや、作っていて気づいたことなどを、ゆっくり増やしていきます。</p></div></section>')
+    body = (f'<section class="sec" style="padding-top:20px"><div class="gidx"><aside class="gside" aria-label="カテゴリ"><div class="in"><p class="arttoc-h">カテゴリ</p><ul>'
+            f'<li><a href="#g-new">新しい記事</a></li>{side}</ul><p class="gtotal">ぜんぶで {len(GUIDE)} 本</p></div></aside><div class="gmain">{secs}'
+            '<p style="margin-top:18px">パズルのコツや、作っていて気づいたことなどを、ゆっくり増やしていきます。</p></div></div></section>')
     sub_page('/guide/', '読み物', f'読み物｜パズル・暗算・変則将棋・カードゲームのコツ｜{BRAND}',
              'パズルの解き方、暗算のコツ、変則将棋や大富豪のルール、散歩を続けるコツなどをまとめています。毎日1問のパズルアプリをつくる「いま」が書いています。',
              'パズル・暗算・変則将棋・カードゲーム・散歩のコツと、アプリを作っていて考えていることです。', body, [items])
