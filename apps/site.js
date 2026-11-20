@@ -166,8 +166,9 @@
     var box = d.getElementById('chooser');
     if (!box) return;
     box.hidden = false;
-    var qs = $$('.q', box), st = $$('.steps i', box), res = d.getElementById('res'), sc = {}, k = 0;
     var order = $$('#cands li[data-app]').map(function (li) { return li.getAttribute('data-app'); });
+    function base() { var b = {}; $$('#cands li[data-app]').forEach(function (li) { b[li.getAttribute('data-app')] = +li.getAttribute('data-b') || 0; }); return b; }   // おすすめの順（作り手の推し）を少しだけ足す
+    var qs = $$('.q', box), st = $$('.steps i', box), res = d.getElementById('res'), sc = base(), k = 0;
     function show() {
       qs.forEach(function (q, i) { q.hidden = i !== k; });
       st.forEach(function (s, i) { s.classList.toggle('on', i <= k); });
@@ -202,7 +203,7 @@
       });
     });
     d.getElementById('res-again').addEventListener('click', function () {
-      sc = {}; k = 0; res.hidden = true; show(); var h2 = qs[0].querySelector('h2'); if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus(); }
+      sc = base(); k = 0; res.hidden = true; show(); var h2 = qs[0].querySelector('h2'); if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus(); }
     });
     show();
   })();

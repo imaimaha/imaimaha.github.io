@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = HERE   # gen.py・apps_data.py・orig/・data/ も同じフォルダ
 sys.path.insert(0, SITE)
 import gen
-from apps_data import APPS, NAMES, SHOTS, DAILY, DAILY_LINE, CATS, ADS
+from apps_data import APPS, NAMES, SHOTS, DAILY, DAILY_LINE, CATS, ADS, PUSH
 from gen import colors, mix
 
 R = os.path.expanduser('~/Developer/imaimaha.github.io')
@@ -28,7 +28,7 @@ NOTE_ON = True   # 2026-11-19 ユーザー「いったん NOTE への遷移は�
 DEV = 'https://apps.apple.com/jp/developer/id6818812575'
 MAIL = 'imaimaha.apps@gmail.com'
 BRAND = 'いまのアプリ'
-V = '20261202'
+V = '20261203'
 gen.CSSV = V
 
 def esc(s): return html.escape(s, quote=True)
@@ -1243,28 +1243,28 @@ def fix_privacy_nav(d):
 
 # ---------------- /start/ どれが合う？（3つの質問で、さいしょの1本） ----------------
 # 2026-11-20 site_lab の 09_start_chooser から。点数の計算は site.js（#chooser）。答えはこの画面の中だけ（どこにも送らない）
-START_WHY = {
+START_WHY = {   # 並び＝同点のときの順（作り手の推しの順）
     'hitofude': 'なぞるのが気持ちいい一筆書き。毎日の盤でタイム勝負',
-    'okazu': 'おかずをつめて列をそろえる、お弁当のブロックパズル',
     'suji': '数字をヒントに、じっくりへやを分ける数字パズル',
-    'jimidrive': '車のナンバー4桁で10を作る、テンポのいい暗算',
     'kakezan': '計算ゲートをくぐって数をふやす、走る暗算',
+    'futaridaifugo': '赤と黒に分けて、1対1で遊ぶ大富豪。CPU とも',
+    'hensokushogi': '安南将棋・トランプ将棋などを友達とオンライン対戦',
+    'pokerstudy': 'ポーカーのプリフロップを、クイズでおぼえる練習帳',
+    'gekokujo': '1が9に勝つ、数字カードの読み合い。CPU とも',
+    'okazu': 'おかずをつめて列をそろえる、お弁当のブロックパズル',
+    'jimidrive': '車のナンバー4桁で10を作る、テンポのいい暗算',
     'yudetamago': '殻をツルッとむく手ざわり。毎日のたまごでスコア勝負',
     'nattofilm': '納豆のフィルムを、きれいにはがす。毎日の納豆でタイム勝負',
     'madoshizuku': '雨の窓でしずくを集める、ぼーっとできる時間',
-    'hensokushogi': '安南将棋・トランプ将棋などを友達とオンライン対戦',
-    'gekokujo': '1が9に勝つ、数字カードの読み合い。CPU とも',
-    'pokerstudy': 'ポーカーのプリフロップを、クイズでおぼえる練習帳',
-    'futaridaifugo': '赤と黒に分けて、1対1で遊ぶ大富豪。CPU とも',
 }
 START_QS = [
-    ('Q1. どんなときに あそぶ？', [('⏱️', 'すきまの1分', {'jimidrive': 2, 'yudetamago': 2, 'nattofilm': 2, 'hitofude': 1, 'kakezan': 1}),
+    ('Q1. どんなときに あそぶ？', [('⏱️', 'すきまの1分', {'kakezan': 2, 'hitofude': 2, 'jimidrive': 2, 'yudetamago': 2, 'nattofilm': 2}),
                                 ('☕', 'のんびり10分', {'suji': 2, 'okazu': 2, 'madoshizuku': 2, 'pokerstudy': 1}),
-                                ('👥', '友達と', {'hensokushogi': 3, 'gekokujo': 3, 'futaridaifugo': 3})]),
-    ('Q2. すきなのは？', [('✍️', 'なぞる・つめる', {'hitofude': 3, 'okazu': 3}), ('🔢', '数字・計算', {'suji': 2, 'jimidrive': 3, 'kakezan': 3}),
-                       ('🫧', 'さわって気持ちいい', {'yudetamago': 3, 'nattofilm': 3, 'madoshizuku': 3}), ('🧠', '読み合い', {'gekokujo': 3, 'hensokushogi': 2, 'pokerstudy': 3, 'futaridaifugo': 2})]),
+                                ('👥', '友達と', {'hensokushogi': 3, 'futaridaifugo': 3, 'gekokujo': 2})]),
+    ('Q2. すきなのは？', [('✍️', 'なぞる・つめる', {'hitofude': 3, 'okazu': 3}), ('🔢', '数字・計算', {'kakezan': 3, 'suji': 2, 'jimidrive': 2}),
+                       ('🫧', 'さわって気持ちいい', {'yudetamago': 3, 'nattofilm': 3, 'madoshizuku': 3}), ('🧠', '読み合い', {'pokerstudy': 3, 'hensokushogi': 3, 'futaridaifugo': 2, 'gekokujo': 2})]),
     ('Q3. 勝負したい？', [('🏆', 'みんなとランキング', {d: 2 for d in DAILY}), ('🌿', '自分のペースで', {'madoshizuku': 2, 'pokerstudy': 2, 'suji': 1}),
-                       ('⚔️', '1対1で', {'gekokujo': 2, 'hensokushogi': 2, 'futaridaifugo': 2})]),
+                       ('⚔️', '1対1で', {'hensokushogi': 2, 'futaridaifugo': 2, 'gekokujo': 1})]),
 ]
 
 def why_html(t):   # さいごの「、」「。」のあとは折り返さない（1〜2文字だけの行を作らない）
@@ -1276,7 +1276,7 @@ def start_cand(d):
     acts = (f'<a class="go sm2" href="/play/{d}/">{play_label(d)}</a>' if d in PLAY else '') + \
            f'<a class="pill" href="{store(i)}" aria-label="{esc(name)} を App Store で見る">App Store</a>' + \
            f'<a class="ghost sm2" href="/{d}/">くわしく</a>'
-    return (f'<li class="cand" data-app="{d}" style="{cv(d)}"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
+    return (f'<li class="cand" data-app="{d}" data-b="{PUSH.get(d, 0) / 2:g}" style="{cv(d)}"><img class="ic" src="/{d}/icon-256.webp" width="64" height="64" alt="" loading="lazy">'
             f'<div class="tx"><h3><a href="/{d}/">{esc(name)}</a></h3><p>{why_html(START_WHY[d])}</p>'
             + ('<p class="pl">ブラウザでも遊べます（登録なし）</p>' if d in PLAY else '') + f'<div class="acts">{acts}</div></div></li>')
 

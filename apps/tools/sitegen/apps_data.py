@@ -40,14 +40,16 @@ NAMES = {  # dir -> (short name, id, one-liner for cards)
  'notre-app': ('Notre Endroit','6821843630','恋人・夫婦のふたりだけで使うアプリ'),
 }
 
-CATS = [
- ('puzzle','パズル・脳トレ',['hitofude','suji','okazu','kakezan','jimidrive']),
+CATS = [   # 並びは作り手の推しの順（2026-11-20 ユーザー: 1番手 ひとふで・すうじ・暗算ランナー・大富豪・将棋・ポーカー／2番手 下剋上・おかず・ドライブ／3番手 たまご・納豆・まど）
+ ('puzzle','パズル・脳トレ',['hitofude','suji','kakezan','okazu','jimidrive']),
+ ('versus','対戦',['futaridaifugo','hensokushogi','pokerstudy','gekokujo']),
  ('relax','のんびり',['yudetamago','nattofilm','madoshizuku']),
- ('versus','対戦',['hensokushogi','gekokujo','futaridaifugo','pokerstudy']),
  ('life','くらし・記録',['sanpobingo','tsundoku','osouji','notre-app']),
 ]
+PUSH = {d: 2 for d in ['hitofude','suji','kakezan','futaridaifugo','hensokushogi','pokerstudy']}
+PUSH.update({d: 1 for d in ['gekokujo','okazu','jimidrive']})   # 3番手（たまご・納豆・まど）は 0
 # apps where everyone plays the same daily puzzle and competes in a ranking
-DAILY = ['hitofude','suji','okazu','kakezan','jimidrive','yudetamago','nattofilm']
+DAILY = ['hitofude','suji','kakezan','okazu','jimidrive','yudetamago','nattofilm']
 DAILY_LINE = {
  'hitofude':'今日のいもむし：みんな同じ盤でタイム勝負',
  'suji':'今日のへや割り・今日の住人さがし：タイム勝負',
