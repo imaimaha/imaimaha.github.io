@@ -9,12 +9,12 @@ def mark(full=False, small=False):
     # full: 角まで塗る（マスカブル・ホーム画面用）。small: 16〜32px 用に線を太く
     bg = '<rect width="64" height="64" fill="url(#g)"/>' if full else '<rect width="64" height="64" rx="18" fill="url(#g)"/>'
     s = 0.78 if full else 1.0                       # マスカブルは中央 80% に収める
-    sw = 6.2 if small else 5
-    face = (f'<g transform="translate(32 33) scale({s}) translate(-32 -33)">'
-            '<circle cx="19.5" cy="13.5" r="5.5" fill="#fff"/><circle cx="44.5" cy="13.5" r="5.5" fill="#fff"/>'
-            '<circle cx="32" cy="35" r="20" fill="#fff"/>'
-            f'<path d="M32 23.5V35l8 5" fill="none" stroke="#3b2b1f" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round"/>'
-            + ('' if small else '<circle cx="32" cy="35" r="2.6" fill="#3b2b1f"/>') + '</g>')
+    # 2026-11-21 ユーザーが案 E（パズルのマス＋時計）にきめた。白いマス2つ・うすいマス2つ、右下のマスに時計の針
+    hw = 3.8 if small else 3.2
+    face = (f'<g transform="translate(32 32) scale({s}) translate(-32 -32)">'
+            '<rect x="11" y="11" width="19" height="19" rx="5" fill="#fff"/><rect x="34" y="11" width="19" height="19" rx="5" fill="#fff" opacity=".55"/>'
+            '<rect x="11" y="34" width="19" height="19" rx="5" fill="#fff" opacity=".55"/><rect x="34" y="34" width="19" height="19" rx="5" fill="#fff"/>'
+            f'<path d="M43.5 38.5v5l3.5 2.2" fill="none" stroke="#ff6a43" stroke-width="{hw}" stroke-linecap="round" stroke-linejoin="round"/></g>')
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">{GRAD}{bg}{face}</svg>'
 
 def favicon_svg():
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     from playwright.sync_api import sync_playwright
     open(f'{R}/favicon.svg', 'w').write(favicon_svg())
     open(f'{R}/icon.svg', 'w').write(mark(full=True))
-    open(f'{R}/apps/logo.svg', 'w').write(mark())
+    # apps/logo.svg・apps/logo.png（サイトの上のロゴ）は時計のまま。ファビコンとホーム画面のアイコンだけ案 E（2026-11-21）
     with sync_playwright() as p:
         b = p.webkit.launch(); pg = b.new_page()
         tmp = '/tmp/imaapp_icons'; os.makedirs(tmp, exist_ok=True)
@@ -49,6 +49,5 @@ if __name__ == '__main__':
         png(pg, mark(), 192, f'{R}/icon-192.png'); png(pg, mark(), 512, f'{R}/icon-512.png')
         png(pg, mark(), 192, f'{R}/apps/icon-192.png'); png(pg, mark(), 512, f'{R}/apps/icon-512.png')
         png(pg, mark(full=True), 512, f'{R}/apps/icon-maskable-512.png', bg='#ff8a45')
-        png(pg, mark(), 180, f'{R}/apps/logo.png')
         b.close()
     print('ok')
