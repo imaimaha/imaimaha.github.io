@@ -1,0 +1,52 @@
+<!-- {"title": "ついたて将棋とは｜相手の駒が見えない将棋のルールとコツ", "short": "ついたて将棋とは", "desc": "相手の駒が見えないまま指す「ついたて将棋」のルールを解説します。反則になる手と、反則のときに手がもどる決まり、反則10回で負け、王手の知らせ、取られた駒から相手の配置を推理するコツです。", "lead": "ついたて将棋は、相手の駒が見えないまま指す将棋です。盤も駒も動きも本将棋と同じですが、わかるのは自分の駒と、審判が知らせてくれることだけです。", "published": "2026-11-21", "modified": "2026-11-21"} -->
+<p class="rv dateline">この記事は、AIで下書きしたあと、作者が確かめて公開しています。</p>
+
+<h2 class="rv">結論：知らされたことと「反則」から、相手の駒の場所を推理する</h2>
+<p class="rv">ついたて将棋では、相手の駒が見えません。手がかりは、駒を取った・取られたこと、王手、そして反則です。指せなかった手も「そこに何かいる」という情報になります。はじめは1マスずつ動く手を中心に、少しずつ相手の形を想像していきます。</p>
+
+<h2 class="rv">ついたて将棋とは</h2>
+<p class="rv">昔からある将棋の遊び方の1つです。2人のあいだを「ついたて」で仕切って、おたがいの盤が見えないようにします。審判が本当の局面を見ながら、「反則」や「王手」を伝えます。審判が要るので、なかなか遊ぶ機会のない将棋です。</p>
+<p class="rv"><a href="/hensokushogi/">変則将棋対戦</a>では、アプリが審判になって、ついたて将棋を遊べるようにしています（次のアップデートで入る予定です）。この記事のルールは、アプリでの決まりです。</p>
+
+<h2 class="rv">見えるもの・知らされること</h2>
+<div class="rv" style="overflow-x:auto"><table class="tbl" style="width:100%;border-collapse:collapse">
+<tr><th style="text-align:left;padding:4px 8px">見える</th><td style="padding:4px 8px">自分の駒、おたがいの持ち駒</td></tr>
+<tr><th style="text-align:left;padding:4px 8px">知らされる</th><td style="padding:4px 8px">駒を取った・取られたマスと、その駒の種類（両方に）<br>王手がかかったこと（向きは知らされません）<br>相手が反則したこと（何をしようとしたかはひみつ）</td></tr>
+<tr><th style="text-align:left;padding:4px 8px">見えない</th><td style="padding:4px 8px">相手の駒の場所、相手がどこからどこへ指したか、相手がどこに打ったか</td></tr>
+</table></div>
+<p class="rv">持ち駒はおたがいに見えるので、相手の持ち駒がへれば「どこかに打った」ことはわかります。場所まではわかりません。対局が終わると、相手の駒が全部見えます。</p>
+
+<h2 class="rv">反則と、反則10回で負け</h2>
+<p class="rv">本当の局面で指せない手を指そうとすると、反則です。たとえば次のような手です。</p>
+<ul class="rv">
+<li>飛車・角・香車が、とちゅうにいる見えない相手の駒を通りぬけようとする</li>
+<li>相手の駒がいるマスに、持ち駒を打とうとする</li>
+<li>王手をされているのに、王手をふせがない手</li>
+<li>相手の駒に取られるマスへ、玉を動かす</li>
+<li>動かすと玉が取られてしまう駒を動かす、打ち歩詰め</li>
+</ul>
+<div class="rv"><svg class="fig" role="img" aria-label="自分の飛車を5マス先へ動かそうとしたが、とちゅうに見えない相手の駒がいたので反則になり、手がもどる図" viewBox="0 0 260 116" width="260" height="116" style="max-width:100%;height:auto;display:block;margin:12px auto"><text x="10" y="18" font-size="12" fill="#3b2b1f">自分に見えている盤（相手の駒は見えない）</text><rect x="10" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><rect x="50" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><rect x="90" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><rect x="130" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><rect x="170" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><rect x="210" y="30" width="40" height="40" fill="#ffe0b2" stroke="#8d7b68"/><text x="30.0" y="57.0" font-size="20" text-anchor="middle" fill="#3b2b1f" font-weight="700">飛</text><text x="150.0" y="57.0" font-size="20" text-anchor="middle" fill="#b3261e" opacity=".55">？</text><text x="230.0" y="56.0" font-size="13" text-anchor="middle" fill="#3b2b1f">ここへ</text><path d="M50 84 H230.0" stroke="#8d7b68" stroke-width="2" stroke-dasharray="5 4" fill="none"/><path d="M224.0 79 L230.0 84 L224.0 89" stroke="#8d7b68" stroke-width="2" fill="none"/><text x="150.0" y="108" font-size="12" text-anchor="middle" fill="#b3261e" font-weight="700">とちゅうに相手の駒 → 反則（手はもどる）</text></svg></div>
+<p class="rv">反則の手は<b>もどって、指しなおし</b>です。盤は変わらず、手番もそのままです。ただし時計は止まりません。<b>反則が10回になると負け</b>です。</p>
+<p class="rv">二歩や、行き所のない駒（いちばん奥の段の歩など）は、自分の駒を見ればわかるので、はじめから指せないようになっています。反則にはなりません。勝ち負けは本将棋と同じで、詰みで決まります。千日手は引き分けです。</p>
+
+<h2 class="rv">相手の駒を推理するコツ</h2>
+<ul class="rv">
+<li><b>動いていない駒は、はじめの場所</b>：はじめの並びは本将棋と同じです。序盤は、相手の駒がどこにいるかがほぼわかっています。</li>
+<li><b>取られたマスには、相手の駒がいる</b>：自分の駒が取られたら、そのマスには相手の駒が入っています。そこへ来られる駒は何かを考えます。</li>
+<li><b>反則も手がかり</b>：飛車がすべれなかったら、通り道のどこかに相手の駒がいます。打てなかったマスには、相手の駒がいます。</li>
+<li><b>持ち駒の変化を見る</b>：相手の持ち駒がへったら、どこかに打たれています。自分の玉の近くに打たれていないか、気をつけます。</li>
+</ul>
+
+<h2 class="rv">指し方のコツ</h2>
+<ul class="rv">
+<li><b>1マスの手は反則になりにくい</b>：歩・金・銀の1マスの動きは、行き先に相手の駒がいれば、ふつうに取れます。反則になるのは、ピンされているときなどにかぎられます。玉だけは、取られるマスへ動くと反則なので注意します。</li>
+<li><b>長い飛び道具は慎重に</b>：飛車・角・香車を遠くへ動かすと、とちゅうの見えない駒にぶつかって反則になりやすくなります。</li>
+<li><b>打つなら自分の陣に近いところ</b>：相手の陣に打つと、そこに駒がいて反則になることがあります。</li>
+<li><b>玉はしっかり囲う</b>：王手は、向きを教えてもらえません。玉が薄いと、王手をふせぐ手を探しているうちに反則が重なります。</li>
+<li><b>反則の残りを数える</b>：反則でさぐる手もありますが、10回で負けです。残りが少なくなったら、確実な手だけにします。</li>
+</ul>
+<p class="rv">アプリの CPU も、相手の駒は見えていません。知らされたことだけで推理して指すので、反則をすることも、反則負けになることもあります。</p>
+
+<div class="box rv" style="margin-top:22px"><h2><span class="nw">変則将棋対戦</span></h2><p>安南将棋・トランプ将棋・王手将棋・影武者将棋・縛り将棋などの変則将棋を、CPU や友達とのオンライン対戦で遊べます。ついたて将棋は次のアップデートで入る予定です。無料（広告あり）の <span class="nw">iPhone アプリ</span>です。</p><div class="btns"><a class="ghost" href="/hensokushogi/">くわしく見る</a><a class="ghost" href="/guide/hensoku-shogi-rules/">ルール一覧</a></div></div>
+<h2 class="rv">よくある質問</h2>
+<details class="qa rv"><summary><span class="qt">反則をしたら、<span class="nw">相手にわかりますか？</span></span></summary><div class="a"><p>反則をしたことと、その回数は相手にも知らされます。何をしようとしたかは、本人にしかわかりません。</p></div></details><details class="qa rv"><summary><span class="qt">王手の向きは<span class="nw">わかりますか？</span></span></summary><div class="a"><p>わかりません。知らされるのは、王手がかかったことだけです。</p></div></details><details class="qa rv"><summary><span class="qt">1台の iPhone で2人で<span class="nw">遊べますか？</span></span></summary><div class="a"><p>遊べます。手番が変わるたびに交代の画面が出て、ボタンを押すまで盤の駒は出ません。相手の駒を見ないで遊べます。</p></div></details><details class="qa rv"><summary><span class="qt">軍人将棋とは<span class="nw">ちがいますか？</span></span></summary><div class="a"><p>どちらも相手の駒が見えない遊びですが、ついたて将棋は本将棋の盤と駒をそのまま使います。軍人将棋は、駒の強さで勝ち負けが決まる別のゲームです。くわしくは<a href="/guide/gunjin-shogi-rules/">軍人将棋のルールと駒の強さ表</a>にまとめています。</p></div></details>

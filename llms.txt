@@ -27,7 +27,7 @@
     - [4つの数字で24を作る遊び｜1〜9なら作れないのは91組](https://imaimaha.com/guide/make-24/)
     - [4けたの素数を速く見分ける方法｜2・3・5・7・11の順](https://imaimaha.com/guide/sosuu-miwakekata/)
     - [暗算ランナーのコツ｜＋と×、−と÷のどちらが得かを一瞬で決める](https://imaimaha.com/guide/kakezan-gate-kotsu/)
-  - [変則将棋](https://imaimaha.com/guide/shogi/): 安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。囲いと戦法の種類の一覧もあります。友達とオンラインで対戦するしかたも書いています。
+  - [変則将棋](https://imaimaha.com/guide/shogi/): 安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。相手の駒が見えない、ついたて将棋もあります。囲いと戦法の種類の一覧もあります。友達とオンラインで対戦するしかたも書いています。
     - [変則将棋のルール一覧｜安南将棋・トランプ将棋・王手将棋など](https://imaimaha.com/guide/hensoku-shogi-rules/)
     - [将棋の囲いの種類一覧｜美濃・矢倉・穴熊など12種類の形](https://imaimaha.com/guide/shogi-kakoi-ichiran/)
     - [将棋の戦法の種類一覧｜振り飛車・居飛車・奇襲の14種類](https://imaimaha.com/guide/shogi-senpou-ichiran/)
@@ -37,6 +37,7 @@
     - [影武者将棋のルールとコツ｜ひみつの1枚を取られたら負け](https://imaimaha.com/guide/kagemusha-shogi/)
     - [特殊効果将棋のカード13種類｜効果と使いどころ](https://imaimaha.com/guide/tokushu-kouka-shogi/)
     - [縛り将棋のルールと攻略｜囲い・戦法の形を作ってから攻める](https://imaimaha.com/guide/shibari-shogi/)
+    - [ついたて将棋とは｜相手の駒が見えない将棋のルールとコツ](https://imaimaha.com/guide/tsuitate-shogi/)
     - [変則詰将棋（安南詰将棋）のコツ｜借りた動きで王手を探す](https://imaimaha.com/guide/hensoku-tsume-kotsu/)
     - [友達とオンライン対戦するには｜部屋のコードを送るだけ、登録なし](https://imaimaha.com/guide/online-taisen/)
   - [カードゲーム](https://imaimaha.com/guide/cards/): 大富豪のローカルルールと、2人でできるトランプゲーム、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーの役の一覧とプリフロップ・レンジ表の読み方です。
@@ -47,6 +48,11 @@
     - [ポーカーの役の一覧（強い順）｜10種類の役と出る確率](https://imaimaha.com/guide/poker-yaku-ichiran/)
     - [ポーカーのプリフロップとは｜席の順番で、参加する手が変わる理由](https://imaimaha.com/guide/poker-preflop-kihon/)
     - [13×13のレンジ表の読み方｜ペア・スーテッド・オフスート](https://imaimaha.com/guide/poker-range-hyou/)
+  - [ボードゲーム](https://imaimaha.com/guide/board/): 軍人将棋と立体四目並べのルールとコツです。駒の強さ表や、そろう並びの数から、読み合いと置き方の考え方をまとめています。
+    - [軍人将棋のルールと駒の強さ表｜23枚・16種類の勝ち負けと配置のコツ](https://imaimaha.com/guide/gunjin-shogi-rules/)
+    - [立体四目並べの勝ち方｜76本の並びと「あと1つ」の読み方](https://imaimaha.com/guide/rittai-yonmoku-kotsu/)
+  - [高さと空](https://imaimaha.com/guide/sora/): 東京タワーから月まで、のぼるゲームに出てくる高さをくらべます。高さの一覧と、10倍ずつのものさしのグラフ、豆知識です。
+    - [東京タワーから月まで 高さくらべ｜333mから38万4,400kmまでを1つの表に](https://imaimaha.com/guide/takasa-kurabe/)
   - [散歩と記録](https://imaimaha.com/guide/sanpo/): 散歩を続けるコツと、散歩ビンゴの遊び方です。目的と記録を小さく作ると、毎日の散歩が少し楽しくなります。
     - [散歩を続けるコツ5つ｜「目的」と「記録」を小さく作る](https://imaimaha.com/guide/sanpo-tsuzukeru/)
     - [散歩ビンゴの遊び方とお題の例｜9つのなかまから選ぶ](https://imaimaha.com/guide/sanpo-bingo/)
