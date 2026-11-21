@@ -48,7 +48,7 @@ CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
 # 英語のページ（/en/）。英語のページがあるのは、ゲーム12本（くらしのアプリ以外）とホーム・一覧・ブラウザで遊ぶ・作っている人・よくある質問
 from content_en import BRAND_EN
-EN_SOON = ('nazotte10', 'rittai', 'gunjin')   # 2026-11-21 公開前の3本。英語の文（content_en.py）ができるまで英語のページは作らない
+EN_SOON = ('nazotte10', 'rittai', 'gunjin', 'tsurunobori', 'furikonobori', 'soranokaidan')   # 2026-11-21 公開前の3本。英語の文（content_en.py）ができるまで英語のページは作らない
 EN_GAMES = [d for cid, _, ds in CATS if cid != 'life' for d in ds if d not in EN_SOON]
 EN_ALT = {'/': '/en/', '/apps/': '/en/apps/', '/play/': '/en/play/', '/about/': '/en/about/', '/faq/': '/en/faq/', **{f'/{d}/': f'/en/apps/{d}/' for d in EN_GAMES}}
 JA_ALT = {v: k for k, v in EN_ALT.items()}
@@ -707,7 +707,7 @@ LOOKUP = {ID2D[str(r['trackId'])]: r for r in json.load(open(f'{HERE}/lookup.jso
 VIDEO = [d for d in ALL if os.path.exists(f'{R}/{d}/play.mp4')]
 CAT_INTRO = {
  'puzzle': ('パズル・脳トレのアプリ', '一筆書き・数字のへや割り・お弁当のブロックパズル・暗算。毎日みんなと同じ1問で、タイムやスコアをくらべられるアプリが中心です。'),
- 'relax': ('のんびり遊べるアプリ', 'ゆでたまごの殻むき、納豆のフィルムはがし、雨の窓のしずく集め。指を動かすだけで、ひと息つけるゲームです。'),
+ 'relax': ('のんびり遊べるアプリ', 'ゆでたまごの殻むき、納豆のフィルムはがし、雨の窓のしずく集め、空へのぼるワンタップゲーム。指を動かすだけで、ひと息つけるゲームです。'),
  'versus': ('対戦・読み合いのアプリ', '安南将棋やトランプ将棋などの変則将棋、1が9に勝つ数字カード、ポーカーのプリフロップの練習。友達や CPU と遊べます。'),
  'life': ('くらし・記録のアプリ', 'お散歩の日記、積読のタワー、家のおそうじの分担、ふたりの交換日記。毎日の記録に使うアプリです。'),
 }

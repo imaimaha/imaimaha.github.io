@@ -79,6 +79,9 @@
 - [つるっと ゆでたまご剥き](https://imaimaha.com/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
 - [ねばっと 納豆フィルム剥がし](https://imaimaha.com/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
 - [まどのしずく](https://imaimaha.com/madoshizuku/): 雨の日の車の窓で、指でしずくを集めて大きくする、のんびりゲーム。5つの雨と12の景色、眠る前の雨音タイマー、60秒チャレンジのランキングつき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821822966
+- [つるのぼり](https://imaimaha.com/tsurunobori/): 押しているあいだ、光の線が指のほうへ曲がる。赤いじゃまものをよけて、東京タワー・富士山・宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [ふりこのぼり](https://imaimaha.com/furikonobori/): ゆれる光の玉を、タップで上の点にかけかえてのぼる振り子のゲーム。下からくる霧をふりきって、宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [そらのかいだん](https://imaimaha.com/soranokaidan/): はねる光の玉の下に、タップで段をおいてのぼるゲーム。「ぴったり！」で2段アップ。東京タワー・富士山・宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 ### くらし・記録
 - [おさんぽ日記](https://imaimaha.com/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
 - [積読記録](https://imaimaha.com/tsundoku/): まだ読んでいない本（積読）を背表紙のタワーにして見せる読書記録アプリ。バーコードで登録、読書タイマー、図書館の返却日のお知らせつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821840892
