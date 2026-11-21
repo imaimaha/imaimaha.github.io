@@ -67,11 +67,14 @@
 - [暗算ランナー](https://imaimaha.com/kakezan/): 左右の計算ゲートの得なほうをくぐって数をふやす暗算ランゲーム。毎日の「今日のステージ」はみんな同じコースで、どこまで行けるか勝負。全200ステージ。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821955613
 - [おかず詰めパズル](https://imaimaha.com/okazu/): おかずをお弁当箱につめて、たてかよこを1列そろえるブロックパズル。毎日の「今日のおべんとう」はみんな同じ問題で勝負。全200ステージ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6823270044
 - [ナンバー暗算ドライブ](https://imaimaha.com/jimidrive/): すれ違う車のナンバー4桁で10を作れるかを数秒で判断する暗算ゲーム。毎日の「今日のドライブ」はみんな同じナンバーでランキング勝負。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6818812573
+- [なぞって10](https://imaimaha.com/nazotte10/): となりの数字をなぞって、ちょうど10を作ると敵に攻撃。8つの章を進んで最後のボスを倒す計算パズルのダンジョンバトル。おともと図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 ### 対戦
 - [ふたり大富豪](https://imaimaha.com/futaridaifugo/): ジョーカーなしの52枚を赤と黒に分けて、ふたりで遊ぶ大富豪。5スキップ・7わたし・8切り・10すて・イレブンバック・革命。CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6836394499
 - [変則将棋対戦](https://imaimaha.com/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
 - [ポーカー プリフロ練習](https://imaimaha.com/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
 - [下剋上デュエル](https://imaimaha.com/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
+- [軍人将棋オンライン](https://imaimaha.com/gunjin/): 相手の駒が見えない軍人将棋を、アプリが審判になって遊べます。23枚・8×6の盤。CPU（3段階）・2人で1台・部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [立体四目対戦](https://imaimaha.com/rittai/): 4×4の16本の棒に玉を落として、たて・よこ・高さ・ななめに4つそろえる立体の四目並べ。CPU（3段階）や、部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 ### のんびり
 - [つるっと ゆでたまご剥き](https://imaimaha.com/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
 - [ねばっと 納豆フィルム剥がし](https://imaimaha.com/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
