@@ -19,7 +19,7 @@
     - [住人さがしパズルの解き方｜0のへやと、列の決まりから順に](https://imaimaha.com/guide/jyunin-sagashi-kotsu/)
     - [おかず詰めパズルのコツ｜「つぎ」を見て、すみから詰める](https://imaimaha.com/guide/okazu-kotsu/)
     - [毎日1問のパズルアプリの選び方｜5つの見るポイント](https://imaimaha.com/guide/mainichi-1mon-puzzle/)
-  - [暗算と数あそび](https://imaimaha.com/guide/anzan/): 暗算を速くするコツと、4つの数字で10や24を作るあそび、4けたの素数の見分け方です。きりのいい数を作るのが、いちばんの近道です。
+  - [暗算と数あそび](https://imaimaha.com/guide/anzan/): 暗算を速くするコツと、4つの数字で10や24を作るあそび、4けたの素数の見分け方です。暗算ランナーで★3を取るコツや、なぞって10の10の作り方もあります。きりのいい数を作るのが、いちばんの近道です。
     - [暗算を速くするコツ7つ｜きりのいい数にしてから計算する](https://imaimaha.com/guide/anzan-kotsu/)
     - [4つの数字で10を作る暗算のコツ｜5つの考え方](https://imaimaha.com/guide/make-10-anzan/)
     - [4つの数字で10を作れない組み合わせ一覧｜1〜9なら48組](https://imaimaha.com/guide/make10-dekinai/)
@@ -27,6 +27,8 @@
     - [4つの数字で24を作る遊び｜1〜9なら作れないのは91組](https://imaimaha.com/guide/make-24/)
     - [4けたの素数を速く見分ける方法｜2・3・5・7・11の順](https://imaimaha.com/guide/sosuu-miwakekata/)
     - [暗算ランナーのコツ｜＋と×、−と÷のどちらが得かを一瞬で決める](https://imaimaha.com/guide/kakezan-gate-kotsu/)
+    - [暗算ランナーで★3を取るコツ｜いちばん大きい道の9割をめざす](https://imaimaha.com/guide/kakezan-hoshi3/)
+    - [なぞって10の10の作り方｜組み合わせ表と長い10の使いどころ](https://imaimaha.com/guide/nazotte10-tsukurikata/)
   - [変則将棋](https://imaimaha.com/guide/shogi/): 安南将棋・トランプ将棋・王手将棋など、ふつうの将棋とルールが少しちがう将棋のルールとコツです。相手の駒が見えない、ついたて将棋もあります。囲いと戦法の種類の一覧もあります。友達とオンラインで対戦するしかたも書いています。
     - [変則将棋のルール一覧｜安南将棋・トランプ将棋・王手将棋など](https://imaimaha.com/guide/hensoku-shogi-rules/)
     - [将棋の囲いの種類一覧｜美濃・矢倉・穴熊など12種類の形](https://imaimaha.com/guide/shogi-kakoi-ichiran/)
@@ -40,10 +42,12 @@
     - [ついたて将棋とは｜相手の駒が見えない将棋のルールとコツ](https://imaimaha.com/guide/tsuitate-shogi/)
     - [変則詰将棋（安南詰将棋）のコツ｜借りた動きで王手を探す](https://imaimaha.com/guide/hensoku-tsume-kotsu/)
     - [友達とオンライン対戦するには｜部屋のコードを送るだけ、登録なし](https://imaimaha.com/guide/online-taisen/)
-  - [カードゲーム](https://imaimaha.com/guide/cards/): 大富豪のローカルルールと、2人でできるトランプゲーム、ふたり大富豪・下剋上デュエルの読み合いのコツ、ポーカーの役の一覧とプリフロップ・レンジ表の読み方です。
+  - [カードゲーム](https://imaimaha.com/guide/cards/): 大富豪のローカルルールと、2人でできるトランプゲーム、ふたり大富豪の読み合いとあがり方、下剋上デュエルの読み合いと段位戦のライバル、ポーカーの役の一覧とプリフロップ・レンジ表の読み方です。
     - [大富豪のローカルルール一覧｜8切り・革命・イレブンバック](https://imaimaha.com/guide/daifugo-local-rules/)
     - [ふたり大富豪のコツ｜相手の手札は、はじめは自分と同じ数字](https://imaimaha.com/guide/futari-daifugo-kotsu/)
+    - [ふたり大富豪のあがり方｜さいごの1手と残り2枚の形](https://imaimaha.com/guide/futari-daifugo-agari/)
     - [下剋上デュエルのコツ｜1が9に勝つ読み合いで、相手の残りを読む](https://imaimaha.com/guide/gekokujo-kotsu/)
+    - [下剋上デュエルの段位戦｜ライバル10人のくせと週間リーグの点](https://imaimaha.com/guide/gekokujo-dani/)
     - [2人でできるトランプゲーム一覧｜ルールを短く9つ](https://imaimaha.com/guide/futari-trump-games/)
     - [ポーカーの役の一覧（強い順）｜10種類の役と出る確率](https://imaimaha.com/guide/poker-yaku-ichiran/)
     - [ポーカーのプリフロップとは｜席の順番で、参加する手が変わる理由](https://imaimaha.com/guide/poker-preflop-kihon/)
