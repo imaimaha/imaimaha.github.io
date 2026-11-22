@@ -84,6 +84,8 @@ NAV_EN = [('/en/', 'Home'), ('/en/play/', 'Play in browser'), ('/en/apps/', 'Gam
 
 AVAIL_EN = ('Available on the App Store in Japan. We haven\'t decided yet whether to release the apps in other countries, '
             'so the App Store links may not open from a store in another country.')
+AVAIL_SOON_EN = ('Coming soon to the App Store in Japan (now in App Review). Like our other games, it will be available in Japan only for now, '
+                 'so the App Store link may not open from a store in another country.')
 LANG_EN = 'Menus and in-game text are in Japanese for now. Most games are easy to play without reading Japanese.'
 
 ABOUT_EN = {
@@ -174,3 +176,134 @@ STORE_EN = {
   promo="Split a deck into red and black for one-on-one Daifugo. Read what's left from the cards played. 5 Skip, 7 Pass, 8 Cut, 10 Discard, Revolution and more - vs CPU or online.",
   desc='Daifugo (also called Daihinmin - a Japanese card game similar to President) for two players, one on one.\n\nThe 52 cards (no jokers) are split into red (hearts and diamonds) and black (spades and clubs), one color per player. Both hands have two of every number, so the deal is fair. You can\'t see your opponent\'s hand, but if you remember the cards played, you can work out what\'s left. When to use your strong cards and when to pass - it\'s a game of reading each other.\n\nHOW TO PLAY\n• Card strength goes 3, 4, ... K, A, 2 (2 is the strongest)\n• Play one card, or 2-4 cards of the same number together\n• When there are cards on the table, play the same number of cards with a higher number, or pass\n• When your opponent passes, the table is cleared and the last player to play leads\n• The first player to empty their hand wins\n\nSPECIAL CARDS\n• 5 Skip: skip your opponent\'s turn and play again\n• 7 Pass: give your opponent cards of your choice, as many as you played\n• 8 Cut: clear the table and lead again\n• 10 Discard: discard cards of your choice, as many as you played\n• Jack Back: playing a J reverses card strength until the table is cleared\n• Revolution: four of the same number reverse card strength (7 Pass moves cards around, so four of a kind can happen)\n\nCARDS YOU CAN\'T FINISH WITH\nYour very last play can\'t be the strongest number (usually 2), a 5, 7, 8, 10 or J, or a revolution. Use your special cards early!\n\nMODES\n• vs CPU: easy, normal or strong. One game decides the match\n• Online: create a room and wait, or send a join request to a waiting room; the game starts when the host accepts. Invite friends to a private room with a 5-character code or an invite link\n• Preset stamps (10 kinds) during play\n\nLANGUAGE\nMenus and rule explanations are in Japanese for now; the cards are standard playing cards.\n\nOTHER\n• The rules are always available in the app (on the title screen, and the "?" button during play)\n• No login. Online, only a short nickname is shown; names are filtered and can be reported or hidden\n• Banner ads appear on the title and result screens, never during play. A full-screen ad may occasionally appear after CPU games\n• Anonymous play counts (no IDs or names) help us improve; you can turn this off'),
 }
+
+# 2026-11-22 追加の6本（審査中・公開前）。英語の App Store の文はまだないので、日本語の App Store の文（AppStore.md）から訳した文。
+# ページの下の「Text from the English App Store description」のかわりに「Translated from the Japanese ...」と出す（FROM_JA）
+FROM_JA = ('nazotte10', 'rittai', 'gunjin', 'tsurunobori', 'furikonobori', 'soranokaidan')
+
+SHOT_ALT_EN.update({
+    'nazotte10': {'1_battle': 'Tracing neighboring numbers to make 10 and attack an enemy', '2_boss': 'A boss battle at the end of a chapter',
+                  '3_terrain': 'The snowy mountain chapter with icy tiles', '4_ally': 'Choosing a defeated enemy as a companion', '5_book': 'The monster book'},
+    'rittai': {'1_play': 'Dropping red and blue balls onto the 4×4 board of poles', '2_win': 'Four in a row using height and a diagonal',
+               '3_online': 'Creating a room to play a friend online', '4_stamp': 'Saying hi with a stamp during a game', '5_title': 'Title screen'},
+    'gunjin': {'1_battle': 'A battle with a hidden enemy piece - only the result is shown', '2_place': 'Setting up 23 pieces in your camp',
+               '3_online': 'Playing a friend online with a room code', '4_chart': 'The chart of which piece beats which', '5_reveal': 'All pieces revealed after the game'},
+    'tsurunobori': {'1_play': 'The glowing line passing Tokyo Tower', '2_space': 'Near space at 100 km, with the blue Earth below',
+                    '3_moon': 'The line reaching toward the Moon, 384,400 km up', '4_record': 'The result screen with the whole line and your record',
+                    '5_kisekae': 'Choosing line colors and tips'},
+    'furikonobori': {'1_play': 'A glowing ball swinging like a pendulum in the night sky', '2_space': 'Near space at 100 km, with the blue Earth below',
+                     '3_moon': 'Climbing close to the Moon, 384,400 km up', '4_record': 'The result screen with landmarks and your record',
+                     '5_kisekae': 'Choosing ball colors and strings'},
+    'soranokaidan': {'1_play': 'A "Perfect!" landing on a step of light near Tokyo Skytree', '2_space': 'Near space at 100 km, with the blue Earth below',
+                     '3_moon': 'Climbing close to the Moon, 384,400 km up', '4_record': 'The result screen with landmarks and your record',
+                     '5_kisekae': 'Choosing ball colors and step shapes'},
+})
+
+HEAD_EN.update({'8 CHAPTERS TO EXPLORE': '8 chapters to explore', 'THE APP IS THE REFEREE': 'The app is the referee',
+                'PAST LANDMARKS, INTO SPACE, TO THE MOON': 'Past landmarks, into space, to the Moon'})
+
+_CLIMB_COMMON = (
+    "PAST LANDMARKS, INTO SPACE, TO THE MOON\n"
+    "The view changes as you climb: city buildings, mountains, above the clouds, the starry sky and the blue Earth. "
+    "Pass Tokyo Tower (333 m), Tokyo Skytree (634 m), Mt. Fuji (3,776 m), the stratosphere, space (100 km), the International Space Station and finally the Moon (384,400 km). "
+    "A message pops up each time you pass a landmark, and \"Next: Mt. Fuji in ○ m\" always shows your next goal.\n\n"
+    "SKINS YOU UNLOCK BY PLAYING\n"
+    "{skins} New skins unlock as you pass landmarks, climb a lot and play every day. They can't be bought with ads or money.\n\n"
+    "PICK YOUR MUSIC\n"
+    "The original music is generated in the app. On \"Auto\" the tune changes with your height, or choose gentle, upbeat, night or space - or no music. Sound effects and vibration can each be turned off.\n\n"
+    "RANKINGS\n"
+    "Compare your best height today, this week and all time. No sign-in - just choose a nickname. Nothing is sent unless you choose one, and you can delete your records any time.\n\n"
+    "LANGUAGE\n"
+    "The game is easy to play without reading Japanese; menus and in-game text are in Japanese for now.\n\n"
+    "OTHER\n"
+    "• Your records and skins are saved on your iPhone. No connection needed to play (only the rankings go online)\n"
+    "• Banner ads appear on the title and result screens, never during play. After a few games, a full-screen ad sometimes appears on the result screen\n"
+    "• When you fall, you can watch an optional video ad to continue once from where you fell")
+
+STORE_EN.update({
+ 'nazotte10': dict(
+  name='Nazotte 10: Math Dungeon Puzzle',
+  sub='Make 10 to defeat monsters',
+  promo='Trace neighboring numbers to make exactly 10 and attack the enemy. Watch its next move and choose which 10 to clear first. Travel through 8 chapters and beat the final boss.',
+  desc="Trace numbers to make exactly 10. A puzzle RPG where addition defeats monsters.\n\n"
+       "Trace the number tiles 1-9 on the board in one stroke without lifting your finger. When the total is exactly 10, the tiles vanish and hit the enemy. A 10 made from 2 tiles or from 5 tiles both count - the more tiles you use, the stronger the attack.\n\n"
+       "HOW TO PLAY\n• Trace from tile to tile - up, down, left, right or diagonal\n• When the total is exactly 10, the tiles clear and you attack\n"
+       "• When the gauge around an enemy's face fills up, it does the \"next move\" shown on screen\n"
+       "• Time stops until you clear your first 10 and after each enemy move, so you can look at the board calmly\n"
+       "• There is always at least one 10 you can make on the board\n• Stuck? Use a magnifying glass item to see a hint\n\n"
+       "SPECIAL TILES\n• Star: double damage\n• Shield: blocks an enemy attack\n• Heart: restores HP\n• Rock: breaks when you make a 10 next to it\n\n"
+       "8 CHAPTERS TO EXPLORE\nForest path, mountain cave, night castle, rocky shore, snowy mountain road, sand ruins, sky island and the candy land. Each chapter has new enemies and terrain, with a boss waiting at the end - plus shops, rest stops and treasure chests along the way.\n\n"
+       "GET STRONGER\n• Earn stars from defeated enemies and cleared chapters, and use them to raise max HP, attack, defense and more\n"
+       "• Defeated enemies can join you as companions, each with one special skill\n• Clearing a chapter can give you an item - equip one before you set out\n"
+       "• Your hero levels up with every adventure\n• Open mystery boxes with medals to get companions, items and new hero faces\n"
+       "• Slow the enemy gauge with Time, hit harder with Power, or protect yourself with Guard. Find a combination for the harder chapters\n\n"
+       "MONSTER BOOK\nEvery monster you defeat goes into the book. Collect the cute, slightly creepy monsters.\n\n"
+       "LANGUAGE\nThe rules are simple and the game is easy to play without reading Japanese; menus and in-game text are in Japanese for now.\n\n"
+       "OTHER\n• No account needed. Your records are saved on your iPhone\n• Ads appear at the bottom of screens such as the title and map, never during battles\n• When you lose, you can watch an optional video to revive once"),
+ 'rittai': dict(
+  name='3D Four in a Row Online',
+  sub='Line up 4 in 3D with friends',
+  promo='Drop red and blue balls onto 16 poles on a 4×4 board. Line up 4 across, down, up or diagonally to win. Rotate the board and watch for your rival\'s threats. Play the CPU, a friend on one phone, or online.',
+  desc="Across, down, up and diagonal. A two-player game of four in a row - in 3D.\n\n"
+       "16 poles stand on a 4×4 board. Red and blue take turns dropping one ball at a time. Balls stack from the bottom, up to 4 on each pole. Line up 4 of your color in a straight line to win. There are 76 possible lines in all, including diagonals on each level and diagonals through the whole cube - some of them are easy to miss from any angle.\n\n"
+       "HOW TO PLAY\n• Tap a pole to select it, then tap again to drop the ball to the bottom (so you don't drop one by mistake). You can switch to one-tap dropping in Settings\n"
+       "• Rotate the board by swiping or with the rotate buttons, or view it from almost straight above\n"
+       "• The last ball played has a glowing ring, and a winning line lights up\n"
+       "• Careful: if you play on a pole below your opponent's winning spot, they can drop right on top of it\n\n"
+       "WAYS TO PLAY\n• vs CPU: easy, normal or strong. Play first, second or random, and take back moves to your own turn\n• 2 players on one iPhone: take turns\n"
+       "• Online: create a room and wait, or ask to join a waiting room - the game starts when the host accepts. Invite a friend to a private room with a 6-character code. Time limits: none, 30 seconds per move, or 3 minutes per player\n"
+       "• Say hi with 9 preset stamps during a game\n\n"
+       "RECORDS\nWins, losses and draws for each CPU level, your best winning streak, your fastest win and your online record.\n\n"
+       "LANGUAGE\nThe game is easy to play without reading Japanese; menus and in-game text are in Japanese for now.\n\n"
+       "OTHER\nNo account needed. Online, only a short nickname you choose is shown to your opponent, and you can report or hide names. Ads appear on the title and result screens, never during a game."),
+ 'gunjin': dict(
+  name='Gunjin Shogi Online (Military Shogi)',
+  sub='Hidden pieces - the app is the referee',
+  promo='You can\'t see what your opponent\'s pieces are or where they stand. When pieces clash, you only learn win, lose or draw. Gunjin Shogi usually needs a referee - here the app is the referee.',
+  desc="Gunjin Shogi (\"military shogi\") is a Japanese board game of hidden pieces and mind games. The app is the referee, so just two players can play.\n\n"
+       "In Gunjin Shogi, neither player knows what the other's pieces are. Normally a third person has to act as referee - here, the app does it. When your piece runs into an enemy piece, you are told only whether you won, lost or both were removed. Which piece looks strong? Where might the mines be? Read your opponent's setup from the results of each battle.\n\n"
+       "HOW TO PLAY\n• The board is 6 wide and 8 deep. The 4 rows on your side are your camp\n"
+       "• First, place your 23 pieces in your camp. Pick a template (balanced, attack, defense or random), then tap two pieces to swap them\n"
+       "• Most pieces move 1 square forward, back or sideways. Tanks and cavalry move 2 squares, engineers move any distance, and planes can jump over pieces forward and back. Mines and the flag can't move\n"
+       "• When you move into an enemy piece, they battle. The stronger piece stays; if they're the same, both are removed\n"
+       "• Win by moving an officer from major up to general into the enemy headquarters, or when your opponent has no pieces left to move\n\n"
+       "PIECES (23 PIECES, 16 KINDS)\nGeneral, lieutenant general, major general, colonel, lieutenant colonel, major, captain, first lieutenant, second lieutenant, plane, tank, cavalry, engineer, mine, spy and flag. The spy beats the general, and a mine loses only to planes and engineers. A battle chart with piece pictures shows which piece beats which at any time.\n\n"
+       "THE APP IS THE REFEREE\n• Only your own pieces are shown. The type and position of enemy pieces never appear on screen\n"
+       "• You only learn where a battle happened and whether you won, lost or drew\n• When the game ends, all enemy pieces are revealed\n\n"
+       "WAYS TO PLAY\n• vs CPU: easy, normal or strong. The CPU also sees only its own pieces and the battle results - no cheating\n"
+       "• 2 players on one iPhone: a hand-over screen appears every turn so you never see your opponent's pieces\n"
+       "• Online: create a room and wait, or ask to join a waiting room - the game starts when the host accepts. Invite a friend to a private room with a 6-character code\n"
+       "• Time controls: 3 or 10 minutes per player, 10 or 30 seconds per move, or 5 minutes + 5 seconds per move (CPU and 2-player games can also have no clock). The clock stops during setup\n"
+       "• Say hi with 9 preset stamps during a game\n\n"
+       "LANGUAGE\nMenus and in-game text are in Japanese for now. The battle chart uses piece pictures, and this page explains the rules in English.\n\n"
+       "OTHER\nNo account needed. Online, only a short nickname you choose is shown to your opponent, and you can report or hide names. Ads appear on the title and result screens, never during a game."),
+ 'tsurunobori': dict(
+  name='Vine Climb',
+  sub='Hold to steer a line to the Moon',
+  promo='The glowing line keeps growing upward. While you hold, it bends toward your finger - dodge the red obstacles and climb as high as you can: Tokyo Tower, Mt. Fuji, space and the Moon. Pass landmarks to unlock skins.',
+  desc="Grow a line of light higher and higher. A climbing game you play just by holding the screen.\n\n"
+       "HOW TO PLAY\n• The glowing line (the vine) keeps growing upward\n• While you hold the screen, the tip heads toward your finger's left-right position. Let go and it grows straight up\n"
+       "• Touch a red bar or ring and it's over\n• The higher you go, the faster it gets and the more obstacles appear\n• When it's over, your whole line becomes one picture\n\n"
+       + _CLIMB_COMMON.format(skins='Choose the line color, thickness, glow, tip and background (27 in all).')),
+ 'furikonobori': dict(
+  name='Pendulum Climb',
+  sub='Tap to swing up into space',
+  promo='A glowing ball hangs from a point and swings. Tap to let go and hook onto a higher point. The best moment is when it swings up with speed. Stay ahead of the rising mist and climb into space and to the Moon.',
+  desc="Swing, hook and climb higher. A pendulum game you play with just a tap.\n\n"
+       "HOW TO PLAY\n• A glowing ball hangs from a point on a string and swings\n"
+       "• Tap to let go and hook onto the nearest higher point within reach. Points you can reach are shown with a faint dotted line\n"
+       "• Hook on while swinging upward with speed, and you'll shoot up\n• Tap when no point is in reach and you let go and fall\n"
+       "• Glowing mist rises from below. Touch it and it's over\n\n"
+       + _CLIMB_COMMON.format(skins='Choose the ball color, trail, string, point shape and background (27 in all).')),
+ 'soranokaidan': dict(
+  name='Sky Stairs',
+  sub='Tap to build steps to the Moon',
+  promo='Tap to place a step of light under the bouncing ball and climb. Tap just above the dotted line for a "Perfect!" and jump 2 steps at once - keep it up for combos. Slip past red spikes on the open side.',
+  desc="Place steps of light and climb into the sky. A stair-climbing game you play with just a tap.\n\n"
+       "HOW TO PLAY\n• A glowing ball bounces while moving left and right\n• Tap to make a new step one level up, under the ball\n"
+       "• Tap while the ball is above the dotted line - just before it starts to fall is best. Miss the new step and you fall\n"
+       "• Tap just above the line (when it glows gold) for a \"Perfect!\" - a big bounce, and your next step goes 2 levels up. Keep it up for combos\n"
+       "• A step you land on stretches across the screen and crumbles after 4 bounces\n"
+       "• For red spikes, wait until the ball is on the open side, then place your step to slip through\n\n"
+       + _CLIMB_COMMON.format(skins='Choose the ball color, step color, step shape, trail and background (26 in all).')),
+})

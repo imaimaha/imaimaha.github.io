@@ -48,7 +48,7 @@ CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
 # 英語のページ（/en/）。英語のページがあるのは、ゲーム12本（くらしのアプリ以外）とホーム・一覧・ブラウザで遊ぶ・作っている人・よくある質問
 from content_en import BRAND_EN
-EN_SOON = ('nazotte10', 'rittai', 'gunjin', 'tsurunobori', 'furikonobori', 'soranokaidan')   # 2026-11-21 公開前の3本。英語の文（content_en.py）ができるまで英語のページは作らない
+EN_SOON = ()   # 英語の文（content_en.py の STORE_EN）がまだないゲーム。ここに入れると英語のページを作らない（2026-11-22 新しい6本の英語の文を入れて空に）
 EN_GAMES = [d for cid, _, ds in CATS if cid != 'life' for d in ds if d not in EN_SOON]
 EN_ALT = {'/': '/en/', '/apps/': '/en/apps/', '/play/': '/en/play/', '/about/': '/en/about/', '/faq/': '/en/faq/', **{f'/{d}/': f'/en/apps/{d}/' for d in EN_GAMES}}
 JA_ALT = {v: k for k, v in EN_ALT.items()}
@@ -1598,7 +1598,7 @@ def page_en_home():
              f'<ul class="rail" aria-label="Games with a daily puzzle">{"".join(en_daily_card(d) for d in DAILY)}</ul><p class="swipe" aria-hidden="true">← Swipe →</p></div></section>')
     others = [d for d in EN_GAMES if d not in DAILY]
     life = [d for d in ALL if d not in EN_GAMES and d not in EN_SOON]
-    L.append('<section class="sec tint" aria-labelledby="h-more"><div class="wrap"><div class="sec-h rv"><h2 id="h-more">✨ More games</h2><p>Relaxing games, shogi variants, card games and a poker study quiz.</p></div>'
+    L.append('<section class="sec tint" aria-labelledby="h-more"><div class="wrap"><div class="sec-h rv"><h2 id="h-more">✨ More games</h2><p>Relaxing games, shogi variants, board games, card games and a poker study quiz.</p></div>'
              f'<ul class="grid">{"".join(en_card(d) for d in others)}</ul>'
              '<div class="sec-h rv" style="margin-top:34px"><h2 id="h-life" style="font-size:22px">📒 Also by Ima (in Japanese only)</h2><p>Everyday apps whose pages are in Japanese.</p></div>'
              f'<ul class="grid" aria-labelledby="h-life">{"".join(en_life_card(d) for d in life)}</ul></div></section>')
@@ -1627,7 +1627,7 @@ def page_en_apps():
              f'<p>These apps and their pages are in Japanese.</p></div><ul class="grid">{"".join(en_life_card(d) for d in life)}</ul></div></section>')
     body = f'<section class="sec" style="padding:16px 0 0"><div class="narrow">{notice_en()}</div></section>' + secs
     sub_page_en('/en/apps/', 'All games', f'All games | {BRAND_EN} (free iPhone games)',
-                f'{len(EN_GAMES)} free iPhone games: daily logic puzzles, mental math, relaxing peeling games, shogi variants, card games and a poker study quiz.',
+                f'{len(EN_GAMES)} free iPhone games: daily logic puzzles, mental math, relaxing games, shogi variants, board games, card games and a poker study quiz.',
                 f'Puzzles, relaxing games and versus games - {len(EN_GAMES)} in all, every one free.', body,
                 [{"@context": "https://schema.org", **itemlist_en()}], crumbs=[('/en/', 'Home'), (None, 'Games')])
 
@@ -1687,7 +1687,7 @@ def page_en_app(d):
              f'<p class="price">Free with ads · iPhone (iOS {a.get("minos", "18")} or later) · {avail}</p>{playbtn}</div></section>')
     extra = f'<li>{esc(lang)}</li>' if lang else ''
     L.append(f'<section class="block" style="padding-top:6px"><div class="narrow"><div class="box rv notice"><h2>🌏 Language &amp; availability</h2><ul>{extra}'
-             f'<li>{esc(EN.AVAIL_EN)}</li></ul><p><a class="more-link" href="/{d}/" hreflang="ja" lang="ja">日本語のページ →</a></p></div></div></section>')
+             f'<li>{esc(EN.AVAIL_EN if i else EN.AVAIL_SOON_EN)}</li></ul><p><a class="more-link" href="/{d}/" hreflang="ja" lang="ja">日本語のページ →</a></p></div></div></section>')
     shots = ''.join(f'<li><img src="/{d}/shots/{f}.webp" width="480" height="1043" alt="{esc(shot_alt_en(d, f))}"' + (' loading="lazy"' if k > 1 else '') + '></li>'
                     for k, (f, _) in enumerate(SHOTS[d]))
     L.append(f'<section class="shots" aria-label="Screenshots"><ul>{shots}</ul><p class="hint">← Scroll sideways →</p></section>')
@@ -1700,7 +1700,7 @@ def page_en_app(d):
                  f'<div class="btns">{sb}{pl}<a class="ghost" href="/en/play/">Other daily puzzles</a></div></div></div></div></section>')
     body = f'<div class="box rv"><h2>What is {esc(name)}?</h2>{intro}</div>' + ''.join(f'<div class="box rv"><h2>{esc(h)}</h2>{x}</div>' for h, x in secs)
     L.append(f'<section class="block" aria-label="About the game"><div class="narrow">{body}'
-             f'<p class="small" style="color:var(--dim)">Text from the English App Store description. Questions? <a href="mailto:{MAIL}">{MAIL}</a> · '
+             f'<p class="small" style="color:var(--dim)">{"Translated from the Japanese App Store description" if d in EN.FROM_JA else "Text from the English App Store description"}. Questions? <a href="mailto:{MAIL}">{MAIL}</a> · '
              f'<a href="/{d}/privacy.html" hreflang="ja">Privacy policy (in Japanese)</a></p></div></section>')
     rel = [x for x in EN_GAMES if CAT_OF[x][0] == cid and x != d][:3]
     if len(rel) < 3: rel += [x for x in DAILY if x != d and x not in rel][:3 - len(rel)]
