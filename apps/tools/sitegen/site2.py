@@ -48,7 +48,7 @@ CAT_OF = {d: (cid, lb) for cid, lb, ds in CATS for d in ds}
 
 # 英語のページ（/en/）。英語のページがあるのは、ゲーム12本（くらしのアプリ以外）とホーム・一覧・ブラウザで遊ぶ・作っている人・よくある質問
 from content_en import BRAND_EN
-EN_SOON = ()   # 英語の文（content_en.py の STORE_EN）がまだないゲーム。ここに入れると英語のページを作らない（2026-11-22 新しい6本の英語の文を入れて空に）
+EN_SOON = ('gurat',)   # 2026-11-23 ぐらっと（英語の文がまだ）。 英語の文（content_en.py の STORE_EN）がまだないゲーム。ここに入れると英語のページを作らない（2026-11-22 新しい6本の英語の文を入れて空に）
 EN_GAMES = [d for cid, _, ds in CATS if cid != 'life' for d in ds if d not in EN_SOON]
 EN_ALT = {'/': '/en/', '/apps/': '/en/apps/', '/play/': '/en/play/', '/about/': '/en/about/', '/faq/': '/en/faq/', **{f'/{d}/': f'/en/apps/{d}/' for d in EN_GAMES}}
 JA_ALT = {v: k for k, v in EN_ALT.items()}
