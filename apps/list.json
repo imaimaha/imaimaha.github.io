@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-19",
+  "updated": "2026-11-23",
   "categories": [
     { "id": "puzzle", "label": "パズル・脳トレ" },
     { "id": "relax", "label": "のんびり" },
@@ -13,13 +13,18 @@
     { "key": "okazutsume", "id": "6823270044", "name": "おかず詰めパズル", "text": "おかずを詰めて列をそろえる", "icon": "icons/okazutsume.png", "cat": "puzzle" },
     { "key": "kakezanrunner", "id": "6821955613", "name": "暗算ランナー", "text": "計算ゲートをくぐって数をふやす", "icon": "icons/kakezanrunner.png", "cat": "puzzle" },
     { "key": "jimidrive", "id": "6818812573", "name": "ナンバー暗算ドライブ", "text": "車のナンバーの数字で10を作る暗算", "icon": "icons/jimidrive.png", "cat": "puzzle" },
+    { "key": "nazotte10", "id": "6837609128", "name": "なぞって10", "text": "数字をなぞって10を作り、敵を倒すパズルRPG", "icon": "icons/nazotte10.png", "cat": "puzzle" },
     { "key": "yudetamago", "id": "6821884836", "name": "つるっと ゆでたまご剥き", "text": "ゆでたまごの殻をつるっとむく", "icon": "icons/yudetamago.png", "cat": "relax" },
     { "key": "nattofilm", "id": "6821884133", "name": "ねばっと 納豆フィルム剥がし", "text": "ねばねばの糸を巻き取ってはがす", "icon": "icons/nattofilm.png", "cat": "relax" },
     { "key": "madoshizuku", "id": "6821822966", "name": "まどのしずく", "text": "雨の窓で、しずくを集めて大きくする", "icon": "icons/madoshizuku.png", "cat": "relax" },
+    { "key": "nobiru", "id": "6837691783", "name": "つるのぼり", "text": "押すだけで、光の線をどこまでも高く", "icon": "icons/nobiru.png", "cat": "relax" },
+    { "key": "furiko", "id": "6837694679", "name": "ふりこのぼり", "text": "タップで振り子をかけかえて、宇宙まで", "icon": "icons/furiko.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
     { "key": "pokerstudy", "id": "6823270157", "name": "ポーカー プリフロ練習", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
     { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" },
     { "key": "futaridaifugo", "id": "6836394499", "name": "ふたり大富豪", "text": "赤と黒に分けて、1対1で遊ぶ大富豪", "icon": "icons/futaridaifugo.png", "cat": "versus" },
+    { "key": "rittai", "id": "6837609471", "name": "立体四目対戦", "text": "4×4×4の立体で4つそろえる、四目並べの対戦", "icon": "icons/rittai.png", "cat": "versus" },
+    { "key": "gunjin", "id": "6837609485", "name": "軍人将棋オンライン", "text": "相手の駒が見えない、アプリが審判の軍人将棋", "icon": "icons/gunjin.png", "cat": "versus" },
     { "key": "sanpobingo", "id": "6821944194", "name": "おさんぽ日記", "text": "歩数と行った場所の日記と、散歩ビンゴ", "icon": "icons/sanpobingo.png", "cat": "life" },
     { "key": "tsundokutower", "id": "6821840892", "name": "積読記録", "text": "積んだ本をタワーにして、読んで崩す", "icon": "icons/tsundokutower.png", "cat": "life" }
   ]
