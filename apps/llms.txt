@@ -81,7 +81,7 @@
 ### 対戦
 - [ふたり大富豪](https://imaimaha.com/futaridaifugo/): ジョーカーなしの52枚を赤と黒に分けて、ふたりで遊ぶ大富豪。5スキップ・7わたし・8切り・10すて・イレブンバック・革命。CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6836394499
 - [変則将棋対戦](https://imaimaha.com/hensokushogi/): 安南将棋・トランプ将棋・縛り将棋などの変則将棋を、部屋のコードで友達とオンライン対戦。CPU 対局と変則詰将棋2250問も。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821822985
-- [ポーカー プリフロ練習](https://imaimaha.com/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
+- [プリフロップ道場](https://imaimaha.com/pokerstudy/): テキサスホールデムのプリフロップの判断を、クイズでおぼえる学習アプリ。6人卓・100BBの目安のレンジ、13×13のレンジ表、苦手な手の復習つき。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6823270157
 - [下剋上デュエル](https://imaimaha.com/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
 - [軍人将棋オンライン](https://imaimaha.com/gunjin/): 相手の駒が見えない軍人将棋を、アプリが審判になって遊べます。23枚・8×6の盤。CPU（3段階）・2人で1台・部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837609485
 - [立体四目対戦](https://imaimaha.com/rittai/): 4×4の16本の棒に玉を落として、たて・よこ・高さ・ななめに4つそろえる立体の四目並べ。CPU（3段階）や、部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837609471

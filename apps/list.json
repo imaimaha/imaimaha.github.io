@@ -20,7 +20,7 @@
     { "key": "nobiru", "id": "6837691783", "name": "つるのぼり", "text": "押すだけで、光の線をどこまでも高く", "icon": "icons/nobiru.png", "cat": "relax" },
     { "key": "furiko", "id": "6837694679", "name": "ふりこのぼり", "text": "タップで振り子をかけかえて、宇宙まで", "icon": "icons/furiko.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
-    { "key": "pokerstudy", "id": "6823270157", "name": "ポーカー プリフロ練習", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
+    { "key": "pokerstudy", "id": "6823270157", "name": "プリフロップ道場", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
     { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" },
     { "key": "futaridaifugo", "id": "6836394499", "name": "ふたり大富豪", "text": "赤と黒に分けて、1対1で遊ぶ大富豪", "icon": "icons/futaridaifugo.png", "cat": "versus" },
     { "key": "rittai", "id": "6837609471", "name": "立体四目対戦", "text": "4×4×4の立体で4つそろえる、四目並べの対戦", "icon": "icons/rittai.png", "cat": "versus" },
