@@ -194,9 +194,9 @@ SHOT_ALT_EN.update({
     'furikonobori': {'1_play': 'A glowing ball swinging like a pendulum in the night sky', '2_space': 'Near space at 100 km, with the blue Earth below',
                      '3_moon': 'Climbing close to the Moon, 384,400 km up', '4_record': 'The result screen with landmarks and your record',
                      '5_kisekae': 'Choosing ball colors and strings'},
-    'soranokaidan': {'1_play': 'A "Perfect!" landing on a step of light near Tokyo Skytree', '2_space': 'Near space at 100 km, with the blue Earth below',
-                     '3_moon': 'Climbing close to the Moon, 384,400 km up', '4_record': 'The result screen with landmarks and your record',
-                     '5_kisekae': 'Choosing ball colors and step shapes'},
+    'soranokaidan': {'1_play': 'Placing keys under the bouncing note with a row of "Perfect!" taps', '2_songs': 'The xylophone title and the list of 10 songs',
+                     '3_result': 'The result screen showing the notes you played on a staff', '4_medley': 'The medley mode, where the 10 songs play in a row',
+                     '5_kisekae': 'Choosing a sound: piano, music box, marimba and more'},
 })
 
 HEAD_EN.update({'8 CHAPTERS TO EXPLORE': '8 chapters to explore', 'THE APP IS THE REFEREE': 'The app is the referee',
@@ -296,14 +296,20 @@ STORE_EN.update({
        "• Glowing mist rises from below. Touch it and it's over\n\n"
        + _CLIMB_COMMON.format(skins='Choose the ball color, trail, string, point shape and background (27 in all).')),
  'soranokaidan': dict(
-  name='Sky Stairs',
-  sub='Tap to build steps to the Moon',
-  promo='Tap to place a step of light under the bouncing ball and climb. Tap just above the dotted line for a "Perfect!" and jump 2 steps at once - keep it up for combos. Slip past red spikes on the open side.',
-  desc="Place steps of light and climb into the sky. A stair-climbing game you play with just a tap.\n\n"
-       "HOW TO PLAY\n• A glowing ball bounces while moving left and right\n• Tap to make a new step one level up, under the ball\n"
-       "• Tap while the ball is above the dotted line - just before it starts to fall is best. Miss the new step and you fall\n"
-       "• Tap just above the line (when it glows gold) for a \"Perfect!\" - a big bounce, and your next step goes 2 levels up. Keep it up for combos\n"
-       "• A step you land on stretches across the screen and crumbles after 4 bounces\n"
-       "• For red spikes, wait until the ball is on the open side, then place your step to slip through\n\n"
-       + _CLIMB_COMMON.format(skins='Choose the ball color, step color, step shape, trail and background (26 in all).')),
+  name='Oto no Kaidan: Tap a Melody',
+  sub='Place keys and play famous songs',
+  promo='Tap to place a key under the bouncing note and the next note of the song plays. Tap at just the right moment for a "Perfect!" and a clear tone. Play 10 songs, from Twinkle Twinkle Little Star to Canon, with your own finger.',
+  desc="Every key you place plays the next note of the song. A music game where your taps perform the melody.\n\n"
+       "HOW TO PLAY\n• A round note bounces while moving left and right\n• Tap to make a key under it - and the next note of the song plays\n"
+       "• Tap just above the dotted line for a \"Perfect!\" - a clear, clean tone, and your next key goes 2 levels up\n"
+       "• Keys are colored by do-re-mi. The circle on the left shows the next note\n• Sheet music at the bottom shows the notes you played and the ones to come\n"
+       "• Touch a black key and it's over - wait until the note is on the open side, then place your key to slip through\n\n"
+       "ONE SONG PER STAGE\nPlay to the last note to clear a song. More Perfects give more stars and open the next song. "
+       "10 songs whose melodies are free for everyone: Twinkle Twinkle Little Star, Mary Had a Little Lamb, Ode to Joy, Jingle Bells, Fur Elise, Canon and more. "
+       "The result screen shows your notes on a staff.\n\n"
+       "MEDLEY\nThe 10 songs play one after another. Compare how many notes you played today, this week and all time (just choose a nickname).\n\n"
+       "SOUNDS AND SKINS\nBall color, key shape (xylophone, bell, keyboard, bean), sound (piano, music box, marimba, glockenspiel, chiptune) and paper color. "
+       "Unlocked by clearing songs, collecting stars and playing every day - never bought with ads or purchases.\n\n"
+       "LANGUAGE\nThe game is easy to play without reading Japanese; menus and in-game text are in Japanese for now.\n\n"
+       "Free with ads (never during play). Works offline; only the rankings use the network."),
 })
