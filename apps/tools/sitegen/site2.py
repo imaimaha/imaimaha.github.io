@@ -701,6 +701,7 @@ def page_contact():
             '<div class="box rv"><h2>📝 書いてもらえると助かること</h2><ul><li>アプリの名前</li><li>iPhone の機種と iOS のバージョン</li>'
             '<li>何をしたら、どうなったか（できれば画面のスクリーンショットも）</li></ul><p>ひとりで作っているので、お返事に少し時間がかかることがあります。</p></div></div></section>'
             '<section class="sec"><div class="narrow">'
+            '<div class="box rv" id="ads"><h2>このサイトの広告と<span class="nw">Cookie</span></h2><p>読み物（/guide/）の記事の下に、第三者配信の広告サービス「i-mobile Ad Network」（株式会社アイモバイル）の広告を表示しています。広告配信事業者は、あなたの興味に合わせた広告を出すために、Cookie などで このサイトやほかのサイトへのアクセスの情報を使うことがあります。名前・メールアドレス・住所など、あなた個人を特定する情報は含みません。</p><p>興味に合わせた広告を止めたいときは、<a href="https://www.i-mobile.co.jp/optout.aspx" rel="noopener">アイモバイルのオプトアウトのページ</a>から設定できます。アイモバイルの情報の扱いは<a href="https://www.i-mobile.co.jp/privacy.aspx" rel="noopener">アイモバイルのプライバシーポリシー</a>をご覧ください。アプリの中の広告と、アプリで集める情報については、下のアプリごとのプライバシーポリシーに書いています。</p></div>'
             f'<div class="box rv" id="privacy"><h2>アプリごとのサポートと<span class="nw">プライバシーポリシー</span></h2><p>よくある質問や遊び方は、各アプリのページにもあります。</p><ul class="applinks">{rows}</ul></div></div></section>')
     sub_page('/contact/', 'お問い合わせ', f'お問い合わせ｜{BRAND}',
              'いまのアプリへの不具合・ご要望・ご質問はメールでどうぞ。アプリごとのサポートとプライバシーポリシーへのリンクもあります。',
@@ -895,6 +896,17 @@ def jp_date(iso):
 
 PERSON = {"@type": "Person", "@id": BASE + "/about/#ima", "name": "いま", "url": BASE + "/about/"}
 
+# i-mobile の広告（2026-11-26 今西さんが作った「いまのアプリ」の広告スポット）。読み物の記事の下だけに出す。
+# スマホ用と PC 用はサイトの番号が別（i-mobile の決まりで、ほかの端末のタグは使えない）ので、端末を見てどちらか1つだけ出す
+IMOBILE_AD = (
+    '<div class="adbox rv" aria-label="広告"><p class="adlb">広告</p><div id="imad"></div></div>'
+    '<script>(function(){var sp=/iPhone|iPod|Android.*Mobile/.test(navigator.userAgent);'
+    "var c=sp?{mid:598677,asid:1954577,id:'im-a8ed374b42fc4f9882da82017e9efc0a'}:{mid:598676,asid:1954576,id:'im-7d22282ed84f490799717e19ac71a6cd'};"
+    "var d=document.getElementById('imad');if(!d)return;d.id=c.id;d.parentNode.classList.add(sp?'sp':'pc');"
+    "var s=document.createElement('script');s.async=true;s.src='https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104';document.head.appendChild(s);"
+    "(window.adsbyimobile=window.adsbyimobile||[]).push({pid:85776,mid:c.mid,asid:c.asid,type:'banner',display:'inline',elementid:c.id});})();</script>")
+
+
 def page_guide_article(slug):
     meta, body = guide_meta(slug)
     path = f'/guide/{slug}/'; og = 'guide-' + slug
@@ -932,7 +944,7 @@ def page_guide_article(slug):
     L = [h, header('/guide/'), '<main id="main">',
          '<section class="phero"><div class="blobs" aria-hidden="true"><span class="blob b1"></span><span class="blob b3"></span></div>' + crumb(cr) +
          f'<div class="wrap"><h1>{esc(meta["title"])}</h1><p class="lead2">{meta["lead"]}</p></div></section>',
-         f'<article class="sec" style="padding-top:20px"><div class="artwrap"><div class="artmain">{body}'
+         f'<article class="sec" style="padding-top:20px"><div class="artwrap"><div class="artmain">{body}{IMOBILE_AD}'
          f'<div class="sec-h rv" style="margin-top:30px"><h2 style="font-size:22px">ほかの読み物</h2><a class="more-link" href="{more}">ぜんぶ見る →</a></div><ul class="readlist rv">{others}</ul>'
          '</div>' + (f'<aside class="arttoc" aria-label="目次"><div class="in"><p class="arttoc-h">目次<span>約{mins}分</span></p><ol class="tocs">{tl}</ol>'
          + (f'<p class="arttoc-h">{esc(GUIDE_GROUP_LB[grp])}の記事</p><ul class="tocrel">' + ''.join(f'<li><a href="/guide/{s}/">{esc(t.partition("｜")[0])}</a></li>' for s, t in near) + f'</ul><a class="more-link" href="{more}">ぜんぶ見る →</a>' if grp else '')

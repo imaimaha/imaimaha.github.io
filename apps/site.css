@@ -941,3 +941,9 @@ section.block.support .more-sec { margin-top: 8px; }
   .gchips { display: none; }
   .toclist a { padding: 12px 20px; }
 }
+
+/* i-mobile の広告（読み物の記事の下）。2026-11-26 */
+.adbox { margin: 34px auto 10px; text-align: center; overflow: hidden; }
+.adbox .adlb { margin: 0 0 6px; font-size: 11px; letter-spacing: .1em; color: #8a8f9c; }
+.adbox.sp > div { min-height: 250px; }
+.adbox.pc > div { min-height: 90px; }
