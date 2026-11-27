@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-23",
+  "updated": "2026-11-27",
   "categories": [
     { "id": "puzzle", "label": "パズル・脳トレ" },
     { "id": "relax", "label": "のんびり" },
@@ -19,12 +19,15 @@
     { "key": "madoshizuku", "id": "6821822966", "name": "まどのしずく", "text": "雨の窓で、しずくを集めて大きくする", "icon": "icons/madoshizuku.png", "cat": "relax" },
     { "key": "nobiru", "id": "6837691783", "name": "つるのぼり", "text": "押すだけで、光の線をどこまでも高く", "icon": "icons/nobiru.png", "cat": "relax" },
     { "key": "furiko", "id": "6837694679", "name": "ふりこのぼり", "text": "タップで振り子をかけかえて、宇宙まで", "icon": "icons/furiko.png", "cat": "relax" },
+    { "key": "monsterisland", "id": "6839605337", "name": "モンスターアイランド", "text": "たたかった敵を仲間に。2体を吸収させて育てるRPG", "icon": "icons/monsterisland.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
     { "key": "pokerstudy", "id": "6823270157", "name": "プリフロップ道場", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
     { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" },
     { "key": "futaridaifugo", "id": "6836394499", "name": "ふたり大富豪", "text": "赤と黒に分けて、1対1で遊ぶ大富豪", "icon": "icons/futaridaifugo.png", "cat": "versus" },
     { "key": "rittai", "id": "6837609471", "name": "立体四目対戦", "text": "4×4×4の立体で4つそろえる、四目並べの対戦", "icon": "icons/rittai.png", "cat": "versus" },
     { "key": "gunjin", "id": "6837609485", "name": "軍人将棋オンライン", "text": "相手の駒が見えない、アプリが審判の軍人将棋", "icon": "icons/gunjin.png", "cat": "versus" },
+    { "key": "gurat", "id": "6839606185", "name": "ぐらっと", "text": "盤を傾けて、コマを自分の色の穴へ落とす対戦", "icon": "icons/gurat.png", "cat": "versus" },
+    { "key": "michidefense", "id": "6839605660", "name": "みちづくりディフェンス", "text": "道を引いて、砲台で敵の行列から宝を守る", "icon": "icons/michidefense.png", "cat": "versus" },
     { "key": "sanpobingo", "id": "6821944194", "name": "おさんぽ日記", "text": "歩数と行った場所の日記と、散歩ビンゴ", "icon": "icons/sanpobingo.png", "cat": "life" },
     { "key": "tsundokutower", "id": "6821840892", "name": "積読記録", "text": "積んだ本をタワーにして、読んで崩す", "icon": "icons/tsundokutower.png", "cat": "life" }
   ]
