@@ -85,8 +85,8 @@
 - [下剋上デュエル](https://imaimaha.com/gekokujo/): 1〜9の数字カードを1枚ずつ出して、大きいほうが勝ち。でも1だけは9に勝つ。読み合いのカードゲームを CPU や友達とオンラインで。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821823101
 - [軍人将棋オンライン](https://imaimaha.com/gunjin/): 相手の駒が見えない軍人将棋を、アプリが審判になって遊べます。23枚・8×6の盤。CPU（3段階）・2人で1台・部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837609485
 - [立体四目対戦](https://imaimaha.com/rittai/): 4×4の16本の棒に玉を落として、たて・よこ・高さ・ななめに4つそろえる立体の四目並べ。CPU（3段階）や、部屋のコードで友達とネット対戦。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837609471
-- [ぐらっと](https://imaimaha.com/gurat/): 盤を上下左右に傾けると、全部のコマがいっしょにすべる2人用のボードゲーム。自分の色の穴で1点。CPU（3段階）・2人で1台・今日の一局。8つの盤。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
-- [みちづくりディフェンス](https://imaimaha.com/michidefense/): マス目を指でなぞって道を引き、道ぞいの砲台で敵の行列から宝を守るタワーディフェンス。波のあいだも道を引きなおせる。5つの国・25ステージとエンドレス。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [ぐらっと](https://imaimaha.com/gurat/): 盤を上下左右に傾けると、全部のコマがいっしょにすべる2人用のボードゲーム。自分の色の穴で1点。CPU（3段階）・2人で1台・今日の一局。8つの盤。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6839606185
+- [みちづくりディフェンス](https://imaimaha.com/michidefense/): マス目を指でなぞって道を引き、道ぞいの砲台で敵の行列から宝を守るタワーディフェンス。波のあいだも道を引きなおせる。5つの国・25ステージとエンドレス。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6839605660
 ### のんびり
 - [つるっと ゆでたまご剥き](https://imaimaha.com/yudetamago/): ゆでたまごの殻を、白身を削らずにツルッとむく3Dゲーム。毎日の「今日のたまご」はみんな同じたまごでスコア勝負。18種類のたまご図鑑つき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821884836
 - [ねばっと 納豆フィルム剥がし](https://imaimaha.com/nattofilm/): 納豆パックのフィルムをはがして、のびる糸を巻き取るまでのタイムを競う3Dゲーム。毎日の「今日の納豆」はみんな同じ納豆で勝負。10種類の納豆。無料（広告あり）。 App Store: https://apps.apple.com/jp/app/id6821884133
@@ -94,7 +94,7 @@
 - [つるのぼり](https://imaimaha.com/tsurunobori/): 押しているあいだ、光の線が指のほうへ曲がる。赤いじゃまものをよけて、東京タワー・富士山・宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 - [ふりこのぼり](https://imaimaha.com/furikonobori/): ゆれる光の玉を、タップで上の点にかけかえてのぼる振り子のゲーム。下からくる霧をふりきって、宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837694679
 - [おとのかいだん](https://imaimaha.com/soranokaidan/): はねる音符の下に、タップで鍵をおくと曲の次の音が鳴る音楽ゲーム。きらきら星からカノンまで10曲を演奏。メドレー・音色のきせかえ・ランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
-- [モンスターアイランド](https://imaimaha.com/monsterisland/): ダンジョンにもぐって、たたかった敵を仲間に。2体を吸収させると別の子が生まれるRPG。19のすみか、336体の図鑑、ターン制バトル。ガチャは遊んで集めたかけらだけ。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [モンスターアイランド](https://imaimaha.com/monsterisland/): ダンジョンにもぐって、たたかった敵を仲間に。2体を吸収させると別の子が生まれるRPG。19のすみか、336体の図鑑、ターン制バトル。ガチャは遊んで集めたかけらだけ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6839605337
 - [天体サバイバー](https://imaimaha.com/tentaisurvivor/): 指でうごかすだけで、まわりを回る武器が自動で敵の群れをたおすサバイバーアクション。4つの章・36ステージ、月や火星など14の天体、合体進化。ガチャは遊んで集めた通貨だけ。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 ### くらし・記録
 - [おさんぽ日記](https://imaimaha.com/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
