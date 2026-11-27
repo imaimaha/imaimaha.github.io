@@ -20,6 +20,7 @@
     { "key": "nobiru", "id": "6837691783", "name": "つるのぼり", "text": "押すだけで、光の線をどこまでも高く", "icon": "icons/nobiru.png", "cat": "relax" },
     { "key": "furiko", "id": "6837694679", "name": "ふりこのぼり", "text": "タップで振り子をかけかえて、宇宙まで", "icon": "icons/furiko.png", "cat": "relax" },
     { "key": "monsterisland", "id": "6839605337", "name": "モンスターアイランド", "text": "たたかった敵を仲間に。2体を吸収させて育てるRPG", "icon": "icons/monsterisland.png", "cat": "relax" },
+    { "key": "tentaisurvivor", "id": "6839605356", "name": "天体サバイバー", "text": "惑星をうごかして、敵の群れから生きのこる36ステージ", "icon": "icons/tentaisurvivor.png", "cat": "relax" },
     { "key": "hensokushogi", "id": "6821822985", "name": "変則将棋対戦", "text": "安南・トランプ将棋をオンラインで", "icon": "icons/hensokushogi.png", "cat": "versus" },
     { "key": "pokerstudy", "id": "6823270157", "name": "プリフロップ道場", "text": "ポーカーのレンジを覚えて、CPU の大会で練習", "icon": "icons/pokerstudy.png", "cat": "versus" },
     { "key": "gekokujoduel", "id": "6821823101", "name": "下剋上デュエル", "text": "1が9に勝つ、数字カードの読み合い", "icon": "icons/gekokujoduel.png", "cat": "versus" },
