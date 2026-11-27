@@ -95,7 +95,7 @@
 - [ふりこのぼり](https://imaimaha.com/furikonobori/): ゆれる光の玉を、タップで上の点にかけかえてのぼる振り子のゲーム。下からくる霧をふりきって、宇宙・月まで。きせかえとランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6837694679
 - [おとのかいだん](https://imaimaha.com/soranokaidan/): はねる音符の下に、タップで鍵をおくと曲の次の音が鳴る音楽ゲーム。きらきら星からカノンまで10曲を演奏。メドレー・音色のきせかえ・ランキングつき。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
 - [モンスターアイランド](https://imaimaha.com/monsterisland/): ダンジョンにもぐって、たたかった敵を仲間に。2体を吸収させると別の子が生まれるRPG。19のすみか、336体の図鑑、ターン制バトル。ガチャは遊んで集めたかけらだけ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6839605337
-- [天体サバイバー](https://imaimaha.com/tentaisurvivor/): 指でうごかすだけで、まわりを回る武器が自動で敵の群れをたおすサバイバーアクション。4つの章・36ステージ、月や火星など14の天体、合体進化。ガチャは遊んで集めた通貨だけ。無料（広告あり）のiPhoneアプリ。 App Store: 近日公開
+- [天体サバイバー](https://imaimaha.com/tentaisurvivor/): 指でうごかすだけで、まわりを回る武器が自動で敵の群れをたおすサバイバーアクション。4つの章・36ステージ、月や火星など14の天体、合体進化。ガチャは遊んで集めた通貨だけ。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6839605356
 ### くらし・記録
 - [おさんぽ日記](https://imaimaha.com/sanpobingo/): その日の歩数と行った場所が、1日1ページの日記に自動で並ぶお散歩アプリ。近くの本当にある場所で作る散歩ビンゴやカラーハントつき。会員登録なし。無料のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821944194
 - [積読記録](https://imaimaha.com/tsundoku/): まだ読んでいない本（積読）を背表紙のタワーにして見せる読書記録アプリ。バーコードで登録、読書タイマー、図書館の返却日のお知らせつき。無料（広告あり）のiPhoneアプリ。 App Store: https://apps.apple.com/jp/app/id6821840892
